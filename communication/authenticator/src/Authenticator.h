@@ -8,7 +8,7 @@ namespace balancedbanana {
         namespace authenticator {
             class Authenticator {
                 std::pair<std::string, std::string> GeneratePrivatePublicKeyPair();
-
+                std::string GenerateSignature(std::string name, std::string privkey);
             };
         }
     }

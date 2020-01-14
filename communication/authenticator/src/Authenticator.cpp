@@ -55,3 +55,60 @@ std::pair<std::string, std::string> Authenticator::GeneratePrivatePublicKeyPair(
     std::string privkey(buffer, length);
     return { std::move(privkey), std::move(pubkey) };
 }
+
+std::string Authenticator::GenerateSignature(std::string name, std::string privkey) {
+    // Free structs automatically
+    struct _guard
+    {
+        EVP_MD_CTX *mdctx = NULL;
+        EVP_PKEY *key = NULL;
+        BIO *mem = NULL;
+        unsigned char * sig = NULL;
+        ~_guard() {
+            if(mdctx) {
+                EVP_MD_CTX_free(mdctx);
+            }
+            if(key) {
+                EVP_PKEY_free(key);
+            }
+            if(mem) {
+                BIO_free(mem);
+            }
+            if(sig) {
+                OPENSSL_free(sig);
+            }
+        }
+    } g;
+    
+    /* Create the Message Digest Context */
+    if(!(g.mdctx = EVP_MD_CTX_create())) {
+        throw std::runtime_error("Failed to generate signature (EVP_MD_CTX_create failed)");
+    }
+
+    /* Initialise the DigestSign operation - SHA-256 has been selected as the message digest function in this example */
+    if(1 != EVP_DigestSignInit(g.mdctx, NULL, EVP_sha512(), NULL, g.key)) {
+        throw std::runtime_error("Failed to generate signature (EVP_DigestSignInit failed)");
+    }
+    
+    /* Call update with the message */
+    if(1 != EVP_DigestSignUpdate(g.mdctx, name.data(), name.length())) {
+        throw std::runtime_error("Failed to generate signature (EVP_DigestSignInit failed)");
+    }
+    
+    /* Finalise the DigestSign operation */
+    /* First call EVP_DigestSignFinal with a NULL sig parameter to obtain the length of the
+    * signature. Length is returned in slen */
+    size_t slen;
+    if(1 != EVP_DigestSignFinal(g.mdctx, NULL, &slen)) {
+        throw std::runtime_error("Failed to generate signature (EVP_DigestSignInit failed)");
+    }
+    /* Allocate memory for the signature based on size in slen */
+    if(!(g.sig = (unsigned char *)OPENSSL_malloc(sizeof(unsigned char) * (slen)))) {
+        throw std::runtime_error("Failed to generate signature (EVP_DigestSignInit failed)");
+    }
+    /* Obtain the signature */
+    if(1 != EVP_DigestSignFinal(g.mdctx, g.sig, &slen)) {
+        throw std::runtime_error("Failed to generate signature (EVP_DigestSignInit failed)");
+    }
+    return std::string((char*)g.sig, slen);
+}
