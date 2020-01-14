@@ -79,6 +79,10 @@ std::string Authenticator::GenerateSignature(std::string name, std::string privk
             }
         }
     } g;
+
+    g.mem = BIO_new_mem_buf(privkey.data(), privkey.length());
+
+    g.key = PEM_read_bio_PrivateKey(g.mem, NULL, NULL, NULL);
     
     /* Create the Message Digest Context */
     if(!(g.mdctx = EVP_MD_CTX_create())) {
