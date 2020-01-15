@@ -1,11 +1,11 @@
-ï»¿#pragma once
+#pragma once
 
 #include "Message.h"
 
 namespace balancedbanana {
     namespace communication {
 
-		//Nachticht mit allen Hardware Angaben (CPU RAM OS)
+		//Nachricht mit allen Hardware Angaben (CPU RAM OS)
 		class HardwareDetailMessage : public Message {
 		public:
 			void process(const std::shared_ptr<MessageProcessor> & msgProcessor);
@@ -15,7 +15,7 @@ namespace balancedbanana {
 			//Anzahl der CPU Kerne
 			int coreCount;
 
-			//Grï¿½ï¿½e des verfï¿½gbaren Arbeitsspeichers
+			//Größe des verfügbaren Arbeitsspeichers
 			int ramSize;
 
 			//Irgendeine Information, die das Betriebssystem identifiziert
