@@ -14,13 +14,13 @@ namespace balancedbanana {
             };
             class AuthHandler {
 			public:
-				static AuthHandler GetDefault(const&);
+				static AuthHandler GetDefault();
 
-				AuthHandler(const&);
+				AuthHandler();
 
 				virtual  authenticate(const std::shared_ptr<IUser>& user, const std::string& password) = 0;
 
-				authenticate(const std::shared_ptr<IUser>& user, const std::string& signature);
+				void authenticate(const std::shared_ptr<IUser>& user, const std::string& signature);
             };
         }
     }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <optional>
+#include <vector>
+#include <string>
 
 //This class contains all necessary information that are needed by the scheduler and the worker to successfully execute a job.
 class JobConfig {
@@ -40,7 +43,7 @@ private:
 
 public:
 	//This constructor creates an empty JobConfig.
-	JobConfig(const&);
+	JobConfig();
 
 	//This constructor creates a JobConfig from a serialized stringstream
 	JobConfig(const std::stringstream& data);
@@ -82,28 +85,28 @@ public:
 	void set_current_working_dir(const std::optional<std::filesystem::path>& cwd);
 
 	//Getter for the min_ram_ attribute.
-	std::optional<uint32_t> min_ram(const&);
+	std::optional<uint32_t> min_ram();
 
 	//Getter for the max_ram_ attribute.
-	std::optional<uint32_t> max_ram(const&);
+	std::optional<uint32_t> max_ram();
 
 	//Getter for the min_cpu_count_ attribute.
-	std::optional<uint32_t> min_cpu_count(const&);
+	std::optional<uint32_t> min_cpu_count();
 
 	//Getter for the max_cpu_count_ attribute.
-	std::optional<uint32_t> max_cpu_count(const&);
+	std::optional<uint32_t> max_cpu_count();
 
 	//Getter for the blocking_mode_ attribute.
-	std::optional<bool> blocking_mode(const&);
+	std::optional<bool> blocking_mode();
 
 	//Getter for the email_ attribute.
-	std::string& email(const&);
+	std::string& email();
 
 	//Getter for the priority_ attribute.
-	std::optional<Priority> priority(const&);
+	std::optional<Priority> priority();
 
 	//Getter for the image_ attribute.
-	std::string& image(const&);
+	std::string& image();
 
 	//Getter for the environment_ attribute.
 	std::optional<std::vector<std::string>>& environment();
