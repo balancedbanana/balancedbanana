@@ -11,6 +11,6 @@ public:
 
 	virtual std::string serialize();
 
-	static std::shared_ptr<Message> deserialize(const const char*& msg, unsigned int size, );
+	static std::shared_ptr<Message> deserialize(const char* msg, unsigned int size);
 
 };

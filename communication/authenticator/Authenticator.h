@@ -2,6 +2,7 @@
 #include <map>
 #include <utility>
 #include <string>
+#include <communication/Communicator.h>
 
 namespace balancedbanana {
     namespace communication {
@@ -13,12 +14,12 @@ namespace balancedbanana {
 			public:
 				Authenticator(const Communicator& comm);
 
-				authenticate(const std::string& username, const std::string& password);
+				void authenticate(const std::string& username, const std::string& password);
 
-				authenticate(const std::string& username);
+				void authenticate(const std::string& username);
 
-				//Nur für worker
-				authenticate();
+				//Nur fÃ¼r worker
+				void authenticate();
             };
         }
     }

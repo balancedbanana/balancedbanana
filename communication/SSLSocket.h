@@ -10,9 +10,9 @@ public:
 
     void listen(unsigned short port, const std::function<void(std::shared_ptr<SSLSocket>)> & callback);
 
-    void send(const const char * & msg);
+    void send(const char * msg);
 
-    const char * receive(const char* & data, const size_t & size);
+    const char * receive(const char* data, const size_t & size);
 
     void listen(unsigned short port, const std::function<void()> & callback);
 };

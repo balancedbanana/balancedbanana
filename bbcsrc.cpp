@@ -29,7 +29,7 @@ ClientAuthMessage::ClientAuthMessage(const std::string & username, const std::st
 }
 
 //main method
-int Client::main(const char** & argv, const int* & argc) {
+int Client::main(const char** argv, const int* argc) {
 }
 
  Client::snapshot() {
@@ -41,7 +41,7 @@ void ClientMP::processMsgX(const std::shared_ptr<MsgX> & msg) {
 std::string Message::serialize() {
 }
 
-std::shared_ptr<Message> Message::deserialize(const const char * & msg, unsigned int size,  )
+std::shared_ptr<Message> Message::deserialize(const char * msg, unsigned int size)
 {
 }
 

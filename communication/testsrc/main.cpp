@@ -1,4 +1,4 @@
-#include "../include/Communicator.h"
+#include <communication/Communicator.h>
 
 #include <iostream>
 #include <openssl/evp.h>

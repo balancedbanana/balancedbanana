@@ -1,10 +1,10 @@
-#include "AuthHandler.h"
+#include <communication/authenticator/AuthHandler.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 
 using namespace balancedbanana::communication::authenticator;
 
-void AuthHandler::authenticate(std::shared_ptr<IUser> user, std::string signature) {
+void AuthHandler::publickeyauthenticate(const std::shared_ptr<IUser>& user, const std::string& signature) {
     // Free structs automatically
     struct _guard
     {

@@ -1,4 +1,4 @@
-#include "Authenticator.h"
+#include <communication/authenticator/Authenticator.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 
