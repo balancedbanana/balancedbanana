@@ -1,3 +1,5 @@
+#include "Specs.h"
+
 //Encapsulates all details required to create Worker object.
 struct worker_details {
     //The id of the Worker.
@@ -13,8 +15,6 @@ struct worker_details {
     specs specs;
 
     std::string address;
-
-    specs * ;
 
     std::string public_key;
 
