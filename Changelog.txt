@@ -1,3 +1,11 @@
-New
+Neu
 
 Communicator::Connect zum verbinden des Connectors
+
+Authenticator::GeneratePrivatePublicKeyPair()
+
+Authenticator::GenerateSignature()
+
+Veränderungen zum Entwurf
+
+AuthHandler::authenticate => AuthHandler::publickeyauthenticate zu ähnliche signatur mit der Passwort Autorization
