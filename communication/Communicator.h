@@ -1,21 +1,22 @@
 #pragma once
 #include "SSLSocket.h"
+#include "messageProcessor/MessageProcessor.h"
+#include "message/Message.h"
+#include <memory>
 
+namespace balancedbanana {
+    namespace communication {
+		class Communicator {
+		private:
+			std::shared_ptr<SSLSocket> socket;
 
-class Communicator {
-private:
-	SSLSocket* socket;
+			std::shared_ptr<MessageProcessor> processor;
 
-	MessageProcessor* processor;
+		public:
+			void listen(const std::function<void(std::shared_ptr<Message>)>& callback);
 
+			void send(const Message& message);
 
-	Worker* worker;
-
-
-public:
-	void listen(const std::function<void(std::shared_ptr<Message>)>& callback);
-
-	send(const Message& message);
-
-
-};
+		};
+	}
+}

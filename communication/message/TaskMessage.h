@@ -1,17 +1,22 @@
 ﻿#pragma once
 
+#include "Message.h"
 
-//Nachticht mit allen Hardware Angaben (CPU RAM OS)
-class TaskMessage : public Message {
-public:
-	void process(const MessageProcessor* [balancedbanana::communication] & msgProcessor);
+namespace balancedbanana {
+    namespace communication {
+		//Nachticht mit allen Hardware Angaben (CPU RAM OS)
+		class TaskMessage : public Message {
+		public:
+			void process(const MessageProcessor* & msgProcessor);
 
-	TaskMessage(const Task& task);
+			TaskMessage(const Task& task);
 
 
-private:
-	//Informationen des zu �bermittelnden Tasks
+		private:
+			//Informationen des zu �bermittelnden Tasks
 
-	Task task;
+			Task task;
 
-};
+		};
+	}
+}

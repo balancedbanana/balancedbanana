@@ -1,3 +1,6 @@
+#pragma once
+#include "MessageProcessor.h"
+
 class SchedulerClientMP : public MessageProcessor {
   public:
     virtual void processMsgX(const std::shared_ptr<MsgX> & msg);
