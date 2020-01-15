@@ -46,7 +46,7 @@ void EventDispatcher::dispatch(const Event & eventType, const std::string & work
  EventHandler::receiveEvent(Event event, int taskID) {
 }
 
-std::string Message::serialize(const  & ) {
+std::string Message::serialize() {
 }
 
 std::shared_ptr<Message> Message::deserialize(const const char * & msg, unsigned int size,  )

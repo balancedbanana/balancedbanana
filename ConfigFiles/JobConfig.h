@@ -43,67 +43,67 @@ public:
 	JobConfig(const&);
 
 	//This constructor creates a JobConfig from a serialized stringstream
-	JobConfig(const std::stringstream&& data, const&);
+	JobConfig(const std::stringstream& data);
 
 	//This constructor creates a JobConfig from a saved file.
-	JobConfig(const std::filesystem::path&& path);
+	JobConfig(const std::filesystem::path& path);
 
 	//Setter for the min_ram_ attribute.
-	void set_min_ram(const std::optional<uint32_t>& miB, const&);
+	void set_min_ram(const std::optional<uint32_t>& miB);
 
 	//Setter for the max_ram_ attribute.
-	void set_max_ram(const std::optional<uint32_t>& miB, const&);
+	void set_max_ram(const std::optional<uint32_t>& miB);
 
 	//Setter for the min_cpu_count_ attribute.
-	void set_min_cpu_count(const std::optional<uint32_t>& count, const&);
+	void set_min_cpu_count(const std::optional<uint32_t>& count);
 
 	//Setter for the max_cpu_count_ attribute.
-	void set_max_cpu_count(const std::optional<uint32_t>& count, const&);
+	void set_max_cpu_count(const std::optional<uint32_t>& count);
 
 	//Setter for the blocking_mode_ attribute.
-	void set_blocking_mode(const std::optional<bool>& block_client, const&);
+	void set_blocking_mode(const std::optional<bool>& block_client);
 
 	//Setter for the email_ attribute.
-	void set_email(const std::string&& email, const&);
+	void set_email(const std::string& email);
 
 	//Setter for the priority_ attribute.
-	void set_priority(const std::optional<Priority>& priority, const&);
+	void set_priority(const std::optional<Priority>& priority);
 
 	//Setter for the image_ attribute.
-	void set_image(const std::string&& path, const&);
+	void set_image(const std::string& path);
 
 	//Setter for the environment_ attribute.
-	void set_environment(const std::optional<std::vector<std::string>>&& environment);
+	void set_environment(const std::optional<std::vector<std::string>>& environment);
 
 	//Setter for the interruptible_ attribute.
 	set_interruptible(const std::optional<bool>& interruptible);
 
 	//Setter for the current_working_dir_ attribute.
-	void set_current_working_dir(const std::optional<std::filesystem::path>&& cwd);
+	void set_current_working_dir(const std::optional<std::filesystem::path>& cwd);
 
 	//Getter for the min_ram_ attribute.
-	std::optional<uint32_t> min_ram(const&, const&);
+	std::optional<uint32_t> min_ram(const&);
 
 	//Getter for the max_ram_ attribute.
-	std::optional<uint32_t> max_ram(const&, const&);
+	std::optional<uint32_t> max_ram(const&);
 
 	//Getter for the min_cpu_count_ attribute.
-	std::optional<uint32_t> min_cpu_count(const&, const&);
+	std::optional<uint32_t> min_cpu_count(const&);
 
 	//Getter for the max_cpu_count_ attribute.
-	std::optional<uint32_t> max_cpu_count(const&, const&);
+	std::optional<uint32_t> max_cpu_count(const&);
 
 	//Getter for the blocking_mode_ attribute.
-	std::optional<bool> blocking_mode(const&, const&);
+	std::optional<bool> blocking_mode(const&);
 
 	//Getter for the email_ attribute.
-	std::string& email(const&, const&);
+	std::string& email(const&);
 
 	//Getter for the priority_ attribute.
-	std::optional<Priority> priority(const&, const&);
+	std::optional<Priority> priority(const&);
 
 	//Getter for the image_ attribute.
-	std::string& image(const&, const&);
+	std::string& image(const&);
 
 	//Getter for the environment_ attribute.
 	std::optional<std::vector<std::string>>& environment();
@@ -115,13 +115,13 @@ public:
 	std::optional<std::filesystem::path>& current_working_dir();
 
 	//This method serializes the JobConfig and saves it in a file with the specified path.
-	bool Save(const std::filesystem::path&& path);
+	bool Save(const std::filesystem::path& path);
 
 	//This method serializes the JobConfig into a string and pushes it into the passed stream.
-	virtual void Serialize(const std::stringstream&& destination);
+	virtual void Serialize(const std::stringstream& destination);
 
 	//This method merges the content of the passed JobConfig into this JobConfig. Attributes that are contained in both files are not overwritten.
-	void Merge(const JobConfig&& config);
+	void Merge(const JobConfig& config);
 
 
 private:

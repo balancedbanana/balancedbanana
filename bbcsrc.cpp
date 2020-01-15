@@ -11,11 +11,11 @@ Authenticator::Authenticator(const Communicator & comm) {
  Authenticator::authenticate(const std::string & username) {
 }
 
-//Nur für worker
+//Nur fï¿½r worker
  Authenticator::authenticate() {
 }
 
-//Gibt den Authentfication status zurück 0 falls erfolgreich sonst ungleich 0
+//Gibt den Authentfication status zurï¿½ck 0 falls erfolgreich sonst ungleich 0
 unsigned long AuthResultMessage::getStatus() {
 }
 
@@ -38,7 +38,7 @@ int Client::main(const char** & argv, const int* & argc) {
 void ClientMP::processMsgX(const std::shared_ptr<MsgX> & msg) {
 }
 
-std::string Message::serialize(const  & ) {
+std::string Message::serialize() {
 }
 
 std::shared_ptr<Message> Message::deserialize(const const char * & msg, unsigned int size,  )

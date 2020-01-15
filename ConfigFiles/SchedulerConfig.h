@@ -10,24 +10,24 @@ public:
     SchedulerConfig();
 
     //This constructor loads a SchedulerConfig from a file.
-     SchedulerConfig(const std::filesystem::path & & path);
+     SchedulerConfig(const std::filesystem::path & path);
 
     //This method returns the amount of key-value pairs in the SchedulerConfig.
     size_t count();
 
     //This method adds policy with a specified key to the SchedulerConfig.
-    void Set(const std::string & & key, const std::string & & value);
+    void Set(const std::string & key, const std::string & value);
 
     //This method returns the policy associated with the specified key. If the SchedulerConfig does not contain such a policy, an empty string is returned.
-    std::string & Get(const std::string & & key);
+    std::string & Get(const std::string & key);
 
     //This method clears out the SchedulerConfig.
     void Clear();
 
     //This method serializes the SchedulerConfig and saves it to the specified file.
-    bool Save(const std::filesystem::path & & path);
+    bool Save(const std::filesystem::path & path);
 
     //This method returns true when the SchedulerCOnfig contains a policy associated with the specified key, otherwise it returns false.
-    bool Contains(const std::string & & key);
+    bool Contains(const std::string & key);
 
 };

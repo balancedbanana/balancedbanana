@@ -3,11 +3,11 @@
 #include "bbcsrc.h"
 #include "bb.h"
 
-AuthHandler AuthHandler::GetDefault(const  & )
+AuthHandler AuthHandler::GetDefault()
 {
 }
 
-AuthHandler::AuthHandler(const  & ) {
+AuthHandler::AuthHandler() {
 }
 
  AuthHandler::authenticate(const std::shared_ptr<IUser> & user, const std::string & signature) {
@@ -137,7 +137,7 @@ std::vector<std::shared_ptr<Worker>> Repository::getWorkers() {
 }
 
 //Adds a new job to the DB and returns its ID.
-uint64_t Repository::addJob(const uint64_t & user_id, const JobConfig & config, const std::chrono::time_point & schedule_time, const std::string & command, const  & ) {
+uint64_t Repository::addJob(const uint64_t & user_id, const JobConfig & config, const std::chrono::time_point & schedule_time, const std::string & command) {
 }
 
 //Deletes a Job from the DB.

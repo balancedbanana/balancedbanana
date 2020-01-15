@@ -11,7 +11,7 @@ private:
 
 
 public:
-	WorkerAuthMessage(const std::string& workername, const std::string& pubkey, const&);
+	WorkerAuthMessage(const std::string& workername, const std::string& pubkey);
 
 
 private:

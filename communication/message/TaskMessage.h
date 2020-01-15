@@ -6,7 +6,7 @@ class TaskMessage : public Message {
 public:
 	void process(const MessageProcessor* [balancedbanana::communication] & msgProcessor);
 
-	TaskMessage(const Task& task, , const&);
+	TaskMessage(const Task& task);
 
 
 private:
