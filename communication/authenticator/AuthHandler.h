@@ -1,26 +1,18 @@
 #pragma once
 #include <string>
 #include <memory>
+#include <Scheduler/IUser.h>
 
 namespace balancedbanana {
     namespace communication {
         namespace authenticator {
-            class IUser {
-                std::string name_;
-                std::string pubkey_;
-            public:
-                std::string name() { return name_; };
-                std::string pubkey() { return pubkey_; };
-            };
             class AuthHandler {
 			public:
 				static std::shared_ptr<AuthHandler> GetDefault();
 
-				AuthHandler();
+				virtual void authenticate(const std::shared_ptr<Scheduler::IUser>& user, const std::string& password) = 0;
 
-				virtual void authenticate(const std::shared_ptr<IUser>& user, const std::string& password) = 0;
-
-				void publickeyauthenticate(const std::shared_ptr<IUser>& user, const std::string& signature);
+				void publickeyauthenticate(const std::shared_ptr<Scheduler::IUser>& user, const std::string& signature);
             };
         }
     }

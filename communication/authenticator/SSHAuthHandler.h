@@ -1,7 +1,13 @@
-#include <AuthHandler.h>
+#pragma once
+#include "AuthHandler.h"
 
-class SSHAuthHandler : public AuthHandler {
-  public:
-     authenticate(const std::string & username, const std::string & password);
-
-};
+namespace balancedbanana {
+    namespace communication {
+        namespace authenticator {
+            class SSHAuthHandler : public AuthHandler {
+            public:
+                virtual void authenticate(const std::shared_ptr<Scheduler::IUser>& user, const std::string& password) override;
+            };
+        }
+    }
+}

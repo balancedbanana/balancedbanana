@@ -1,6 +1,10 @@
 #include <communication/authenticator/Authenticator.h>
+#include <communication/message/ClientAuthMessage.h>
+#include <communication/message/WorkerAuthMessage.h>
+#include <communication/message/PublicKeyAuthMessage.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
+#include <random>
 
 using namespace balancedbanana::communication::authenticator;
 
@@ -115,4 +119,31 @@ std::string Authenticator::GenerateSignature(std::string name, std::string privk
         throw std::runtime_error("Failed to generate signature (EVP_DigestSignInit failed)");
     }
     return std::string((char*)g.sig, slen);
+}
+
+balancedbanana::communication::authenticator::Authenticator::Authenticator(const std::shared_ptr<balancedbanana::communication::Communicator> &comm) : comm(comm) {
+}
+
+void balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username, const std::string &password) {
+    auto res = GeneratePrivatePublicKeyPair();
+    auto message = std::make_shared<ClientAuthMessage>(username, password, res.second);
+    comm->send(*message);
+}
+
+void balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username) {
+    // auto message = std::make_shared<PublicKeyAuthMessage>(username, signature);
+    // comm->send(*message);
+}
+
+void balancedbanana::communication::authenticator::Authenticator::authenticate() {
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
+    std::vector<uint32_t> name(25);
+    for (auto &&i : name) {
+        i = dis(gen);
+    }
+    auto res = GeneratePrivatePublicKeyPair();
+    auto message = std::make_shared<PublicKeyAuthMessage>(std::string((char*)name.data(), name.size() * sizeof(uint32_t)), res.second);
+    comm->send(*message);
 }
