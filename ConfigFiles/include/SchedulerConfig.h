@@ -1,5 +1,8 @@
 #pragma once
 
+#include <map>
+#include <filesystem>
+
 namespace balancedbanana::configfiles {
 
 //This class contains policies for the scheduler as key-value pairs.

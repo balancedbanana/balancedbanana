@@ -1,8 +1,10 @@
 #pragma once
 
 #include <optional>
+#include <filesystem>
 #include <vector>
 #include <string>
+#include <Priority.h>
 
 namespace balancedbanana::configfiles {
 
@@ -81,7 +83,7 @@ namespace balancedbanana::configfiles {
         void set_environment(const std::optional <std::vector<std::string>> &environment);
 
         //Setter for the interruptible_ attribute.
-        set_interruptible(const std::optional<bool> &interruptible);
+        void set_interruptible(const std::optional<bool> &interruptible);
 
         //Setter for the current_working_dir_ attribute.
         void set_current_working_dir(const std::optional <std::filesystem::path> &cwd);
@@ -127,10 +129,6 @@ namespace balancedbanana::configfiles {
 
         //This method merges the content of the passed JobConfig into this JobConfig. Attributes that are contained in both files are not overwritten.
         void Merge(const JobConfig &config);
-
-
-    private:
-        Job*;
 
     };
 
