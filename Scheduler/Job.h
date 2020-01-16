@@ -1,3 +1,9 @@
+#pragma once
+#include <ConfigFiles/JobConfig.h>
+#include <cstdint>
+#include <string>
+#include <chrono>
+
 class Job {
   private:
     uint64_t id;
@@ -20,12 +26,9 @@ class Job {
 
     uint64_t user_id;
 
-    JobConfig * config;
+    std::shared_ptr<JobConfig> config;
 
-    JobStatus * status;
+    std::shared_ptr<JobStatus> status;
 
-    job_result * ;
-
-    Scheduler * ;
-
+    std::shared_ptr<job_result> result;
 };

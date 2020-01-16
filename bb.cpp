@@ -145,13 +145,13 @@ PublicKeyAuthMessage::PublicKeyAuthMessage(const std::string & username, const s
 void Communicator::listen(const std::function<void(std::shared_ptr<Message>)> & callback) {
 }
 
- Communicator::send(const Message & message) {
+void Communicator::send(const Message & message) {
 }
 
 void EventDispatcher::dispatch(const Event & eventType, const std::string & worker, int taskID) {
 }
 
- EventHandler::receiveEvent(Event event, int taskID) {
+void EventHandler::receiveEvent(Event event, int taskID) {
 }
 
 void MessageProcessor::process(const std::shared_ptr<Message> & msg) {

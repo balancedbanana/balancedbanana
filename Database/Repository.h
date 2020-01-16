@@ -1,3 +1,4 @@
+#pragma once
 #include "job_details.h"
 #include "Gateway.h"
 #include "Factory.h"
@@ -53,6 +54,6 @@ class Repository : public Subject {
 
 
   public:
-    job_result getJobResult(const uint64_t & job_id);
+    job_result getJobResult(uint64_t job_id);
 
 };

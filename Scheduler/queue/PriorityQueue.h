@@ -1,16 +1,20 @@
+#pragma once
+#include "Queue.h"
+#include <TimedEvents/Timer.h>
+
 //Priorizes Task
 class PriorityQueue : public Queue {
 public:
-    virtual addTask(const Job & job);
+    virtual void addTask(const Job & job);
 
     virtual unsigned long getPos(unsigned long id);
 
-    virtual Job getJob(const uint32_t & ram, const uint32_t & cores);
+    virtual Job getJob(uint32_t ram, uint32_t cores);
 
-    virtual  update();
+    virtual void update();
 
 
 private:
-    Timer * ;
+    std::shared_ptr<Timer> timer;
 
 };
