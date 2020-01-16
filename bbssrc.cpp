@@ -29,16 +29,16 @@ std::string IUser::pubkey() {
  LDAPAuthHandler::authenticate(const std::string & username, const std::string & password) {
 }
 
- PriorityQueue::addTask(const Job & job) {
+void PriorityQueue::addTask(const Job & job) {
 }
 
 unsigned long PriorityQueue::getPos(unsigned long id) {
 }
 
-Job PriorityQueue::getJob(const uint32_t & ram, const uint32_t & cores) {
+Job PriorityQueue::getJob(uint32_t ram, uint32_t cores) {
 }
 
- PriorityQueue::update() {
+void PriorityQueue::update() {
 }
 
 void Scheduler::onTaskMessage(const Message & message) {
@@ -127,24 +127,24 @@ std::string User::email() {
 uint64_t Repository::addWorker(const std::string & name, const std::string & auth_key, int space, int ram, int cores, const std::string & address) {
 }
 
-bool Repository::removeWorker(const uint64_t & id) {
+bool Repository::removeWorker(uint64_t id) {
 }
 
-Worker Repository::getWorker(const uint64_t & worker_id) {
+Worker Repository::getWorker(uint64_t worker_id) {
 }
 
 std::vector<std::shared_ptr<Worker>> Repository::getWorkers() {
 }
 
 //Adds a new job to the DB and returns its ID.
-uint64_t Repository::addJob(const uint64_t & user_id, const JobConfig & config, const std::chrono::time_point & schedule_time, const std::string & command) {
+uint64_t Repository::addJob(uint64_t user_id, const JobConfig & config, const std::chrono::time_point & schedule_time, const std::string & command) {
 }
 
 //Deletes a Job from the DB.
-bool Repository::removeJob(const uint64_t & job_id) {
+bool Repository::removeJob(uint64_t job_id) {
 }
 
-Job Repository::getJob(const uint64_t & job_id) {
+Job Repository::getJob(uint64_t job_id) {
 }
 
 std::vector<std::shared_ptr<Job>> Repository::getJobs() {
@@ -155,24 +155,24 @@ uint64_t Repository::addUser(const std::string & name, const std::string & email
 }
 
 //Deletes a User from the DB.
-bool Repository::removeUser(const uint64_t & user_id) {
+bool Repository::removeUser(uint64_t user_id) {
 }
 
-User Repository::getUser(const uint64_t & user_id) {
+User Repository::getUser(uint64_t user_id) {
 }
 
 std::vector<std::shared_ptr<User>> Repository::getUsers() {
 }
 
 //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
-bool Repository::startJob(const uint64_t & job_id, const uint64_t & worker_id, const specs & specs, const std::chrono::time_point & start_time) {
+bool Repository::startJob(uint64_t job_id, uint64_t worker_id, const specs & specs, const std::chrono::time_point & start_time) {
 }
 
 //Changes the status of a Job to finish and gives it a finish time + assigns a Job Result to it.
-bool Repository::finishJob(const uint64_t & job_id, const std::chrono::time_point & finish_time, const std::string & stdout, const int8_t & exit_code) {
+bool Repository::finishJob(uint64_t job_id, const std::chrono::time_point & finish_time, const std::string & stdout, const int8_t & exit_code) {
 }
 
-job_result Repository::getJobResult(const uint64_t & job_id) {
+job_result Repository::getJobResult(uint64_t job_id) {
 }
 
  SSHAuthHandler::authenticate(const std::string & username, const std::string & password) {
