@@ -6,8 +6,8 @@
 
 using namespace balancedbanana::configfiles;
 
-SchedulerConfig::SchedulerConfig() {
-    //TODO implement
+SchedulerConfig::SchedulerConfig() :
+    values_(){
 }
 
 SchedulerConfig::SchedulerConfig(const std::filesystem::path &path) {
@@ -15,25 +15,28 @@ SchedulerConfig::SchedulerConfig(const std::filesystem::path &path) {
 }
 
 size_t SchedulerConfig::count() {
-    //TODO implement
+    return values_.size();
 }
 
 void SchedulerConfig::Set(const std::string &key, const std::string &value) {
-    //TODO implement
+    if(!key.empty()) {
+        values_[key] = value;
+    }
 }
 
 std::string &SchedulerConfig::Get(const std::string &key) {
-    //TODO implement
+    return values_[key];
 }
 
 void SchedulerConfig::Clear() {
-    //TODO implement
+    values_.clear();
 }
 
 bool SchedulerConfig::Save(const std::filesystem::path &path) {
     //TODO implement
+    return false;
 }
 
 bool SchedulerConfig::Contains(const std::string &key) {
-    //TODO implement
+    return values_.find(key) != values_.end();
 }

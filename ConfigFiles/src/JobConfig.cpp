@@ -3,11 +3,22 @@
 //
 
 #include <JobConfig.h>
+#include <sstream>
 
 using namespace balancedbanana::configfiles;
 
-JobConfig::JobConfig() {
-    //TODO implement
+JobConfig::JobConfig() :
+    min_ram_(std::nullopt),
+    max_ram_(std::nullopt),
+    min_cpu_count_(std::nullopt),
+    max_cpu_count_(std::nullopt),
+    blocking_mode_(std::nullopt),
+    email_(""),
+    priority_(std::nullopt),
+    image_(""),
+    environment_(std::nullopt),
+    interruptible_(std::nullopt),
+    current_working_dir_(std::nullopt){
 }
 
 JobConfig::JobConfig(const std::stringstream &data) {
@@ -19,98 +30,99 @@ JobConfig::JobConfig(const std::filesystem::path &path) {
 }
 
 void JobConfig::set_min_ram(const std::optional <uint32_t> &miB) {
-    //TODO implement
+    min_ram_ = miB;
 }
 
 void JobConfig::set_max_ram(const std::optional <uint32_t> &miB) {
-    //TODO implement
+    max_ram_ = miB;
 }
 
 void JobConfig::set_min_cpu_count(const std::optional <uint32_t> &count) {
-    //TODO implement
+    min_cpu_count_ = count;
 }
 
 void JobConfig::set_max_cpu_count(const std::optional <uint32_t> &count) {
-    //TODO implement
+    max_cpu_count_ = count;
 }
 
 void JobConfig::set_blocking_mode(const std::optional<bool> &block_client) {
-    //TODO implement
+    blocking_mode_ = block_client;
 }
 
 void JobConfig::set_email(const std::string &email) {
-    //TODO implement
+    email_ = email;
 }
 
 void JobConfig::set_priority(const std::optional <Priority> &priority) {
-    //TODO implement
+    priority_ = priority;
 }
 
-void JobConfig::set_image(const std::string &path) {
-    //TODO implement
+void JobConfig::set_image(const std::string &image) {
+    image_ = image;
 }
 
 void JobConfig::set_environment(const std::optional <std::vector<std::string>> &environment) {
-    //TODO implement
+    environment_ = environment;
 }
 
 void JobConfig::set_interruptible(const std::optional<bool> &interruptible) {
-    //TODO implement
+    interruptible_ = interruptible;
 }
 
 void JobConfig::set_current_working_dir(const std::optional <std::filesystem::path> &cwd) {
-    //TODO implement
+    current_working_dir_ = current_working_dir_;
 }
 
 std::optional <uint32_t> JobConfig::min_ram() {
-    //TODO implement
+    return min_ram_;
 }
 
 std::optional <uint32_t> JobConfig::max_ram() {
-    //TODO implement
+    return max_ram_;
 }
 
 std::optional <uint32_t> JobConfig::min_cpu_count() {
-    //TODO implement
+    return min_cpu_count_;
 }
 
 std::optional <uint32_t> JobConfig::max_cpu_count() {
-    //TODO implement
+    return max_cpu_count_;
 }
 
 std::optional<bool> JobConfig::blocking_mode() {
-    //TODO implement
+    return blocking_mode_;
 }
 
 std::string &JobConfig::email() {
-    //TODO implement
+    return email_;
 }
 
 std::optional <Priority> JobConfig::priority() {
-    //TODO implement
+    return priority_;
 }
 
 std::string &JobConfig::image() {
-    //TODO implement
+    return image_;
 }
 
 std::optional <std::vector<std::string>> &JobConfig::environment() {
-    //TODO implement
+    return environment_;
 }
 
 std::optional<bool> JobConfig::interruptible() {
-    //TODO implement
+    return interruptible_;
 }
 
 std::optional <std::filesystem::path> &JobConfig::current_working_dir() {
-    //TODO implement
+    return current_working_dir_;
 }
 
 bool JobConfig::Save(const std::filesystem::path &path) {
     //TODO implement
+    return false;
 }
 
-virtual void JobConfig::Serialize(const std::stringstream &destination) {
+void JobConfig::Serialize(std::stringstream &destination) {
     //TODO implement
 }
 

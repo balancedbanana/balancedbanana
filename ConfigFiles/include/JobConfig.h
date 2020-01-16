@@ -77,7 +77,7 @@ namespace balancedbanana::configfiles {
         void set_priority(const std::optional <Priority> &priority);
 
         //Setter for the image_ attribute.
-        void set_image(const std::string &path);
+        void set_image(const std::string &image);
 
         //Setter for the environment_ attribute.
         void set_environment(const std::optional <std::vector<std::string>> &environment);
@@ -125,7 +125,7 @@ namespace balancedbanana::configfiles {
         bool Save(const std::filesystem::path &path);
 
         //This method serializes the JobConfig into a string and pushes it into the passed stream.
-        virtual void Serialize(const std::stringstream &destination);
+        virtual void Serialize(std::stringstream &destination);
 
         //This method merges the content of the passed JobConfig into this JobConfig. Attributes that are contained in both files are not overwritten.
         void Merge(const JobConfig &config);
