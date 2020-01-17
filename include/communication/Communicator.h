@@ -13,6 +13,8 @@ namespace balancedbanana {
 			std::shared_ptr<MessageProcessor> processor;
 
 		public:
+			void Connect();
+
 			void listen(const std::function<void(std::shared_ptr<Message>)>& callback);
 
 			void send(const Message& message);
