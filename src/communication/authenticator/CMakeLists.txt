@@ -1,3 +1,3 @@
-add_library(Authenticator STATIC src/Authenticator.cpp Authenticator.h src/AuthHandler.cpp AuthHandler.h)
+add_library(Authenticator STATIC Authenticator.cpp AuthHandler.cpp)
 target_include_directories(Authenticator PUBLIC ../..)
 target_link_libraries(Authenticator Qt5::Core Qt5::Network OpenSSL::Crypto)

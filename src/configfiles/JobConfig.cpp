@@ -2,7 +2,7 @@
 // Created by Niklas on 16.01.2020.
 //
 
-#include <JobConfig.h>
+#include <configfiles/JobConfig.h>
 #include <sstream>
 
 using namespace balancedbanana::configfiles;

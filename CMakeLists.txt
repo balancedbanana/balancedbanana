@@ -7,5 +7,7 @@ project(balancedbanana)
 find_package(Qt5 COMPONENTS Core Network REQUIRED)
 find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 
-add_subdirectory(communication)
-add_subdirectory(ConfigFiles)
+include_directories(include)
+
+add_subdirectory(src/communication)
+add_subdirectory(src/configfiles)
