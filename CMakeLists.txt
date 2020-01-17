@@ -9,6 +9,7 @@ find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 
 include_directories(include)
 
+add_subdirectory(src/client)
 add_subdirectory(src/communication)
 add_subdirectory(src/configfiles)
 add_subdirectory(src/database)
