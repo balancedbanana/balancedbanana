@@ -4,7 +4,7 @@
 
 using namespace balancedbanana::communication::authenticator;
 
-void AuthHandler::publickeyauthenticate(const std::shared_ptr<Scheduler::IUser>& user, const std::string& signature) {
+void AuthHandler::publickeyauthenticate(const std::shared_ptr<scheduler::IUser>& user, const std::string& signature) {
     // Free structs automatically
     struct _guard
     {

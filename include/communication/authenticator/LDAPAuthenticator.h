@@ -6,7 +6,7 @@ namespace balancedbanana {
         namespace authenticator {
             class LDAPAuthHandler : public AuthHandler {
             public:
-                virtual void authenticate(const std::shared_ptr<Scheduler::IUser>& user, const std::string& password) override;
+                virtual void authenticate(const std::shared_ptr<scheduler::IUser>& user, const std::string& password) override;
             };
         }
     }

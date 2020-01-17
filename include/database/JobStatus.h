@@ -1,11 +1,15 @@
 #pragma once
 
+namespace balancedbanana {
+    namespace database {
 
-enum JobStatus {
-	scheduled,
-	processing,
-	paused,
-	interrupted,
-	finished,
-	canceled,
-};
+		enum class JobStatus {
+			scheduled,
+			processing,
+			paused,
+			interrupted,
+			finished,
+			canceled,
+		};
+	}
+}

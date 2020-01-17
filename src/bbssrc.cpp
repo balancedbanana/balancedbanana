@@ -41,13 +41,13 @@ Job PriorityQueue::getJob(uint32_t ram, uint32_t cores) {
 void PriorityQueue::update() {
 }
 
-void Scheduler::onTaskMessage(const Message & message) {
+void scheduler::onTaskMessage(const Message & message) {
 }
 
-Worker Scheduler::getWorkerByTaskID(unsigned long tid) {
+Worker scheduler::getWorkerByTaskID(unsigned long tid) {
 }
 
- Scheduler::update() {
+ scheduler::update() {
 }
 
 //L�dt existierende oder erstellt neue Datenbank
@@ -59,16 +59,16 @@ Worker Scheduler::getWorkerByTaskID(unsigned long tid) {
 //Fr�gt Status der Arbeiter ab (sollen fertige Aufgaben zur�ckmelden)
 //Startet Bearbeitung der Warteschlange (startet den Timer)
 //Sendet Nachricht an alle Arbeiter (ich bin hier nachricht)
-void Scheduler::initialize() {
+void scheduler::initialize() {
 }
 
-void SchedulerClientMP::processMsgX(const std::shared_ptr<MsgX> & msg) {
+void schedulerClientMP::processMsgX(const std::shared_ptr<MsgX> & msg) {
 }
 
-void SchedulerClientMP::processMsgY(const std::shared_ptr<MsgY> & msg) {
+void schedulerClientMP::processMsgY(const std::shared_ptr<MsgY> & msg) {
 }
 
-void SchedulerClientMP::processTaskMessage(const TaskMessage & msg) {
+void schedulerClientMP::processTaskMessage(const TaskMessage & msg) {
 }
 
 //This constructor creates an empty SchedulerConfig.
@@ -99,17 +99,17 @@ void SchedulerConfig::Clear() {
 bool SchedulerConfig::Save(const std::filesystem::path & path) {
 }
 
-//This method returns true when the SchedulerCOnfig contains a policy associated with the specified key, otherwise it returns false.
+//This method returns true when the SchedulerConfig contains a policy associated with the specified key, otherwise it returns false.
 bool SchedulerConfig::Contains(const std::string & key) {
 }
 
-void SchedulerWorkerMP::processMsgX(const std::shared_ptr<MsgX> & msg) {
+void schedulerWorkerMP::processMsgX(const std::shared_ptr<MsgX> & msg) {
 }
 
-void SchedulerWorkerMP::processMsgY(const std::shared_ptr<MsgY> & msg) {
+void schedulerWorkerMP::processMsgY(const std::shared_ptr<MsgY> & msg) {
 }
 
-void SchedulerWorkerMP::processTaskMessage(const TaskMessage & msg) {
+void schedulerWorkerMP::processTaskMessage(const TaskMessage & msg) {
 }
 
  SmtpServer::sendMail(const std::string & mail, const std::string & subject, const std::string & content) {

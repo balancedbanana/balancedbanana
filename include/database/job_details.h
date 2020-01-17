@@ -3,29 +3,35 @@
 #include <cinttypes>
 #include <string>
 #include <chrono>
-#include <Specs.h>
 #include <ctime>
+#include "Specs.h"
+#include <configfiles/JobConfig.h>
 
-//This is a struct that includes all relevant information about a Job.
-struct job_details {
-	JobConfig config;
+namespace balancedbanana {
+    namespace database {
 
-	uint64_t user_id;
+		//This is a struct that includes all relevant information about a Job.
+		struct job_details {
+			configfiles::JobConfig config;
 
-	//Represented with an ID.
-	int status;
+			uint64_t user_id;
 
-	//The id of the Job.
-	uint64_t id;
+			//Represented with an ID.
+			int status;
 
-	std::string command;
+			//The id of the Job.
+			uint64_t id;
 
-	std::chrono::time_point<std::chrono::system_clock> schedule_time;
+			std::string command;
 
-	std::chrono::time_point<std::chrono::system_clock> start_time;
+			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> schedule_time;
 
-	std::chrono::time_point<std::chrono::system_clock> finish_time;
+			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> start_time;
 
-	specs allocated_specs;
+			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> finish_time;
 
-};
+			Specs allocated_specs;
+
+		};
+	}
+}

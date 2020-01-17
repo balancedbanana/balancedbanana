@@ -2,10 +2,8 @@
 #include <string>
 
 namespace balancedbanana {
-    namespace Scheduler {
-
+    namespace scheduler {
         class IUser {
-        private:
             //This attribute specifies the name of the user.
             std::string name_;
             std::string pubkey_;

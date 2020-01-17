@@ -2,9 +2,14 @@
 #include <cinttypes>
 #include <string>
 
-struct job_result {
-	std::string stdout;
+namespace balancedbanana {
+    namespace database {
 
-	int8_t exit_code;
+		struct job_result {
+			std::string stdout;
 
-};
+			int8_t exit_code;
+
+		};
+	}
+}

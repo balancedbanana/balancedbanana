@@ -34,7 +34,7 @@ namespace balancedbanana::configfiles {
         //This method serializes the SchedulerConfig and saves it to the specified file.
         bool Save(const std::filesystem::path &path);
 
-        //This method returns true when the SchedulerCOnfig contains a policy associated with the specified key, otherwise it returns false.
+        //This method returns true when the SchedulerConfig contains a policy associated with the specified key, otherwise it returns false.
         bool Contains(const std::string &key);
 
     };

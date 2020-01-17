@@ -14,6 +14,6 @@ public:
     virtual void update() = 0;
 
 private:
-    std::shared_ptr<Scheduler> scheduler;
+    std::shared_ptr<scheduler> scheduler;
 
 };

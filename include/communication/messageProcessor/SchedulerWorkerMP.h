@@ -1,7 +1,7 @@
 #pragma once
 #include "MessageProcessor.h"
 
-class SchedulerWorkerMP : public MessageProcessor {
+class schedulerWorkerMP : public MessageProcessor {
 public:
     virtual void processAuthResultMessage(const std::shared_ptr<AuthResultMessage>& msg) override;
     virtual void processClientAuthMessage(const std::shared_ptr<ClientAuthMessage>& msg) override;

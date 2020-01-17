@@ -2,14 +2,19 @@
 
 #include <cinttypes>
 
-// Encapsulates all details required to create a user object
-struct user_details {
-    uint64_t id;
+namespace balancedbanana {
+    namespace database {
 
-    std::string name;
+        // Encapsulates all details required to create a user object
+        struct user_details {
+            uint64_t id;
 
-    std::string email;
+            std::string name;
 
-    std::string public_key;
+            std::string email;
 
-};
+            std::string public_key;
+
+        };
+    }
+}

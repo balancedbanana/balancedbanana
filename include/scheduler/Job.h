@@ -1,34 +1,42 @@
 #pragma once
-#include <ConfigFiles/JobConfig.h>
+#include <configfiles/JobConfig.h>
+#include <database/JobStatus.h>
+#include <database/job_result.h>
+#include <memory>
 #include <cstdint>
 #include <string>
 #include <chrono>
 
-class Job {
-  private:
-    uint64_t id;
+namespace balancedbanana {
+    namespace scheduler {
 
-    std::chrono::time_point started_at;
+        class Job {
+        private:
+            uint64_t id;
 
-    std::chrono::time_point scheduled_at;
+            std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> started_at;
 
-    std::chrono::time_point finished_at;
+            std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> scheduled_at;
 
-    uint64_t allocated_ram;
+            std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> finished_at;
 
-    uint32_t allocated_cores;
+            uint64_t allocated_ram;
 
-    uint64_t allocated_disk_space;
+            uint32_t allocated_cores;
 
-    std::string command;
+            uint64_t allocated_disk_space;
 
-    uint64_t worker_id;
+            std::string command;
 
-    uint64_t user_id;
+            uint64_t worker_id;
 
-    std::shared_ptr<JobConfig> config;
+            uint64_t user_id;
 
-    std::shared_ptr<JobStatus> status;
+            std::shared_ptr<configfiles::JobConfig> config;
 
-    std::shared_ptr<job_result> result;
-};
+            std::shared_ptr<database::JobStatus> status;
+
+            std::shared_ptr<database::job_result> result;
+        };
+    }
+}

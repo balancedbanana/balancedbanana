@@ -8,52 +8,57 @@
 #include <chrono>
 #include <cinttypes>
 
-//This is the interface that the rest of the program uses to query the database.
-class Repository : public Subject {
-  public:
-    //Adds a Worker to the DB and returns its ID
-    uint64_t addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const std::string address);
+namespace balancedbanana {
+    namespace database {
 
-    bool removeWorker(const uint64_t id);
+        //This is the interface that the rest of the program uses to query the database.
+        class Repository : public Subject {
+        public:
+            //Adds a Worker to the DB and returns its ID
+            uint64_t addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const std::string address);
 
-    Worker getWorker(const uint64_t worker_id);
+            bool removeWorker(const uint64_t id);
 
-    std::vector<std::shared_ptr<Worker>> getWorkers();
+            Worker getWorker(const uint64_t worker_id);
 
-    //Adds a new job to the DB and returns its ID.
-    uint64_t addJob(const uint64_t user_id, const JobConfig config, const std::chrono::time_point<std::chrono::system_clock> schedule_time, const std::string command);
+            std::vector<std::shared_ptr<Worker>> getWorkers();
 
-    //Deletes a Job from the DB.
-    bool removeJob(const uint64_t job_id);
+            //Adds a new job to the DB and returns its ID.
+            uint64_t addJob(const uint64_t user_id, const JobConfig config, const std::chrono::time_point<std::chrono::system_clock> schedule_time, const std::string command);
 
-    Job getJob(const uint64_t job_id);
+            //Deletes a Job from the DB.
+            bool removeJob(const uint64_t job_id);
 
-    std::vector<std::shared_ptr<Job>> getJobs();
+            Job getJob(const uint64_t job_id);
 
-    //Adds a new User to the DB and returns their status.
-    uint64_t addUser(const std::string name, const std::string email, const std::string public_key);
+            std::vector<std::shared_ptr<Job>> getJobs();
 
-    //Deletes a User from the DB.
-    bool removeUser(const uint64_t user_id);
+            //Adds a new User to the DB and returns their status.
+            uint64_t addUser(const std::string name, const std::string email, const std::string public_key);
 
-    User getUser(const uint64_t user_id);
+            //Deletes a User from the DB.
+            bool removeUser(const uint64_t user_id);
 
-    std::vector<std::shared_ptr<User>> getUsers();
+            User getUser(const uint64_t user_id);
 
-    //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
-    bool startJob(const uint64_t job_id, const uint64_t worker_id, const specs specs, const std::chrono::time_point<std::chrono::system_clock> start_time);
+            std::vector<std::shared_ptr<User>> getUsers();
 
-    //Changes the status of a Job to finish and gives it a finish time + assigns a Job Result to it.
-    bool finishJob(const uint64_t job_id, const std::chrono::time_point<std::chrono::system_clock> finish_time, const std::string stdout, const int8_t exit_code);
+            //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
+            bool startJob(const uint64_t job_id, const uint64_t worker_id, const Specs specs, const std::chrono::time_point<std::chrono::system_clock> start_time);
 
-
-  private:
-    Factory factory;
-
-    Gateway gateway;
+            //Changes the status of a Job to finish and gives it a finish time + assigns a Job Result to it.
+            bool finishJob(const uint64_t job_id, const std::chrono::time_point<std::chrono::system_clock> finish_time, const std::string stdout, const int8_t exit_code);
 
 
-  public:
-    job_result getJobResult(uint64_t job_id);
+        private:
+            Factory factory;
 
-};
+            Gateway gateway;
+
+
+        public:
+            job_result getJobResult(uint64_t job_id);
+
+        };
+    }
+}
