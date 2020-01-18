@@ -1,20 +1,21 @@
 #pragma once
+#include <string>
+#include "Snapshot.h"
 
+namespace balancedbanana {
+	namespace worker {
+		class Container {
+			std::string id;
+		public:
+			Container(const std::string &id);
 
-class Container {
-public:
-	string Tail(int lines);
+			std::string Tail(int lines);
 
-	void Stop();
+			void Stop();
 
-	Snapshot Snapshot(bool stop = false);
+			Snapshot CreateSnapshot(bool stop = false);
 
-	Resume(const Snapshot& snap);
-
-
-private:
-	string id;
-
-	<Worker*>;
-
-};
+			void Resume(const Snapshot& snap);
+		};
+	}
+}

@@ -1,17 +1,20 @@
 #pragma once
+#include <string>
 
+namespace balancedbanana {
+	namespace worker {
 
-class Snapshot {
-private:
-	string id;
+		class Snapshot {
+			std::string id;
 
+		public:
+			inline const std::string& get_id() const;
 
-public:
-	inline const string get_id() const;
+			Snapshot(const std::string& id);
 
-	Snapshot(const std::string& id);
-
-};
-inline const string Snapshot::get_id() const {
-	return id;
+		};
+		inline const std::string& Snapshot::get_id() const {
+			return id;
+		}
+	}
 }

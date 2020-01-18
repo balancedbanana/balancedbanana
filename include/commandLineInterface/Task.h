@@ -1,22 +1,25 @@
 #pragma once
 
+#include <configfiles/JobConfig.h>
 
-class Task
-{
-public:
+namespace balancedbanana {
+	namespace commandLineInterface {
 
-	void setType(int type);
-	int getType();
+		class Task {
+			std::string taskCommand;
+			std::shared_ptr<configfiles::JobConfig> config;
+			int type;
 
-	void setTaskCommand(std::string& taskCommand);
-	std::string* getTaskCommand();
+		public:
 
-	JobConfig* getConfig();
+			void setType(int type);
+			int getType() const;
 
-private:
+			void setTaskCommand(std::string& taskCommand);
+			const std::string& getTaskCommand() const;
 
-	std::string* taskCommand;
-	JobConfig* config;
-	int type;
+			std::shared_ptr<configfiles::JobConfig> getConfig() const;
 
-};
+		};
+	}
+}

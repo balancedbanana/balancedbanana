@@ -9,3 +9,8 @@ Authenticator::GenerateSignature()
 Veränderungen zum Entwurf
 
 AuthHandler::authenticate => AuthHandler::publickeyauthenticate zu ähnliche signatur mit der Passwort Autorization
+
+Container:
+Snapshot => CreateSnapshot // Typname darf kein Methodenname sein
+
+18.01.2020 Docker, Container class Basic Implementation, Snapshot stub
