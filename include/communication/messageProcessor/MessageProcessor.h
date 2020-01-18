@@ -14,17 +14,18 @@ namespace balancedbanana {
 #include <communication/message/PublicKeyAuthMessage.h>
 // #include <communication/message/SnapshotMessage.h>
 // #include <communication/message/TaskMessage.h>
-// #include <communication/message/WorkerAuthMessage.h>
+#include <communication/message/WorkerAuthMessage.h>
 
 class balancedbanana::communication::MessageProcessor {
 private:
 	virtual void handleInvalidMessage(const std::shared_ptr<Message>& msg);
 
 public:
-	virtual void process(const std::shared_ptr<Message>& msg) = 0;
+	void process(const std::shared_ptr<Message>& msg);
 
 	virtual void processAuthResultMessage(const std::shared_ptr<AuthResultMessage>& msg);
 	virtual void processClientAuthMessage(const std::shared_ptr<ClientAuthMessage>& msg);
+	virtual void processWorkerAuthMessage(const std::shared_ptr<WorkerAuthMessage>& msg);
 	virtual void processPublicKeyAuthMessage(const std::shared_ptr<PublicKeyAuthMessage>& msg);
 
 };
