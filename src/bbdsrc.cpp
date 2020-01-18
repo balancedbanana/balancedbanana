@@ -34,25 +34,7 @@ void Worker::readInTaskList(const std::string & pathToTaskList) {
 void Worker::moveSnapshotToFileServer(const Snapshot & snapshot, const std::string & location) {
 }
 
-//Speichert einen Snapshot aller laufenden Aufgaben an der angegebenen Stelle im FileServer oder nur auf dem Worker, falls location keine gültige Stelle auf dem File Server ist.
+//Speichert einen Snapshot aller laufenden Aufgaben an der angegebenen Stelle im FileServer oder nur auf dem Worker, falls location keine gï¿½ltige Stelle auf dem File Server ist.
 void Worker::backup(const std::string & location) {
-}
-
-string Container::Tail(int lines) {
-}
-
-void Container::Stop() {
-}
-
-Snapshot Container::Snapshot(bool stop) {
-}
-
- Container::Resume(const Snapshot & snap) {
-}
-
-Container Docker::Start(int userid, const Task & task) {
-}
-
-Snapshot::Snapshot(const std::string & id) {
 }
 

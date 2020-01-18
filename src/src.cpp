@@ -1,16 +1,6 @@
 
 #include "src.h"
 
- Authenticator::authenticate(const std::string & username, const std::string & password) {
-}
-
- Authenticator::authenticate(const std::string & username) {
-}
-
-//Nur f�r worker
- Authenticator::authenticate() {
-}
-
 //Gibt den Authentfication status zur�ck 0 falls erfolgreich sonst ungleich 0
 unsigned long AuthResultMessage::getStatus() {
 }

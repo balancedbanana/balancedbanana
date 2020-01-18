@@ -13,6 +13,7 @@ std::string Container::Tail(int lines) {
     proc.setProgram("docker");
     proc.setArguments({ "logs", "--tail", std::to_string(lines).data(), id.data() });
     proc.start();
+    proc.waitForFinished(-1);
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
@@ -26,6 +27,7 @@ void Container::Stop() {
     proc.setProgram("docker");
     proc.setArguments({ "stop", id.data() });
     proc.start();
+    proc.waitForFinished(-1);
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();

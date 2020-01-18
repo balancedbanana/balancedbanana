@@ -2,19 +2,6 @@
 #include "bbcsrc.h"
 #include "bb.h"
 
-Authenticator::Authenticator(const Communicator & comm) {
-}
-
- Authenticator::authenticate(const std::string & username, const std::string & password) {
-}
-
- Authenticator::authenticate(const std::string & username) {
-}
-
-//Nur f�r worker
- Authenticator::authenticate() {
-}
-
 //Gibt den Authentfication status zur�ck 0 falls erfolgreich sonst ungleich 0
 unsigned long AuthResultMessage::getStatus() {
 }
@@ -32,7 +19,7 @@ ClientAuthMessage::ClientAuthMessage(const std::string & username, const std::st
 int Client::main(const char** argv, const int* argc) {
 }
 
- Client::snapshot() {
+void Client::snapshot() {
 }
 
 void ClientMP::processMsgX(const std::shared_ptr<MsgX> & msg) {

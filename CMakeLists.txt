@@ -11,6 +11,7 @@ include_directories(include)
 
 add_subdirectory(src/client)
 add_subdirectory(src/worker)
+add_subdirectory(testsrc/worker)
 add_subdirectory(src/communication)
 add_subdirectory(src/configfiles)
 add_subdirectory(src/database)

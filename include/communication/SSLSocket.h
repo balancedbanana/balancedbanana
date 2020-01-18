@@ -1,10 +1,10 @@
-// #include <QTcpServer>
+#include <QSslSocket>
 #include <string>
 #include <functional>
 #include <memory>
 
 class SSLSocket {
-    // QSslSocket socket;
+    QSslSocket socket;
 public:
     void connect(const std::string & address);
 

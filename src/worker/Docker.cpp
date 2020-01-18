@@ -10,6 +10,7 @@ Container Docker::Start(int userid, const commandLineInterface::Task & task) {
     // config->environment()
     proc.setArguments({ "run", "-d", /* "--env-file", envfile,  */"--user", std::to_string(userid).data(), "--network", "host"});
     proc.start();
+    proc.waitForFinished(-1);
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
