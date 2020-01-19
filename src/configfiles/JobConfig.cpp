@@ -3,9 +3,35 @@
 //
 
 #include <configfiles/JobConfig.h>
-#include <sstream>
+#include <iostream>
+#include <fstream>
 
 using namespace balancedbanana::configfiles;
+
+//Helper methods
+std::ostream &operator <<(std::ostream &stream, std::vector<std::string> &value) {
+    stream << "[\n";
+    for(std::string &string : value) {
+        stream << string << "\n";
+    }
+    stream << "]";
+    return stream;
+}
+
+template<typename T>
+void SerializeOptional(std::ostream &stream, const std::string &name, std::optional<T> &value) {
+    stream << name << ":";
+    if(value) {
+        stream << value.value();
+    }
+    stream << "\n";
+}
+
+void SerializeString(std::ostream &stream, const std::string &name, const std::string &value) {
+    stream << name << ":" << value << "\n";
+}
+
+//Class Implementation
 
 JobConfig::JobConfig() :
     min_ram_(std::nullopt),
@@ -25,7 +51,7 @@ JobConfig::JobConfig(const std::stringstream &data) {
     //TODO implement
 }
 
-JobConfig::JobConfig(const std::filesystem::path &path) {
+JobConfig::JobConfig(const std::experimental::filesystem::path &path) {
     //TODO implement
 }
 
@@ -69,7 +95,7 @@ void JobConfig::set_interruptible(const std::optional<bool> &interruptible) {
     interruptible_ = interruptible;
 }
 
-void JobConfig::set_current_working_dir(const std::optional <std::filesystem::path> &cwd) {
+void JobConfig::set_current_working_dir(const std::optional <std::experimental::filesystem::path> &cwd) {
     current_working_dir_ = current_working_dir_;
 }
 
@@ -113,17 +139,33 @@ std::optional<bool> JobConfig::interruptible() {
     return interruptible_;
 }
 
-std::optional <std::filesystem::path> &JobConfig::current_working_dir() {
+std::optional <std::experimental::filesystem::path> &JobConfig::current_working_dir() {
     return current_working_dir_;
 }
 
-bool JobConfig::Save(const std::filesystem::path &path) {
-    //TODO implement
+bool JobConfig::Save(const std::experimental::filesystem::path &path) {
+    std::ofstream stream(path);
+    std::stringstream s;
+    Serialize(s);
+    stream << s.str();
+    stream.flush();
+    stream.close();
     return false;
 }
 
-void JobConfig::Serialize(std::stringstream &destination) {
-    //TODO implement
+void JobConfig::Serialize(std::stringstream &stream) {
+    SerializeOptional(stream, "min_ram", min_ram_);
+    SerializeOptional(stream, "max_ram", max_ram_);
+    SerializeOptional(stream, "min_cpu_count", min_cpu_count_);
+    SerializeOptional(stream, "max_cpu_count", max_cpu_count_);
+    SerializeOptional(stream, "blocking_mode", blocking_mode_);
+    SerializeString(stream, "email", email_);
+    SerializeOptional(stream, "priority", priority_);
+    SerializeString(stream, "image", image_);
+    SerializeOptional(stream, "environment", environment_);
+    SerializeOptional(stream, "interruptible", interruptible_);
+    SerializeOptional(stream, "current_working_dir", current_working_dir_);
+    stream.flush();
 }
 
 void JobConfig::Merge(const JobConfig &config) {

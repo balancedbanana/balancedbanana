@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optional>
-#include <filesystem>
+#include <experimental/filesystem>
 #include <vector>
 #include <string>
 #include <configfiles/Priority.h>
@@ -43,7 +43,7 @@ namespace balancedbanana {
             std::optional<bool> interruptible_;
 
             //This attribute specifies the current working directory from which the job is executed.
-            std::optional <std::filesystem::path> current_working_dir_;
+            std::optional <std::experimental::filesystem::path> current_working_dir_;
 
 
         public:
@@ -54,7 +54,7 @@ namespace balancedbanana {
             JobConfig(const std::stringstream &data);
 
             //This constructor creates a JobConfig from a saved file.
-            JobConfig(const std::filesystem::path &path);
+            JobConfig(const std::experimental::filesystem::path &path);
 
             //Setter for the min_ram_ attribute.
             void set_min_ram(const std::optional <uint32_t> &miB);
@@ -120,10 +120,10 @@ namespace balancedbanana {
             std::optional<bool> interruptible();
 
             //Getter for the current_working_dir_ attribute.
-            std::optional <std::filesystem::path> &current_working_dir();
+            std::optional <std::experimental::filesystem::path> &current_working_dir();
 
             //This method serializes the JobConfig and saves it in a file with the specified path.
-            bool Save(const std::filesystem::path &path);
+            bool Save(const std::experimental::filesystem::path &path);
 
             //This method serializes the JobConfig into a string and pushes it into the passed stream.
             virtual void Serialize(std::stringstream &destination);

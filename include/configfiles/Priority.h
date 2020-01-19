@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace balancedbanana {
     namespace configfiles {
 
@@ -10,5 +12,10 @@ namespace balancedbanana {
             high = 3,//This priority can be used for Jobs that are important to finish quickly and are favoured by the scheduler.
             emergency = 4//This priority can be used for the most important jobs that have to be started instantly. The scheduler might even cancel a running job to let the ones with this priority take it's place.
         };
+
+        std::string to_string(Priority priority);
+
+        std::ostream &operator <<(std::ostream &, Priority);
+
     }
 }
