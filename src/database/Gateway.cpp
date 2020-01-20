@@ -1,4 +1,5 @@
 #include <database/Gateway.h>
+#include <database/JobStatus.h>
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -9,12 +10,13 @@
 #include <QDataStream>
 #include <QIODevice>
 #include <QDateTime>
+#include <QSqlError>
+#include <optional>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 namespace fs = std::experimental::filesystem;
 
-QByteArray toByteArray(const QVector<std::string>& data);
 
 Gateway::Gateway() {
     QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
@@ -50,7 +52,7 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     QSqlDatabase db = QSqlDatabase::database();
 
     // DB must contain table
-    if (!db.tables.contains("workers")){
+    if (!db.tables().contains("workers")){
         qDebug() << "addWorker error: workers table doesn't exist.";
     }
 
@@ -66,7 +68,7 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     // Executing the query.
     bool success = query.exec();
     if (!success){
-        qDebug() << "addWorker error: " << query.lastError();
+        qDebug() << "addWorker error: " << query.lastError().text();
     }
 
     return query.lastInsertId().toUInt();
@@ -83,12 +85,11 @@ std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
 }
 
 //Adds a new Job to the database and returns its ID.
-uint64_t Gateway::addJob(uint64_t user_id, const JobConfig& config, const QDateTime schedule_time, const std::string &command) {
+uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime schedule_time, const std::string &command) {
 
     // Check args
     // TODO find way to check config properly
     assert(user_id > 0);
-    assert(config != NULL);
     assert(!command.empty());
 
     // Converting the various args into QVariant Objects
@@ -103,37 +104,37 @@ uint64_t Gateway::addJob(uint64_t user_id, const JobConfig& config, const QDateT
     QVariant q_image = QVariant::fromValue(config.image());
     QVariant q_interruptible = QVariant::fromValue(config.interruptible());
 
-    QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment());
-    QByteArray qbytearray = toByteArray(qvec);
+    // Convert environment => QVector => QByteArray. QByteArray will then be mapped to BLOB in the database
+    std::optional <std::vector<std::string>> environment = config.environment();
+    assert(environment.has_value());
+    QVector<std::string> qvec = QVector<std::string>::fromStdVector(environment.value());
+    QByteArray qbytearray = QByteArray::fromRawData(
+        reinterpret_cast<const char*>(qvec.constData()),
+        sizeof(std::string) * qvec.size()
+    );
     QVariant q_environment = QVariant::fromValue(qbytearray);
 
     
-    fs::path path = config.current_working_dir();
-    std::string path_string = path.string();
+    std::optional<fs::path> path = config.current_working_dir();
+    assert(path.has_value());
+    std::string path_string = path.value().string();
     QVariant q_current_working_dir = QVariant::fromValue(path_string);
     
     QVariant q_command = QVariant::fromValue(command);
     QVariant q_schedule_time = QVariant::fromValue(schedule_time);
+    QVariant q_status_id = QVariant::fromValue(int(JobStatus::scheduled));
 
     QSqlDatabase db = QSqlDatabase::database();
 
     // DB must contain table
-    if (!db.tables.contains("jobs")){
+    if (!db.tables().contains("jobs")){
         qDebug() << "addJob error: jobs table doesn't exist.";
     }
 
     // Create the query
     QSqlQuery query(db);
-    query.prepare("INSERT INTO workers (key, space, ram, cores, address) VALUES (?, ?, ?, ?, ?)")
+    query.prepare("INSERT INTO jobs (key, space, ram, cores, address) VALUES (?, ?, ?, ?, ?)");
 
-}
-
-QByteArray toByteArray(const QVector<std::string>& data){
-    QByteArray result;
-    QDataStream bWrite(&result, QIODevice::WriteOnly);
-    bWrite << data;
-
-    return result;
 }
 
 bool Gateway::removeJob(const uint64_t job_id) {
