@@ -60,7 +60,7 @@ namespace balancedbanana {
           //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
           bool startJob(const uint64_t job_id, const uint64_t worker_id, const Specs specs);
 
-          bool finishJob(const uint64_t job_id, const std::chrono::time_point<std::chrono::system_clock> finish_time, const std::string stdout, const int8_t exit_code);
+          bool finishJob(const uint64_t job_id, const std::chrono::time_point<std::chrono::system_clock> finish_time, const std::string _stdout, const int8_t exit_code);
 
           job_result getJobResult(const uint64_t job_id);
 

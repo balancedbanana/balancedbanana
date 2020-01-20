@@ -14,6 +14,9 @@ std::string Container::Tail(int lines) {
     proc.setArguments({ "logs", "--tail", std::to_string(lines).data(), id.data() });
     proc.start();
     proc.waitForFinished(-1);
+    if(!proc.exitStatus() != QProcess::NormalExit) {
+        throw std::runtime_error("Invalid Argument for docker Tail");
+    }
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
@@ -28,14 +31,18 @@ void Container::Stop() {
     proc.setArguments({ "stop", id.data() });
     proc.start();
     proc.waitForFinished(-1);
+    if(!proc.exitStatus() != QProcess::NormalExit) {
+        throw std::runtime_error("Invalid Argument for docker stop");
+    }
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
-        throw std::runtime_error("Invalid Argument for docker Tail");
+        throw std::runtime_error("Invalid Argument for docker stop");
     }
 }
 
 Snapshot Container::CreateSnapshot(bool stop) {
+    return {""};
 }
 
 void Container::Resume(const Snapshot & snap) {

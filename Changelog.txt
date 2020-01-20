@@ -14,3 +14,11 @@ Container:
 Snapshot => CreateSnapshot // Typname darf kein Methodenname sein
 
 18.01.2020 Docker, Container class Basic Implementation, Snapshot stub
+
+Windows
+
+gtest
+cmake -Dgtest_force_shared_crt=1 .
+
+QT5
+-DQt5_DIR="C:\Qt\Qt5.14.0\5.14.0\msvc2017_64\lib\cmake\Qt5"
