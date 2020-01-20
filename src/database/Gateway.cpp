@@ -3,12 +3,15 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QVariant>
+#include <QDebug>
+#include <cassert>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 
 Gateway::Gateway() {
     QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+    // TODO change placeholders
     db.setHostName("placeholder");
     db.setDatabaseName("placeholder");
     db.setUserName("placeholder");
@@ -22,13 +25,13 @@ Gateway::Gateway() {
 }
 
 uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int cores, const std::string  address) {    
+   
     // Check args
-    
-    //TODO Implement public_key check
-    //TODO Implemment address check
-    if (space <= 0 || ram <=0 || cores <=0){
-        qDebug() << "addWorker error: negative args";
-    }
+    assert(!public_key.empty());
+    assert(space > 0);
+    assert(ram > 0);
+    assert(cores > 0);
+    assert(!address.empty());
 
     // Converting the various args into QVariant Objects
     QVariant q_public_key = QString::fromStdString(public_key);
@@ -37,8 +40,16 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     QVariant q_cores = QVariant::fromValue(cores);
     QVariant q_address = QString::fromStdString(address);
 
-    // Creating the query
-    QSqlQuery query("INSERT INTO workers (key, space, ram, cores, address) VALUES (?, ?, ?, ?, ?)");
+    QSqlDatabase db = QSqlDatabase::database();
+
+    // DB must contain table
+    if (!db.tables.contains("workers")){
+        qDebug() << "addWorker error: workers table doesn't exist.";
+    }
+
+    // Create query
+    QSqlQuery query(db);
+    query.prepare("INSERT INTO workers (key, space, ram, cores, address) VALUES (?, ?, ?, ?, ?)");
     query.addBindValue(q_public_key);
     query.addBindValue(q_space);
     query.addBindValue(q_ram);
@@ -46,12 +57,12 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     query.addBindValue(q_address);
 
     // Executing the query.
-    if (!query.exec()){
+    bool success = query.exec();
+    if (!success){
         qDebug() << "addWorker error: " << query.lastError();
     }
-    //TODO Create the ids and return them
-    //TODO Return id for success or -1 for error.
 
+    return query.lastInsertId().toUInt();
 }
 
 //Removes a worker.
@@ -66,6 +77,7 @@ std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
 
 //Adds a new Job to the database and returns its ID.
 uint64_t Gateway::addJob(uint64_t user_id, const JobConfig& config, const std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> schedule_time, const std::string &command) {
+
 }
 
 bool Gateway::removeJob(const uint64_t job_id) {
