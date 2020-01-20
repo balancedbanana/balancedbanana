@@ -11,7 +11,7 @@
 #include <chrono>
 #include <ctime>
 #include <QSqlDatabase>
-#include <QString>
+#include <QDateTime>
 
 
 namespace balancedbanana {
@@ -50,7 +50,7 @@ namespace balancedbanana {
           std::vector<std::shared_ptr<worker_details>> getWorkers();
 
           //Adds a new Job to the database and returns its ID.
-          uint64_t addJob(uint64_t user_id, const configfiles::JobConfig& config, const std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> schedule_time, const std::string& command);
+          uint64_t addJob(uint64_t user_id, const configfiles::JobConfig& config, const QDateTime schedule_time, const std::string& command);
 
           bool removeJob(const uint64_t job_id);
 

@@ -8,6 +8,7 @@
 #include <QVector>
 #include <QDataStream>
 #include <QIODevice>
+#include <QDateTime>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
@@ -82,7 +83,7 @@ std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
 }
 
 //Adds a new Job to the database and returns its ID.
-uint64_t Gateway::addJob(uint64_t user_id, const JobConfig& config, const std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> schedule_time, const std::string &command) {
+uint64_t Gateway::addJob(uint64_t user_id, const JobConfig& config, const QDateTime schedule_time, const std::string &command) {
 
     // Check args
     // TODO find way to check config properly
@@ -100,13 +101,19 @@ uint64_t Gateway::addJob(uint64_t user_id, const JobConfig& config, const std::c
     QVariant q_email = QVariant::fromValue(config.email());
     QVariant q_priority = QVariant::fromValue(config.priority());
     QVariant q_image = QVariant::fromValue(config.image());
-    QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment());
     QVariant q_interruptible = QVariant::fromValue(config.interruptible());
+
+    QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment());
+    QByteArray qbytearray = toByteArray(qvec);
+    QVariant q_environment = QVariant::fromValue(qbytearray);
+
+    
     fs::path path = config.current_working_dir();
     std::string path_string = path.string();
     QVariant q_current_working_dir = QVariant::fromValue(path_string);
+    
     QVariant q_command = QVariant::fromValue(command);
-    // TODOconvert schedule_time to QVariant
+    QVariant q_schedule_time = QVariant::fromValue(schedule_time);
 
     QSqlDatabase db = QSqlDatabase::database();
 
@@ -117,8 +124,16 @@ uint64_t Gateway::addJob(uint64_t user_id, const JobConfig& config, const std::c
 
     // Create the query
     QSqlQuery query(db);
-    query.prepare
+    query.prepare("INSERT INTO workers (key, space, ram, cores, address) VALUES (?, ?, ?, ?, ?)")
 
+}
+
+QByteArray toByteArray(const QVector<std::string>& data){
+    QByteArray result;
+    QDataStream bWrite(&result, QIODevice::WriteOnly);
+    bWrite << data;
+
+    return result;
 }
 
 bool Gateway::removeJob(const uint64_t job_id) {
@@ -153,11 +168,3 @@ bool Gateway::finishJob(const uint64_t job_id, const std::chrono::time_point<std
 job_result Gateway::getJobResult(const uint64_t job_id) {
 }
 
-
-QByteArray toByteArray(const QVector<std::string>& data){
-    QByteArray result;
-    QDataStream bWrite(&result, QIODevice::WriteOnly);
-    bWrite << data;
-
-    return result;
-}
