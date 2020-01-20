@@ -1,5 +1,9 @@
 #include <database/Gateway.h>
 
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QVariant>
+
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 
@@ -26,8 +30,28 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
         qDebug() << "addWorker error: negative args";
     }
 
-    QSqlQuery query;
-    query.prepare("INSERT ")
+    // Converting the various args into QVariant Objects
+    QVariant q_public_key = QString::fromStdString(public_key);
+    QVariant q_space = QVariant::fromValue(space);
+    QVariant q_ram = QVariant::fromValue(ram);
+    QVariant q_cores = QVariant::fromValue(cores);
+    QVariant q_address = QString::fromStdString(address);
+
+    // Creating the query
+    QSqlQuery query("INSERT INTO workers (key, space, ram, cores, address) VALUES (?, ?, ?, ?, ?)");
+    query.addBindValue(q_public_key);
+    query.addBindValue(q_space);
+    query.addBindValue(q_ram);
+    query.addBindValue(q_cores);
+    query.addBindValue(q_address);
+
+    // Executing the query.
+    if (!query.exec()){
+        qDebug() << "addWorker error: " << query.lastError();
+    }
+    //TODO Create the ids and return them
+    //TODO Return id for success or -1 for error.
+
 }
 
 //Removes a worker.
