@@ -19,9 +19,13 @@ namespace balancedbanana {
       //Connects to the database and executes the SQL queries.
       class Gateway {
       private:
-          //Handles the connection to the database.
-          //
-          //See more: https://doc.qt.io/qt-5/qsqldatabase.html
+
+        /**
+         * Handles the connection to the database.
+         * 
+         * See more: https://doc.qt.io/qt-5/qsqldatabase.html
+         * 
+         */
           QSqlDatabase db;
 
 
@@ -36,7 +40,18 @@ namespace balancedbanana {
           Gateway();
 
           //Adds a new worker to the database and returns its ID.
-          uint64_t addWorker(int auth_key, int space, int ram, int cores, const std::string address);
+          /**
+           * 
+           * Adds a new Worker to the database and returns its ID.
+           * 
+           * @param public_key 
+           * @param space
+           * @param ram
+           * @param cores
+           * @param address
+           * 
+           */
+          uint64_t addWorker(std::string public_key, int space, int ram, int cores, const std::string address);
 
           //Removes a worker.
           bool removeWorker(const uint64_t id);

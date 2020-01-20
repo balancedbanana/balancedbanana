@@ -3,17 +3,31 @@
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 
-//The constructor of Gateway sets up the database connection and opens it. The path argument value is the path to the database file.
 Gateway::Gateway() {
     db = QSqlDatabase::addDatabase("QMYSQL");
     db.setHostName("placeholder");
     db.setDatabaseName("placeholder");
     db.setUserName("placeholder");
     db.setPassword("placeholder");
+
+    if(!db.isOpen()){
+        qDebug() << "Error: connection with database failed.";
+    } else {
+        qDebug() << "Database: connection was successful.";
+    }
 }
 
-//Adds a new worker to the database and returns its ID.
-uint64_t Gateway::addWorker(int auth_key, int space, int ram, int cores, const std::string  address) {
+uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int cores, const std::string  address) {    
+    // Check args
+    
+    //TODO Implement public_key check
+    //TODO Implemment address check
+    if (space <= 0 || ram <=0 || cores <=0){
+        qDebug() << "addWorker error: negative args";
+    }
+
+    QSqlQuery query;
+    query.prepare("INSERT ")
 }
 
 //Removes a worker.
