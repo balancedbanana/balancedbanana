@@ -1,6 +1,5 @@
 #pragma once
-#include "job_details.h"
-#include "job_result.h"
+
 #include <database/worker_details.h>
 #include <database/job_details.h>
 #include <database/user_details.h>
@@ -13,6 +12,7 @@
 #include <ctime>
 #include <QSqlDatabase>
 #include <QString>
+
 
 namespace balancedbanana {
     namespace database {

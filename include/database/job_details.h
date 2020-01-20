@@ -1,11 +1,12 @@
 #pragma once
 
+#include "configfiles/JobConfig.h"
+#include "database/Specs.h"
+
 #include <cinttypes>
 #include <string>
 #include <chrono>
 #include <ctime>
-#include "Specs.h"
-#include <configfiles/JobConfig.h>
 
 namespace balancedbanana {
     namespace database {

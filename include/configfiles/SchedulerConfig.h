@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include <filesystem>
+#include <experimental/filesystem>
 
 namespace balancedbanana::configfiles {
 
@@ -17,7 +17,7 @@ namespace balancedbanana::configfiles {
         SchedulerConfig();
 
         //This constructor loads a SchedulerConfig from a file.
-        SchedulerConfig(const std::filesystem::path &path);
+        SchedulerConfig(const std::experimental::filesystem::path &path);
 
         //This method returns the amount of key-value pairs in the SchedulerConfig.
         size_t count();
@@ -32,7 +32,7 @@ namespace balancedbanana::configfiles {
         void Clear();
 
         //This method serializes the SchedulerConfig and saves it to the specified file.
-        bool Save(const std::filesystem::path &path);
+        bool Save(const std::experimental::filesystem::path &path);
 
         //This method returns true when the SchedulerConfig contains a policy associated with the specified key, otherwise it returns false.
         bool Contains(const std::string &key);

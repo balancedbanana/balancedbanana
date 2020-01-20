@@ -5,6 +5,7 @@ using namespace balancedbanana::database;
 
 //The constructor of Gateway sets up the database connection and opens it. The path argument value is the path to the database file.
 Gateway::Gateway(const QString& path) {
+    
 }
 
 //Adds a new worker to the database and returns its ID.

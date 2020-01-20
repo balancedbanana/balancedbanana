@@ -1,9 +1,8 @@
 #pragma once
-#include "job_details.h"
-#include "Gateway.h"
-#include "Factory.h"
-#include "job_result.h"
-#include "Subject.h"
+
+#include "database/job_details.h"
+#include "database/job_result.h"
+#include "database/Gateway.h"
 
 #include <chrono>
 #include <cinttypes>
@@ -12,7 +11,7 @@ namespace balancedbanana {
     namespace database {
 
         //This is the interface that the rest of the program uses to query the database.
-        class Repository : public Subject {
+        class Repository {
         public:
             //Adds a Worker to the DB and returns its ID
             uint64_t addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const std::string address);

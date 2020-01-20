@@ -2,7 +2,8 @@
 // Created by Niklas on 16.01.2020.
 //
 
-#include <configfiles/JobConfig.h>
+#include "configfiles/JobConfig.h"
+
 #include <sstream>
 
 using namespace balancedbanana::configfiles;
@@ -25,7 +26,7 @@ JobConfig::JobConfig(const std::stringstream &data) {
     //TODO implement
 }
 
-JobConfig::JobConfig(const std::filesystem::path &path) {
+JobConfig::JobConfig(const std::experimental::filesystem::path &path) {
     //TODO implement
 }
 
@@ -69,7 +70,7 @@ void JobConfig::set_interruptible(const std::optional<bool> &interruptible) {
     interruptible_ = interruptible;
 }
 
-void JobConfig::set_current_working_dir(const std::optional <std::filesystem::path> &cwd) {
+void JobConfig::set_current_working_dir(const std::optional <std::experimental::filesystem::path> &cwd) {
     current_working_dir_ = current_working_dir_;
 }
 
@@ -113,11 +114,11 @@ std::optional<bool> JobConfig::interruptible() {
     return interruptible_;
 }
 
-std::optional <std::filesystem::path> &JobConfig::current_working_dir() {
+std::optional <std::experimental::filesystem::path> &JobConfig::current_working_dir() {
     return current_working_dir_;
 }
 
-bool JobConfig::Save(const std::filesystem::path &path) {
+bool JobConfig::Save(const std::experimental::filesystem::path &path) {
     //TODO implement
     return false;
 }

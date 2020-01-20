@@ -1,5 +1,9 @@
 #pragma once
-#include "Specs.h"
+
+#include <database/Specs.h>
+
+#include <string>
+#include <cstdint>
 
 namespace balancedbanana {
     namespace database {

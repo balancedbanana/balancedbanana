@@ -1,5 +1,6 @@
 #pragma once
-#include "SSLSocket.h"
+
+#include "communication/SSLSocket.h"
 #include "messageProcessor/MessageProcessor.h"
 #include "message/Message.h"
 #include <memory>
