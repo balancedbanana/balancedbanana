@@ -4,7 +4,7 @@ using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 
 Gateway::Gateway() {
-    db = QSqlDatabase::addDatabase("QMYSQL");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
     db.setHostName("placeholder");
     db.setDatabaseName("placeholder");
     db.setUserName("placeholder");

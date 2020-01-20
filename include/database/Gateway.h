@@ -18,17 +18,6 @@ namespace balancedbanana {
     namespace database {
       //Connects to the database and executes the SQL queries.
       class Gateway {
-      private:
-
-        /**
-         * Handles the connection to the database.
-         * 
-         * See more: https://doc.qt.io/qt-5/qsqldatabase.html
-         * 
-         */
-          QSqlDatabase db;
-
-
       public:
           
           /**
