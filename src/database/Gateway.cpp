@@ -4,8 +4,12 @@ using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 
 //The constructor of Gateway sets up the database connection and opens it. The path argument value is the path to the database file.
-Gateway::Gateway(const QString& path) {
-    
+Gateway::Gateway() {
+    db = QSqlDatabase::addDatabase("QMYSQL");
+    db.setHostName("placeholder");
+    db.setDatabaseName("placeholder");
+    db.setUserName("placeholder");
+    db.setPassword("placeholder");
 }
 
 //Adds a new worker to the database and returns its ID.
