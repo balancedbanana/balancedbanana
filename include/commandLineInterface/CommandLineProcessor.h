@@ -19,7 +19,7 @@
 namespace balancedbanana {
 	namespace commandLineInterface {
 
-		enum TaskType {
+		enum class TaskType {
 			ADD_IMAGE,
 			BACKUP,
 			CONTINUE,
