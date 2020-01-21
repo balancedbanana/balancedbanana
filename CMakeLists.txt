@@ -8,6 +8,8 @@ project(balancedbanana)
 
 find_package(Qt5 COMPONENTS Core Network Sql REQUIRED)
 find_package(OpenSSL COMPONENTS Crypto REQUIRED)
+find_package(Threads REQUIRED)
+link_libraries(Threads::Threads)
 enable_testing()
 find_package(GTest)
 set(GTEST GTest::GTest GTest::Main)
