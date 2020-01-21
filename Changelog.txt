@@ -19,6 +19,9 @@ Windows
 
 gtest
 cmake -Dgtest_force_shared_crt=1 .
+cmake --build . -t install
+-DGTEST_INCLUDE_DIR="C:/Program Files (x86)/googletest-distribution/include" -DGTEST_LIBRARY:FILEPATH=C:/Program Files (x86)/googletest-distribution/lib/gtestd.lib -DGTEST_MAIN_LIBRARY:FILEPATH=C:/Program Files (x86)/googletest-distribution/lib/gtest_maind.lib
 
 QT5
--DQt5_DIR="C:\Qt\Qt5.14.0\5.14.0\msvc2017_64\lib\cmake\Qt5"
+in workspace/build
+cmake .. -DQt5_DIR="C:\Qt\Qt5.14.0\5.14.0\msvc2017_64\lib\cmake\Qt5"

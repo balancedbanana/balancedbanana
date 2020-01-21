@@ -7,7 +7,7 @@ namespace commandLineInterface
 
 std::shared_ptr<Task> CommandLineProcessor::process(int *argc, char **argv)
 {
-    Task task;
+    std::shared_ptr<Task> task = std::make_shared<Task>();
 
     // extract potential job command from arguments
 
@@ -25,7 +25,7 @@ std::shared_ptr<Task> CommandLineProcessor::process(int *argc, char **argv)
             }
             std::string jobCommand = job.str();
 
-            task.setTaskCommand(jobCommand);
+            task->setTaskCommand(jobCommand);
 
             *argc = arg;
 
@@ -33,7 +33,8 @@ std::shared_ptr<Task> CommandLineProcessor::process(int *argc, char **argv)
         }
     }
 
-    processArguments(*argc, argv, task);
+    processArguments(*argc, argv, *task);
+    return task;
 }
 
 int CommandLineProcessor::processArguments(int argc, char **argv, Task &task)
@@ -89,35 +90,25 @@ int CommandLineProcessor::processArguments(int argc, char **argv, Task &task)
         // tail sub command
         auto tailSubCommand = app.add_subcommand("tail", "Show Tail of a Job");
 
-        int jobID;
-
         app.add_option("jobID", jobID, "Show Tail of this Job")->required();
 
         // stop sub command
         auto stopSubCommand = app.add_subcommand("stop", "Stop a Job");
-
-        int jobID;
 
         app.add_option("jobID", jobID, "Stop this Job")->required();
 
         // pause sub command
         auto pauseSubCommand = app.add_subcommand("pause", "Pause a Job");
 
-        int jobID;
-
         pauseSubCommand->add_option("jobID", jobID, "Pause this Job")->required();
 
         // continue sub command
         auto continueSubCommand = app.add_subcommand("continue", "Continue a Job");
 
-        int jobID;
-
         continueSubCommand->add_option("jobID", jobID, "Continue this Job")->required();
 
         // backup sub command
         auto backupSubCommand = app.add_subcommand("backup", "Backup a Job");
-
-        int jobID;
 
         backupSubCommand->add_option("jobID", jobID, "Backup this Job")->required();
 
@@ -140,13 +131,13 @@ int CommandLineProcessor::processArguments(int argc, char **argv, Task &task)
 
         if (presentSubCommand == backupSubCommand)
         {
-            task.setType(TaskType::BACKUP);
+            task.setType((int)TaskType::BACKUP);
 
             config->set_job_ID(jobID);
         }
         else if (presentSubCommand == continueSubCommand)
         {
-            task.setType(TaskType::CONTINUE);
+            task.setType((int)TaskType::CONTINUE);
 
             config->set_job_ID(jobID);
         }
@@ -164,13 +155,13 @@ int CommandLineProcessor::processArguments(int argc, char **argv, Task &task)
         }
         else if (presentSubCommand == pauseSubCommand)
         {
-            task.setType(TaskType::PAUSE);
+            task.setType((int)TaskType::PAUSE);
 
             config->set_job_ID(jobID);
         }
         else if (presentSubCommand == restoreSubCommand)
         {
-            task.setType(TaskType::RESTORE);
+            task.setType((int)TaskType::RESTORE);
 
             //jobAndBackupID
 
@@ -179,7 +170,7 @@ int CommandLineProcessor::processArguments(int argc, char **argv, Task &task)
         }
         else if (presentSubCommand == runSubCommand)
         {
-            task.setType(TaskType::RUN);
+            task.setType((int)TaskType::RUN);
 
             config->set_blocking_mode(block);
             config->set_email(email);
@@ -195,19 +186,19 @@ int CommandLineProcessor::processArguments(int argc, char **argv, Task &task)
         }
         else if (presentSubCommand == statusSubCommand)
         {
-            task.setType(TaskType::STATUS);
+            task.setType((int)TaskType::STATUS);
 
             config->set_job_ID(jobID);
         }
         else if (presentSubCommand == stopSubCommand)
         {
-            task.setType(TaskType::STOP);
+            task.setType((int)TaskType::STOP);
 
             config->set_job_ID(jobID);
         }
         else if (presentSubCommand == tailSubCommand)
         {
-            task.setType(TaskType::TAIL);
+            task.setType((int)TaskType::TAIL);
 
             config->set_job_ID(jobID);
         }
@@ -254,6 +245,7 @@ int CommandLineProcessor::processArguments(int argc, char **argv, Task &task)
     {
         // unknown program specifier
     }
+    return 0;
 }
 
 

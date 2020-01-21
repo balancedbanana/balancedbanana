@@ -1,2 +1,2 @@
-add_executable(client Client.cpp)
-target_link_libraries(client Authenticator communication configfiles)
+add_executable(bbc Client.cpp)
+target_link_libraries(bbc Authenticator communication configfiles commandLineInterface)
