@@ -73,6 +73,15 @@ void JobConfig::set_current_working_dir(const std::optional <std::filesystem::pa
     current_working_dir_ = current_working_dir_;
 }
 
+void JobConfig::set_job_ID(uint32_t jobID) {
+    this->jobID = jobID;
+}
+
+void JobConfig::set_backup_ID(uint32_t backupID) {
+    this->backupID = backupID;
+}
+
+
 std::optional <uint32_t> JobConfig::min_ram() {
     return min_ram_;
 }
