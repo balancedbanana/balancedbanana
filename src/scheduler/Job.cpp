@@ -20,55 +20,55 @@ Job::Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at
         result_(result) {
 }
 
-uint64_t Job::id() const {
+uint64_t Job::getId() const {
     return id_;
 }
 
-const QDateTime &Job::started_at() const {
+const QDateTime &Job::getStarted_at() const {
     return started_at_;
 }
 
-const QDateTime &Job::scheduled_at() const {
+const QDateTime &Job::getScheduled_at() const {
     return scheduled_at_;
 }
 
-const QDateTime &Job::finished_at() const {
+const QDateTime &Job::getFinished_at() const {
     return finished_at_;
 }
 
-uint32_t Job::allocated_ram() const {
+uint32_t Job::getAllocated_ram() const {
     return allocated_ram_;
 }
 
-uint32_t Job::allocated_cores() const {
+uint32_t Job::getAllocated_cores() const {
     return allocated_cores_;
 }
 
-uint32_t Job::allocated_disk_space() const {
+uint32_t Job::getAllocated_disk_space() const {
     return allocated_disk_space_;
 }
 
-const std::string &Job::command() const {
+const std::string &Job::getCommand() const {
     return command_;
 }
 
-uint64_t Job::worker_id() const {
+uint64_t Job::getWorker_id() const {
     return worker_id_;
 }
 
-uint64_t Job::client_id() const {
+uint64_t Job::getClient_id() const {
     return client_id_;
 }
 
-std::shared_ptr<JobConfig> Job::config() const {
+std::shared_ptr<JobConfig> Job::getConfig() const {
     return config_;
 }
 
-std::shared_ptr<JobStatus> Job::status() const {
+std::shared_ptr<JobStatus> Job::getStatus() const {
     return status_;
 }
 
-std::shared_ptr<job_result> Job::result() const {
+std::shared_ptr<job_result> Job::getResult() const {
     return result_;
 }
 

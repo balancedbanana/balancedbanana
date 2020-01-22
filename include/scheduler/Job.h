@@ -21,19 +21,19 @@ namespace balancedbanana {
                 const std::shared_ptr<database::JobStatus> &status,
                 const std::shared_ptr<database::job_result> &result);
 
-            uint64_t id() const;
-            const QDateTime &started_at() const;
-            const QDateTime &scheduled_at() const;
-            const QDateTime &finished_at() const;
-            uint32_t allocated_ram() const;
-            uint32_t allocated_cores() const;
-            uint32_t allocated_disk_space() const;
-            const std::string &command() const;
-            uint64_t worker_id() const;
-            uint64_t client_id() const;
-            std::shared_ptr<configfiles::JobConfig> config() const;
-            std::shared_ptr<database::JobStatus> status() const;
-            std::shared_ptr<database::job_result> result() const;
+            uint64_t getId() const;
+            const QDateTime &getStarted_at() const;
+            const QDateTime &getScheduled_at() const;
+            const QDateTime &getFinished_at() const;
+            uint32_t getAllocated_ram() const;
+            uint32_t getAllocated_cores() const;
+            uint32_t getAllocated_disk_space() const;
+            const std::string &getCommand() const;
+            uint64_t getWorker_id() const;
+            uint64_t getClient_id() const;
+            std::shared_ptr<configfiles::JobConfig> getConfig() const;
+            std::shared_ptr<database::JobStatus> getStatus() const;
+            std::shared_ptr<database::job_result> getResult() const;
 
             void set_id(uint32_t id);
             void set_started_at(const QDateTime &started_at);
