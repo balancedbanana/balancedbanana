@@ -86,7 +86,8 @@ std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
 }
 
 //Adds a new Job to the database and returns its ID.
-uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime schedule_time, const std::string &command) {
+uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime schedule_time
+        , const std::string &command) {
 
     // Check args
     assert(user_id > 0);
@@ -113,7 +114,8 @@ uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime sc
     QVariant q_max_cpu_count = QVariant::fromValue(config.max_cpu_count().value());
     QVariant q_blocking_mode = QVariant::fromValue(config.blocking_mode().value());
     QVariant q_email = QVariant::fromValue(QString::fromStdString(config.email()));
-    QVariant q_priority = QVariant::fromValue(static_cast<std::underlying_type<Priority>::type>(config.priority().value()));
+    QVariant q_priority = QVariant::fromValue(static_cast<std::underlying_type<Priority>::type>(config.priority()
+            .value()));
     QVariant q_image = QVariant::fromValue(QString::fromStdString(config.image()));
     QVariant q_interruptible = QVariant::fromValue(config.interruptible().value());
 
@@ -126,7 +128,8 @@ uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime sc
     QVariant q_environment = QVariant::fromValue(qbytearray);
 
     // current_working_dir => std::filesystem::path => std::string => QString => QVariant
-    QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().value().string()));
+    QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().value()
+            .string()));
     
     QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
     QVariant q_schedule_time = QVariant::fromValue(schedule_time);
@@ -141,7 +144,31 @@ uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime sc
 
     // Create the query
     QSqlQuery query(db);
-    query.prepare("INSERT INTO jobs (key, space, ram, cores, address) VALUES (?, ?, ?, ?, ?)");
+    query.prepare("INSERT INTO jobs (user_id, min_ram, max_ram, min_cpu_count, max_cpu_count, "
+                  "blocking_mode, email, priority, image, interruptible, environment, current_working_dir, command, "
+                  "schedule_time, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    query.addBindValue(q_user_id);
+    query.addBindValue(q_min_ram);
+    query.addBindValue(q_max_ram);
+    query.addBindValue(q_min_cpu_count);
+    query.addBindValue(q_max_cpu_count);
+    query.addBindValue(q_blocking_mode);
+    query.addBindValue(q_email);
+    query.addBindValue(q_priority);
+    query.addBindValue(q_image);
+    query.addBindValue(q_interruptible);
+    query.addBindValue(q_environment);
+    query.addBindValue(q_current_working_dir);
+    query.addBindValue(q_command);
+    query.addBindValue(q_schedule_time);
+    query.addBindValue(q_status_id);
+
+    // Executing the query.
+    bool success = query.exec();
+    if(!success){
+        qDebug() << "addJob error: " << query.lastError();
+    }
+    return query.lastInsertId().toUInt();
 
 }
 
@@ -171,7 +198,8 @@ std::vector<std::shared_ptr<user_details>> Gateway::getUsers() {
 bool Gateway::startJob(const uint64_t job_id, const uint64_t worker_id, const Specs specs) {
 }
 
-bool Gateway::finishJob(const uint64_t job_id, const std::chrono::time_point<std::chrono::system_clock> finish_time, const std::string stdout, const int8_t exit_code) {
+bool Gateway::finishJob(const uint64_t job_id, const std::chrono::time_point<std::chrono::system_clock> finish_time
+        , const std::string stdout, const int8_t exit_code) {
 }
 
 job_result Gateway::getJobResult(const uint64_t job_id) {
