@@ -21,7 +21,7 @@ namespace balancedbanana {
       public:
           
           /**
-           * Consturctor for the database connection.
+           * Constructor for the database connection.
            * 
            * Note: QString& path may be required, but I'm not sure. Will remove it for now.
            * 

@@ -1,5 +1,6 @@
 #include <database/Gateway.h>
 #include <database/JobStatus.h>
+#include <configfiles/Priority.h>
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -8,14 +9,14 @@
 #include <cassert>
 #include <QVector>
 #include <QDataStream>
-#include <QIODevice>
 #include <QDateTime>
 #include <QSqlError>
 #include <optional>
+#include <filesystem>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
-namespace fs = std::experimental::filesystem;
+namespace fs = std::filesystem;
 
 
 Gateway::Gateway() {
@@ -43,11 +44,11 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     assert(!address.empty());
 
     // Converting the various args into QVariant Objects
-    QVariant q_public_key = QVariant::fromValue(public_key);
+    QVariant q_public_key = QVariant::fromValue(QString::fromStdString(public_key));
     QVariant q_space = QVariant::fromValue(space);
     QVariant q_ram = QVariant::fromValue(ram);
     QVariant q_cores = QVariant::fromValue(cores);
-    QVariant q_address = QVariant::fromValue(address);
+    QVariant q_address = QVariant::fromValue(QString::fromStdString(address));
 
     QSqlDatabase db = QSqlDatabase::database();
 
@@ -68,7 +69,7 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     // Executing the query.
     bool success = query.exec();
     if (!success){
-        qDebug() << "addWorker error: " << query.lastError().text();
+        qDebug() << "addWorker error: " << query.lastError();
     }
 
     return query.lastInsertId().toUInt();
@@ -88,39 +89,46 @@ std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
 uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime schedule_time, const std::string &command) {
 
     // Check args
-    // TODO find way to check config properly
     assert(user_id > 0);
     assert(!command.empty());
 
+    // Note: Not sure how QtSql deals with NULL values. Will assert for values for now, but this might change.
+    assert(config.min_ram().has_value());
+    assert(config.max_ram().has_value());
+    assert(config.min_cpu_count().has_value());
+    assert(config.max_cpu_count().has_value());
+    assert(config.blocking_mode().has_value());
+    assert(!config.email().empty());
+    assert(config.priority().has_value());
+    assert(!config.image().empty());
+    assert(config.interruptible().has_value());
+    assert(config.environment().has_value());
+    assert(config.current_working_dir().has_value());
+
     // Converting the various args into QVariant Objects
     QVariant q_user_id = QVariant::fromValue(user_id);
-    QVariant q_min_ram = QVariant::fromValue(config.min_ram());
-    QVariant q_max_ram = QVariant::fromValue(config.max_ram());
-    QVariant q_min_cpu_count = QVariant::fromValue(config.min_cpu_count());
-    QVariant q_max_cpu_count = QVariant::fromValue(config.max_cpu_count());
-    QVariant q_blocking_mode = QVariant::fromValue(config.blocking_mode());
-    QVariant q_email = QVariant::fromValue(config.email());
-    QVariant q_priority = QVariant::fromValue(config.priority());
-    QVariant q_image = QVariant::fromValue(config.image());
-    QVariant q_interruptible = QVariant::fromValue(config.interruptible());
+    QVariant q_min_ram = QVariant::fromValue(config.min_ram().value());
+    QVariant q_max_ram = QVariant::fromValue(config.max_ram().value());
+    QVariant q_min_cpu_count = QVariant::fromValue(config.min_cpu_count().value());
+    QVariant q_max_cpu_count = QVariant::fromValue(config.max_cpu_count().value());
+    QVariant q_blocking_mode = QVariant::fromValue(config.blocking_mode().value());
+    QVariant q_email = QVariant::fromValue(QString::fromStdString(config.email()));
+    QVariant q_priority = QVariant::fromValue(static_cast<std::underlying_type<Priority>::type>(config.priority().value()));
+    QVariant q_image = QVariant::fromValue(QString::fromStdString(config.image()));
+    QVariant q_interruptible = QVariant::fromValue(config.interruptible().value());
 
     // Convert environment => QVector => QByteArray. QByteArray will then be mapped to BLOB in the database
-    std::optional <std::vector<std::string>> environment = config.environment();
-    assert(environment.has_value());
-    QVector<std::string> qvec = QVector<std::string>::fromStdVector(environment.value());
+    QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment().value());
     QByteArray qbytearray = QByteArray::fromRawData(
         reinterpret_cast<const char*>(qvec.constData()),
         sizeof(std::string) * qvec.size()
     );
     QVariant q_environment = QVariant::fromValue(qbytearray);
 
+    // current_working_dir => std::filesystem::path => std::string => QString => QVariant
+    QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().value().string()));
     
-    std::optional<fs::path> path = config.current_working_dir();
-    assert(path.has_value());
-    std::string path_string = path.value().string();
-    QVariant q_current_working_dir = QVariant::fromValue(path_string);
-    
-    QVariant q_command = QVariant::fromValue(command);
+    QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
     QVariant q_schedule_time = QVariant::fromValue(schedule_time);
     QVariant q_status_id = QVariant::fromValue(int(JobStatus::scheduled));
 
