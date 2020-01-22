@@ -18,6 +18,25 @@ using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 namespace fs = std::filesystem;
 
+// Stores all details about a Job in QVariants
+typedef struct QVariant_JobConfig{
+    QVariant q_user_id;
+    QVariant q_min_ram;
+    QVariant q_max_ram;
+    QVariant q_min_cpu_count;
+    QVariant q_max_cpu_count;
+    QVariant q_blocking_mode;
+    QVariant q_email;
+    QVariant q_priority;
+    QVariant q_image;
+    QVariant q_interruptible;
+    QVariant q_environment;
+    QVariant q_current_working_dir;
+    QVariant q_command;
+    QVariant q_schedule_time;
+    QVariant q_status_id;
+};
+
 
 Gateway::Gateway() {
     QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
@@ -85,6 +104,96 @@ worker_details Gateway::getWorker(const uint64_t worker_id) {
 std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
 }
 
+QVariant_JobConfig convertJobConfig(const uint64_t &user_id, JobConfig& config, const QDateTime &schedule_time
+        , const std::string &command){
+    // Converting the various args into QVariant Objects
+    QVariant q_user_id = QVariant::fromValue(user_id);
+    QVariant q_min_ram = QVariant::fromValue(config.min_ram().value());
+    QVariant q_max_ram = QVariant::fromValue(config.max_ram().value());
+    QVariant q_min_cpu_count = QVariant::fromValue(config.min_cpu_count().value());
+    QVariant q_max_cpu_count = QVariant::fromValue(config.max_cpu_count().value());
+    QVariant q_blocking_mode = QVariant::fromValue(config.blocking_mode().value());
+    QVariant q_email = QVariant::fromValue(QString::fromStdString(config.email()));
+    QVariant q_priority = QVariant::fromValue(static_cast<std::underlying_type<Priority>::type>(config.priority()
+            .value()));
+    QVariant q_image = QVariant::fromValue(QString::fromStdString(config.image()));
+    QVariant q_interruptible = QVariant::fromValue(config.interruptible().value());
+
+    // Convert environment => QVector => QByteArray. QByteArray will then be mapped to BLOB in the database
+    QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment().value());
+    QByteArray qbytearray = QByteArray::fromRawData(
+            reinterpret_cast<const char*>(qvec.constData()),
+            sizeof(std::string) * qvec.size()
+    );
+    QVariant q_environment = QVariant::fromValue(qbytearray);
+
+    // current_working_dir => std::filesystem::path => std::string => QString => QVariant
+    QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().value()
+                                                                                        .string()));
+
+    QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
+    QVariant q_schedule_time = QVariant::fromValue(schedule_time);
+    QVariant q_status_id = QVariant::fromValue(int(JobStatus::scheduled));
+
+    // Save all of them in a struct
+    QVariant_JobConfig qstruct;
+    qstruct.q_user_id = q_user_id;
+    qstruct.q_min_ram = q_min_ram;
+    qstruct.q_max_ram = q_max_ram;
+    qstruct.q_min_cpu_count = q_min_cpu_count;
+    qstruct.q_max_cpu_count = q_max_cpu_count;
+    qstruct.q_blocking_mode = q_blocking_mode;
+    qstruct.q_email = q_email;
+    qstruct.q_priority = q_priority;
+    qstruct.q_image= q_image;
+    qstruct.q_interruptible = q_interruptible;
+    qstruct.q_environment = q_environment;
+    qstruct.q_current_working_dir = q_current_working_dir;
+    qstruct.q_command = q_command;
+    qstruct.q_schedule_time = q_schedule_time;
+    qstruct.q_status_id = q_status_id;
+
+    return qstruct;
+}
+
+// Executes the addJob query.
+uint64_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
+    QSqlDatabase db = QSqlDatabase::database();
+
+    // DB must contain table
+    if (!db.tables().contains("jobs")){
+        qDebug() << "addJob error: jobs table doesn't exist.";
+    }
+
+    // Create the query
+    QSqlQuery query(db);
+    query.prepare("INSERT INTO jobs (user_id, min_ram, max_ram, min_cpu_count, max_cpu_count, "
+                  "blocking_mode, email, priority, image, interruptible, environment, current_working_dir, command, "
+                  "schedule_time, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    query.addBindValue(qstruct.q_user_id);
+    query.addBindValue(qstruct.q_min_ram);
+    query.addBindValue(qstruct.q_max_ram);
+    query.addBindValue(qstruct.q_min_cpu_count);
+    query.addBindValue(qstruct.q_max_cpu_count);
+    query.addBindValue(qstruct.q_blocking_mode);
+    query.addBindValue(qstruct.q_email);
+    query.addBindValue(qstruct.q_priority);
+    query.addBindValue(qstruct.q_image);
+    query.addBindValue(qstruct.q_interruptible);
+    query.addBindValue(qstruct.q_environment);
+    query.addBindValue(qstruct.q_current_working_dir);
+    query.addBindValue(qstruct.q_command);
+    query.addBindValue(qstruct.q_schedule_time);
+    query.addBindValue(qstruct.q_status_id);
+
+    // Executing the query.
+    bool success = query.exec();
+    if(!success){
+        qDebug() << "addJob error: " << query.lastError();
+    }
+    return query.lastInsertId().toUInt();
+}
+
 //Adds a new Job to the database and returns its ID.
 uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime schedule_time
         , const std::string &command) {
@@ -106,70 +215,9 @@ uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime sc
     assert(config.environment().has_value());
     assert(config.current_working_dir().has_value());
 
-    // Converting the various args into QVariant Objects
-    QVariant q_user_id = QVariant::fromValue(user_id);
-    QVariant q_min_ram = QVariant::fromValue(config.min_ram().value());
-    QVariant q_max_ram = QVariant::fromValue(config.max_ram().value());
-    QVariant q_min_cpu_count = QVariant::fromValue(config.min_cpu_count().value());
-    QVariant q_max_cpu_count = QVariant::fromValue(config.max_cpu_count().value());
-    QVariant q_blocking_mode = QVariant::fromValue(config.blocking_mode().value());
-    QVariant q_email = QVariant::fromValue(QString::fromStdString(config.email()));
-    QVariant q_priority = QVariant::fromValue(static_cast<std::underlying_type<Priority>::type>(config.priority()
-            .value()));
-    QVariant q_image = QVariant::fromValue(QString::fromStdString(config.image()));
-    QVariant q_interruptible = QVariant::fromValue(config.interruptible().value());
-
-    // Convert environment => QVector => QByteArray. QByteArray will then be mapped to BLOB in the database
-    QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment().value());
-    QByteArray qbytearray = QByteArray::fromRawData(
-        reinterpret_cast<const char*>(qvec.constData()),
-        sizeof(std::string) * qvec.size()
-    );
-    QVariant q_environment = QVariant::fromValue(qbytearray);
-
-    // current_working_dir => std::filesystem::path => std::string => QString => QVariant
-    QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().value()
-            .string()));
-    
-    QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
-    QVariant q_schedule_time = QVariant::fromValue(schedule_time);
-    QVariant q_status_id = QVariant::fromValue(int(JobStatus::scheduled));
-
-    QSqlDatabase db = QSqlDatabase::database();
-
-    // DB must contain table
-    if (!db.tables().contains("jobs")){
-        qDebug() << "addJob error: jobs table doesn't exist.";
-    }
-
-    // Create the query
-    QSqlQuery query(db);
-    query.prepare("INSERT INTO jobs (user_id, min_ram, max_ram, min_cpu_count, max_cpu_count, "
-                  "blocking_mode, email, priority, image, interruptible, environment, current_working_dir, command, "
-                  "schedule_time, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    query.addBindValue(q_user_id);
-    query.addBindValue(q_min_ram);
-    query.addBindValue(q_max_ram);
-    query.addBindValue(q_min_cpu_count);
-    query.addBindValue(q_max_cpu_count);
-    query.addBindValue(q_blocking_mode);
-    query.addBindValue(q_email);
-    query.addBindValue(q_priority);
-    query.addBindValue(q_image);
-    query.addBindValue(q_interruptible);
-    query.addBindValue(q_environment);
-    query.addBindValue(q_current_working_dir);
-    query.addBindValue(q_command);
-    query.addBindValue(q_schedule_time);
-    query.addBindValue(q_status_id);
-
-    // Executing the query.
-    bool success = query.exec();
-    if(!success){
-        qDebug() << "addJob error: " << query.lastError();
-    }
-    return query.lastInsertId().toUInt();
-
+    // Convert values to QVariants and execute the query.
+    QVariant_JobConfig qstruct = convertJobConfig(user_id, config, schedule_time, command);
+    return executeAddJobQuery(qstruct);
 }
 
 bool Gateway::removeJob(const uint64_t job_id) {
