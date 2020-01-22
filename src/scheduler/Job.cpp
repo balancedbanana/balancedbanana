@@ -72,43 +72,43 @@ std::shared_ptr<job_result> Job::getResult() const {
     return result_;
 }
 
-void Job::set_id(uint32_t id) {
+void Job::setId(uint32_t id) {
     id_ = id;
 }
-void Job::set_started_at(const QDateTime &started_at) {
+void Job::setStarted_at(const QDateTime &started_at) {
     started_at_ = started_at;
 }
-void Job::set_scheduled_at(const QDateTime &scheduled_at) {
+void Job::setScheduled_at(const QDateTime &scheduled_at) {
     scheduled_at_ = scheduled_at;
 }
-void Job::set_finished_at(const QDateTime &finished_at) {
+void Job::setFinished_at(const QDateTime &finished_at) {
     finished_at_ = finished_at;
 }
-void Job::set_allocated_ram(uint32_t allocated_ram) {
+void Job::setAllocated_ram(uint32_t allocated_ram) {
     allocated_ram_ = allocated_ram;
 }
-void Job::set_allocated_cores(uint32_t allocated_cores) {
+void Job::setAllocated_cores(uint32_t allocated_cores) {
     allocated_cores_ = allocated_cores;
 }
-void Job::set_allocated_disk_space(uint32_t allocated_disk_space) {
+void Job::setAllocated_disk_space(uint32_t allocated_disk_space) {
     allocated_disk_space_ = allocated_disk_space;
 }
 
-void Job::set_command(const std::string &command) {
+void Job::setCommand(const std::string &command) {
     command_ = command;
 }
-void Job::set_worker_id(uint64_t worker_id) {
+void Job::setWorker_id(uint64_t worker_id) {
     worker_id_ = worker_id;
 }
-void Job::set_client_id(uint64_t client_id) {
+void Job::setClient_id(uint64_t client_id) {
     client_id_ = client_id;
 }
-void Job::set_config(std::shared_ptr<JobConfig> &config) {
+void Job::setConfig(std::shared_ptr<JobConfig> &config) {
     config_ = config;
 }
-void Job::set_status(std::shared_ptr<JobStatus> &status) {
+void Job::setStatus(std::shared_ptr<JobStatus> &status) {
     status_ = status;
 }
-void Job::set_result(std::shared_ptr<job_result> &result) {
+void Job::setResult(std::shared_ptr<job_result> &result) {
     result_ = result;
 }
