@@ -511,7 +511,7 @@ uint64_t Gateway::addUser(const std::string name, const std::string email, std::
     // Check args
     assert(!name.empty());
     assert(!email.empty());
-    assert(!public_key.empty())
+    assert(!public_key.empty());
 
     // Converting the various args into QVariant Objects
     QVariant q_name = QVariant::fromValue(QString::fromStdString(name));
@@ -541,7 +541,38 @@ uint64_t Gateway::addUser(const std::string name, const std::string email, std::
     return query.lastInsertId().toUInt();
 }
 
+bool doesUserExist(const uint64_t id){
+    QSqlDatabase db = QSqlDatabase::database();
+
+    // Check if table exists
+    if (!db.tables().contains("users")){
+        qDebug() << "removeUser error: users table doesn't exist.";
+    }
+
+    QSqlQuery query(db);
+    query.prepare("SELECT id FROM users WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        return query.next();
+    }
+    return false;
+}
+
 bool Gateway::removeUser(const uint64_t user_id) {
+    QSqlDatabase db = QSqlDatabase::database();
+    if (doesUserExist(user_id)){
+        QSqlQuery query(db);
+        query.prepare("DELETE FROM users WHERE id = (:id)");
+        query.bindValue(":id", QVariant::fromValue(user_id));
+        bool success = query.exec();
+        if (success){
+            return true;
+        } else {
+            qDebug() << "removeUser error: " << query.lastError();
+        }
+    } else {
+        return false;
+    }
 }
 
 user_details Gateway::getUser(const uint64_t user_id) {
