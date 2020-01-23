@@ -640,6 +640,7 @@ bool Gateway::startJob(const uint64_t job_id, const uint64_t worker_id, const Sp
         allocated_specs = queryAlloc.lastInsertId().toUInt();
     } else {
         qDebug() << "startJob error: allocated_resources query failed: " << queryAlloc.lastError();
+        return false;
     }
     QSqlQuery query(db);
     query.prepare("UPDATE jobs SET allocated_resources = ?, worker_id = ? WHERE id = ?");
@@ -658,16 +659,28 @@ bool Gateway::finishJob(const uint64_t job_id, const QDateTime finish_time
         , const std::string stdout, const int8_t exit_code) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
+    assert(db.tables().contains("job_results"));
     assert(doesJobExist(job_id));
 
     // TODO Check if this assertion is actually necessary
     assert(!stdout.empty());
 
+    QSqlQuery queryResult(db);
+    queryResult.prepare("INSERT INTO job_results (exit_code, stdout) VALUES (?, ?)");
+    queryResult.addBindValue(QVariant::fromValue(exit_code));
+    queryResult.addBindValue(QVariant::fromValue(QString::fromStdString(stdout)));
+    uint64_t result;
+    if(queryResult.exec()){
+        result = queryResult.lastInsertId().toUInt();
+    } else {
+        qDebug() << "finishJob error: job_results query failed: " << queryResult.lastError();
+        return false;
+    }
+
     QSqlQuery query(db);
-    query.prepare("UPDATE jobs SET finish_time = ?, stdout = ?, exit_code = ? WHERE id = ?");
+    query.prepare("UPDATE jobs SET finish_time = ?, result = ? WHERE id = ?");
     query.addBindValue(QVariant::fromValue(finish_time));
-    query.addBindValue(QVariant::fromValue(QString::fromStdString(stdout)));
-    query.addBindValue(QVariant::fromValue(exit_code));
+    query.addBindValue(QVariant::fromValue(result));
     query.addBindValue(QVariant::fromValue(job_id));
 
     if(query.exec()){
@@ -679,5 +692,6 @@ bool Gateway::finishJob(const uint64_t job_id, const QDateTime finish_time
 }
 
 job_result Gateway::getJobResult(const uint64_t job_id) {
+    QSqlDatabase db = QSqlDatabase::database();
 }
 
