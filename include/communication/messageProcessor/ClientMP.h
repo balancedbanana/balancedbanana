@@ -1,12 +1,7 @@
-#ifndef CLIENTMP_H
-#define CLIENTMP_H
-
+#pragma once
 
 class ClientMP : public MessageProcessor {
 public:
 	virtual void processMsgX(const std::shared_ptr<MsgX>& msg);
 
 };
-
-
-#endif // !CLIENTMP_H

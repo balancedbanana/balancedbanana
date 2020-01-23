@@ -1,5 +1,4 @@
-﻿#ifndef CLIENTAUTHMESSAGE_H
-#define CLIENTAUTHMESSAGE_H
+﻿#pragma once
 
 #include "Message.h"
 
@@ -28,5 +27,3 @@ namespace balancedbanana {
 		};
 	}
 }
-
-#endif // !CLIENTAUTHMESSAGE_H

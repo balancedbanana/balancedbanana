@@ -1,5 +1,4 @@
-﻿#ifndef AUTHRESULTMESSAGE_H
-#define AUTHRESULTMESSAGE_H
+﻿#pragma once
 
 #include "Message.h"
 
@@ -21,5 +20,3 @@ namespace balancedbanana {
 
 	}
 }
-
-#endif // !AUTHRESULTMESSAGE_H

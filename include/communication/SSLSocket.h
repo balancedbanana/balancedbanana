@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QSslSocket>
 #include <string>
 #include <functional>
