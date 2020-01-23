@@ -322,7 +322,43 @@ uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime sc
     return executeAddJobQuery(qstruct);
 }
 
+bool doesJobExist(uint64_t id){
+    QSqlDatabase db = QSqlDatabase::database();
+
+    // Check if table exists
+    if (!db.tables().contains("jobs")){
+        qDebug() << "removeJob error: jobs table doesn't exist.";
+    }
+
+    QSqlQuery query(db);
+    query.prepare("SELECT id FROM jobs WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        if (query.next()){
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
+
 bool Gateway::removeJob(const uint64_t job_id) {
+    QSqlDatabase db = QSqlDatabase::database();
+    if (doesJobExist(job_id)){
+        QSqlQuery query(db);
+        query.prepare("DELETE FROM jobs WHERE id = (:id)");
+        query.bindValue(":id", QVariant::fromValue(job_id));
+        bool success = query.exec();
+        if (success){
+            return true;
+        } else {
+            qDebug() << "removeJob error: " << query.lastError();
+        }
+    } else {
+        return false;
+    }
+
 }
 
 job_details Gateway::getJob(const uint64_t job_id) {
