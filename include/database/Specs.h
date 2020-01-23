@@ -1,12 +1,14 @@
 #pragma once
 
+#include <cstdint>
+
 namespace balancedbanana {
     namespace database {
 
 		//Specifications (hardware) of a worker
 		struct Specs {
 			//Drive space
-			u_int64_t space;
+			uint64_t space;
 
 			//Random Access Memory
 			uint64_t ram;

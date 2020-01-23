@@ -197,7 +197,7 @@ std::vector<worker_details> Gateway::getWorkers() {
             worker.address = query.value(idAddress).toString().toStdString();
             worker.name = query.value(idName).toString().toStdString();
 
-            workerVector.push_back(worker_details);
+            workerVector.push_back(worker);
         }
         return workerVector;
     } else {
