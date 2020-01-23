@@ -94,8 +94,43 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     return query.lastInsertId().toUInt();
 }
 
+bool doesWorkerExist(uint64_t id){
+    QSqlDatabase db = QSqlDatabase::database();
+
+    // Check if table exists
+    if (!db.tables().contains("workers")){
+        qDebug() << "removeWorker error: workers table doesn't exist.";
+    }
+
+    QSqlQuery query(db);
+    query.prepare("SELECT id FROM workers WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        if (query.next()){
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
 //Removes a worker.
 bool Gateway::removeWorker(const uint64_t id) {
+    QSqlDatabase db = QSqlDatabase::database();
+    if (doesWorkerExist(id)){
+        QSqlQuery query(db);
+        query.prepare("DELETE FROM workers WHERE id = (:id)");
+        query.bindValue(":id", QVariant::fromValue(id));
+        bool success = query.exec();
+        if (success){
+            return true;
+        } else {
+            qDebug() << "removeWorker error: " << query.lastError();
+        }
+    } else {
+        return false;
+    }
+
 }
 
 worker_details Gateway::getWorker(const uint64_t worker_id) {
@@ -104,6 +139,7 @@ worker_details Gateway::getWorker(const uint64_t worker_id) {
 std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
 }
 
+// Converts the args for addJob to QVariants and returns a struct that contains all of them.
 QVariant_JobConfig convertJobConfig(const uint64_t &user_id, JobConfig& config, const QDateTime &schedule_time
         , const std::string &command){
     // Converting the various args into QVariant Objects
