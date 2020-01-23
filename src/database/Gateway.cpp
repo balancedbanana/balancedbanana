@@ -580,7 +580,7 @@ user_details Gateway::getUser(const uint64_t user_id) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("users"));
     QSqlQuery query(db);
-    assert(doesWorkerExist(user_id));
+    assert(doesUserExist(user_id));
     query.prepare("SELECT key, name, email FROM users WHERE id = (:id)");
     query.bindValue(":id", QVariant::fromValue(user_id));
     user_details details;
@@ -600,6 +600,26 @@ user_details Gateway::getUser(const uint64_t user_id) {
 }
 
 std::vector<user_details> Gateway::getUsers() {
+    QSqlDatabase db = QSqlDatabase::database();
+    assert(db.tables().contains("users"));
+    QSqlQuery query(db);
+    query.prepare("SELECT id, key, name, email FROM users");
+    user_details details;
+    std::vector<user_details> userVector;
+    if (query.exec()){
+        while (query.next()){
+            user_details details;
+            details.id = query.value(0).toUInt();
+            details.public_key = query.value(1).toString().toStdString();
+            details.name = query.value(2).toString().toStdString();
+            details.email = query.value(3).toString().toStdString();
+
+            userVector.push_back(details);
+        }
+        return userVector;
+    } else {
+        qDebug() << "getUser error: " << query.lastError();
+    }
 }
 
 //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
