@@ -8,12 +8,10 @@
 #include <QDebug>
 #include <cassert>
 #include <QVector>
-#include <QDataStream>
 #include <QDateTime>
 #include <QSqlError>
 #include <optional>
 #include <filesystem>
-#include <memory>
 #include <vector>
 #include <QSqlRecord>
 
@@ -175,7 +173,7 @@ worker_details Gateway::getWorker(const uint64_t worker_id) {
     }
 }
 
-std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
+std::vector<worker_details> Gateway::getWorkers() {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("workers"));
     QSqlQuery query(db);
@@ -186,11 +184,22 @@ std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
     int idCores = query.record().indexOf("cores");
     int idAddress = query.record().indexOf("address");
     int idName = query.record().indexOf("name");
-    if (query.exec())
-        std::vector<std::shared_ptr<worker_details>> workerVector;
+    std::vector<worker_details> workerVector;
+    if (query.exec()) {
         while(query.next()){
-            std::shared_ptr<worker_details> sharedWorker = std::make_shared<worker_details>();
+            worker_details worker;
+            worker.public_key = query.value(idKey).toString().toStdString();
+            Specs specs;
+            specs.space = query.value(idSpace).toUInt();
+            specs.ram = query.value(idRam).toUInt();
+            specs.cores = query.value(idCores).toUInt();
+            worker.specs = specs;
+            worker.address = query.value(idAddress).toString().toStdString();
+            worker.name = query.value(idName).toString().toStdString();
+
+            workerVector.push_back(worker_details);
         }
+        return workerVector;
     } else {
         qDebug() << "getWorkers error: " << query.lastError();
     }
@@ -319,7 +328,7 @@ bool Gateway::removeJob(const uint64_t job_id) {
 job_details Gateway::getJob(const uint64_t job_id) {
 }
 
-std::vector<std::shared_ptr<job_details>> Gateway::getJobs() {
+std::vector<job_details> Gateway::getJobs() {
 }
 
 //Adds a user to the database and returns their ID.
@@ -332,7 +341,7 @@ bool Gateway::removeUser(const uint64_t user_id) {
 user_details Gateway::getUser(const uint64_t user_id) {
 }
 
-std::vector<std::shared_ptr<user_details>> Gateway::getUsers() {
+std::vector<user_details> Gateway::getUsers() {
 }
 
 //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
