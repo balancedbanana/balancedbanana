@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.0)
 
-add_library(scheduler Worker.cpp)
-target_link_libraries(scheduler Qt5::Core Qt5::Network Qt5::Sql)
+add_executable(bbs Scheduler.cpp Worker.cpp)
+target_link_libraries(bbs Qt5::Core Qt5::Network Qt5::Sql Authenticator communication configfiles commandLineInterface)

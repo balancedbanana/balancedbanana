@@ -25,3 +25,6 @@ cmake --build . -t install
 QT5
 in workspace/build
 cmake .. -DQt5_DIR="C:\Qt\Qt5.14.0\5.14.0\msvc2017_64\lib\cmake\Qt5"
+
+
+openssl-devel qt5-qtbase-devel
