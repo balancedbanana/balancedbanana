@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <cstring>
 #include <vector>
 
 #include "Task.h"
