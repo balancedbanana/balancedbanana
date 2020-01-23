@@ -40,7 +40,8 @@ namespace balancedbanana {
            * @param address
            * 
            */
-          uint64_t addWorker(std::string public_key, int space, int ram, int cores, const std::string address);
+          uint64_t addWorker(std::string public_key, int space, int ram, int cores, const std::string address,
+                  std::string name);
 
           //Removes a worker.
           bool removeWorker(const uint64_t id);

@@ -53,7 +53,9 @@ Gateway::Gateway() {
     }
 }
 
-uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int cores, const std::string  address) {    
+uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int cores, const std::string  address,
+        std::string name) {
+
    
     // Check args
     assert(!public_key.empty());
@@ -61,6 +63,7 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     assert(ram > 0);
     assert(cores > 0);
     assert(!address.empty());
+    assert(!name.empty());
 
     // Converting the various args into QVariant Objects
     QVariant q_public_key = QVariant::fromValue(QString::fromStdString(public_key));
@@ -68,6 +71,7 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
     QVariant q_ram = QVariant::fromValue(ram);
     QVariant q_cores = QVariant::fromValue(cores);
     QVariant q_address = QVariant::fromValue(QString::fromStdString(address));
+    QVariant q_name = QVariant::fromValue(QString::fromStdString(name));
 
     QSqlDatabase db = QSqlDatabase::database();
 
@@ -78,12 +82,13 @@ uint64_t Gateway::addWorker(std::string public_key, int space, int ram, int core
 
     // Create query
     QSqlQuery query(db);
-    query.prepare("INSERT INTO workers (key, space, ram, cores, address) VALUES (?, ?, ?, ?, ?)");
+    query.prepare("INSERT INTO workers (key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)");
     query.addBindValue(q_public_key);
     query.addBindValue(q_space);
     query.addBindValue(q_ram);
     query.addBindValue(q_cores);
     query.addBindValue(q_address);
+    query.addBindValue(q_name);
 
     // Executing the query.
     bool success = query.exec();
@@ -134,6 +139,31 @@ bool Gateway::removeWorker(const uint64_t id) {
 }
 
 worker_details Gateway::getWorker(const uint64_t worker_id) {
+    QSqlDatabase db = QSqlDatabase::database();
+    assert(!db.tables().contains("workers"));
+    QSqlQuery query(db);
+    assert(doesWorkerExist(id));
+    query.prepare("SELECT key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
+    query.bindValue(":id", QVariant::fromValue(worker_id));
+    worker_details details;
+    details.id = worker_id;
+    if (query.exec()){
+        if (query.next()){
+            details.public_key = query.value(0).toString().toStdString();
+            Specs specs;
+            specs.space = query.value(1).toInt();
+            specs.ram = query.value(2).toInt();
+            specs.cores = query.value(3).toInt();
+            details.specs = specs;
+            details.address = query.value(4).toString().toStdString();
+            details.name = query.value(5).toString().toStdString();
+            return details;
+        } else {
+            qDebug() << "getWorker error: record doesn't exist";
+        }
+    } else {
+        qDebug() << "getWorker error: " << query.lastError();
+    }
 }
 
 std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
