@@ -48,8 +48,28 @@ endif()
 set(GTEST gtest gtest_main)
 endif()
 
+# Download and unpack Webserver at configure time
+configure_file(contrib/Webserver/CMakeLists.txt.in Webserver-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Webserver-download )
+if(result)
+  message(FATAL_ERROR "CMake step for Webserver failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Webserver-download )
+if(result)
+  message(FATAL_ERROR "Build step for Webserver failed: ${result}")
+endif()
+
+# Add Webserver directly to our build.
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/Webserver-src
+                 ${CMAKE_CURRENT_BINARY_DIR}/Webserver-build
+                 EXCLUDE_FROM_ALL)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/Webserver-src)
+
 include_directories(include)
-include_directories(contrib/Webserver)
 
 add_subdirectory(src/client)
 add_subdirectory(src/worker)
@@ -59,4 +79,3 @@ add_subdirectory(src/communication)
 add_subdirectory(src/configfiles)
 add_subdirectory(src/database)
 add_subdirectory(src/scheduler)
-add_subdirectory(contrib/Webserver)
