@@ -4,7 +4,7 @@
 
 namespace balancedbanana
 {
-namespace commandLineInterface
+namespace communication
 {
 
 class Task

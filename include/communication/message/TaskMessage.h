@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <communication/message/Message.h>
+#include <communication/Task.h>
 
 namespace balancedbanana {
     namespace communication {

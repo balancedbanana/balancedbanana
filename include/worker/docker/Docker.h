@@ -1,6 +1,6 @@
 #pragma once
 #include "Container.h"
-#include <commandLineInterface/Task.h>
+#include <communication/Task.h>
 
 namespace balancedbanana {
 	namespace worker {

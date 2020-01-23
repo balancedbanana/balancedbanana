@@ -6,7 +6,7 @@
 #include <cstring>
 #include <vector>
 
-#include "Task.h"
+#include <communication/Task.h>
 #include "CLI11.hpp"
 
 #define CLIENT_PROGRAM_NAME "bbc"
@@ -39,11 +39,11 @@ namespace balancedbanana {
 		{
 		public:
 
-			std::shared_ptr<Task> process(int* argc, char** argv);
+			std::shared_ptr<communication::Task> process(int* argc, char** argv);
 
 		private:
 
-			int processArguments(int argc, char** argv, Task& task);
+			int processArguments(int argc, char** argv, communication::Task& task);
 
 			configfiles::Priority evaluatePriority(std::string& priority);
 

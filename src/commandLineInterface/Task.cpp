@@ -1,4 +1,4 @@
-#include <commandLineInterface/Task.h>
+#include <communication/Task.h>
 
 namespace balancedbanana
 {
