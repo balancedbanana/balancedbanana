@@ -693,5 +693,24 @@ bool Gateway::finishJob(const uint64_t job_id, const QDateTime finish_time
 
 job_result Gateway::getJobResult(const uint64_t job_id) {
     QSqlDatabase db = QSqlDatabase::database();
+    assert(db.tables().contains("jobs"));
+    assert(db.tables().contains("job_results"));
+    assert(doesJobExist(job_id));
+
+    QSqlQuery query(db);
+    query.prepare("SELECT job_results.exit_code, job_results.stdout FROM jobs JOIN ON job_results WHERE "
+                  "job_results.id = jobs.result");
+    if (query.exec()){
+        job_result result;
+        if (query.next()){
+            result.exit_code = query.value(0).toInt();
+            result.stdout = query.value(1).toString().toStdString();
+            return result;
+        } else {
+            qDebug() << "getJobResult error: no record exists";
+        }
+    } else {
+        qDebug() << "getJobResult error: " << query.lastError();
+    }
 }
 
