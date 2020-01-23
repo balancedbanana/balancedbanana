@@ -6,9 +6,9 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Build
+          name: Install deps
           command: |
-            yum install -y wget tar git gcc gcc-c++ unzip
+            yum install -y wget tar git gcc gcc-c++ unzip openssl-devel qt5-qtbase-devel
             wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz
             tar -xf cmake-3.16.2-Linux-x86_64.tar.gz
             export PATH=$PWD/cmake-3.16.2-Linux-x86_64/bin:$PATH
@@ -20,6 +20,9 @@ jobs:
             export PATH=$PWD/llvm/bin:$PATH
             wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
             unzip ninja-linux
+      - run:
+          name: Build
+          command: |
             mkdir build
             cd build
             CC=clang CXX=clang++ cmake -DCMAKE_MAKE_PROGRAM=$PWD/../ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../balancedbanana -DCMAKE_C_FLAGS="-fuse-ld=lld -fPIC" -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -fPIC" -G Ninja ..
