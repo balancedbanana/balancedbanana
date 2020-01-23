@@ -142,7 +142,7 @@ worker_details Gateway::getWorker(const uint64_t worker_id) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(!db.tables().contains("workers"));
     QSqlQuery query(db);
-    assert(doesWorkerExist(id));
+    assert(doesWorkerExist(worker_id));
     query.prepare("SELECT key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
     query.bindValue(":id", QVariant::fromValue(worker_id));
     worker_details details;
