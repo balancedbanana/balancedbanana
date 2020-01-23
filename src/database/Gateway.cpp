@@ -14,6 +14,7 @@
 #include <filesystem>
 #include <vector>
 #include <QDataStream>
+#include <QByteArray>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
@@ -399,11 +400,12 @@ bool Gateway::removeJob(const uint64_t job_id) {
 
 }
 
-std::vector<std::string> toVectorString(const QByteArray& buffer){
-    QVector<std::string> result;
+std::vector<std::string> convertToVectorString(const QByteArray& buffer){
+    QVector<char*> result;
     QDataStream bRead(buffer);
     bRead >> result;
-    return result.toStdVector();
+    std::vector<char*> resultVector = result.toStdVector();
+    return std::vector<std::string>(resultVector.begin(), resultVector.end());
 }
 
 job_details Gateway::getJob(const uint64_t job_id) {
@@ -434,7 +436,7 @@ job_details Gateway::getJob(const uint64_t job_id) {
             config.set_priority(static_cast<Priority >(query.value(7).toInt()));
             config.set_image(query.value(8).toString().toStdString());
             config.set_interruptible(query.value(9).toBool());
-            config.set_environment(toVectorString(query.value(10).toByteArray()));
+            config.set_environment(convertToVectorString(query.value(10).toByteArray()));
             config.set_current_working_dir(query.value(11).toString().toStdString());
             details.command = query.value(12).toString().toStdString();
             details.schedule_time = QDateTime::fromString(query.value(13).toString(),
