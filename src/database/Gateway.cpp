@@ -466,11 +466,45 @@ std::vector<job_details> Gateway::getJobs() {
     assert(db.tables().contains("jobs"));
     assert(db.tables().contains("allocated_resources"));
     QSqlQuery query(db);
-    query.prepare("SELECT * FROM jobs");
+    query.prepare("SELECT jobs.id, jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cpu_count, "
+                  "jobs.max_cpu_count, jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs"
+                  ".environment, jobs.current_working_dir, jobs.command, jobs.schedule_time, jobs.start_time, "
+                  "jobs.finish_time, jobs.status_id, allocated_resources.cores, allocated_resources.space, "
+                  "allocated_resources.ram FROM jobs JOIN allocated_resources "
+                  "ON jobs.allocated_specs=allocated_resources.id");
     std::vector<job_details> jobVector;
     if (query.exec()) {
         while(query.next()){
-            job_details jobs;
+            job_details details;
+            details.id = query.value(0).toUInt();
+            details.user_id = query.value(1).toUInt();
+            JobConfig config;
+            config.set_min_ram(query.value(2).toUInt());
+            config.set_max_ram(query.value(3).toUInt());
+            config.set_min_cpu_count(query.value(4).toUInt());
+            config.set_max_cpu_count(query.value(5).toUInt());
+            config.set_blocking_mode(query.value(6).toBool());
+            config.set_email(query.value(7).toString().toStdString());
+            config.set_priority(static_cast<Priority >(query.value(8).toInt()));
+            config.set_image(query.value(9).toString().toStdString());
+            config.set_interruptible(query.value(10).toBool());
+            config.set_environment(convertToVectorString(query.value(11).toByteArray()));
+            config.set_current_working_dir(query.value(12).toString().toStdString());
+            details.command = query.value(13).toString().toStdString();
+            details.schedule_time = QDateTime::fromString(query.value(14).toString(),
+                                                          "yyyy-MM-dd hh:mm:ss.zzz000");
+            details.start_time = QDateTime::fromString(query.value(15).toString(),
+                                                       "yyyy-MM-dd hh:mm:ss.zzz000");
+            details.finish_time = QDateTime::fromString(query.value(16).toString(),
+                                                        "yyyy-MM-dd hh:mm:ss.zzz000");
+            details.status = query.value(17).toInt();
+            details.config = config;
+            Specs allocated_specs;
+            allocated_specs.cores = query.value(18).toUInt();
+            allocated_specs.space = query.value(19).toUInt();
+            allocated_specs.ram = query.value(20).toUInt();
+            details.allocated_specs = allocated_specs;
+            jobVector.push_back(details);
         }
         return jobVector;
     } else {
