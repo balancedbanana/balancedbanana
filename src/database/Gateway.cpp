@@ -656,6 +656,26 @@ bool Gateway::startJob(const uint64_t job_id, const uint64_t worker_id, const Sp
 
 bool Gateway::finishJob(const uint64_t job_id, const QDateTime finish_time
         , const std::string stdout, const int8_t exit_code) {
+    QSqlDatabase db = QSqlDatabase::database();
+    assert(db.tables().contains("jobs"));
+    assert(doesJobExist(job_id));
+
+    // TODO Check if this assertion is actually necessary
+    assert(!stdout.empty());
+
+    QSqlQuery query(db);
+    query.prepare("UPDATE jobs SET finish_time = ?, stdout = ?, exit_code = ? WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(finish_time));
+    query.addBindValue(QVariant::fromValue(QString::fromStdString(stdout)));
+    query.addBindValue(QVariant::fromValue(exit_code));
+    query.addBindValue(QVariant::fromValue(job_id));
+
+    if(query.exec()){
+        return true;
+    } else {
+        qDebug() << "finishJob error: " << query.lastError();
+        return false;
+    }
 }
 
 job_result Gateway::getJobResult(const uint64_t job_id) {
