@@ -5,8 +5,7 @@
 
 #include <cinttypes>
 #include <string>
-#include <chrono>
-#include <ctime>
+#include <QDateTime>
 
 namespace balancedbanana {
     namespace database {
@@ -25,11 +24,11 @@ namespace balancedbanana {
 
 			std::string command;
 
-			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> schedule_time;
+			QDateTime schedule_time;
 
-			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> start_time;
+			QDateTime start_time;
 
-			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> finish_time;
+			QDateTime finish_time;
 
 			Specs allocated_specs;
 
