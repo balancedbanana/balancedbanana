@@ -1,0 +1,55 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: centos:7
+    steps:
+      - checkout
+      - run:
+          name: Install deps
+          command: |
+            yum install -y wget tar git gcc gcc-c++ unzip openssl-devel qt5-qtbase-devel make
+            wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz
+            tar -xf cmake-3.16.2-Linux-x86_64.tar.gz
+            wget https://github.com/balancedbanana/llvm-centos7-ci/releases/download/centos7%2Fllvm/llvm.tar.gz
+            mkdir llvm
+            cd llvm
+            tar -xf ../llvm.tar.gz
+            cd ..
+            wget https://github.com/ninja-build/ninja/releases/download/v1.8.2/ninja-linux.zip
+            unzip ninja-linux
+      - run:
+          name: Install newer Openssl 1.1.1
+          command: |
+            git clone https://github.com/openssl/openssl.git -b OpenSSL_1_1_1-stable
+            cd openssl
+            ./config --prefix=$PWD/../balancedbanana --openssldir=$PWD/../balancedbanana/ssl
+            make install
+      - run:
+          name: Build
+          command: |
+            export PATH=$PWD:$PWD/llvm/bin:$PWD/cmake-3.16.2-Linux-x86_64/bin:$PATH
+            mkdir build
+            cd build
+            CC=clang CXX=clang++ cmake -DCMAKE_MAKE_PROGRAM=$PWD/../ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../balancedbanana -DCMAKE_C_FLAGS="-fuse-ld=lld -fPIC" -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -fPIC -Wno-unused-command-line-argument" -G Ninja -DOPENSSL_INCLUDE_DIR=$PWD/../balancedbanana/include -DOPENSSL_CRYPTO_LIBRARY=$PWD/../balancedbanana/lib/libcrypto.so -DOPENSSL_SSL_LIBRARY=$PWD/../balancedbanana/lib/libssl.so ..
+            LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../llvm/lib cmake --build . -t install -j 4
+            cd ..
+            cd balancedbanana/ && tar -zcvf ../balancedbanana.tar.gz . && cd -
+      - run:
+          name: Upload files to Github
+          command: curl -L https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz --output ghr.tar.gz && tar -xf ghr.tar.gz && ./ghr*/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace centos7/llvm balancedbanana.tar.gz
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build

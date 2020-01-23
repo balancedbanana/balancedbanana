@@ -507,7 +507,38 @@ std::vector<job_details> Gateway::getJobs() {
 }
 
 //Adds a user to the database and returns their ID.
-uint64_t Gateway::addUser(const std::string name, const std::string email, int auth_key) {
+uint64_t Gateway::addUser(const std::string name, const std::string email, std::string public_key) {
+    // Check args
+    assert(!name.empty());
+    assert(!email.empty());
+    assert(!public_key.empty())
+
+    // Converting the various args into QVariant Objects
+    QVariant q_name = QVariant::fromValue(QString::fromStdString(name));
+    QVariant q_email = QVariant::fromValue(QString::fromStdString(email));
+    QVariant q_public_key = QVariant::fromValue(QString::fromStdString(public_key));
+
+    QSqlDatabase db = QSqlDatabase::database();
+
+    // DB must contain table
+    if (!db.tables().contains("users")){
+        qDebug() << "addUser error: users table doesn't exist.";
+    }
+
+    // Create query
+    QSqlQuery query(db);
+    query.prepare("INSERT INTO users (name, email, key) VALUES (?, ?, ?)");
+    query.addBindValue(q_name);
+    query.addBindValue(q_email);
+    query.addBindValue(q_public_key);
+
+    // Executing the query.
+    bool success = query.exec();
+    if (!success){
+        qDebug() << "addUser error: " << query.lastError();
+    }
+
+    return query.lastInsertId().toUInt();
 }
 
 bool Gateway::removeUser(const uint64_t user_id) {

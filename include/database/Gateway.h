@@ -59,7 +59,7 @@ namespace balancedbanana {
           std::vector<job_details> getJobs();
 
           //Adds a user to the database and returns their ID.
-          uint64_t addUser(const std::string  name, const std::string email, int auth_key);
+          uint64_t addUser(const std::string  name, const std::string email, std::string public_key);
 
           bool removeUser(const uint64_t user_id);
 
