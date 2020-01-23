@@ -13,6 +13,9 @@
 #include <QSqlError>
 #include <optional>
 #include <filesystem>
+#include <memory>
+#include <vector>
+#include <QSqlRecord>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
@@ -140,23 +143,29 @@ bool Gateway::removeWorker(const uint64_t id) {
 
 worker_details Gateway::getWorker(const uint64_t worker_id) {
     QSqlDatabase db = QSqlDatabase::database();
-    assert(!db.tables().contains("workers"));
+    assert(db.tables().contains("workers"));
     QSqlQuery query(db);
     assert(doesWorkerExist(worker_id));
     query.prepare("SELECT key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
     query.bindValue(":id", QVariant::fromValue(worker_id));
     worker_details details;
     details.id = worker_id;
+    int idKey = query.record().indexOf("key");
+    int idSpace = query.record().indexOf("space");
+    int idRam = query.record().indexOf("ram");
+    int idCores = query.record().indexOf("cores");
+    int idAddress = query.record().indexOf("address");
+    int idName = query.record().indexOf("name");
     if (query.exec()){
         if (query.next()){
-            details.public_key = query.value(0).toString().toStdString();
+            details.public_key = query.value(idKey).toString().toStdString();
             Specs specs;
-            specs.space = query.value(1).toInt();
-            specs.ram = query.value(2).toInt();
-            specs.cores = query.value(3).toInt();
+            specs.space = query.value(idSpace).toInt();
+            specs.ram = query.value(idRam).toInt();
+            specs.cores = query.value(idCores).toInt();
             details.specs = specs;
-            details.address = query.value(4).toString().toStdString();
-            details.name = query.value(5).toString().toStdString();
+            details.address = query.value(idAddress).toString().toStdString();
+            details.name = query.value(idName).toString().toStdString();
             return details;
         } else {
             qDebug() << "getWorker error: record doesn't exist";
@@ -167,6 +176,24 @@ worker_details Gateway::getWorker(const uint64_t worker_id) {
 }
 
 std::vector<std::shared_ptr<worker_details>> Gateway::getWorkers() {
+    QSqlDatabase db = QSqlDatabase::database();
+    assert(db.tables().contains("workers"));
+    QSqlQuery query(db);
+    query.prepare("SELECT * FROM workers");
+    int idKey = query.record().indexOf("key");
+    int idSpace = query.record().indexOf("space");
+    int idRam = query.record().indexOf("ram");
+    int idCores = query.record().indexOf("cores");
+    int idAddress = query.record().indexOf("address");
+    int idName = query.record().indexOf("name");
+    if (query.exec())
+        std::vector<std::shared_ptr<worker_details>> workerVector;
+        while(query.next()){
+            std::shared_ptr<worker_details> sharedWorker = std::make_shared<worker_details>();
+        }
+    } else {
+        qDebug() << "getWorkers error: " << query.lastError();
+    }
 }
 
 // Converts the args for addJob to QVariants and returns a struct that contains all of them.
