@@ -148,7 +148,7 @@ bool doesWorkerExist(uint64_t id){
 
     // Check if table exists
     if (!db.tables().contains("workers")){
-        qDebug() << "removeWorker error: workers table doesn't exist.";
+        qDebug() << "error: workers table doesn't exist.";
     }
 
     QSqlQuery query(db);
@@ -364,7 +364,7 @@ bool doesJobExist(uint64_t id){
 
     // Check if table exists
     if (!db.tables().contains("jobs")){
-        qDebug() << "removeJob error: jobs table doesn't exist.";
+        qDebug() << "error: jobs table doesn't exist.";
     }
 
     QSqlQuery query(db);
@@ -547,7 +547,7 @@ bool doesUserExist(const uint64_t id){
 
     // Check if table exists
     if (!db.tables().contains("users")){
-        qDebug() << "removeUser error: users table doesn't exist.";
+        qDebug() << "error: users table doesn't exist.";
     }
 
     QSqlQuery query(db);
@@ -624,6 +624,34 @@ std::vector<user_details> Gateway::getUsers() {
 
 //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
 bool Gateway::startJob(const uint64_t job_id, const uint64_t worker_id, const Specs specs) {
+    QSqlDatabase db = QSqlDatabase::database();
+    assert(db.tables().contains("jobs"));
+    assert(db.tables().contains("workers"));
+    assert(doesJobExist(job_id));
+    assert(doesWorkerExist(worker_id));
+
+    QSqlQuery queryAlloc(db);
+    queryAlloc.prepare("INSERT INTO allocated_resources (cores, space, ram) VALUES (?, ?, ?)");
+    queryAlloc.addBindValue(QVariant::fromValue(specs.cores));
+    queryAlloc.addBindValue(QVariant::fromValue(specs.space));
+    queryAlloc.addBindValue(QVariant::fromValue(specs.ram));
+    uint64_t allocated_specs;
+    if (queryAlloc.exec()){
+        allocated_specs = queryAlloc.lastInsertId().toUInt();
+    } else {
+        qDebug() << "startJob error: allocated_resources query failed: " << queryAlloc.lastError();
+    }
+    QSqlQuery query(db);
+    query.prepare("UPDATE jobs SET allocated_resources = ?, worker_id = ? WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(allocated_specs));
+    query.addBindValue(QVariant::fromValue(worker_id));
+    query.addBindValue(QVariant::fromValue(job_id));
+    if (query.exec()){
+        return true;
+    } else {
+        qDebug() << "startJob error: " << query.lastError();
+        return false;
+    }
 }
 
 bool Gateway::finishJob(const uint64_t job_id, const std::chrono::time_point<std::chrono::system_clock> finish_time
