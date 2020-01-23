@@ -155,10 +155,7 @@ bool doesWorkerExist(uint64_t id){
     query.prepare("SELECT id FROM workers WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
-        if (query.next()){
-            return true;
-        }
-        return false;
+        return query.next();
     }
     return false;
 }
@@ -373,10 +370,7 @@ bool doesJobExist(uint64_t id){
     query.prepare("SELECT id FROM jobs WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
-        if (query.next()){
-            return true;
-        }
-        return false;
+        return query.next();
     }
     return false;
 }
