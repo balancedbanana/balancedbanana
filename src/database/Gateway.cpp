@@ -172,6 +172,7 @@ bool Gateway::removeWorker(const uint64_t id) {
             return true;
         } else {
             qDebug() << "removeWorker error: " << query.lastError();
+            return false;
         }
     } else {
         return false;
@@ -576,6 +577,26 @@ bool Gateway::removeUser(const uint64_t user_id) {
 }
 
 user_details Gateway::getUser(const uint64_t user_id) {
+    QSqlDatabase db = QSqlDatabase::database();
+    assert(db.tables().contains("users"));
+    QSqlQuery query(db);
+    assert(doesWorkerExist(user_id));
+    query.prepare("SELECT key, name, email FROM users WHERE id = (:id)");
+    query.bindValue(":id", QVariant::fromValue(user_id));
+    user_details details;
+    details.id = user_id;
+    if (query.exec()){
+        if (query.next()){
+            details.public_key = query.value(0).toString().toStdString();
+            details.name = query.value(1).toString().toStdString();
+            details.email = query.value(2).toString().toStdString();
+            return details;
+        } else {
+            qDebug() << "getUser error: record doesn't exist";
+        }
+    } else {
+        qDebug() << "getUser error: " << query.lastError();
+    }
 }
 
 std::vector<user_details> Gateway::getUsers() {
