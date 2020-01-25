@@ -18,7 +18,7 @@ Container Docker::Start(int userid, const Task & task) {
         args.append({"-m", QString::fromStdString(std::to_string(*config->max_ram()))});
     }
     if(config->min_ram()) {
-        args.append({"--memory-reservation", QString::fromStdString(std::to_string(*config->max_ram()))});
+        args.append({"--memory-reservation", QString::fromStdString(std::to_string(*config->min_ram()))});
     }
     if(!config->blocking_mode() || !*config->blocking_mode()) {
         args.append("-d");
