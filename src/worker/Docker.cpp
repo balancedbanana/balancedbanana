@@ -34,7 +34,7 @@ Container Docker::Start(int userid, const Task & task) {
     proc.setArguments(args);
     proc.start();
     proc.waitForFinished(-1);
-    if(!proc.exitStatus() != QProcess::NormalExit) {
+    if(proc.exitStatus() != QProcess::NormalExit) {
         throw std::runtime_error("Invalid Argument for docker start");
     }
     std::string output = proc.readAllStandardOutput().toStdString();
