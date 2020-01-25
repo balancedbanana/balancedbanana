@@ -9,9 +9,10 @@ namespace balancedbanana {
             std::string pubkey_;
 
         public:
+            IUser(const std::string& username, const std::string& pubkey);
             //Getter for the name_ attribute
-            std::string name();
-            std::string pubkey();
+            const std::string& name();
+            const std::string& pubkey();
         };
     }
 }
