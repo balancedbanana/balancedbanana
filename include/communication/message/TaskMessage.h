@@ -2,18 +2,24 @@
 
 #include "Message.h"
 
+#include <commandLineInterface/Task.h>
+
+using balancedbanana::commandLineInterface::Task;
+
 namespace balancedbanana {
     namespace communication {
-		//Nachticht mit allen Hardware Angaben (CPU RAM OS)
+		
 		class TaskMessage : public Message {
 		public:
-			void process(const MessageProcessor* & msgProcessor);
+			virtual void process(const MessageProcessor* & msgProcessor);
+
+			virtual std::string serialize();
 
 			TaskMessage(const Task& task);
 
 
 		private:
-			//Informationen des zu �bermittelnden Tasks
+			//Informationen des zu übermittelnden Tasks
 
 			Task task;
 
