@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <vector>
+#include <thread>
 
 
 namespace balancedbanana
@@ -68,6 +69,11 @@ private:
 	 * The list of all callback functions.
 	 */
 	std::vector<std::function<void()>>* timerFunctions;
+
+	/**
+	 * This thread is responsible for sleeping until one interval has passed, then calling all callback functions.
+	 */
+	std::thread sleeperThread;
 
 };
 
