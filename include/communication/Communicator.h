@@ -18,6 +18,7 @@ namespace balancedbanana {
 			Communicator(const std::string address, short port, const std::shared_ptr<MessageProcessor>& processor);
 
 			void send(const Message& message);
+			
 
 		};
 	}

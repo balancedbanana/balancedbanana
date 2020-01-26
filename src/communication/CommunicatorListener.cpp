@@ -1,6 +1,7 @@
 #include <communication/CommunicatorListener.h>
 #include <communication/Communicator.h>
 #include <communication/authenticator/Authenticator.h>
+#include <cstring>
 
 using namespace balancedbanana::communication;
 
@@ -18,7 +19,7 @@ void CommunicatorListener::listen(const std::function<void(std::shared_ptr<Messa
 	address->sin6_family = AF_INET6;
 	address->sin6_port = htons(8443);
 	address->sin6_addr = in6addr_any;
-    // auto p = balancedbanana::communication::authenticator::Authenticator::GeneratePrivatePublicKeyPair();
+    auto p = balancedbanana::communication::authenticator::Authenticator::GeneratePrivatePublicKeyPair();
     // listener->UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
     // listener->UsePrivateKey((uint8_t*)p.first.data(), (int)p.first.length(), Net::SSLFileType::PEM);
     listener->UseCertificate("server.cert", Net::SSLFileType::PEM);

@@ -1,7 +1,19 @@
 #include <communication/messageProcessor/MessageProcessor.h>
+#include <communication/message/Message.h>
+#include <communication/message/AuthResultMessage.h>
+#include <communication/message/ClientAuthMessage.h>
+// #include <communication/message/HardwareDetailMessage.h>
+#include <communication/message/PublicKeyAuthMessage.h>
+// #include <communication/message/SnapshotMessage.h>
+// #include <communication/message/TaskMessage.h>
+#include <communication/message/WorkerAuthMessage.h>
 #include <stdexcept>
 
 using namespace balancedbanana::communication;
+
+void balancedbanana::communication::MessageProcessor::process(const std::shared_ptr<Message> &msg) {
+    msg->process(shared_from_this());
+}
 
 void MessageProcessor::handleInvalidMessage(const std::shared_ptr<Message> &msg) {
     throw std::runtime_error("Invalid Message");
