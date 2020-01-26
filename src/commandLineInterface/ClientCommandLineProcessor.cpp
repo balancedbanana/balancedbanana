@@ -1,4 +1,4 @@
-#include "ClientCommandLineProcessor.h"
+#include <commandLineInterface/ClientCommandLineProcessor.h>
 
 
 using balancedbanana::commandLineInterface::ClientCommandLineProcessor;

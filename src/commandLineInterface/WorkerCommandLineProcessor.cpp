@@ -1,4 +1,4 @@
-#include "WorkerCommandLineProcessor.h"
+#include <commandLineInterface/WorkerCommandLineProcessor.h>
 
 
 using balancedbanana::commandLineInterface::WorkerCommandLineProcessor;

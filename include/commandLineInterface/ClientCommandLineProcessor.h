@@ -8,7 +8,7 @@ namespace balancedbanana
 namespace commandLineInterface
 {
     
-class ClientCommandLineProcessor : public CommandLineProcessor
+class ClientCommandLineProcessor : public balancedbanana::commandLineInterface::CommandLineProcessor
 {
     public:
 
@@ -16,7 +16,7 @@ class ClientCommandLineProcessor : public CommandLineProcessor
 
     private:
 
-        Priority evaluatePriority(const std::string& priority);
+        balancedbanana::configfiles::Priority evaluatePriority(const std::string& priority);
 };
 
 } // namespace commandLineInterface

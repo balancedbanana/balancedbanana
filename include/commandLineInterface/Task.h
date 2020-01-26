@@ -1,6 +1,6 @@
 #pragma once
 
-#include <JobConfig.h>
+#include "configfiles/JobConfig.h"
 
 namespace balancedbanana
 {

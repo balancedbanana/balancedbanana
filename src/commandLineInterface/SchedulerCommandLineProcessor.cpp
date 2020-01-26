@@ -1,4 +1,4 @@
-#include "SchedulerCommandLineProcessor.h"
+#include <commandLineInterface/SchedulerCommandLineProcessor.h>
 
 
 using balancedbanana::commandLineInterface::SchedulerCommandLineProcessor;

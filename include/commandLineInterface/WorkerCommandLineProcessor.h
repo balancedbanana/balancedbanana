@@ -8,7 +8,7 @@ namespace balancedbanana
 namespace commandLineInterface
 {
     
-class WorkerCommandLineProcessor : public CommandLineProcessor
+class WorkerCommandLineProcessor : public balancedbanana::commandLineInterface::CommandLineProcessor
 {
     public:
 
