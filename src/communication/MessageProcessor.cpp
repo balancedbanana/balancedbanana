@@ -1,4 +1,5 @@
 #include <communication/messageProcessor/MessageProcessor.h>
+#include <stdexcept>
 
 using namespace balancedbanana::communication;
 

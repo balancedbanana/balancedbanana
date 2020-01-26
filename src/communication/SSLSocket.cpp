@@ -14,6 +14,7 @@ void SSLSocket::send(const char * msg) {
 }
 
 const char * SSLSocket::receive(const char* data, const size_t & size) {
+    return {};
 }
 
 void SSLSocket::listen(unsigned short port, const std::function<void()> & callback) {

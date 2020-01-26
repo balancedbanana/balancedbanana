@@ -713,4 +713,3 @@ job_result Gateway::getJobResult(const uint64_t job_id) {
         qDebug() << "getJobResult error: " << query.lastError();
     }
 }
-

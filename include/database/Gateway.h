@@ -7,8 +7,6 @@
 #include <configfiles/JobConfig.h>
 
 #include <vector>
-#include <chrono>
-#include <ctime>
 #include <QSqlDatabase>
 #include <QDateTime>
 

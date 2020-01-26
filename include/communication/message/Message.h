@@ -8,6 +8,7 @@ namespace balancedbanana {
 }
 
 #include <communication/messageProcessor/MessageProcessor.h>
+#include <string>
 
 class balancedbanana::communication::Message {
 protected:

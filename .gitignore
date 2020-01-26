@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 build/
 .vscode/
 .vs/
@@ -62,3 +63,9 @@ test/test_runner
 *.json
 *.cmake
 *.gitignore
+=======
+build/
+.vscode/
+.vs/
+.idea
+>>>>>>> master
