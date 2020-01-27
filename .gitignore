@@ -49,7 +49,7 @@ include/divisible/*
 
 # Ignore binary files
 testsrc/worker/workertests
-
+src/client/client
 
 ## Local 
 
