@@ -14,7 +14,6 @@ enable_testing()
 find_package(GTest)
 set(GTEST GTest::GTest GTest::Main)
 if (NOT GTest_FOUND)
-<<<<<<< HEAD
     # Download and unpack googletest at configure time
     configure_file(contrib/GTest/CMakeLists.txt.in googletest-download/CMakeLists.txt)
     execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -47,7 +46,6 @@ if (NOT GTest_FOUND)
         include_directories("${gtest_SOURCE_DIR}/include")
     endif()
     set(GTEST gtest gtest_main)
-=======
 # Download and unpack googletest at configure time
 configure_file(contrib/GTest/CMakeLists.txt.in googletest-download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -80,18 +78,13 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
 set(GTEST gtest gtest_main)
->>>>>>> master
 endif()
 
 include_directories(include)
 
 add_subdirectory(src/client)
 add_subdirectory(src/worker)
-<<<<<<< HEAD
-# (src/commandLineInterface)
-=======
 add_subdirectory(src/commandLineInterface)
->>>>>>> master
 add_subdirectory(testsrc/worker)
 add_subdirectory(src/communication)
 add_subdirectory(src/configfiles)
