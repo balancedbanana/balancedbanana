@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-#include "configfiles/Priority.h"
+#include <configfiles/Priority.h>
 
 namespace balancedbanana {
     namespace configfiles {
