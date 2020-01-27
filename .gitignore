@@ -47,6 +47,9 @@ build/
 
 include/divisible/*
 
+# Ignore binary files
+testsrc/worker/workertests
+
 
 ## Local 
 
