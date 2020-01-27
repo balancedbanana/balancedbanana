@@ -3,7 +3,6 @@
 //
 
 #include <configfiles/JobConfig.h>
-
 #include <sstream>
 
 using namespace balancedbanana::configfiles;

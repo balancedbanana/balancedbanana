@@ -1,7 +1,7 @@
+#include <QSslSocket>
 #include <string>
 #include <functional>
 #include <memory>
-#include <QSslSocket>
 
 class SSLSocket {
     QSslSocket socket;

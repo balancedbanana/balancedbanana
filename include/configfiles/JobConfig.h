@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <vector>
 #include <string>
-
 #include <configfiles/Priority.h>
 
 namespace balancedbanana {
