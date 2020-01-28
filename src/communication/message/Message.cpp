@@ -1,6 +1,6 @@
 #include <communication/message/Message.h>
 #include <communication/message/ClientAuthMessage.h>
-#include <Net/Http/V2/Session.h>
+#include <Net/Http/V2/Stream.h>
 
 balancedbanana::communication::Message::Message(unsigned int typeId) : typeId(typeId) {
 }
