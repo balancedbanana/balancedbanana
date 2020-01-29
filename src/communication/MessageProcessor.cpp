@@ -17,6 +17,14 @@ void MessageProcessor::process(const std::shared_ptr<Message> &msg) {
     msg->process(*this);
 }
 
+MessageProcessor::MessageProcessor(balancedbanana::communication::Communicator *communicator) :
+communicator_(communicator){
+}
+
+Communicator *MessageProcessor::communicator() {
+    return communicator_;
+}
+
 void MessageProcessor::handleInvalidMessage(const std::shared_ptr<Message> &msg) {
     throw std::runtime_error("Invalid Message");
 }

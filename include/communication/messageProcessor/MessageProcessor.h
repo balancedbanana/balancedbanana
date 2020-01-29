@@ -4,6 +4,7 @@
 namespace balancedbanana {
     namespace communication {
 
+        class Communicator;
 		class AuthResultMessage;
 		class ClientAuthMessage;
 		class HardwareDetailMessage;
@@ -15,10 +16,15 @@ namespace balancedbanana {
 
         class MessageProcessor {
         private:
+            Communicator *communicator_;
+
             virtual void handleInvalidMessage(const std::shared_ptr<Message> &msg);
 
         public:
+            explicit MessageProcessor(Communicator *communicator);
+
             void process(const std::shared_ptr<Message> &msg);
+            Communicator *communicator();
 
             virtual void processAuthResultMessage(const std::shared_ptr<AuthResultMessage> &msg);
             virtual void processClientAuthMessage(const std::shared_ptr<ClientAuthMessage> &msg);
