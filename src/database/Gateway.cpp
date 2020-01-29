@@ -84,13 +84,13 @@ static const JobColumns job_columns{};
 
 Gateway::Gateway() {
     QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-    // TODO change placeholders
-    db.setHostName("placeholder");
-    db.setDatabaseName("placeholder");
-    db.setUserName("placeholder");
-    db.setPassword("placeholder");
+    db.setHostName("127.0.0.1");
+    db.setDatabaseName("balancedbanana");
+    db.setUserName("root");
+    db.setPassword("banana");
+    bool success = db.open();
 
-    if(!db.isOpen()){
+    if(!success){
         qDebug() << "Error: connection with database failed.";
     } else {
         qDebug() << "Database: connection was successful.";
