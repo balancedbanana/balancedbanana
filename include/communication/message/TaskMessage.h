@@ -7,17 +7,14 @@ namespace balancedbanana {
     namespace communication {
 		//Nachticht mit allen Hardware Angaben (CPU RAM OS)
 		class TaskMessage : public Message {
+            Task task;
+
 		public:
+            TaskMessage(const Task& task);
+
 			void process(const MessageProcessor* & msgProcessor);
 
-			TaskMessage(const Task& task);
-
-
-		private:
-			//Informationen des zu �bermittelnden Tasks
-
-			Task task;
-
+            virtual void serialize(std::ostream &stream) override;
 		};
 	}
 }

@@ -1,17 +1,19 @@
 #pragma once
 
-#include <communication/MessageProcessor.h>
 #include <string>
+#include <sstream>
+#include <communication/MessageProcessor.h>
+#include <communication/message/MessageType.h>
 
 class balancedbanana::communication::Message {
 protected:
-	const unsigned int typeId;
+	const MessageType type;
 
 public:
+    explicit Message(MessageType type);
+
 	virtual void process(MessageProcessor &mp) = 0;
 
-	virtual std::string serialize();
-
-	static std::shared_ptr<Message> deserialize(const char* msg, unsigned int size);
+	virtual void serialize(std::ostream &stream);
 
 };

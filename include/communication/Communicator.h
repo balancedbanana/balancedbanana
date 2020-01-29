@@ -19,6 +19,7 @@ namespace balancedbanana {
 
 			void send(const Message& message);
 
+            static std::shared_ptr<Message> deserializeMessage(std::istream &stream);
 		};
 	}
 }
