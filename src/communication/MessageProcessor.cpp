@@ -25,34 +25,34 @@ std::shared_ptr<Communicator> MessageProcessor::communicator() {
     return communicator_;
 }
 
-void MessageProcessor::handleInvalidMessage(const std::shared_ptr<Message> &msg) {
+void MessageProcessor::handleInvalidMessage(const Message *msg) {
     throw std::runtime_error("Invalid Message");
 }
 
-void MessageProcessor::processAuthResultMessage(const std::shared_ptr<AuthResultMessage> &msg) {
+void MessageProcessor::processAuthResultMessage(const AuthResultMessage *msg) {
     handleInvalidMessage(msg);
 }
 
-void MessageProcessor::processClientAuthMessage(const std::shared_ptr<ClientAuthMessage> &msg) {
+void MessageProcessor::processClientAuthMessage(const ClientAuthMessage *msg) {
     handleInvalidMessage(msg);
 }
 
-void MessageProcessor::processHardwareDetailMessage(const std::shared_ptr<HardwareDetailMessage> &msg) {
+void MessageProcessor::processHardwareDetailMessage(const HardwareDetailMessage *msg) {
     handleInvalidMessage(msg);
 }
 
-void MessageProcessor::processPublicKeyAuthMessage(const std::shared_ptr<PublicKeyAuthMessage> &msg) {
+void MessageProcessor::processPublicKeyAuthMessage(const PublicKeyAuthMessage *msg) {
     handleInvalidMessage(msg);
 }
 
-void MessageProcessor::processSnapshotMessage(const std::shared_ptr<SnapshotMessage> &msg) {
+void MessageProcessor::processSnapshotMessage(const SnapshotMessage *msg) {
     handleInvalidMessage(msg);
 }
 
-void MessageProcessor::processTaskMessage(const std::shared_ptr<TaskMessage> &msg) {
+void MessageProcessor::processTaskMessage(const TaskMessage *msg) {
     handleInvalidMessage(msg);
 }
 
-void MessageProcessor::processWorkerAuthMessage(const std::shared_ptr<WorkerAuthMessage> &msg) {
+void MessageProcessor::processWorkerAuthMessage(const WorkerAuthMessage *msg) {
     handleInvalidMessage(msg);
 }
