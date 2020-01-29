@@ -1,4 +1,9 @@
 add_subdirectory(authenticator)
 
-add_library(communication STATIC Communicator.cpp SSLSocket.cpp MessageProcessor.cpp)
+add_library(communication STATIC
+        Communicator.cpp
+        message/AuthResultMessage.cpp
+        message/Message.cpp
+        MessageProcessor.cpp
+        SSLSocket.cpp)
 target_link_libraries(communication Qt5::Core Qt5::Network)
