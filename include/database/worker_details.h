@@ -11,7 +11,7 @@ namespace balancedbanana {
         //Encapsulates all details required to create Worker object.
         struct worker_details {
             //The id of the Worker.
-            uint64_t id;
+            uint8_t id;
 
             std::string name;
 

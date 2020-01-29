@@ -37,42 +37,43 @@ namespace balancedbanana {
            * @param address
            * 
            */
-          uint64_t addWorker(std::string public_key, uint64_t space, uint64_t ram, uint64_t cores, const std::string
+          uint8_t addWorker(std::string public_key, uint64_t space, uint64_t ram, uint64_t cores, const std::string
           address,
                   std::string name);
 
           //Removes a worker.
-          bool removeWorker(const uint64_t id);
+          bool removeWorker(const uint8_t id);
 
-          worker_details getWorker(const uint64_t worker_id);
+          worker_details getWorker(const uint8_t worker_id);
 
           std::vector<worker_details> getWorkers();
 
           //Adds a new Job to the database and returns its ID.
-          uint64_t addJob(uint64_t user_id, configfiles::JobConfig& config, const QDateTime schedule_time, const std::string& command);
+          uint8_t addJob(uint8_t user_id, configfiles::JobConfig& config, const QDateTime schedule_time, const
+          std::string& command);
 
-          bool removeJob(const uint64_t job_id);
+          bool removeJob(const uint8_t job_id);
 
-          job_details getJob(const uint64_t job_id);
+          job_details getJob(const uint8_t job_id);
 
           std::vector<job_details> getJobs();
 
           //Adds a user to the database and returns their ID.
-          uint64_t addUser(const std::string  name, const std::string email, std::string public_key);
+          uint8_t addUser(const std::string  name, const std::string email, std::string public_key);
 
-          bool removeUser(const uint64_t user_id);
+          bool removeUser(const uint8_t user_id);
 
-          user_details getUser(const uint64_t user_id);
+          user_details getUser(const uint8_t user_id);
 
           std::vector<user_details> getUsers();
 
           //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
-          bool startJob(const uint64_t job_id, const uint64_t worker_id, const Specs specs);
+          bool startJob(const uint8_t job_id, const uint8_t worker_id, const Specs specs);
 
-          bool finishJob(const uint64_t job_id, const QDateTime finish_time, const std::string stdout, const int8_t
+          bool finishJob(const uint8_t job_id, const QDateTime finish_time, const std::string stdout, const int8_t
           exit_code);
 
-          job_result getJobResult(const uint64_t job_id);
+          job_result getJobResult(const uint8_t job_id);
 
       };
    }

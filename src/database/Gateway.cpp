@@ -98,7 +98,7 @@ Gateway::Gateway() {
     }
 }
 
-uint64_t Gateway::addWorker(std::string public_key, uint64_t space, uint64_t ram, uint64_t cores, const std::string
+uint8_t Gateway::addWorker(std::string public_key, uint64_t space, uint64_t ram, uint64_t cores, const std::string
 address,
         std::string name) {
 
@@ -145,7 +145,7 @@ address,
     return query.lastInsertId().toUInt();
 }
 
-bool doesWorkerExist(uint64_t id){
+bool doesWorkerExist(uint8_t id){
     QSqlDatabase db = QSqlDatabase::database();
 
     // Check if table exists
@@ -163,7 +163,7 @@ bool doesWorkerExist(uint64_t id){
 }
 
 //Removes a worker.
-bool Gateway::removeWorker(const uint64_t id) {
+bool Gateway::removeWorker(const uint8_t id) {
     QSqlDatabase db = QSqlDatabase::database();
     if (doesWorkerExist(id)){
         QSqlQuery query(db);
@@ -182,7 +182,7 @@ bool Gateway::removeWorker(const uint64_t id) {
 
 }
 
-worker_details Gateway::getWorker(const uint64_t worker_id) {
+worker_details Gateway::getWorker(const uint8_t worker_id) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("workers"));
     QSqlQuery query(db);
@@ -246,7 +246,7 @@ auto as_integer(Enumeration const value)
 }
 
 // Converts the args for addJob to QVariants and returns a struct that contains all of them.
-QVariant_JobConfig convertJobConfig(const uint64_t &user_id, JobConfig& config, const QDateTime &schedule_time
+QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, const QDateTime &schedule_time
         , const std::string &command){
     // Converting the various args into QVariant Objects
     QVariant q_user_id = QVariant::fromValue(user_id);
@@ -298,7 +298,7 @@ QVariant_JobConfig convertJobConfig(const uint64_t &user_id, JobConfig& config, 
 }
 
 // Executes the addJob query.
-uint64_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
+uint8_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
     QSqlDatabase db = QSqlDatabase::database();
 
     // DB must contain table
@@ -336,7 +336,7 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
 }
 
 //Adds a new Job to the database and returns its ID.
-uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime schedule_time
+uint8_t Gateway::addJob(uint8_t user_id, JobConfig& config, const QDateTime schedule_time
         , const std::string &command) {
 
     // Check args
@@ -361,7 +361,7 @@ uint64_t Gateway::addJob(uint64_t user_id, JobConfig& config, const QDateTime sc
     return executeAddJobQuery(qstruct);
 }
 
-bool doesJobExist(uint64_t id){
+bool doesJobExist(uint8_t id){
     QSqlDatabase db = QSqlDatabase::database();
 
     // Check if table exists
@@ -379,7 +379,7 @@ bool doesJobExist(uint64_t id){
 }
 
 
-bool Gateway::removeJob(const uint64_t job_id) {
+bool Gateway::removeJob(const uint8_t job_id) {
     QSqlDatabase db = QSqlDatabase::database();
     if (doesJobExist(job_id)){
         QSqlQuery query(db);
@@ -405,7 +405,7 @@ std::vector<std::string> convertToVectorString(const QByteArray& buffer){
     return std::vector<std::string>(resultVector.begin(), resultVector.end());
 }
 
-job_details Gateway::getJob(const uint64_t job_id) {
+job_details Gateway::getJob(const uint8_t job_id) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("workers"));
     assert(db.tables().contains("allocated_resources"));
@@ -510,7 +510,7 @@ std::vector<job_details> Gateway::getJobs() {
 }
 
 //Adds a user to the database and returns their ID.
-uint64_t Gateway::addUser(const std::string name, const std::string email, std::string public_key) {
+uint8_t Gateway::addUser(const std::string name, const std::string email, std::string public_key) {
     // Check args
     assert(!name.empty());
     assert(!email.empty());
@@ -544,7 +544,7 @@ uint64_t Gateway::addUser(const std::string name, const std::string email, std::
     return query.lastInsertId().toUInt();
 }
 
-bool doesUserExist(const uint64_t id){
+bool doesUserExist(const uint8_t id){
     QSqlDatabase db = QSqlDatabase::database();
 
     // Check if table exists
@@ -561,7 +561,7 @@ bool doesUserExist(const uint64_t id){
     return false;
 }
 
-bool Gateway::removeUser(const uint64_t user_id) {
+bool Gateway::removeUser(const uint8_t user_id) {
     QSqlDatabase db = QSqlDatabase::database();
     if (doesUserExist(user_id)){
         QSqlQuery query(db);
@@ -578,7 +578,7 @@ bool Gateway::removeUser(const uint64_t user_id) {
     }
 }
 
-user_details Gateway::getUser(const uint64_t user_id) {
+user_details Gateway::getUser(const uint8_t user_id) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("users"));
     QSqlQuery query(db);
@@ -625,7 +625,7 @@ std::vector<user_details> Gateway::getUsers() {
 }
 
 //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
-bool Gateway::startJob(const uint64_t job_id, const uint64_t worker_id, const Specs specs) {
+bool Gateway::startJob(const uint8_t job_id, const uint8_t worker_id, const Specs specs) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
     assert(db.tables().contains("workers"));
@@ -657,7 +657,7 @@ bool Gateway::startJob(const uint64_t job_id, const uint64_t worker_id, const Sp
     }
 }
 
-bool Gateway::finishJob(const uint64_t job_id, const QDateTime finish_time
+bool Gateway::finishJob(const uint8_t job_id, const QDateTime finish_time
         , const std::string stdout, const int8_t exit_code) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
@@ -693,7 +693,7 @@ bool Gateway::finishJob(const uint64_t job_id, const QDateTime finish_time
     }
 }
 
-job_result Gateway::getJobResult(const uint64_t job_id) {
+job_result Gateway::getJobResult(const uint8_t job_id) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
     assert(db.tables().contains("job_results"));

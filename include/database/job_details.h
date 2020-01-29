@@ -14,13 +14,13 @@ namespace balancedbanana {
 		struct job_details {
 			configfiles::JobConfig config;
 
-			uint64_t user_id;
+			uint8_t user_id;
 
 			//Represented with an ID.
 			int status;
 
 			//The id of the Job.
-			uint64_t id;
+			uint8_t id;
 
 			std::string command;
 
