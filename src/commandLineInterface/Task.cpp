@@ -5,6 +5,13 @@ namespace balancedbanana
 namespace commandLineInterface
 {
 
+
+Task::Task()
+{
+    configfiles::JobConfig conf(configFilePath);
+    this->config = std::make_shared<configfiles::JobConfig>(conf);
+}
+
 void Task::setType(int type) {
     this->type = type;
 }

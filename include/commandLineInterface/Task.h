@@ -21,6 +21,11 @@ class Task
 	short int webAPIPort;
 
 public:
+
+	const std::string configFilePath = "./config.txt";
+
+	Task();
+
 	void setType(int type);
 	int getType() const;
 
