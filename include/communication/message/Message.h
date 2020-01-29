@@ -1,6 +1,6 @@
 #pragma once
 
-#include <communication/messageProcessor/MessageProcessor.h>
+#include <communication/MessageProcessor.h>
 #include <string>
 
 class balancedbanana::communication::Message {

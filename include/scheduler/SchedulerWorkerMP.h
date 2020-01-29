@@ -1,5 +1,5 @@
 #pragma once
-#include <communication/messageProcessor/MessageProcessor.h>
+#include <communication/MessageProcessor.h>
 
 namespace balancedbanana {
     namespace communication {

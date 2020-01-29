@@ -9,7 +9,7 @@
 #include <communication/message/TaskMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
 
-#include <communication/messageProcessor/MessageProcessor.h>
+#include <communication/MessageProcessor.h>
 
 using namespace balancedbanana::communication;
 
@@ -17,11 +17,11 @@ void MessageProcessor::process(const std::shared_ptr<Message> &msg) {
     msg->process(*this);
 }
 
-MessageProcessor::MessageProcessor(balancedbanana::communication::Communicator *communicator) :
+MessageProcessor::MessageProcessor(std::shared_ptr<Communicator> &communicator) :
 communicator_(communicator){
 }
 
-Communicator *MessageProcessor::communicator() {
+std::shared_ptr<Communicator> MessageProcessor::communicator() {
     return communicator_;
 }
 
