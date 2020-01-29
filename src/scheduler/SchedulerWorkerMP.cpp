@@ -1,4 +1,4 @@
-#include <communication/messageProcessor/SchedulerWorkerMP.h>
+#include <scheduler/SchedulerWorkerMP.h>
 
 using namespace balancedbanana::communication;
 
