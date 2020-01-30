@@ -5,6 +5,7 @@
 #include <configfiles/JobConfig.h>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 using namespace balancedbanana::configfiles;
 
@@ -14,7 +15,7 @@ std::ostream &operator <<(std::ostream &stream, std::vector<std::string> &value)
     for(std::string &string : value) {
         stream << string << "\n";
     }
-    stream << "]";
+    stream << "]\n";
     return stream;
 }
 
@@ -27,8 +28,89 @@ void SerializeOptional(std::ostream &stream, const std::string &name, std::optio
     stream << "\n";
 }
 
-void SerializeString(std::ostream &stream, const std::string &name, const std::string &value) {
+inline void SerializeString(std::ostream &stream, const std::string &name, const std::string &value) {
     stream << name << ":" << value << "\n";
+}
+
+std::optional<uint32_t> convertToInt32(std::string &value) {
+    try {
+        return std::stoull(value);
+    } catch(std::invalid_argument &) {
+        return std::nullopt;
+    } catch(std::out_of_range &) {
+        return UINT32_MAX;
+    }
+}
+
+std::optional<bool> convertToBool(std::string &value) {
+    if(value == "true" || value == "True") {
+        return std::optional<bool>(true);
+    } else if(value == "false" || value == "False") {
+        return std::optional<bool>(false);
+    } else {
+        return std::nullopt;
+    }
+}
+
+std::optional<std::vector<std::string>> convertToVector(std::string &value) {
+
+}
+
+inline void insertValue(JobConfig *config, std::string &name, std::string &value) {
+    if(name == "min_ram") {
+        config->set_min_ram(convertToInt32(value));
+    } else if(name == "max_ram") {
+        config->set_max_ram(convertToInt32(value));
+    } else if(name == "min_cpu_count") {
+        config->set_min_cpu_count(convertToInt32(value));
+    } else if(name == "max_cpu_count") {
+        config->set_max_cpu_count(convertToInt32(value));
+    } else if(name == "blocking_mode") {
+        config->set_blocking_mode(convertToBool(value));
+    } else if(name == "email") {
+        config->set_email(value);
+    } else if(name == "priority") {
+        bool success = false;
+        Priority p = stopriority(value, success);
+        config->set_priority(success ? std::optional<Priority>(p) : std::nullopt);
+    } else if(name == "image") {
+        config->set_image(value);
+    } else if(name == "interruptible") {
+        config->set_interruptible(convertToBool(value));
+    } else if(name == "current_working_dir") {
+        config->set_current_working_dir((!value.empty()) ? std::optional<std::filesystem::path>(value) : std::nullopt);
+    }
+}
+
+inline void insertVector(JobConfig *config, std::string &name, std::vector<std::string> &vec) {
+    if(name == "environment") {
+        config->set_environment(std::optional<std::vector<std::string>>(vec));
+    }
+}
+
+void readFromStream(JobConfig *config, std::istream *stream) {
+    std::string line;
+    while(std::getline(*stream, line)) {
+        size_t separator = line.find_first_of(':');
+        if(separator > 0) {
+            std::string name = line.substr(0, separator);
+            std::string value = line.substr(separator, std::string::npos);
+            if(value == "[") {
+                std::vector<std::string> vec;
+                bool endofvector = false;
+                while(!endofvector && std::getline(*stream, line)) {
+                    if(line == "]") {
+                        endofvector = true;
+                    } else {
+                        vec.push_back(line);
+                    }
+                }
+                insertVector(config, name, vec);
+            } else {
+                insertValue(config, name, value);
+            }
+        }
+    }
 }
 
 //Class Implementation
@@ -47,12 +129,37 @@ JobConfig::JobConfig() :
     current_working_dir_(std::nullopt){
 }
 
-JobConfig::JobConfig(const std::stringstream &data) {
-    //TODO implement
+JobConfig::JobConfig(std::istream &data) :
+min_ram_(std::nullopt),
+max_ram_(std::nullopt),
+min_cpu_count_(std::nullopt),
+max_cpu_count_(std::nullopt),
+blocking_mode_(std::nullopt),
+email_(""),
+priority_(std::nullopt),
+image_(""),
+environment_(std::nullopt),
+interruptible_(std::nullopt),
+current_working_dir_(std::nullopt){
+    readFromStream(this, &data);
 }
 
-JobConfig::JobConfig(const std::experimental::filesystem::path &path) {
-    //TODO implement
+JobConfig::JobConfig(const std::filesystem::path &path) :
+min_ram_(std::nullopt),
+max_ram_(std::nullopt),
+min_cpu_count_(std::nullopt),
+max_cpu_count_(std::nullopt),
+blocking_mode_(std::nullopt),
+email_(""),
+priority_(std::nullopt),
+image_(""),
+environment_(std::nullopt),
+interruptible_(std::nullopt),
+current_working_dir_(std::nullopt){
+    if(std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
+        std::ifstream s(path);
+        readFromStream(this, &s);
+    }
 }
 
 void JobConfig::set_min_ram(const std::optional <uint32_t> &miB) {
@@ -95,7 +202,7 @@ void JobConfig::set_interruptible(const std::optional<bool> &interruptible) {
     interruptible_ = interruptible;
 }
 
-void JobConfig::set_current_working_dir(const std::optional <std::experimental::filesystem::path> &cwd) {
+void JobConfig::set_current_working_dir(const std::optional <std::filesystem::path> &cwd) {
     current_working_dir_ = current_working_dir_;
 }
 
@@ -139,11 +246,11 @@ std::optional<bool> JobConfig::interruptible() {
     return interruptible_;
 }
 
-std::optional <std::experimental::filesystem::path> &JobConfig::current_working_dir() {
+std::optional <std::filesystem::path> &JobConfig::current_working_dir() {
     return current_working_dir_;
 }
 
-bool JobConfig::Save(const std::experimental::filesystem::path &path) {
+bool JobConfig::Save(const std::filesystem::path &path) {
     std::ofstream stream(path);
     std::stringstream s;
     Serialize(s);
@@ -153,7 +260,7 @@ bool JobConfig::Save(const std::experimental::filesystem::path &path) {
     return false;
 }
 
-void JobConfig::Serialize(std::stringstream &stream) {
+void JobConfig::Serialize(std::ostream &stream) {
     SerializeOptional(stream, "min_ram", min_ram_);
     SerializeOptional(stream, "max_ram", max_ram_);
     SerializeOptional(stream, "min_cpu_count", min_cpu_count_);
@@ -169,5 +276,37 @@ void JobConfig::Serialize(std::stringstream &stream) {
 }
 
 void JobConfig::Merge(const JobConfig &config) {
-    //TODO implement
+    if(!min_ram_) {
+        set_min_ram(config.min_ram_);
+    }
+    if(!max_ram_) {
+        set_max_ram(config.max_ram_);
+    }
+    if(!min_cpu_count_) {
+        set_min_cpu_count(config.min_cpu_count_);
+    }
+    if(!max_cpu_count_) {
+        set_max_cpu_count(config.max_cpu_count_);
+    }
+    if(!blocking_mode_) {
+        set_blocking_mode(config.blocking_mode_);
+    }
+    if(email_.empty()) {
+        set_email(config.email_);
+    }
+    if(!priority_) {
+        set_priority(config.priority_);
+    }
+    if(!image_.empty()) {
+        set_image(config.image_);
+    }
+    if(!environment_) {
+        set_environment(config.environment_);
+    }
+    if(!interruptible_) {
+        set_interruptible(config.interruptible_);
+    }
+    if(!current_working_dir_) {
+        set_current_working_dir(config.current_working_dir_);
+    }
 }

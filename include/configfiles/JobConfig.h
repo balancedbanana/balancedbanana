@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optional>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <vector>
 #include <string>
 #include <configfiles/Priority.h>
@@ -11,7 +11,6 @@ namespace balancedbanana {
 
         //This class contains all necessary information that are needed by the scheduler and the worker to successfully execute a job.
         class JobConfig {
-        private:
             //This attribute specifies how much RAM jobs with this configuration need at least in order to finish successfully.
             std::optional <uint32_t> min_ram_;
 
@@ -43,7 +42,7 @@ namespace balancedbanana {
             std::optional<bool> interruptible_;
 
             //This attribute specifies the current working directory from which the job is executed.
-            std::optional <std::experimental::filesystem::path> current_working_dir_;
+            std::optional <std::filesystem::path> current_working_dir_;
 
 
         public:
@@ -51,10 +50,10 @@ namespace balancedbanana {
             JobConfig();
 
             //This constructor creates a JobConfig from a serialized stringstream
-            JobConfig(const std::stringstream &data);
+            JobConfig(std::istream &data);
 
             //This constructor creates a JobConfig from a saved file.
-            JobConfig(const std::experimental::filesystem::path &path);
+            JobConfig(const std::filesystem::path &path);
 
             //Setter for the min_ram_ attribute.
             void set_min_ram(const std::optional <uint32_t> &miB);
@@ -120,13 +119,13 @@ namespace balancedbanana {
             std::optional<bool> interruptible();
 
             //Getter for the current_working_dir_ attribute.
-            std::optional <std::experimental::filesystem::path> &current_working_dir();
+            std::optional <std::filesystem::path> &current_working_dir();
 
             //This method serializes the JobConfig and saves it in a file with the specified path.
-            bool Save(const std::experimental::filesystem::path &path);
+            bool Save(const std::filesystem::path &path);
 
             //This method serializes the JobConfig into a string and pushes it into the passed stream.
-            virtual void Serialize(std::stringstream &destination);
+            virtual void Serialize(std::ostream &destination);
 
             //This method merges the content of the passed JobConfig into this JobConfig. Attributes that are contained in both files are not overwritten.
             void Merge(const JobConfig &config);
