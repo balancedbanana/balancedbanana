@@ -9,4 +9,4 @@ set(HEADERS
         ../../include/database/Factory.h)
 
 add_library(database ${SOURCES} ${HEADERS})
-target_link_libraries(database PUBLIC Qt5::Core Qt5::Network Qt5::Sql configfiles)
+target_link_libraries(database PUBLIC Qt5::Core Qt5::Network Qt5::Sql configfiles stdc++fs)

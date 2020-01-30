@@ -17,7 +17,7 @@
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
-namespace fs = std::filesystem;
+// namespace fs = std::filesystem;
 
 // Stores all details about a Job in QVariants
 typedef struct QVariant_JobConfig{
@@ -228,8 +228,7 @@ QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, c
     QVariant q_environment = QVariant::fromValue(qbytearray);
 
     // current_working_dir => std::filesystem::path => std::string => QString => QVariant
-    QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().value()
-                                                                                        .string()));
+   QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().value().string()));
 
     QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
     QVariant q_schedule_time = QVariant::fromValue(schedule_time);
@@ -248,7 +247,7 @@ QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, c
     qstruct.q_image= q_image;
     qstruct.q_interruptible = q_interruptible;
     qstruct.q_environment = q_environment;
-    qstruct.q_current_working_dir = q_current_working_dir;
+    //qstruct.q_current_working_dir = q_current_working_dir;
     qstruct.q_command = q_command;
     qstruct.q_schedule_time = q_schedule_time;
     qstruct.q_status_id = q_status_id;

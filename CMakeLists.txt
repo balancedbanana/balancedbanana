@@ -52,7 +52,6 @@ endif()
 
 
 include_directories(include)
-include_directories("/usr/include/x86_64-linux-gnu/qt5")
 
 add_subdirectory(src/client)
 add_subdirectory(src/worker)
