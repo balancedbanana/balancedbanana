@@ -7,9 +7,8 @@
 #include <configfiles/JobConfig.h>
 
 #include <vector>
-#include <QSqlDatabase>
-#include <QDateTime>
 
+class QDateTime;
 
 namespace balancedbanana {
     namespace database {

@@ -1,7 +1,8 @@
-#include <QSslSocket>
+// #include <QSslSocket>
 #include <string>
 #include <functional>
 #include <memory>
+#include <QtNetwork/QSslSocket>
 
 class SSLSocket {
     QSslSocket socket;

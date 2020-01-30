@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED 17)
+set(CMAKE_CXX_FLAGS "-fPIC")
 enable_language(CXX)
 
 project(balancedbanana)
@@ -46,10 +47,12 @@ if (NOT GTest_FOUND)
         include_directories("${gtest_SOURCE_DIR}/include")
     endif()
     set(GTEST gtest gtest_main)
-    endif()
+
+endif()
 
 
 include_directories(include)
+include_directories("/usr/include/x86_64-linux-gnu/qt5")
 
 add_subdirectory(src/client)
 add_subdirectory(src/worker)
@@ -59,3 +62,4 @@ add_subdirectory(src/communication)
 add_subdirectory(src/configfiles)
 add_subdirectory(src/database)
 add_subdirectory(src/scheduler)
+add_subdirectory(testsrc/database)

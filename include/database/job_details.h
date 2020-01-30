@@ -5,7 +5,7 @@
 
 #include <cinttypes>
 #include <string>
-#include <QDateTime>
+#include <QtCore/QDateTime>
 
 namespace balancedbanana {
     namespace database {
