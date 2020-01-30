@@ -20,7 +20,7 @@ using namespace balancedbanana::database;
 // namespace fs = std::filesystem;
 
 // Stores all details about a Job in QVariants
-typedef struct QVariant_JobConfig{
+struct QVariant_JobConfig{
     QVariant q_user_id;
     QVariant q_min_ram;
     QVariant q_max_ram;
@@ -54,9 +54,8 @@ Gateway::Gateway() {
     }
 }
 
-uint8_t Gateway::addWorker(std::string public_key, uint64_t space, uint64_t ram, uint64_t cores, const std::string
-address,
-        std::string name) {
+uint8_t Gateway::addWorker(const std::string& public_key, uint64_t space, uint64_t ram, uint64_t cores, const std::string&
+address, const std::string& name) {
 
    
     // Check args
@@ -153,7 +152,7 @@ worker_details Gateway::getWorker(const uint8_t worker_id) {
     if (query.exec()){
         if (query.next()){
             details.public_key = query.value(0).toString().toStdString();
-            Specs specs;
+            Specs specs{};
             specs.space = query.value(1).toInt();
             specs.ram = query.value(2).toInt();
             specs.cores = query.value(3).toInt();
@@ -294,7 +293,7 @@ uint8_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
 }
 
 //Adds a new Job to the database and returns its ID.
-uint8_t Gateway::addJob(uint8_t user_id, JobConfig& config, const QDateTime schedule_time
+uint8_t Gateway::addJob(uint8_t user_id, JobConfig& config, const QDateTime& schedule_time
         , const std::string &command) {
 
     // Check args
@@ -402,7 +401,7 @@ job_details Gateway::getJob(const uint8_t job_id) {
                     "yyyy-MM-dd hh:mm:ss.zzz000");
             details.status = query.value(16).toInt();
             details.config = config;
-            Specs allocated_specs;
+            Specs allocated_specs{};
             allocated_specs.cores = query.value(17).toUInt();
             allocated_specs.space = query.value(18).toUInt();
             allocated_specs.ram = query.value(19).toUInt();
@@ -468,7 +467,7 @@ std::vector<job_details> Gateway::getJobs() {
 }
 
 //Adds a user to the database and returns their ID.
-uint8_t Gateway::addUser(const std::string name, const std::string email, std::string public_key) {
+uint8_t Gateway::addUser(const std::string& name, const std::string& email, const std::string& public_key) {
     // Check args
     assert(!name.empty());
     assert(!email.empty());
@@ -564,7 +563,6 @@ std::vector<user_details> Gateway::getUsers() {
     assert(db.tables().contains("users"));
     QSqlQuery query(db);
     query.prepare("SELECT id, key, name, email FROM users");
-    user_details details;
     std::vector<user_details> userVector;
     if (query.exec()){
         while (query.next()){
@@ -615,8 +613,8 @@ bool Gateway::startJob(const uint8_t job_id, const uint8_t worker_id, const Spec
     }
 }
 
-bool Gateway::finishJob(const uint8_t job_id, const QDateTime finish_time
-        , const std::string stdout, const int8_t exit_code) {
+bool Gateway::finishJob(const uint8_t job_id, const QDateTime& finish_time
+        , const std::string& stdout, const int8_t exit_code) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
     assert(db.tables().contains("job_results"));
