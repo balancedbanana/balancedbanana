@@ -39,49 +39,6 @@ typedef struct QVariant_JobConfig{
     QVariant q_status_id;
 };
 
-/*
- * Commenting out this part for now as I'm not sure of the implementation
- *
-// Stores the indexes of columns in Worker table
-typedef struct WorkerColumns{
-     int id;
-     int idKey;
-     int idSpace;
-     int idRam;
-     int idCores;
-     int idAddress;
-     int idName;
-};
-
-// Stores the indexes of columns in Job table
-typedef struct JobColumns{
-    int id_user_id;
-    int id_min_ram_;
-    int id_max_ram_;
-    int id_min_cpu_count_;
-    int id_max_cpu_count_;
-    int id_blocking_mode_;
-    int id_email_;
-    int id_priority_;
-    int id_image_;
-    int id_environment_;
-    int id_interruptible_;
-    int id_current_working_dir_;
-    int id_status;
-    int id;
-    int id_command;
-    int id_schedule_time;
-    int id_start_time;
-    int id_finish_time;
-};
-
-// TODO give each member a const value
-static const WorkerColumns worker_columns{};
-
-// TODO give each member a const value
-static const JobColumns job_columns{};
-*/
-
 Gateway::Gateway() {
     QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
     db.setHostName("127.0.0.1");
@@ -128,7 +85,10 @@ address,
 
     // Create query
     QSqlQuery query(db);
-    query.prepare("INSERT INTO workers (key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)");
+
+    // See https://dev.mysql.com/doc/refman/8.0/en/miscellaneous-functions.html#function_inet-aton for info on INET
+    // functions
+    query.prepare("INSERT INTO workers (key, space, ram, cores, INET_ATON(address), name) VALUES (?, ?, ?, ?, ?, ?)");
     query.addBindValue(q_public_key);
     query.addBindValue(q_space);
     query.addBindValue(q_ram);
@@ -187,7 +147,7 @@ worker_details Gateway::getWorker(const uint8_t worker_id) {
     assert(db.tables().contains("workers"));
     QSqlQuery query(db);
     assert(doesWorkerExist(worker_id));
-    query.prepare("SELECT key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
+    query.prepare("SELECT key, space, ram, cores, INET_NTOA(address), name FROM workers WHERE id = (:id)");
     query.bindValue(":id", QVariant::fromValue(worker_id));
     worker_details details;
     details.id = worker_id;
@@ -214,7 +174,7 @@ std::vector<worker_details> Gateway::getWorkers() {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("workers"));
     QSqlQuery query(db);
-    query.prepare("SELECT id, key, space, ram, cores, address, name FROM workers");
+    query.prepare("SELECT id, key, space, ram, cores,INET_NTOA(address), name FROM workers");
     std::vector<worker_details> workerVector;
     if (query.exec()) {
         while(query.next()){
