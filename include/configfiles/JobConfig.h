@@ -55,6 +55,8 @@ namespace balancedbanana {
             //This constructor creates a JobConfig from a saved file.
             JobConfig(const std::filesystem::path &path);
 
+            virtual ~JobConfig();
+
             //Setter for the min_ram_ attribute.
             void set_min_ram(const std::optional <uint32_t> &miB);
 

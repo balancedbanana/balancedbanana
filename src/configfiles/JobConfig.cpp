@@ -15,7 +15,7 @@ std::ostream &operator <<(std::ostream &stream, std::vector<std::string> &value)
     for(std::string &string : value) {
         stream << string << "\n";
     }
-    stream << "]\n";
+    stream << "]";
     return stream;
 }
 
@@ -28,7 +28,7 @@ void SerializeOptional(std::ostream &stream, const std::string &name, std::optio
     stream << "\n";
 }
 
-inline void SerializeString(std::ostream &stream, const std::string &name, const std::string &value) {
+void SerializeString(std::ostream &stream, const std::string &name, const std::string &value) {
     stream << name << ":" << value << "\n";
 }
 
@@ -52,11 +52,7 @@ std::optional<bool> convertToBool(std::string &value) {
     }
 }
 
-std::optional<std::vector<std::string>> convertToVector(std::string &value) {
-
-}
-
-inline void insertValue(JobConfig *config, std::string &name, std::string &value) {
+void insertValue(JobConfig *config, std::string &name, std::string &value) {
     if(name == "min_ram") {
         config->set_min_ram(convertToInt32(value));
     } else if(name == "max_ram") {
@@ -82,7 +78,7 @@ inline void insertValue(JobConfig *config, std::string &name, std::string &value
     }
 }
 
-inline void insertVector(JobConfig *config, std::string &name, std::vector<std::string> &vec) {
+void insertVector(JobConfig *config, std::string &name, std::vector<std::string> &vec) {
     if(name == "environment") {
         config->set_environment(std::optional<std::vector<std::string>>(vec));
     }
@@ -162,6 +158,10 @@ current_working_dir_(std::nullopt){
     }
 }
 
+JobConfig::~JobConfig() {
+
+}
+
 void JobConfig::set_min_ram(const std::optional <uint32_t> &miB) {
     min_ram_ = miB;
 }
@@ -203,7 +203,7 @@ void JobConfig::set_interruptible(const std::optional<bool> &interruptible) {
 }
 
 void JobConfig::set_current_working_dir(const std::optional <std::filesystem::path> &cwd) {
-    current_working_dir_ = current_working_dir_;
+    current_working_dir_ = cwd;
 }
 
 std::optional <uint32_t> JobConfig::min_ram() {
@@ -252,9 +252,7 @@ std::optional <std::filesystem::path> &JobConfig::current_working_dir() {
 
 bool JobConfig::Save(const std::filesystem::path &path) {
     std::ofstream stream(path);
-    std::stringstream s;
-    Serialize(s);
-    stream << s.str();
+    Serialize(stream);
     stream.flush();
     stream.close();
     return false;
