@@ -1,4 +1,5 @@
 #include "scheduler/queue/PriorityQueue.h"
+#include <stdexcept>
 
 namespace balancedbanana {
     namespace scheduler {
@@ -8,14 +9,15 @@ namespace balancedbanana {
         }
 
         Job PriorityQueue::getJob(uint32_t ram, uint32_t cores) {
-            return nullptr;
+            throw std::runtime_error("PriorityQueue::getJob not Implemented :(");
+            // return nullptr;
         }
 
         void PriorityQueue::update() {
 
         }
 
-        PriorityQueue::PriorityQueue(Timer) {
+        PriorityQueue::PriorityQueue(const std::shared_ptr<timedevents::Timer>& timer) {
 
         }
 

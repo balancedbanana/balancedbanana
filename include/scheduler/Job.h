@@ -37,6 +37,10 @@ namespace balancedbanana {
             std::shared_ptr<database::JobStatus> status;
 
             std::shared_ptr<database::job_result> result;
+        public:
+            inline uint64_t getID() const {
+                return id;
+            }
         };
     }
 }
