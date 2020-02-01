@@ -1,6 +1,6 @@
 #include <communication/Communicator.h>
 #include <Net/TLSSocket.h>
-#include <Net/Http/V2/Session.h>
+#include <Net/Http/V2/Stream.h>
 
 using namespace balancedbanana::communication;
 
