@@ -6,10 +6,8 @@
 
 using namespace balancedbanana::commandLineInterface;
 using namespace balancedbanana::communication;
-int printcer();
 
 int main(int argc, char** argv) {
-    printcer();
     CommandLineProcessor proc;
     // Wieso argc als Zeiger...
     auto task = proc.process(&argc, argv);
