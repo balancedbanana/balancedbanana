@@ -42,7 +42,7 @@ namespace balancedbanana {
             std::optional<bool> interruptible_;
 
             //This attribute specifies the current working directory from which the job is executed.
-            std::optional <std::filesystem::path> current_working_dir_;
+            std::filesystem::path current_working_dir_;
 
             //This attribute specifies which job a request is referring to
             std::optional <uint32_t> jobID;
@@ -94,7 +94,7 @@ namespace balancedbanana {
             void set_interruptible(const std::optional<bool> &interruptible);
 
             //Setter for the current_working_dir_ attribute.
-            void set_current_working_dir(const std::optional <std::filesystem::path> &cwd);
+            void set_current_working_dir(const std::filesystem::path &cwd);
 
             //Setter for the referred jobID
             void set_job_ID(uint32_t jobID);
@@ -133,7 +133,7 @@ namespace balancedbanana {
             std::optional<bool> interruptible();
 
             //Getter for the current_working_dir_ attribute.
-            std::optional <std::filesystem::path> &current_working_dir();
+            const std::filesystem::path &current_working_dir();
 
             //Getter for the referred jobID
             std::optional <uint32_t> get_job_ID();

@@ -108,10 +108,10 @@ TEST_F(JobConfigGetterSetterTests, Interruptible) {
 
 TEST_F(JobConfigGetterSetterTests, CurrentWorkingDir) {
     std::filesystem::path currentDir(".");
-    EXPECT_EQ(std::nullopt, conf->current_working_dir());
+    EXPECT_EQ("", conf->current_working_dir());
     conf->set_current_working_dir(currentDir);
     EXPECT_EQ(currentDir, conf->current_working_dir());
-    conf->set_current_working_dir(std::nullopt);
+    conf->set_current_working_dir("");
     EXPECT_NE(currentDir, conf->current_working_dir());
 }
 
@@ -151,7 +151,7 @@ protected:
                 "str3\n"
                 "]\n"
                 "interruptible:0\n"
-                "current_working_dir:\".\"\n"
+                "current_working_dir:.\n"
                 );
     }
 
