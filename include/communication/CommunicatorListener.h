@@ -10,12 +10,12 @@ namespace balancedbanana {
 		private:
 			std::shared_ptr<Net::TLSSocketListener> listener;
 
-			std::shared_ptr<MessageProcessor> processor;
+			std::function<std::shared_ptr<MessageProcessor>()> processorfactory;
 
 			std::shared_ptr<std::thread> listenthread;
 
 		public:
-			CommunicatorListener(const std::shared_ptr<MessageProcessor>& processor);
+			CommunicatorListener(std::function<std::shared_ptr<MessageProcessor>()> processorfactory);
 			void listen(const std::function<void(std::shared_ptr<Message>)>& callback);
 		};
 	}

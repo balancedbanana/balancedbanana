@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
     // Wieso argc als Zeiger...
     auto task = proc.process(&argc, argv);
     std::cout << "Task Type" << task->getType() << "\n";
-    CommunicatorListener listener(std::make_shared<balancedbanana::communication::SchedulerClientMP>());
+    CommunicatorListener listener([](){ return std::make_shared<balancedbanana::communication::SchedulerClientMP>(); });
     listener.listen([](std::shared_ptr<balancedbanana::communication::Message> message) {
         
     });

@@ -5,14 +5,14 @@
 
 using namespace balancedbanana::communication;
 
-CommunicatorListener::CommunicatorListener(const std::shared_ptr<MessageProcessor>& processor) {
-    this->processor = processor;
+CommunicatorListener::CommunicatorListener(std::function<std::shared_ptr<MessageProcessor>()> processorfactory) {
+    this->processorfactory = std::move(processorfactory);
 }
 
 void CommunicatorListener::listen(const std::function<void(std::shared_ptr<Message>)>& callback) {
     listener = std::make_shared<Net::TLSSocketListener>();
     listener->SetConnectionHandler([this](std::shared_ptr<Net::Socket> socket) {
-        auto com = std::make_shared<Communicator>(socket, processor);
+        auto com = std::make_shared<Communicator>(socket, processorfactory());
     });
     auto address = std::make_shared<sockaddr_in6>();
 	memset(address.get(), 0, sizeof(sockaddr_in6));
