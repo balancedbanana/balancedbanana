@@ -43,60 +43,68 @@ void CommunicatorListener::listen(const std::function<void(std::shared_ptr<Messa
 #include <openssl/engine.h>
 #endif
 
-int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int days);
+int mkcert(X509 **x509p, EVP_PKEY *pkeyp, int bits, int serial, int days);
 int add_ext(X509 *cert, int nid, char *value);
 
-int printcer(int argc, char **argv)
+int printcer()
 	{
 	BIO *bio_err;
 	X509 *x509=NULL;
-	EVP_PKEY *pkey=NULL;
 
 	bio_err=BIO_new_fp(stderr, BIO_NOCLOSE);
 
-	mkcert(&x509,&pkey,512,0,365);
+// Free structs automatically
+    struct _guard
+    {
+        EVP_PKEY_CTX *ctx = NULL;
+        EVP_PKEY *key = NULL;
+        BIO *mem = NULL;
+        ~_guard() {
+            if(ctx) {
+                EVP_PKEY_CTX_free(ctx);
+            }
+            if(key) {
+                EVP_PKEY_free(key);
+            }
+            if(mem) {
+                BIO_free(mem);
+            }
+        }
+    } g;
+
+    g.ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    if (!g.ctx){
+        throw std::runtime_error("Failed to generate private / public KeyPair (EVP_PKEY_CTX_new_id failed)");
+    }
+    if (EVP_PKEY_keygen_init(g.ctx) <= 0) {
+        throw std::runtime_error("Failed to generate private / public KeyPair (EVP_PKEY_keygen_init failed)");
+    }
+    if (EVP_PKEY_CTX_set_rsa_keygen_bits(g.ctx, 2048) <= 0) {
+        throw std::runtime_error("Failed to generate private / public KeyPair (EVP_PKEY_CTX_set_rsa_keygen_bits failed)");
+    }
+    /* Generate key */
+    if (EVP_PKEY_keygen(g.ctx, &g.key) <= 0) {
+        throw std::runtime_error("Failed to generate private / public KeyPair (EVP_PKEY_keygen failed)");
+    }
+
+	mkcert(&x509,g.key,512,0,365);
     
-	RSA_print_fp(stdout, EVP_PKEY_get0_RSA(pkey),0);
+	RSA_print_fp(stdout, EVP_PKEY_get0_RSA(g.key),0);
 	X509_print_fp(stdout,x509);
 
-	PEM_write_PrivateKey(stdout,pkey,NULL,NULL,0,NULL, NULL);
+	PEM_write_PrivateKey(stdout,g.key,NULL,NULL,0,NULL, NULL);
 	PEM_write_X509(stdout,x509);
 
 	X509_free(x509);
-	EVP_PKEY_free(pkey);
 
 	BIO_free(bio_err);
 	return(0);
 	}
 
-static void callback(int p, int n, void *arg)
-	{
-	char c='B';
-
-	if (p == 0) c='.';
-	if (p == 1) c='+';
-	if (p == 2) c='*';
-	if (p == 3) c='\n';
-	fputc(c,stderr);
-	}
-
-int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int days)
+int mkcert(X509 **x509p, EVP_PKEY *pk, int bits, int serial, int days)
 	{
 	X509 *x;
-	EVP_PKEY *pk;
-	RSA *rsa;
 	X509_NAME *name=NULL;
-	
-	if ((pkeyp == NULL) || (*pkeyp == NULL))
-		{
-		if ((pk=EVP_PKEY_new()) == NULL)
-			{
-			abort(); 
-			return(0);
-			}
-		}
-	else
-		pk= *pkeyp;
 
 	if ((x509p == NULL) || (*x509p == NULL))
 		{
@@ -105,14 +113,6 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int days)
 		}
 	else
 		x= *x509p;
-
-	rsa=RSA_generate_key(bits,RSA_F4,callback,NULL);
-	if (!EVP_PKEY_assign_RSA(pk,rsa))
-		{
-		abort();
-		goto err;
-		}
-	rsa=NULL;
 
 	X509_set_version(x,2);
 	ASN1_INTEGER_set(X509_get_serialNumber(x),serial);
@@ -127,9 +127,9 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int days)
 	 * Normally we'd check the return value for errors...
 	 */
 	X509_NAME_add_entry_by_txt(name,"C",
-				MBSTRING_ASC, (const unsigned char*)"UK", -1, -1, 0);
+				MBSTRING_ASC, (const unsigned char*)"DE", -1, -1, 0);
 	X509_NAME_add_entry_by_txt(name,"CN",
-				MBSTRING_ASC, (const unsigned char*)"OpenSSL Group", -1, -1, 0);
+				MBSTRING_ASC, (const unsigned char*)"balancedbanana", -1, -1, 0);
 
 	/* Its self signed so set the issuer name to be the same as the
  	 * subject.
@@ -162,7 +162,6 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int days)
 		goto err;
 
 	*x509p=x;
-	*pkeyp=pk;
 	return(1);
 err:
 	return(0);
