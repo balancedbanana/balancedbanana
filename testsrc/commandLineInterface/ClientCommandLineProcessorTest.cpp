@@ -9,8 +9,9 @@ TEST(ClientCommandLineProcessor, status)
     std::cerr << "End of Test" << std::endl;
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"status", "1337"};
-    int argc = 2;
+
+    char* argv[] = { "bbc", "status", "-j", "1337", 0};
+    int argc = 4;
 
     std::shared_ptr<Task> task;
     task = clp.process(argc, argv);
