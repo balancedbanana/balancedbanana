@@ -22,4 +22,5 @@ public:
 
 	static std::shared_ptr<Message> deserialize(const char* msg, unsigned int size);
 
+	Message();
 };

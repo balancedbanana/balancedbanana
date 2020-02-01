@@ -39,13 +39,7 @@ namespace balancedbanana {
 		{
 		public:
 
-			std::shared_ptr<Task> process(int* argc, char** argv);
-
-		private:
-
-			int processArguments(int argc, char** argv, Task& task);
-
-			configfiles::Priority evaluatePriority(std::string& priority);
+			virtual std::shared_ptr<Task> process(int argc, char** argv) { return NULL; }
 
 		};
 
