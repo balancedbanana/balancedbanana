@@ -5,6 +5,8 @@
 
 using namespace balancedbanana::communication;
 
+std::pair<std::string, std::string> GenerateCert();
+
 CommunicatorListener::CommunicatorListener(std::function<std::shared_ptr<MessageProcessor>()> processorfactory) {
     this->processorfactory = std::move(processorfactory);
 }
@@ -19,11 +21,11 @@ void CommunicatorListener::listen(const std::function<void(std::shared_ptr<Messa
 	address->sin6_family = AF_INET6;
 	address->sin6_port = htons(8443);
 	address->sin6_addr = in6addr_any;
-    auto p = balancedbanana::communication::authenticator::Authenticator::GeneratePrivatePublicKeyPair();
-    // listener->UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
-    // listener->UsePrivateKey((uint8_t*)p.first.data(), (int)p.first.length(), Net::SSLFileType::PEM);
-    listener->UseCertificate("server.cert", Net::SSLFileType::PEM);
-    listener->UsePrivateKey("server.key", Net::SSLFileType::PEM);
+    auto p = GenerateCert(); //balancedbanana::communication::authenticator::Authenticator::GeneratePrivatePublicKeyPair();
+    listener->UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
+    listener->UsePrivateKey((uint8_t*)p.first.data(), (int)p.first.length(), Net::SSLFileType::PEM);
+    // listener->UseCertificate("server.cert", Net::SSLFileType::PEM);
+    // listener->UsePrivateKey("server.key", Net::SSLFileType::PEM);
     listenthread = listener->Listen(std::shared_ptr<sockaddr>(address, (sockaddr*)address.get()), sizeof(sockaddr_in6));
     listenthread->join();
 }
@@ -46,7 +48,7 @@ void CommunicatorListener::listen(const std::function<void(std::shared_ptr<Messa
 int mkcert(X509 **x509p, EVP_PKEY *pkeyp, int bits, int serial, int days);
 int add_ext(X509 *cert, int nid, char *value);
 
-int printcer()
+std::pair<std::string, std::string> GenerateCert()
 	{
 	BIO *bio_err;
 	X509 *x509=NULL;
@@ -95,10 +97,27 @@ int printcer()
 	PEM_write_PrivateKey(stdout,g.key,NULL,NULL,0,NULL, NULL);
 	PEM_write_X509(stdout,x509);
 
+	g.mem = BIO_new(BIO_s_mem());
+    if(!g.mem) {
+        throw std::runtime_error("Failed to generate private / public KeyPair (BIO_new failed)");
+    }
+    if(!PEM_write_bio_X509(g.mem, x509)) {
+        throw std::runtime_error("Failed to generate private / public KeyPair (PEM_write_bio_PUBKEY failed)");
+    }
+    char buffer[100000];
+    int length = BIO_read(g.mem, buffer, sizeof(buffer));
+    std::string cert(buffer, length);
+    if(!PEM_write_bio_PrivateKey(g.mem, g.key, NULL, NULL, 0, NULL, NULL)) {
+        throw std::runtime_error("Failed to generate private / public KeyPair (PEM_write_bio_PrivateKey failed)");
+    }
+    length = BIO_read(g.mem, buffer, sizeof(buffer));
+    std::string privkey(buffer, length);
+
 	X509_free(x509);
 
 	BIO_free(bio_err);
-	return(0);
+
+    return { std::move(privkey), std::move(cert) };
 	}
 
 int mkcert(X509 **x509p, EVP_PKEY *pk, int bits, int serial, int days)

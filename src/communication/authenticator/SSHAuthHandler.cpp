@@ -21,7 +21,9 @@ void balancedbanana::communication::authenticator::SSHAuthHandler::authenticate(
         throw std::runtime_error("Invalid Argument for ssh");
     }
     std::string output = proc.readAllStandardOutput().toStdString();
-    
+    auto npos = output.find('\n');
+    auto userid = output.substr(0, npos);
+    auto username = output.substr(0, npos);
     if(proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
         throw std::runtime_error("Invalid Argument for ssh");
