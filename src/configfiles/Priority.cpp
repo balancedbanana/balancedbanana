@@ -3,6 +3,7 @@
 //
 
 #include <configfiles/Priority.h>
+#include <ostream>
 
 namespace balancedbanana {
 
