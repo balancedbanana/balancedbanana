@@ -49,6 +49,7 @@ set(GTEST gtest gtest_main)
 endif()
 
 include_directories(include)
+include_directories(contrib)
 
 add_subdirectory(src/client)
 add_subdirectory(src/worker)

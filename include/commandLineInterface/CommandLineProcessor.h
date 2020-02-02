@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "Task.h"
-#include "CLI11.hpp"
+#include "CLI11/CLI11.hpp"
 
 #define CLIENT_PROGRAM_NAME "bbc"
 #define SERVER_PROGRAM_NAME "bbs"
