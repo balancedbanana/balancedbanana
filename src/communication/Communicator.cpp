@@ -1,6 +1,7 @@
 #include <communication/Communicator.h>
 #include <Net/TLSSocket.h>
 #include <Net/Http/V2/Stream.h>
+#include <thread>
 
 using namespace balancedbanana::communication;
 
@@ -9,7 +10,7 @@ Communicator::Communicator(const std::shared_ptr<Net::Socket> &socket, const std
     this->processor = processor;
     // uint8_t buf[20];
     // size_t count = this->socket->GetInputStream().Receive(buf, 20);
-    // std::thread([this]() {
+    std::thread([this, socket]() {
         auto in = this->socket->GetInputStream();
         std::vector<uint8_t> buf(500);
         while (true) {
@@ -23,7 +24,7 @@ Communicator::Communicator(const std::shared_ptr<Net::Socket> &socket, const std
             }
             this->processor->process(Message::deserialize((char*)data, length));
         }
-    // }).detach();
+    }).detach();
 }
 
 Communicator::Communicator(const std::string address, short port, const std::shared_ptr<MessageProcessor>& processor) {
@@ -32,21 +33,21 @@ Communicator::Communicator(const std::string address, short port, const std::sha
     }
     // this->socket->GetOutputStream().Send((const uint8_t*)"Hallo Welt", 10);
     this->processor = processor;
-    // std::thread([this]() {
-    //     auto in = this->socket->GetInputStream();
-    //     std::vector<uint8_t> buf(500);
-    //     while (true) {
-    //         if(!in.ReceiveAll(buf.data(), 4)) {
-    //             return;
-    //         }
-    //         uint32_t length;
-    //         auto data = Net::Http::V2::GetUInt32(buf.data(), length);
-    //         if(!in.ReceiveAll(data, length)) {
-    //             return;
-    //         }
-    //         this->processor->process(Message::deserialize((char*)data, length));
-    //     }
-    // }).detach();
+    std::thread([this, socket = this->socket]() {
+        auto in = this->socket->GetInputStream();
+        std::vector<uint8_t> buf(500);
+        while (true) {
+            if(!in.ReceiveAll(buf.data(), 4)) {
+                return;
+            }
+            uint32_t length;
+            auto data = Net::Http::V2::GetUInt32(buf.data(), length);
+            if(!in.ReceiveAll(data, length)) {
+                return;
+            }
+            this->processor->process(Message::deserialize((char*)data, length));
+        }
+    }).detach();
 }
 
 void Communicator::send(const Message & message) {

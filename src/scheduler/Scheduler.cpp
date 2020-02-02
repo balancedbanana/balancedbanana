@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
     auto task = proc.process(argc, argv);
     std::cout << "Task Type" << task->getType() << "\n";
     CommunicatorListener listener([](){ return std::make_shared<balancedbanana::communication::SchedulerClientMP>(); });
-    listener.listen([](std::shared_ptr<balancedbanana::communication::Message> message) {
+    listener.listen([](std::shared_ptr<balancedbanana::communication::Communicator> com) {
         
     });
 }
