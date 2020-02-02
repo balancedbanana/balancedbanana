@@ -34,9 +34,9 @@ TEST(communication, Connect)
     std::shared_ptr<balancedbanana::communication::Communicator> othercom; 
     listener->listen([listener, clauth, &othercom](std::shared_ptr<balancedbanana::communication::Communicator> com) {
         com->send(*clauth);
-        othercom = std::move(othercom);
+        othercom = std::move(com);
     });
-    auto com = std::make_shared<Communicator>("::1", 8443, testmp);
+    auto com = std::make_shared<Communicator>("localhost", 8443, testmp);
     com->send(*clauth);
     std::mutex lck;
     std::unique_lock<std::mutex> lock(lck);
