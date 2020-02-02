@@ -10,8 +10,8 @@ Communicator::Communicator(const std::shared_ptr<Net::Socket> &socket, const std
     this->processor = processor;
     // uint8_t buf[20];
     // size_t count = this->socket->GetInputStream().Receive(buf, 20);
-    std::thread([this, socket]() {
-        auto in = this->socket->GetInputStream();
+    std::thread([this, socket=socket, processor=processor]() {
+        auto in = socket->GetInputStream();
         std::vector<uint8_t> buf(500);
         while (true) {
             if(!in.ReceiveAll(buf.data(), 4)) {
@@ -22,7 +22,7 @@ Communicator::Communicator(const std::shared_ptr<Net::Socket> &socket, const std
             if(!in.ReceiveAll(data, length)) {
                 return;
             }
-            this->processor->process(Message::deserialize((char*)data, length));
+            processor->process(Message::deserialize((char*)data, length));
         }
     }).detach();
 }
@@ -33,8 +33,8 @@ Communicator::Communicator(const std::string address, short port, const std::sha
     }
     // this->socket->GetOutputStream().Send((const uint8_t*)"Hallo Welt", 10);
     this->processor = processor;
-    std::thread([this, socket = this->socket]() {
-        auto in = this->socket->GetInputStream();
+    std::thread([this, socket = this->socket, processor = this->processor]() {
+        auto in = socket->GetInputStream();
         std::vector<uint8_t> buf(500);
         while (true) {
             if(!in.ReceiveAll(buf.data(), 4)) {
@@ -45,7 +45,7 @@ Communicator::Communicator(const std::string address, short port, const std::sha
             if(!in.ReceiveAll(data, length)) {
                 return;
             }
-            this->processor->process(Message::deserialize((char*)data, length));
+            processor->process(Message::deserialize((char*)data, length));
         }
     }).detach();
 }
