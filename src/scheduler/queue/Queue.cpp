@@ -4,7 +4,7 @@ namespace balancedbanana {
     namespace scheduler {
 
         void Queue::addTask(const Job &job) {
-            list.emplace(job.getID(), job);
+            list.emplace(job.getId(), job);
         }
 
         uint64_t Queue::getPos(uint64_t id) {
