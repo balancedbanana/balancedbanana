@@ -3,7 +3,7 @@
 
 using namespace balancedbanana::communication;
 
-balancedbanana::communication::ClientAuthMessage::ClientAuthMessage(const std::string &username, const std::string &password, const std::string &pubkey) : Message(0x223) {
+balancedbanana::communication::ClientAuthMessage::ClientAuthMessage(const std::string &username, const std::string &password, const std::string &publickey) : Message(0x223) {
     this->username = username;
     this->password = password;
     this->publickey = publickey;

@@ -12,7 +12,7 @@ namespace balancedbanana {
 			std::string password;
 			std::string publickey;
 		public:
-			ClientAuthMessage(const std::string& username, const std::string& password, const std::string& pubkey);
+			ClientAuthMessage(const std::string& username, const std::string& password, const std::string& publickey);
 			virtual void process(const std::shared_ptr<MessageProcessor>& mp) override;
 			virtual std::string serialize();
 			const std::string& GetUsername();
