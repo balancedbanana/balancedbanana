@@ -10,10 +10,8 @@ namespace balancedbanana
 namespace commandLineInterface
 {
 
-std::shared_ptr<Task> ClientCommandLineProcessor::process(int argc, char** argv)
+int ClientCommandLineProcessor::process(int argc, char** argv, const std::shared_ptr<Task>& task)
 {
-    std::shared_ptr<Task> task = std::make_shared<Task>();
-
     // extract potential job command from arguments
 
     for (int arg = 0; arg < argc; ++arg)
@@ -38,7 +36,7 @@ std::shared_ptr<Task> ClientCommandLineProcessor::process(int argc, char** argv)
         }
     }
 
-    CLI::App app;
+    CLI::App app{"Client App"};
 
     app.require_subcommand(1, 1);
 
@@ -58,10 +56,10 @@ std::shared_ptr<Task> ClientCommandLineProcessor::process(int argc, char** argv)
     runSubCommand->add_option("--email,-e", email, "User EMail");
     runSubCommand->add_option("--image,-i", image, "Job Image (Docker)");
     runSubCommand->add_option("--priority,-p", priority, "Job Priority");
-    runSubCommand->add_option("--max-cpu-count,-maxc", max_cpu_count, "Maximum amount of used CPU Cores");
-    runSubCommand->add_option("--min-cpu-count,-minc", min_cpu_count, "Minimum amount of wanted CPU Cores");
-    runSubCommand->add_option("--max-ram,-maxr", max_ram, "Maximum amount of used RAM");
-    runSubCommand->add_option("--min-ram,-minr", min_ram, "Minimum amount of wanted CPU Cores");
+    runSubCommand->add_option("--max-cpu-count,-C", max_cpu_count, "Maximum amount of used CPU Cores");
+    runSubCommand->add_option("--min-cpu-count,-c", min_cpu_count, "Minimum amount of wanted CPU Cores");
+    runSubCommand->add_option("--max-ram,-R", max_ram, "Maximum amount of used RAM");
+    runSubCommand->add_option("--min-ram,-r", min_ram, "Minimum amount of wanted CPU Cores");
 
     // image sub command
     auto imageSubCommand = app.add_subcommand("image", "Configure Docker Images");
@@ -69,8 +67,8 @@ std::shared_ptr<Task> ClientCommandLineProcessor::process(int argc, char** argv)
     std::string removeImage = "";
     std::vector<std::string> addImage;
 
-    imageSubCommand->add_option_group("removeImage", "identifies a remove image call")->add_option("--remove-image,-ri", removeImage, "Remove a Docker Image")->required();
-    imageSubCommand->add_option_group("addImage", "identifies an add image call")->add_option("--add-image,-ai", addImage, "Add a Docker Image")->required();
+    auto removeImageOptionGroup = imageSubCommand->add_option_group("removeImage", "identifies a remove image call")->add_option("--remove-image,-I", removeImage, "Remove a Docker Image")->required();
+    auto addImageOptionGroup = imageSubCommand->add_option_group("addImage", "identifies an add image call")->add_option("--add-image,-i", addImage, "Add a Docker Image")->required();
 
     // status sub command
     auto statusSubCommand = app.add_subcommand("status", "Show Status of a Job");
@@ -82,12 +80,12 @@ std::shared_ptr<Task> ClientCommandLineProcessor::process(int argc, char** argv)
     // tail sub command
     auto tailSubCommand = app.add_subcommand("tail", "Show Tail of a Job");
 
-    app.add_option("jobID", jobID, "Show Tail of this Job")->required();
+    tailSubCommand->add_option("jobID", jobID, "Show Tail of this Job")->required();
 
     // stop sub command
     auto stopSubCommand = app.add_subcommand("stop", "Stop a Job");
 
-    app.add_option("jobID", jobID, "Stop this Job")->required();
+    stopSubCommand->add_option("jobID", jobID, "Stop this Job")->required();
 
     // pause sub command
     auto pauseSubCommand = app.add_subcommand("pause", "Pause a Job");
@@ -113,45 +111,45 @@ std::shared_ptr<Task> ClientCommandLineProcessor::process(int argc, char** argv)
 
     // Parse
 
-    try { (app).parse((argc), (argv)); } catch(const CLI::ParseError &e) { return NULL; }
+    CLI11_PARSE(app, argc, argv);
 
     // update task and config
 
     auto config = task->getConfig();
 
-    auto presentSubCommand = app.get_subcommand();
-
-    if (presentSubCommand == backupSubCommand)
+    if (backupSubCommand->parsed())
     {
         task->setType((int)TaskType::BACKUP);
 
         config->set_job_ID(jobID);
     }
-    else if (presentSubCommand == continueSubCommand)
+    if (continueSubCommand->parsed())
     {
         task->setType((int)TaskType::CONTINUE);
 
         config->set_job_ID(jobID);
     }
-    else if (presentSubCommand == imageSubCommand)
+    if (imageSubCommand->parsed())
     {
-       if (imageSubCommand->get_option_group("addImage")) {
+       if (*addImageOptionGroup) {
             // addimage was mentioned
+            task->setType((int)TaskType::ADD_IMAGE);
             task->setAddImageName(addImage[0]);
             task->setAddImageFilePath(addImage[1]);
         }
-        if (imageSubCommand->get_option_group("removeImage")) {
+        if (*removeImageOptionGroup) {
             // remove image was mentioned
+            task->setType((int)TaskType::REMOVE_IMAGE);
             task->setRemoveImageName(removeImage);
         }
     }
-    else if (presentSubCommand == pauseSubCommand)
+    if (pauseSubCommand->parsed())
     {
         task->setType((int)TaskType::PAUSE);
 
         config->set_job_ID(jobID);
     }
-    else if (presentSubCommand == restoreSubCommand)
+    if (restoreSubCommand->parsed())
     {
         task->setType((int)TaskType::RESTORE);
 
@@ -160,7 +158,7 @@ std::shared_ptr<Task> ClientCommandLineProcessor::process(int argc, char** argv)
         config->set_job_ID(jobAndBackupID[0]);
         config->set_backup_ID(jobAndBackupID[1]);
     }
-    else if (presentSubCommand == runSubCommand)
+    if (runSubCommand->parsed())
     {
         task->setType((int)TaskType::RUN);
 
@@ -176,30 +174,26 @@ std::shared_ptr<Task> ClientCommandLineProcessor::process(int argc, char** argv)
 
         config->set_priority(prio);
     }
-    else if (presentSubCommand == statusSubCommand)
+    if (statusSubCommand->parsed())
     {
         task->setType((int)TaskType::STATUS);
 
         config->set_job_ID(jobID);
     }
-    else if (presentSubCommand == stopSubCommand)
+    if (stopSubCommand->parsed())
     {
         task->setType((int)TaskType::STOP);
 
         config->set_job_ID(jobID);
     }
-    else if (presentSubCommand == tailSubCommand)
+    if (tailSubCommand->parsed())
     {
         task->setType((int)TaskType::TAIL);
 
         config->set_job_ID(jobID);
     }
-    else
-    {
-        // default
-    }
 
-    return task;
+    return 0;
 }
 
 

@@ -1,11 +1,11 @@
 #include <commandLineInterface/ClientCommandLineProcessor.h>
-#include <communication/message/TaskMessage.h>
+//#include <communication/message/TaskMessage.h>
 
 #include <iostream>
 
 using namespace balancedbanana::commandLineInterface;
-using balancedbanana::communication::Message;
-using balancedbanana::communication::TaskMessage;
+//using balancedbanana::communication::Message;
+//using balancedbanana::communication::TaskMessage;
 
 /**
  * Handles necessary actions for adding a new docker image.
@@ -39,10 +39,11 @@ void handleRequest(std::shared_ptr<Task> task);
 
 int main(int argc, char** argv) {
     // Create Client CLP
-    CommandLineProcessor clp = ClientCommandLineProcessor();
+    ClientCommandLineProcessor clp = ClientCommandLineProcessor();
 
     // process input
-    auto task = clp.process(argc, argv);
+    auto task = std::make_shared<Task>();
+    int ret = clp.process(argc, argv, task);
 
     // interpret input
     switch (task->getType()) {

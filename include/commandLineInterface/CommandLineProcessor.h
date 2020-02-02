@@ -39,7 +39,7 @@ namespace balancedbanana {
 		{
 		public:
 
-			virtual std::shared_ptr<Task> process(int argc, char** argv) { return NULL; }
+			virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task) { return 0; }
 
 		};
 

@@ -16,6 +16,8 @@ Snapshot => CreateSnapshot // Typname darf kein Methodenname sein
 18.01.2020 Docker, Container class Basic Implementation, Snapshot stub
 
 CommandLineInterface: Command structure changed; now uses subcommands to differentiate between different requests
+changed arguments: -minc -> -c, -maxc -> C, minr -> -r, -maxr -> -R, -ri -> I, -ai -> i
+reason: CLI11 does not support short arguments with names longer than one character (apparently)
 
 Windows
 

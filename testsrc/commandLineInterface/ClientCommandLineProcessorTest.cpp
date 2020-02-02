@@ -6,14 +6,17 @@ using namespace balancedbanana::commandLineInterface;
 
 TEST(ClientCommandLineProcessor, status)
 {
-    std::cerr << "End of Test" << std::endl;
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"status", "1337"};
-    int argc = 2;
+    char* argv[] = {"./bbc", "status", "1337"};
+    int argc = 3;
 
-    std::shared_ptr<Task> task;
-    task = clp.process(argc, argv);
+    std::shared_ptr<Task> task = std::make_shared<Task>();
 
-    ASSERT_EQ(task->getType(), 8);
+    clp.process(argc, argv, task);
+
+    int type = task->getType();
+    int should = (int) TaskType::STATUS;
+
+    ASSERT_EQ(type, should);
 }
