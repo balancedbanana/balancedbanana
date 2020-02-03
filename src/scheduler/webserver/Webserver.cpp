@@ -24,6 +24,7 @@ using namespace Net::Http;
 using namespace std::filesystem;
 
 #include <scheduler/Worker.h>
+#include <scheduler/Job.h>
 
 std::pair<std::string, std::string> GenerateCert();
 
@@ -60,17 +61,91 @@ void RunWebServer()
                 response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
                 con->SendResponse(false);
                 con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+				return;
             }
-            else
-            {
-                response.status = 404;
-                response.contenttype = "text/plain";
-                std::string content = "Nicht gefunden";
-                // response.contentlength = content.length();
-                response.headerlist.insert({ "content-length", "14" });
+            else if (request->method == "GET" && !request->path.compare(0, 9, "/v1/jobs/", 9)) {
+                response.status = 200;
+				int userid = std::strtol(request->path.data() + 9, nullptr, 10);
+				balancedbanana::scheduler::Job job(23, std::make_shared<balancedbanana::configfiles::JobConfig>());
+				std::stringstream resp;
+				resp << "user_name: " << "Missing" << "\n";
+				resp << "user_id: " << "0" << "\n";
+				resp << "status: " << "0" << "\n";
+				resp << "scheduled_at: " << job.getScheduled_at().toString().toStdString() << "\n";
+				resp << "finished_at: " << job.getFinished_at().toString().toStdString() << "\n";
+				resp << "spent_in_queue: " << "0" << "\n";
+				resp << "time_spend_running: " << "0" << "\n";
+				resp << "allocated_threads: " << job.getAllocated_cores() << "\n";
+				resp << "utilization_of_threads: " << "-0" << "\n";
+				resp << "allocated_ram: " << job.getAllocated_ram() << "\n";
+				resp << "utilization_of_ram: " << "0" << "\n";
+				auto responsedata = resp.str();
+                response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
                 con->SendResponse(false);
-                con->SendData((const uint8_t*)content.data(), content.length(), true);
-            }
+                con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+				return;
+            } else if (request->method == "GET" && !request->path.compare(0, 9, "/v1/user/", 9)) {
+				char * endptr;
+				int userid = std::strtol(request->path.data() + 9, &endptr, 10);
+				if(!strcmp(endptr, "/jobs")) {
+					response.status = 200;
+					std::stringstream resp;
+
+					resp << "jobs:\n";
+					std::vector<balancedbanana::scheduler::Job> jobs;
+					for(auto && job : jobs) {
+						resp << "- job_id: " << "0" << "\n";
+					}
+				
+					auto responsedata = resp.str();
+					response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
+					con->SendResponse(false);
+					con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+					return;
+				}
+            } else if (request->method == "GET" && !request->path.compare(0, 15, "/v1/jobs/hours/", 15)) {
+				int hours = std::strtol(request->path.data() + 15, nullptr, 10);
+				response.status = 200;
+				std::stringstream resp;
+
+				resp << "jobs:\n";
+				std::vector<balancedbanana::scheduler::Job> jobs;
+				for(auto && job : jobs) {
+					resp << "- job_id: " << "0" << "\n";
+				}
+			
+				auto responsedata = resp.str();
+				response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
+				con->SendResponse(false);
+				con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+				return;
+			} else if (request->method == "GET" && !request->path.compare(0, 17, "/v1/workmachines/", 17)) {
+				char * endptr;
+				int workmachineid = std::strtol(request->path.data() + 17, &endptr, 10);
+				if(!strcmp(endptr, "/jobs")) {
+					response.status = 200;
+					std::stringstream resp;
+
+					resp << "jobs:\n";
+					std::vector<balancedbanana::scheduler::Job> jobs;
+					for(auto && job : jobs) {
+						resp << "- job_id: " << "0" << "\n";
+					}
+				
+					auto responsedata = resp.str();
+					response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
+					con->SendResponse(false);
+					con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+					return;
+				}
+			}
+
+			response.status = 404;
+			response.contenttype = "text/plain";
+			std::string content = "Nicht gefunden";
+			response.headerlist.insert({ "content-length", "14" });
+			con->SendResponse(false);
+			con->SendData((const uint8_t*)content.data(), content.length(), true);
         };
 		if (socket->GetProtocol() == "h2")
 		{
