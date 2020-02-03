@@ -23,6 +23,8 @@
 using namespace Net::Http;
 using namespace std::filesystem;
 
+#include <scheduler/Worker.h>
+
 std::pair<std::string, std::string> GenerateCert();
 
 void RunWebServer()
@@ -33,12 +35,31 @@ void RunWebServer()
             auto request = &con->GetRequest();
             auto& response = con->GetResponse();
             std::vector<uint8_t> buffer;
-            if (request->method == "GET" && request->path == "/status.html")
+            if (request->method == "GET" && request->path == "/v1/workmachines/workload")
             {
                 response.status = 200;
-                response.headerlist.insert({ "content-length", "23" });
+				std::vector<balancedbanana::scheduler::Worker> workers;
+				workers.push_back({});
+				workers.push_back({});
+				std::stringstream resp;
+				resp << "machines :\n";
+				for(auto && worker : workers) {
+					resp << "- id : " << worker.name() << "\n";
+					resp << "  cpu_load : " << /* worker. */"0" << "\n";
+					resp << "  cpu_threads : \n";
+					resp << "    used : " << "0" << "\n";
+					resp << "    free : " << "0" << "\n";
+					resp << "  memory_load :\n";
+					resp << "    used : " << "0" << "\n";
+					resp << "    free : " << "0" << "\n";
+					resp << "  swap_space :\n";
+					resp << "    used : " << "0" << "\n";
+					resp << "    free : " << "0" << "\n";
+				}
+				auto responsedata = resp.str();
+                response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
                 con->SendResponse(false);
-                con->SendData((uint8_t*)"Http/1-2 Server Running", 23, true);
+                con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
             }
             else
             {
