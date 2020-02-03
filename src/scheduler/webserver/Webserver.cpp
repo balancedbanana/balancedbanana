@@ -43,19 +43,19 @@ void RunWebServer()
 				workers.push_back({});
 				workers.push_back({});
 				std::stringstream resp;
-				resp << "machines :\n";
+				resp << "machines:\n";
 				for(auto && worker : workers) {
-					resp << "- id : " << worker.name() << "\n";
-					resp << "  cpu_load : " << /* worker. */"0" << "\n";
-					resp << "  cpu_threads : \n";
-					resp << "    used : " << "0" << "\n";
-					resp << "    free : " << "0" << "\n";
-					resp << "  memory_load :\n";
-					resp << "    used : " << "0" << "\n";
-					resp << "    free : " << "0" << "\n";
-					resp << "  swap_space :\n";
-					resp << "    used : " << "0" << "\n";
-					resp << "    free : " << "0" << "\n";
+					resp << "- id: " << worker.name() << "\n";
+					resp << "  cpu_load: " << /* worker. */"0" << "\n";
+					resp << "  cpu_threads: \n";
+					resp << "    used: " << "0" << "\n";
+					resp << "    free: " << "0" << "\n";
+					resp << "  memory_load:\n";
+					resp << "    used: " << "0" << "\n";
+					resp << "    free: " << "0" << "\n";
+					resp << "  swap_space:\n";
+					resp << "    used: " << "0" << "\n";
+					resp << "    free: " << "0" << "\n";
 				}
 				auto responsedata = resp.str();
                 response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
