@@ -27,7 +27,7 @@ std::pair<std::string, std::string> GenerateCert();
 
 void RunWebServer()
 {
-	Net::TLSSocketListener listener;
+	Net::SocketListener listener;
 	listener.SetConnectionHandler([](std::shared_ptr<Net::Socket> socket) {
         auto requesthandler = [](std::shared_ptr<Net::Http::Connection> con) {
             auto request = &con->GetRequest();
@@ -96,9 +96,9 @@ void RunWebServer()
 			}
 		}
 	});
-    auto p = GenerateCert();
-    listener.UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
-    listener.UsePrivateKey((uint8_t*)p.first.data(), (int)p.first.length(), Net::SSLFileType::PEM);
+    // auto p = GenerateCert();
+    // listener.UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
+    // listener.UsePrivateKey((uint8_t*)p.first.data(), (int)p.first.length(), Net::SSLFileType::PEM);
 	auto address = std::make_shared<sockaddr_in6>();
 	memset(address.get(), 0, sizeof(sockaddr_in6));
 	address->sin6_family = AF_INET6;
