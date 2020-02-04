@@ -6,7 +6,7 @@ namespace balancedbanana {
     namespace configfiles {
 
         //The priorities are used by the scheduler to sort jobs by their specified priority.
-        enum class Priority {
+        enum Priority : int {
             low = 1,//This priority can be used for jobs that are less important than those with the standard priority.
             normal = 2,//This priority can be used for most jobs that should be scheduled and should not take too much time.
             high = 3,//This priority can be used for Jobs that are important to finish quickly and are favoured by the scheduler.

@@ -47,10 +47,10 @@ int ClientCommandLineProcessor::process(int argc, char** argv, const std::shared
     std::string email;
     std::string image;
     std::string priority;
-    int max_cpu_count;
-    int min_cpu_count;
-    int max_ram;
-    int min_ram;
+    uint32_t max_cpu_count;
+    uint32_t min_cpu_count;
+    uint32_t max_ram;
+    uint32_t min_ram;
 
     runSubCommand->add_flag("--block,-b", block, "Block during execution of Job");
     runSubCommand->add_option("--email,-e", email, "User EMail");
@@ -67,13 +67,13 @@ int ClientCommandLineProcessor::process(int argc, char** argv, const std::shared
     std::string removeImage = "";
     std::vector<std::string> addImage;
 
-    auto removeImageOptionGroup = imageSubCommand->add_option_group("removeImage", "identifies a remove image call")->add_option("--remove-image,-I", removeImage, "Remove a Docker Image")->required();
-    auto addImageOptionGroup = imageSubCommand->add_option_group("addImage", "identifies an add image call")->add_option("--add-image,-i", addImage, "Add a Docker Image")->required();
+    auto removeImageOptionGroup = imageSubCommand->add_option_group("removeImage", "identifies a remove image call")->add_option("--remove-image,-I", removeImage, "Remove a Docker Image");
+    auto addImageOptionGroup = imageSubCommand->add_option_group("addImage", "identifies an add image call")->add_option("--add-image,-i", addImage, "Add a Docker Image");
 
     // status sub command
     auto statusSubCommand = app.add_subcommand("status", "Show Status of a Job");
 
-    int jobID;
+    uint32_t jobID;
 
     statusSubCommand->add_option("jobID", jobID, "Show Status of this Job")->required();
 
@@ -105,7 +105,7 @@ int ClientCommandLineProcessor::process(int argc, char** argv, const std::shared
     // restore sub command
     auto restoreSubCommand = app.add_subcommand("restore", "Restore a Job");
 
-    std::vector<int> jobAndBackupID;
+    std::vector<uint32_t> jobAndBackupID;
 
     restoreSubCommand->add_option("ids", jobAndBackupID, "Restore this Job")->required();
 
@@ -170,7 +170,8 @@ int ClientCommandLineProcessor::process(int argc, char** argv, const std::shared
         config->set_max_ram(max_ram);
         config->set_min_ram(min_ram);
 
-        configfiles::Priority prio = evaluatePriority(priority);
+        bool couldConvert;
+        configfiles::Priority prio = configfiles::stopriority(priority, couldConvert);
 
         config->set_priority(prio);
     }
@@ -194,35 +195,6 @@ int ClientCommandLineProcessor::process(int argc, char** argv, const std::shared
     }
 
     return 0;
-}
-
-
-Priority ClientCommandLineProcessor::evaluatePriority(const std::string& priority)
-{
-    configfiles::Priority returnValue;
-
-    int in;
-    try {
-        in = std::stoi(priority);
-    } catch (std::invalid_argument& e) {
-        // input is not a number
-        in = -1;
-    }
-
-    if (priority.compare("low") == 0 || in == 1) {
-        returnValue = configfiles::Priority::low;
-    }
-    else if (priority.compare("normal") || in == 2) {
-        returnValue = configfiles::Priority::normal;
-    }
-    else if (priority.compare("high") || in == 3) {
-        returnValue = configfiles::Priority::high;
-    }
-    else if (priority.compare("emergency") || in == 4) {
-        returnValue = configfiles::Priority::emergency;
-    }
-
-    return returnValue;
 }
 
 } // namespace commandLineInterface

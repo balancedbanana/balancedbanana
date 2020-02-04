@@ -15,8 +15,6 @@ class ClientCommandLineProcessor : public balancedbanana::commandLineInterface::
         virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task);
 
     private:
-
-        balancedbanana::configfiles::Priority evaluatePriority(const std::string& priority);
 };
 
 } // namespace commandLineInterface

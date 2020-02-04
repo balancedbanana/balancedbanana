@@ -18,6 +18,8 @@ namespace balancedbanana {
                     return "high";
                 case Priority::emergency:
                     return "emergency";
+                default:
+                    return "";
             }
         }
 
