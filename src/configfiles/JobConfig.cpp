@@ -159,6 +159,7 @@ current_working_dir_(){
     if(std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
         std::ifstream s(path);
         readFromStream(this, &s);
+        s.close();
     }
 }
 
