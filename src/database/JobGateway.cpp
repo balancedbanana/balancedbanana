@@ -133,7 +133,7 @@ uint8_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
 }
 
 //Adds a new Job to the database and returns its ID.
-uint64_t JobGateway::add(details details) {
+uint64_t JobGateway::add(job_details details) {
 
     auto* job = dynamic_cast<job_details*>(&details);
     // Check args

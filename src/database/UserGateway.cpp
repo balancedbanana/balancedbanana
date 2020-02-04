@@ -11,19 +11,19 @@
 using namespace balancedbanana::database;
 
 //Adds a user to the database and returns their ID.
-uint64_t UserGateway::add(details userdetails) {
+uint64_t UserGateway::add(user_details details) {
 
-    auto* details = dynamic_cast<user_details*>(&userdetails);
+    //auto* details = dynamic_cast<user_details*>(&userdetails);
 
     // Check args
-    assert(!details->name.empty());
-    assert(!details->email.empty());
-    assert(!details->public_key.empty());
+    assert(!details.name.empty());
+    assert(!details.email.empty());
+    assert(!details.public_key.empty());
 
     // Converting the various args into QVariant Objects
-    QVariant q_name = QVariant::fromValue(QString::fromStdString(details->name));
-    QVariant q_email = QVariant::fromValue(QString::fromStdString(details->email));
-    QVariant q_public_key = QVariant::fromValue(QString::fromStdString(details->public_key));
+    QVariant q_name = QVariant::fromValue(QString::fromStdString(details.name));
+    QVariant q_email = QVariant::fromValue(QString::fromStdString(details.email));
+    QVariant q_public_key = QVariant::fromValue(QString::fromStdString(details.public_key));
 
     QSqlDatabase db = QSqlDatabase::database();
 

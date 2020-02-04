@@ -8,10 +8,10 @@
 namespace balancedbanana::database {
         class WorkerGateway : virtual public IGateway {
         public:
-            uint64_t add(details details) override;
+            static uint64_t add(worker_details details);
             bool remove(uint64_t id) override;
-            worker_details getWorker(uint64_t id);
-            std::vector<worker_details> getWorkers();
+            static worker_details getWorker(uint64_t id);
+            static std::vector<worker_details> getWorkers();
 
         private:
             static bool doesWorkerExist(uint64_t id);

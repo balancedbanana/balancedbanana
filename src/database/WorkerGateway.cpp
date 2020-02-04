@@ -1,6 +1,5 @@
 #include <database/WorkerGateway.h>
 #include <database/worker_details.h>
-#include <database/details.h>
 
 #include <cassert>
 #include <QVariant>
@@ -11,24 +10,24 @@
 
 using namespace balancedbanana::database;
 
-uint64_t WorkerGateway::add(details details) {
-    auto* worker = dynamic_cast<worker_details*>(&details);
-
+uint64_t WorkerGateway::add(worker_details worker) {
+    //worker_details* worker = static_cast<worker_details*>(&details);
+    //qDebug() << "We've reached!";
     // Check args
-    assert(!(worker->public_key).empty());
-    assert(worker->specs.space > 0);
-    assert(worker->specs.ram > 0);
-    assert(worker->specs.cores > 0);
-    assert(!(worker->address).empty());
-    assert(!(worker->name).empty());
+    assert(!(worker.public_key).empty());
+    assert(worker.specs.space > 0);
+    assert(worker.specs.ram > 0);
+    assert(worker.specs.cores > 0);
+    assert(!(worker.address).empty());
+    assert(!(worker.name).empty());
 
     // Converting the various args into QVariant Objects
-    QVariant q_public_key = QVariant::fromValue(QString::fromStdString(worker->public_key));
-    QVariant q_space = QVariant::fromValue(worker->specs.space);
-    QVariant q_ram = QVariant::fromValue(worker->specs.ram);
-    QVariant q_cores = QVariant::fromValue(worker->specs.cores);
-    QVariant q_address = QVariant::fromValue(QString::fromStdString(worker->address));
-    QVariant q_name = QVariant::fromValue(QString::fromStdString(worker->name));
+    QVariant q_public_key = QVariant::fromValue(QString::fromStdString(worker.public_key));
+    QVariant q_space = QVariant::fromValue(worker.specs.space);
+    QVariant q_ram = QVariant::fromValue(worker.specs.ram);
+    QVariant q_cores = QVariant::fromValue(worker.specs.cores);
+    QVariant q_address = QVariant::fromValue(QString::fromStdString(worker.address));
+    QVariant q_name = QVariant::fromValue(QString::fromStdString(worker.name));
 
     QSqlDatabase db = QSqlDatabase::database();
 
@@ -42,7 +41,7 @@ uint64_t WorkerGateway::add(details details) {
 
     // See https://dev.mysql.com/doc/refman/8.0/en/miscellaneous-functions.html#function_inet-aton for info on INET
     // functions
-    query.prepare("INSERT INTO workers (public_key, space, ram, cores, INET_ATON(address), name) VALUES (?, ?, ?, ?, "
+    query.prepare("INSERT INTO workers (public_key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, "
                   "?, ?)");
     query.addBindValue(q_public_key);
     query.addBindValue(q_space);

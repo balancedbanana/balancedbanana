@@ -11,7 +11,7 @@ namespace balancedbanana{
         class IGateway{
         public:
             virtual ~IGateway(){}
-            virtual uint64_t add(details details) = 0;
+            // virtual uint64_t add(details details) = 0;
             virtual bool remove(uint64_t id) = 0;
         };
     }
