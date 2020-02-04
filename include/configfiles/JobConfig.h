@@ -59,10 +59,10 @@ namespace balancedbanana {
             JobConfig();
 
             //This constructor creates a JobConfig from a serialized stringstream
-            JobConfig(std::istream &data);
+            explicit JobConfig(std::istream &data);
 
             //This constructor creates a JobConfig from a saved file.
-            JobConfig(const std::filesystem::path &path);
+            explicit JobConfig(const std::filesystem::path &path);
 
             virtual ~JobConfig();
 
