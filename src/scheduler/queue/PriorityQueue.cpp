@@ -1,5 +1,7 @@
-#include "scheduler/queue/PriorityQueue.h"
+#include <scheduler/queue/PriorityQueue.h>
 #include <stdexcept>
+
+using Timer = balancedbanana::timedevents::Timer;
 
 namespace balancedbanana {
     namespace scheduler {
@@ -12,28 +14,28 @@ namespace balancedbanana {
             int i = 1;
             bool found = false;
             for(std::shared_ptr<Job> job : emergencyList) {
-                if((*job).getID() = localId || found) {
+                if((*job).getId() == localId || found) {
                     found = true;
                 } else {
                     i++;
                 }
             }
             for(std::shared_ptr<Job> job : highList) {
-                if((*job).getID() = localId || found) {
+                if((*job).getId() == localId || found) {
                     found = true;
                 } else {
                     i++;
                 }
             }
             for(std::shared_ptr<Job> job : normalList) {
-                if((*job).getID() = localId || found) {
+                if((*job).getId() == localId || found) {
                     found = true;
                 } else {
                     i++;
                 }
             }
             for(std::shared_ptr<Job> job : lowList) {
-                if((*job).getID() = localId || found) {
+                if((*job).getId() == localId || found) {
                     found = true;
                 } else {
                     i++;
@@ -45,9 +47,9 @@ namespace balancedbanana {
             bool found =  false;
             for(std::shared_ptr<Job> job : emergencyList) {
                 if (!found) {
-                    if ((*job).getConfig().min_ram() <= ram && (*job).getConfig().min_cpu_count() <= cores) {
+                    if ((*job).getConfig()->min_ram() <= ram && (*job).getConfig()->min_cpu_count() <= cores) {
                         found = true;
-                        submissionTimes.erase((*job).getID());
+                        submissionTimes.erase((*job).getId());
                         emergencyList.remove(job);
                         return job;
                     }
@@ -55,9 +57,9 @@ namespace balancedbanana {
             }
             for(std::shared_ptr<Job> job : highList) {
                 if (!found) {
-                    if ((*job).getConfig().min_ram() <= ram && (*job).getConfig().min_cpu_count() <= cores) {
+                    if ((*job).getConfig()->min_ram() <= ram && (*job).getConfig()->min_cpu_count() <= cores) {
                         found = true;
-                        submissionTimes.erase((*job).getID());
+                        submissionTimes.erase((*job).getId());
                         emergencyList.remove(job);
                         return job;
                     }
@@ -65,9 +67,9 @@ namespace balancedbanana {
             }
             for(std::shared_ptr<Job> job : normalList) {
                 if (!found) {
-                    if ((*job).getConfig().min_ram() <= ram && (*job).getConfig().min_cpu_count() <= cores) {
+                    if ((*job).getConfig()->min_ram() <= ram && (*job).getConfig()->min_cpu_count() <= cores) {
                         found = true;
-                        submissionTimes.erase((*job).getID());
+                        submissionTimes.erase((*job).getId());
                         emergencyList.remove(job);
                         return job;
                     }
@@ -75,9 +77,9 @@ namespace balancedbanana {
             }
             for(std::shared_ptr<Job> job : lowList) {
                 if (!found) {
-                    if ((*job).getConfig().min_ram() <= ram && (*job).getConfig().min_cpu_count() <= cores) {
+                    if ((*job).getConfig()->min_ram() <= ram && (*job).getConfig()->min_cpu_count() <= cores) {
                         found = true;
-                        submissionTimes.erase((*job).getID());
+                        submissionTimes.erase((*job).getId());
                         emergencyList.remove(job);
                         return job;
                     }
@@ -91,13 +93,13 @@ namespace balancedbanana {
         void PriorityQueue::update() {
             uint64_t currTime = (uint64_t) time(nullptr);
             for(std::shared_ptr<Job> job : normalList) {
-                if(currTime - (uint64_t) submissionTimes.at((*job).getID()) >= 86400) {
+                if(currTime - (uint64_t) submissionTimes.at((*job).getId()) >= 86400) {
                     normalList.remove(job);
                     highList.emplace_back(job);
                 }
             }
             for(std::shared_ptr<Job> job : lowList) {
-                if(currTime - (uint64_t) submissionTimes.at((*job).getID()) >= 86400) {
+                if(currTime - (uint64_t) submissionTimes.at((*job).getId()) >= 86400) {
                     lowList.remove(job);
                     normalList.emplace_back(job);
                 }
@@ -110,15 +112,15 @@ namespace balancedbanana {
                 return;
             }
             time_t insertionTime = time(nullptr);
-            submissionTimes.emplace((*job).getID(), insertionTime);
-            std::string priority = configfiles::Priority.to_string((*job).getConfig().getPriority());
-            if(priority == low) {
+            submissionTimes.emplace((*job).getId(), insertionTime);
+            configfiles::Priority priority = (*job).getConfig()->priority().value_or(configfiles::Priority::normal);
+            if(priority == configfiles::Priority::low) {
                 lowList.emplace_back(job);
-            } else if(priority == normal) {
+            } else if(priority == configfiles::Priority::normal) {
                 normalList.emplace_back(job);
-            } else if(priority == high) {
+            } else if(priority == configfiles::Priority::high) {
                 highList.emplace_back(job);
-            } else if(priority == emergency) {
+            } else if(priority == configfiles::Priority::emergency) {
                 emergencyList.emplace_back(job);
             }
         }
@@ -127,8 +129,8 @@ namespace balancedbanana {
             timer = timerptr;
             interval = updateInterval;
             (*timer).setInterval(interval);
-            std::function<void()> fcnptr = update;
-            (*timer).addTimerFunction(fcnptr);
+            std::function<void()> fcnptr = std::bind(&PriorityQueue::update, this);
+            (*timer).addTimerFunction(&fcnptr);
             (*timer).start();
         }
     }

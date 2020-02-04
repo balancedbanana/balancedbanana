@@ -22,7 +22,7 @@ namespace balancedbanana {
 
             virtual void update();
 
-            PriorityQueue(std::shared_ptr<Timer> timerptr, unsigned int updateInterval);
+            PriorityQueue(std::shared_ptr<timedevents::Timer> timerptr, unsigned int updateInterval);
 
         private:
             std::shared_ptr<timedevents::Timer> timer;
