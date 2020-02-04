@@ -251,11 +251,15 @@ std::optional <std::filesystem::path> &JobConfig::current_working_dir() {
 }
 
 bool JobConfig::Save(const std::filesystem::path &path) {
-    std::ofstream stream(path);
-    Serialize(stream);
-    stream.flush();
-    stream.close();
-    return false;
+    try {
+        std::ofstream stream(path);
+        Serialize(stream);
+        stream.flush();
+        stream.close();
+        return true;
+    } catch(std::filesystem::filesystem_error &) {
+        return false;
+    }
 }
 
 void JobConfig::Serialize(std::ostream &stream) {

@@ -4,8 +4,6 @@ enable_language(CXX)
 
 project(balancedbanana)
 
-set(CMAKE_CXX_FLAGS "--coverage")
-
 find_package(Qt5 COMPONENTS Core Network Sql REQUIRED)
 find_package(OpenSSL COMPONENTS Crypto REQUIRED)
 

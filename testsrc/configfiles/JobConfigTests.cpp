@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <configfiles/JobConfig.h>
 #include <optional>
+#include <fstream>
 
 using namespace balancedbanana::configfiles;
 
@@ -187,4 +188,14 @@ TEST_F(JobConfigSerializationTest, Deserialize) {
     std::stringstream deserializer(*serializedConfig);
     JobConfig c(deserializer);
     testEqual(config, &c);
+}
+
+TEST_F(JobConfigSerializationTest, Save) {
+    std::filesystem::path path("./save-test.txt");
+    EXPECT_EQ(true, config->Save(path));
+    std::stringstream saved;
+    std::ifstream stream(path);
+    saved << stream.rdbuf();
+    stream.close();
+    EXPECT_EQ(*serializedConfig, saved.str());
 }
