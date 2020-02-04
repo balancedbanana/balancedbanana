@@ -264,6 +264,14 @@ const std::filesystem::path &JobConfig::current_working_dir() {
     return current_working_dir_;
 }
 
+std::optional<uint32_t> JobConfig::get_job_ID() {
+    return jobID;
+}
+
+std::optional<uint32_t> JobConfig::get_backup_ID() {
+    return backupID;
+}
+
 bool JobConfig::Save(const std::filesystem::path &path) {
     try {
         std::ofstream stream(path);

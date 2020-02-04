@@ -44,6 +44,9 @@ namespace balancedbanana {
             //This attribute specifies the current working directory from which the job is executed.
             std::filesystem::path current_working_dir_;
 
+            //TODO Are job ids 64 bits long or 32 bits now?
+            //TODO The job id and the backup id should be stored in the job class not in the jobconfig!
+
             //This attribute specifies which job a request is referring to
             std::optional <uint32_t> jobID;
 
