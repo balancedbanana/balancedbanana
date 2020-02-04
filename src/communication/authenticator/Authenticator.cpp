@@ -84,7 +84,7 @@ std::string Authenticator::GenerateSignature(std::string name, std::string privk
         }
     } g;
 
-    g.mem = BIO_new_mem_buf(privkey.data(), privkey.length());
+    g.mem = BIO_new_mem_buf(privkey.data(), (int)privkey.length());
 
     g.key = PEM_read_bio_PrivateKey(g.mem, NULL, NULL, NULL);
     
@@ -143,7 +143,7 @@ void balancedbanana::communication::authenticator::Authenticator::authenticate()
     for (auto &&i : name) {
         i = dis(gen);
     }
-    auto res = GeneratePrivatePublicKeyPair();
-    auto message = std::make_shared<PublicKeyAuthMessage>(std::string((char*)name.data(), name.size() * sizeof(uint32_t)), res.second);
-    comm->send(*message);
+    // auto res = GeneratePrivatePublicKeyPair();
+    // auto message = std::make_shared<PublicKeyAuthMessage>(std::string((char*)name.data(), name.size() * sizeof(uint32_t)), res.second);
+    // comm->send(*message);
 }

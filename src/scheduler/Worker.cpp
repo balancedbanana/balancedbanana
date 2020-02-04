@@ -11,4 +11,5 @@ void Worker::getStatus() {
 }
 
 Specs Worker::getSpec() {
+    return {};
 }

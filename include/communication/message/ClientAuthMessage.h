@@ -6,25 +6,18 @@
 namespace balancedbanana {
     namespace communication {
 
-		//Authenifiziert einen Arbeiter für die erste Verbinung  ( folgend PublicKeyAuthMessage on verwenden)
+		//Authenticates the client for its first connection to the scheduler
 		class ClientAuthMessage : public Message {
-		public:
-			virtual void process(const std::shared_ptr<MessageProcessor>& mp);
-
-
-		private:
 			std::string username;
-
 			std::string password;
-
-
-		public:
-			ClientAuthMessage(const std::string& username, const std::string& password, const std::string& pubkey);
-
-
-		private:
 			std::string publickey;
-
+		public:
+			ClientAuthMessage(const std::string& username, const std::string& password, const std::string& publickey);
+			virtual void process(const std::shared_ptr<MessageProcessor>& mp) override;
+			virtual std::string serialize();
+			const std::string& GetUsername();
+			const std::string& GetPassword();
+			const std::string& GetPublickey();
 		};
 	}
 }

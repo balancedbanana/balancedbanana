@@ -23,7 +23,11 @@ template<typename T>
 void SerializeOptional(std::ostream &stream, const std::string &name, std::optional<T> &value) {
     stream << name << ":";
     if(value) {
-        stream << value.value();
+        // if constexpr (std::is_same_v<T, bool>) {
+        //     stream << (value.value() ? "true" : "false");
+        // } else {
+            stream << value.value();
+        // }
     }
     stream << "\n";
 }
@@ -43,9 +47,9 @@ std::optional<uint32_t> convertToInt32(std::string &value) {
 }
 
 std::optional<bool> convertToBool(std::string &value) {
-    if(value == "true" || value == "True") {
+    if(value == "true" || value == "True" || value == "1") {
         return std::optional<bool>(true);
-    } else if(value == "false" || value == "False") {
+    } else if(value == "false" || value == "False" || value == "0") {
         return std::optional<bool>(false);
     } else {
         return std::nullopt;
@@ -74,7 +78,7 @@ void insertValue(JobConfig *config, std::string &name, std::string &value) {
     } else if(name == "interruptible") {
         config->set_interruptible(convertToBool(value));
     } else if(name == "current_working_dir") {
-        config->set_current_working_dir((!value.empty()) ? std::optional<std::filesystem::path>(value) : std::nullopt);
+        config->set_current_working_dir(value);
     }
 }
 
@@ -90,7 +94,7 @@ void readFromStream(JobConfig *config, std::istream *stream) {
         size_t separator = line.find_first_of(':');
         if(separator > 0) {
             std::string name = line.substr(0, separator);
-            std::string value = line.substr(separator, std::string::npos);
+            std::string value = line.substr(separator + 1, std::string::npos);
             if(value == "[") {
                 std::vector<std::string> vec;
                 bool endofvector = false;
@@ -117,12 +121,12 @@ JobConfig::JobConfig() :
     min_cpu_count_(std::nullopt),
     max_cpu_count_(std::nullopt),
     blocking_mode_(std::nullopt),
-    email_(""),
+    email_(),
     priority_(std::nullopt),
-    image_(""),
+    image_(),
     environment_(std::nullopt),
     interruptible_(std::nullopt),
-    current_working_dir_(std::nullopt){
+    current_working_dir_(){
 }
 
 JobConfig::JobConfig(std::istream &data) :
@@ -131,12 +135,12 @@ max_ram_(std::nullopt),
 min_cpu_count_(std::nullopt),
 max_cpu_count_(std::nullopt),
 blocking_mode_(std::nullopt),
-email_(""),
+email_(),
 priority_(std::nullopt),
-image_(""),
+image_(),
 environment_(std::nullopt),
 interruptible_(std::nullopt),
-current_working_dir_(std::nullopt){
+current_working_dir_() {
     readFromStream(this, &data);
 }
 
@@ -146,12 +150,12 @@ max_ram_(std::nullopt),
 min_cpu_count_(std::nullopt),
 max_cpu_count_(std::nullopt),
 blocking_mode_(std::nullopt),
-email_(""),
+email_(),
 priority_(std::nullopt),
-image_(""),
+image_(),
 environment_(std::nullopt),
 interruptible_(std::nullopt),
-current_working_dir_(std::nullopt){
+current_working_dir_(){
     if(std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
         std::ifstream s(path);
         readFromStream(this, &s);
@@ -202,9 +206,18 @@ void JobConfig::set_interruptible(const std::optional<bool> &interruptible) {
     interruptible_ = interruptible;
 }
 
-void JobConfig::set_current_working_dir(const std::optional <std::filesystem::path> &cwd) {
+void JobConfig::set_current_working_dir(const std::filesystem::path &cwd) {
     current_working_dir_ = cwd;
 }
+
+void JobConfig::set_job_ID(uint32_t jobID) {
+    this->jobID = jobID;
+}
+
+void JobConfig::set_backup_ID(uint32_t backupID) {
+    this->backupID = backupID;
+}
+
 
 std::optional <uint32_t> JobConfig::min_ram() {
     return min_ram_;
@@ -246,7 +259,7 @@ std::optional<bool> JobConfig::interruptible() {
     return interruptible_;
 }
 
-std::optional <std::filesystem::path> &JobConfig::current_working_dir() {
+const std::filesystem::path &JobConfig::current_working_dir() {
     return current_working_dir_;
 }
 
@@ -273,7 +286,7 @@ void JobConfig::Serialize(std::ostream &stream) {
     SerializeString(stream, "image", image_);
     SerializeOptional(stream, "environment", environment_);
     SerializeOptional(stream, "interruptible", interruptible_);
-    SerializeOptional(stream, "current_working_dir", current_working_dir_);
+    SerializeString(stream, "current_working_dir", current_working_dir_.u8string());
     stream.flush();
 }
 
@@ -308,7 +321,7 @@ void JobConfig::Merge(const JobConfig &config) {
     if(!interruptible_) {
         set_interruptible(config.interruptible_);
     }
-    if(!current_working_dir_) {
+    if(current_working_dir_.empty()) {
         set_current_working_dir(config.current_working_dir_);
     }
 }

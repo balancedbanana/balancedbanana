@@ -12,6 +12,9 @@ namespace balancedbanana {
             void getStatus();
 
             database::Specs getSpec();
+            Worker() : IUser("", "") {
+
+            }
         private:
             std::shared_ptr<communication::Communicator> comm;
         };

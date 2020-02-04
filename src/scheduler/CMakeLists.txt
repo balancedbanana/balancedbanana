@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
+add_subdirectory(queue)
 
-add_library(scheduler Worker.cpp)
-set_target_properties(scheduler PROPERTIES CXX_STANDARD 17)
-target_link_libraries(scheduler Qt5::Core Qt5::Network Qt5::Sql)
+add_executable(bbs Scheduler.cpp Worker.cpp IUser.cpp webserver/Webserver.cpp)
+target_link_libraries(bbs Qt5::Core Qt5::Network Qt5::Sql communication Authenticator Message configfiles commandLineInterface)

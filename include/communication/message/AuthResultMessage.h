@@ -12,7 +12,8 @@ namespace balancedbanana {
 
 
 		public:
-			//Gibt den Authentfication status zurück 0 falls erfolgreich sonst ungleich 0
+			AuthResultMessage();
+			//Status of Authentification zero success, nonzero failure
 			unsigned long getStatus();
 
 			virtual void process(const std::shared_ptr<MessageProcessor>& mp);

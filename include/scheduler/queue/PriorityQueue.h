@@ -1,20 +1,27 @@
 #pragma once
 #include "Queue.h"
-#include <TimedEvents/Timer.h>
+#include "timedevents/Timer.h"
+#include "scheduler/Job.h"
 
-//Priorizes Task
-class PriorityQueue : public Queue {
-public:
-    virtual void addTask(const Job & job);
+//Prioritizes Task
+namespace balancedbanana {
+    namespace scheduler {
+        class PriorityQueue : public Queue {
+        public:
+            virtual void addTask(const Job &job);
 
-    virtual unsigned long getPos(unsigned long id);
+            virtual unsigned long getPos(unsigned long id);
 
-    virtual Job getJob(uint32_t ram, uint32_t cores);
+            virtual Job getJob(uint32_t ram, uint32_t cores);
 
-    virtual void update();
+            virtual void update();
+
+            PriorityQueue(const std::shared_ptr<timedevents::Timer>& timer);
 
 
-private:
-    std::shared_ptr<Timer> timer;
+        private:
+            std::shared_ptr<timedevents::Timer> timer;
 
-};
+        };
+    }
+}

@@ -9,10 +9,10 @@ namespace balancedbanana {
         namespace authenticator {
             class Authenticator {
                 std::shared_ptr<balancedbanana::communication::Communicator> comm;
-                std::pair<std::string, std::string> GeneratePrivatePublicKeyPair();
-                std::string GenerateSignature(std::string name, std::string privkey);
-
 			public:
+                static std::pair<std::string, std::string> GeneratePrivatePublicKeyPair();
+                static std::string GenerateSignature(std::string name, std::string privkey);
+
 				Authenticator(const std::shared_ptr<balancedbanana::communication::Communicator> &comm);
 
 				void authenticate(const std::string& username, const std::string& password);
