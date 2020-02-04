@@ -1,4 +1,5 @@
 #include "scheduler/queue/PriorityQueue.h"
+#include <stdexcept>
 
 namespace balancedbanana {
     namespace scheduler {

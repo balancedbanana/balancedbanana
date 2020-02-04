@@ -15,7 +15,7 @@ namespace balancedbanana {
 			//Anzahl der CPU Kerne
 			int coreCount;
 
-			//Größe des verfügbaren Arbeitsspeichers
+			//GrÃ¶ÃŸe des verfÃ¼gbaren Arbeitsspeichers
 			int ramSize;
 
 			//Irgendeine Information, die das Betriebssystem identifiziert

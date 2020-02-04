@@ -15,6 +15,8 @@ Snapshot => CreateSnapshot // Typname darf kein Methodenname sein
 
 18.01.2020 Docker, Container class Basic Implementation, Snapshot stub
 
+CommandLineInterface: Command structure changed; now uses subcommands to differentiate between different requests
+
 Windows
 
 gtest
@@ -25,3 +27,8 @@ cmake --build . -t install
 QT5
 in workspace/build
 cmake .. -DQt5_DIR="C:\Qt\Qt5.14.0\5.14.0\msvc2017_64\lib\cmake\Qt5"
+
+
+openssl-devel qt5-qtbase-devel
+
+1.2.2010 Christopher - Certless TLSListener for CommunicatorListener

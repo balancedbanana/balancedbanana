@@ -25,7 +25,7 @@ namespace balancedbanana {
             PriorityQueue(std::shared_ptr<Timer> timerptr, unsigned int updateInterval);
 
         private:
-            std::shared_ptr<Timer> timer;
+            std::shared_ptr<timedevents::Timer> timer;
 
             std::mutex mutex;
 
