@@ -1,7 +1,7 @@
 #pragma once
-#include "job_details.h"
-#include "worker_details.h"
-#include "user_details.h"
+#include <job_details.h>
+#include <worker_details.h>
+#include <user_details.h>
 #include <scheduler/Job.h>
 #include <scheduler/Worker.h>
 #include <scheduler/User.h>

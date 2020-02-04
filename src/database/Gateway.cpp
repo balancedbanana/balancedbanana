@@ -269,7 +269,6 @@ QVariant_JobConfig convertJobConfig(const uint64_t &user_id, JobConfig& config, 
     // current_working_dir => std::filesystem::path => std::string => QString => QVariant
     QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir()
                                                                                         .u8string()));
-
     QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
     QVariant q_schedule_time = QVariant::fromValue(schedule_time);
     QVariant q_status_id = QVariant::fromValue(int(JobStatus::scheduled));
