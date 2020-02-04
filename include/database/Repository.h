@@ -1,18 +1,17 @@
 #pragma once
-#include "job_details.h"
-#include "Gateway.h"
-#include "Factory.h"
-#include "job_result.h"
-#include "Subject.h"
 
-#include <chrono>
+#include <database/job_details.h>
+#include <database/job_result.h>
+#include <database/Gateway.h>
+
 #include <cinttypes>
+#include <QDateTime>>
 
 namespace balancedbanana {
     namespace database {
 
         //This is the interface that the rest of the program uses to query the database.
-        class Repository : public Subject {
+        class Repository {
         public:
             //Adds a Worker to the DB and returns its ID
             uint64_t addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const std::string address);
@@ -21,17 +20,18 @@ namespace balancedbanana {
 
             Worker getWorker(const uint64_t worker_id);
 
-            std::vector<std::shared_ptr<Worker>> getWorkers();
+            std::vector<Worker> getWorkers();
 
             //Adds a new job to the DB and returns its ID.
-            uint64_t addJob(const uint64_t user_id, const JobConfig config, const std::chrono::time_point<std::chrono::system_clock> schedule_time, const std::string command);
+            uint64_t addJob(const uint64_t user_id, const JobConfig config, const QDateTime schedule_time, const std::string
+            command);
 
             //Deletes a Job from the DB.
             bool removeJob(const uint64_t job_id);
 
             Job getJob(const uint64_t job_id);
 
-            std::vector<std::shared_ptr<Job>> getJobs();
+            std::vector<Job> getJobs();
 
             //Adds a new User to the DB and returns their status.
             uint64_t addUser(const std::string name, const std::string email, const std::string public_key);
@@ -41,13 +41,14 @@ namespace balancedbanana {
 
             User getUser(const uint64_t user_id);
 
-            std::vector<std::shared_ptr<User>> getUsers();
+            std::vector<User> getUsers();
 
             //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
-            bool startJob(const uint64_t job_id, const uint64_t worker_id, const Specs specs, const std::chrono::time_point<std::chrono::system_clock> start_time);
+            bool startJob(const uint64_t job_id, const uint64_t worker_id, const Specs specs, const QDateTime start_time);
 
             //Changes the status of a Job to finish and gives it a finish time + assigns a Job Result to it.
-            bool finishJob(const uint64_t job_id, const std::chrono::time_point<std::chrono::system_clock> finish_time, const std::string stdout, const int8_t exit_code);
+            bool finishJob(const uint64_t job_id, const QDateTime finish_time, const std::string stdout, const int8_t
+            exit_code);
 
 
         private:
