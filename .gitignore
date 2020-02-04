@@ -57,7 +57,6 @@ src/client/client
 
 build/**/*
 
-include/*
 lib/*
 bin/*
 test/test_runner
