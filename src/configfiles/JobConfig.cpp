@@ -38,7 +38,8 @@ void SerializeString(std::ostream &stream, const std::string &name, const std::s
 
 std::optional<uint32_t> convertToInt32(std::string &value) {
     try {
-        return std::stoull(value);
+        unsigned long long converted = std::stoull(value);
+        return  converted <= UINT32_MAX ? converted : UINT32_MAX;
     } catch(std::invalid_argument &) {
         return std::nullopt;
     } catch(std::out_of_range &) {
@@ -211,14 +212,13 @@ void JobConfig::set_current_working_dir(const std::filesystem::path &cwd) {
     current_working_dir_ = cwd;
 }
 
-void JobConfig::set_job_ID(uint32_t jobID) {
+void JobConfig::set_job_ID(std::optional<uint32_t> jobID) {
     this->jobID = jobID;
 }
 
-void JobConfig::set_backup_ID(uint32_t backupID) {
+void JobConfig::set_backup_ID(std::optional<uint32_t> backupID) {
     this->backupID = backupID;
 }
-
 
 std::optional <uint32_t> JobConfig::min_ram() {
     return min_ram_;
@@ -273,15 +273,11 @@ std::optional<uint32_t> JobConfig::get_backup_ID() {
 }
 
 bool JobConfig::Save(const std::filesystem::path &path) {
-    try {
-        std::ofstream stream(path);
-        Serialize(stream);
-        stream.flush();
-        stream.close();
-        return true;
-    } catch(std::filesystem::filesystem_error &) {
-        return false;
-    }
+    std::ofstream stream(path);
+    Serialize(stream);
+    stream.flush();
+    stream.close();
+    return !stream.bad() && !stream.fail();
 }
 
 void JobConfig::Serialize(std::ostream &stream) {
@@ -321,7 +317,7 @@ void JobConfig::Merge(const JobConfig &config) {
     if(!priority_) {
         set_priority(config.priority_);
     }
-    if(!image_.empty()) {
+    if(image_.empty()) {
         set_image(config.image_);
     }
     if(!environment_) {
