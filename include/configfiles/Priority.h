@@ -15,7 +15,7 @@ namespace balancedbanana {
 
         std::string to_string(Priority priority);
 
-        Priority stopriority(std::string &value, bool &success);
+        Priority stopriority(const std::string &value, bool &success);
 
         std::ostream &operator <<(std::ostream &, Priority);
 

@@ -19,10 +19,12 @@ namespace balancedbanana {
                     return "high";
                 case Priority::emergency:
                     return "emergency";
+                default:
+                    throw std::invalid_argument("invalid priority");
             }
         }
 
-        Priority stopriority(std::string &value, bool &success) {
+        Priority stopriority(const std::string &value, bool &success) {
             success = true;
             if (value == "low" || value == "1") {
                 return Priority::low;
