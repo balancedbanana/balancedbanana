@@ -199,3 +199,12 @@ TEST_F(JobConfigSerializationTest, Save) {
     stream.close();
     EXPECT_EQ(*serializedConfig, saved.str());
 }
+
+TEST_F(JobConfigSerializationTest, Load) {
+    std::filesystem::path path("./load-test-txt");
+    std::ofstream stream(path);
+    config->Serialize(stream);
+    stream.close();
+    JobConfig loaded(path);
+    testEqual(config, &loaded);
+}
