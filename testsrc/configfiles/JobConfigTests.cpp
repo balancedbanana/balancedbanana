@@ -5,19 +5,33 @@
 
 using namespace balancedbanana::configfiles;
 
+void testEqual(JobConfig *expected, JobConfig *value) {
+    EXPECT_EQ(expected->min_ram(), value->min_ram());
+    EXPECT_EQ(expected->max_ram(), value->max_ram());
+    EXPECT_EQ(expected->min_cpu_count(), value->min_cpu_count());
+    EXPECT_EQ(expected->max_cpu_count(), value->max_cpu_count());
+    EXPECT_EQ(expected->blocking_mode(), value->blocking_mode());
+    EXPECT_EQ(expected->email(), value->email());
+    EXPECT_EQ(expected->priority(), value->priority());
+    EXPECT_EQ(expected->image(), value->image());
+    EXPECT_EQ(expected->environment(), value->environment());
+    EXPECT_EQ(expected->interruptible(), value->interruptible());
+    EXPECT_EQ(expected->current_working_dir(), value->current_working_dir());
+}
+
 class JobConfigGetterSetterTests : public testing::Test {
 protected:
     JobConfig *conf;
 
 public:
-    JobConfigGetterSetterTests() {
-    }
+    JobConfigGetterSetterTests() : conf(nullptr) {
+    };
 
-    virtual void SetUp() override {
+    void SetUp() override {
         conf = new JobConfig();
     }
 
-    virtual void TearDown() override {
+    void TearDown() override {
         delete conf;
     }
 
@@ -116,15 +130,31 @@ TEST_F(JobConfigGetterSetterTests, CurrentWorkingDir) {
     EXPECT_NE(currentDir, conf->current_working_dir());
 }
 
+TEST_F(JobConfigGetterSetterTests, JobId) {
+    EXPECT_EQ(std::nullopt, conf->get_job_ID());
+    conf->set_job_ID(32);
+    EXPECT_EQ(32, conf->get_job_ID());
+    conf->set_job_ID(std::nullopt);
+    EXPECT_NE(32, conf->get_job_ID());
+}
+
+TEST_F(JobConfigGetterSetterTests, BackupId) {
+    EXPECT_EQ(std::nullopt, conf->get_backup_ID());
+    conf->set_backup_ID(31);
+    EXPECT_EQ(31, conf->get_backup_ID());
+    conf->set_backup_ID(std::nullopt);
+    EXPECT_NE(31, conf->get_backup_ID());
+}
+
 class JobConfigSerializationTest : public testing::Test {
 protected:
     JobConfig *config;
     std::string *serializedConfig;
 
-    JobConfigSerializationTest() {
+    JobConfigSerializationTest() : config(nullptr), serializedConfig(nullptr) {
     }
 
-    virtual void SetUp() override {
+    void SetUp() override {
         config = new JobConfig();
         config->set_min_ram(123456);
         config->set_max_ram(654321);
@@ -156,23 +186,9 @@ protected:
                 );
     }
 
-    virtual void TearDown() override {
+    void TearDown() override {
         delete config;
         delete serializedConfig;
-    }
-
-    void testEqual(JobConfig *expected, JobConfig *value) {
-        EXPECT_EQ(expected->min_ram(), value->min_ram());
-        EXPECT_EQ(expected->max_ram(), value->max_ram());
-        EXPECT_EQ(expected->min_cpu_count(), value->min_cpu_count());
-        EXPECT_EQ(expected->max_cpu_count(), value->max_cpu_count());
-        EXPECT_EQ(expected->blocking_mode(), value->blocking_mode());
-        EXPECT_EQ(expected->email(), value->email());
-        EXPECT_EQ(expected->priority(), value->priority());
-        EXPECT_EQ(expected->image(), value->image());
-        EXPECT_EQ(expected->environment(), value->environment());
-        EXPECT_EQ(expected->interruptible(), value->interruptible());
-        EXPECT_EQ(expected->current_working_dir(), value->current_working_dir());
     }
 
 };
@@ -207,4 +223,115 @@ TEST_F(JobConfigSerializationTest, Load) {
     stream.close();
     JobConfig loaded(path);
     testEqual(config, &loaded);
+}
+
+TEST_F(JobConfigSerializationTest, LoadCriticalValues) {
+    std::stringstream s("min_ram:123456\n"
+                        "max_ram:invalid\n"
+                        "min_cpu_count:5000000000\n"
+                        "max_cpu_count:1000000000000000000000000000000000000000000000000\n"
+                        "blocking_mode:maybe\n");
+    JobConfig critical(s);
+    EXPECT_EQ(123456, critical.min_ram().value());
+    EXPECT_EQ(std::nullopt, critical.max_ram());
+    EXPECT_EQ(UINT32_MAX, critical.min_cpu_count().value());
+    EXPECT_EQ(UINT32_MAX, critical.max_cpu_count().value());
+    EXPECT_EQ(std::nullopt, critical.blocking_mode());
+}
+
+class JobConfigMergeTest : public testing::Test {
+protected:
+    JobConfig *a, *b, *c;
+    JobConfigMergeTest() : a(nullptr), b(nullptr), c(nullptr) {
+    }
+
+    void SetUp() override {
+        std::stringstream astream("min_ram:123456\n"
+                            "max_ram:654321\n"
+                            "min_cpu_count:42\n"
+                            "max_cpu_count:43\n"
+                            "blocking_mode:1\n"
+                            "email:mail@test.com\n"
+                            "priority:low\n"
+                            "image:testimage\n"
+                            "environment:[\n"
+                            "str1\n"
+                            "str2\n"
+                            "str3\n"
+                            "]\n"
+                            "interruptible:0\n"
+                            "current_working_dir:.\n");
+        std::stringstream bstream("min_ram:23\n"
+                            "max_cpu_count:2\n"
+                            "email:mail2@test.com\n"
+                            "environment:[\n"
+                            "str1\n"
+                            "str3\n"
+                            "]\n"
+                            "current_working_dir:.\n");
+        std::stringstream cstream("max_ram:34\n"
+                            "min_cpu_count:1\n"
+                            "blocking_mode:0\n"
+                            "priority:high\n"
+                            "image:testimage2\n"
+                            "interruptible:0\n");
+        a = new JobConfig(astream);
+        b = new JobConfig(bstream);
+        c = new JobConfig(cstream);
+    }
+
+    void TearDown() override {
+        delete a;
+        delete b;
+        delete c;
+    }
+
+};
+
+TEST_F(JobConfigMergeTest, MergeFullWithIncomplete) {
+    JobConfig copyA = *a;
+    copyA.Merge(*b);
+    testEqual(a, &copyA);
+}
+
+TEST_F(JobConfigMergeTest, MergeIncompleteWithFull) {
+    c->Merge(*a);
+    std::stringstream s("min_ram:123456\n"
+                        "max_ram:34\n"
+                        "min_cpu_count:1\n"
+                        "max_cpu_count:43\n"
+                        "blocking_mode:0\n"
+                        "email:mail@test.com\n"
+                        "priority:high\n"
+                        "image:testimage2\n"
+                        "environment:[\n"
+                        "str1\n"
+                        "str2\n"
+                        "str3\n"
+                        "]\n"
+                        "interruptible:0\n"
+                        "current_working_dir:.\n"
+                        );
+    JobConfig expected(s);
+    testEqual(&expected, c);
+}
+
+TEST_F(JobConfigMergeTest, MergeIncompleteWithIncomplete) {
+    b->Merge(*c);
+    std::stringstream s("min_ram:23\n"
+                        "max_cpu_count:2\n"
+                        "email:mail2@test.com\n"
+                        "environment:[\n"
+                        "str1\n"
+                        "str3\n"
+                        "]\n"
+                        "current_working_dir:.\n"
+                        "max_ram:34\n"
+                        "min_cpu_count:1\n"
+                        "blocking_mode:0\n"
+                        "priority:high\n"
+                        "image:testimage2\n"
+                        "interruptible:0\n");
+    JobConfig expected(s);
+    testEqual(&expected, b);
 }
