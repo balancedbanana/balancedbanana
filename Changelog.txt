@@ -8,6 +8,8 @@ Authenticator::GenerateSignature()
 
 Veränderungen zum Entwurf
 
+SchedulerConfig -> ApplicationConfig, erbt von std::map anstatt sie als attribut zu haben
+
 AuthHandler::authenticate => AuthHandler::publickeyauthenticate zu ähnliche signatur mit der Passwort Autorization
 
 Container:
