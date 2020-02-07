@@ -16,7 +16,7 @@ void readFromStream(ApplicationConfig *config, std::istream *stream) {
         if(separator > 0) {
             std::string name = line.substr(0, separator);
             std::string value = line.substr(separator + 1, std::string::npos);
-            config->insert(name, value);
+            (*config)[name] = value;
         }
     }
 }
@@ -25,7 +25,7 @@ void readFromStream(ApplicationConfig *config, std::istream *stream) {
 
 ApplicationConfig::ApplicationConfig() = default;
 
-ApplicationConfig::ApplicationConfig(const std::filesystem::path &path) {
+ApplicationConfig::ApplicationConfig(const std::filesystem::path &path) : unordered_map() {
     if(std::filesystem::exists(path) && std::filesystem::is_regular_file(path)) {
         std::ifstream stream(path);
         readFromStream(this, &stream);
@@ -33,7 +33,7 @@ ApplicationConfig::ApplicationConfig(const std::filesystem::path &path) {
     }
 }
 
-ApplicationConfig::ApplicationConfig(std::istream &data) {
+ApplicationConfig::ApplicationConfig(std::istream &data) : unordered_map(){
     readFromStream(this, &data);
 }
 

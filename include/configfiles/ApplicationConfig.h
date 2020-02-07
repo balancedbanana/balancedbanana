@@ -1,12 +1,12 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <filesystem>
 
 namespace balancedbanana::configfiles {
 
 //This class contains policies for the application as key-value pairs.
-    class ApplicationConfig : public std::map<std::string, std::string> {
+    class ApplicationConfig : public std::unordered_map<std::string, std::string> {
     public:
         //This constructor creates an empty ApplicationConfig.
         ApplicationConfig();
