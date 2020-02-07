@@ -94,3 +94,10 @@ TEST_F(ApplicationConfigTest, DeserializeFromFile) {
     ApplicationConfig loaded(path);
     testEqual(config, &loaded);
 }
+
+TEST_F(ApplicationConfigTest, CopyApplicationConfig) {
+    ApplicationConfig copiedByConstructor(*config);
+    testEqual(config, &copiedByConstructor);
+    ApplicationConfig copiedByAsign = *config;
+    testEqual(config, &copiedByAsign);
+}
