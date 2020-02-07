@@ -275,7 +275,6 @@ std::optional<uint32_t> JobConfig::get_backup_ID() {
 bool JobConfig::Save(const std::filesystem::path &path) {
     std::ofstream stream(path);
     Serialize(stream);
-    stream.flush();
     stream.close();
     return !stream.bad() && !stream.fail();
 }
