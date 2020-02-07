@@ -19,10 +19,12 @@ int SchedulerCommandLineProcessor::process(int argc, char** argv, const std::sha
 
     app.add_option("--server,-s", ipAddress, "Start Scheduler at ipAddress");
     app.add_option("--webapi,-w", webAPIAddress, "start Web API at webAPIAddress");
-    app.add_option("--serverport,-sp", serverPort, "Server Port");
-    app.add_option("--webapi-port,-wp", webAPIPort, "web API Port");
+    app.add_option("--serverport,-S", serverPort, "Server Port");
+    app.add_option("--webapi-port,-W", webAPIPort, "web API Port");
 
     CLI11_PARSE(app, argc, argv);
+
+    task->setType((int)TaskType::SERVERSTART);
 
     task->setServerIP(ipAddress);
     task->setServerPort(serverPort);
