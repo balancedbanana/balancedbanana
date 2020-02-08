@@ -26,7 +26,19 @@ public:
 TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
 
 /**
- * Creates a fixture class that initializes a sample worker's details.
+ * Deletes the all records in the workers table and resets the auto increment for the id.
+ */
+void resetTableAI(){
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL");
+    query.exec();
+    query.prepare("DELETE FROM workers");
+    query.exec();
+    query.prepare("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT");
+    query.exec();
+}
+
+/**
+ * Fixture class that initializes a sample worker's details.
  */
 class AddWorkerTest : public ::testing::Test {
 protected:
@@ -39,23 +51,112 @@ protected:
         details.name = "CentOS";
     }
 
+    void TearDown() override {
+        resetTableAI();
+    }
+
     worker_details details;
 };
 
+
 // Test checks if the addWorker method in Gateway works properly given correct parameters
 TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
-
-    // To reset the AUTO_INCREMENT, it has to be removed and then added back
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL");
-    query.exec();
-    query.prepare("DELETE FROM workers");
-    query.exec();
-    query.prepare("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT");
-    query.exec();
-
     // The first entry's id should be 1
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
 }
+
+// Test to see if the auto increment feature works as expected.
+// Adds the workers from the AddWorkerTest fixture
+TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSucess_Test){
+
+    // Add the worker from the first test. Since it's the first worker, its id should be 1.
+    ASSERT_TRUE(WorkerGateway::add(details) == 1);
+
+    // Initialize a new worker
+    worker_details seconddetails{};
+    seconddetails.public_key = "sadfjsaljdf";
+    seconddetails.specs = details.specs;
+    seconddetails.address = "1.2.3.4";
+    seconddetails.name = "Ubuntu";
+
+    ASSERT_TRUE(WorkerGateway::add(seconddetails) == 2);
+}
+
+/**
+ * Fixture class that deletes the workers table on setup and restores it on teardown.
+ */
+class NoTableTest : public ::testing::Test{
+protected:
+    void SetUp() override {
+        // Deletes the workers table
+        QSqlQuery query("DROP TABLE workers");
+        query.exec();
+
+        // Setup the varaibles needed
+        details.public_key = "34nrhk3hkr";
+        details.specs.space = 10240;
+        details.specs.ram = 16384;
+        details.specs.cores = 4;
+        details.address = "0.0.0.0";
+        details.name = "CentOS";
+        id = 1;
+    }
+
+    void TearDown() override {
+        QSqlQuery query("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
+                        "unsigned DEFAULT NULL, `cores` bigint(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
+                        "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
+                        "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
+                        "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
+                        "ENGINE=InnoDB DEFAULT CHARSET=latin1");
+        query.exec();
+    }
+
+    worker_details details;
+    uint64_t id;
+};
+
+// Test to see if an exception is thrown when a worker is being added, but no workers' table exists.
+TEST_F(NoTableTest, NoTableTest_AddWorker_Test){
+    EXPECT_THROW(WorkerGateway::add(details), std::logic_error);
+}
+
+// Test to see if an exception is thrown when a worker is being removed, but no workers' table exists.
+TEST_F(NoTableTest, NoTableTest_RemoveWorker_Test){
+    EXPECT_THROW(WorkerGateway::remove(id), std::logic_error);
+}
+
+// Test to see if an exception is thrown when the worker getter is called, but no workers' table exists.
+TEST_F(NoTableTest, NoTableTest_GetWorker_Test){
+    EXPECT_THROW(WorkerGateway::getWorker(id), std::logic_error);
+}
+
+// Test to see if an exception is when the workers getter is called, but no workers' table exists.
+TEST_F(NoTableTest, NoTableTest_GetWorkers_Test){
+    EXPECT_THROW(WorkerGateway::getWorkers(), std::logic_error);
+}
+
+// Test to see if a worker is removed after successfully.
+TEST(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
+    // Add a worker
+    worker_details details{};
+    details.public_key = "34nrhk3hkr";
+    details.specs.space = 10240;
+    details.specs.ram = 16384;
+    details.specs.cores = 4;
+    details.address = "0.0.0.0";
+    details.name = "CentOS";
+    // Since this is the first worker, this has to be true.
+    ASSERT_TRUE(WorkerGateway::add(details) == 1);
+
+    // This must return true.
+    ASSERT_EQ(WorkerGateway::remove(1), true);
+}
+
+TEST(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
+    ASSERT_EQ(WorkerGateway::remove(1), false);
+}
+
 
 int main(int argc, char **argv){
     ::testing::InitGoogleTest(&argc, argv);

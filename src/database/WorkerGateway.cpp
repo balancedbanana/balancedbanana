@@ -7,12 +7,11 @@
 #include <QSqlQuery>
 #include <QDebug>
 #include <QSqlError>
+#include <stdexcept>
 
 using namespace balancedbanana::database;
 
 uint64_t WorkerGateway::add(worker_details worker) {
-    //worker_details* worker = static_cast<worker_details*>(&details);
-    //qDebug() << "We've reached!";
     // Check args
     assert(!(worker.public_key).empty());
     assert(worker.specs.space > 0);
@@ -33,7 +32,7 @@ uint64_t WorkerGateway::add(worker_details worker) {
 
     // DB must contain table
     if (!db.tables().contains("workers")){
-        qDebug() << "addWorker error: workers table doesn't exist.";
+        throw std::logic_error("addWorker error: workers table doesn't exist");
     }
 
     // Create query
@@ -64,7 +63,7 @@ bool WorkerGateway::doesWorkerExist(uint64_t id){
 
     // Check if table exists
     if (!db.tables().contains("workers")){
-        qDebug() << "error: workers table doesn't exist.";
+        throw std::logic_error("workers table doesn't exist");
     }
 
     QSqlQuery query(db);
@@ -97,7 +96,6 @@ bool WorkerGateway::remove(uint64_t id) {
 
 worker_details WorkerGateway::getWorker(uint64_t id) {
     QSqlDatabase db = QSqlDatabase::database();
-    assert(db.tables().contains("workers"));
     QSqlQuery query(db);
     assert(doesWorkerExist(id));
     query.prepare("SELECT key, space, ram, cores, INET_NTOA(address), name FROM workers WHERE id = (:id)");
@@ -125,7 +123,9 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
 
 std::vector<worker_details> WorkerGateway::getWorkers() {
     QSqlDatabase db = QSqlDatabase::database();
-    assert(db.tables().contains("workers"));
+    if (!db.tables().contains("workers")){
+        throw std::logic_error("workers table doesn't exist");
+    }
     QSqlQuery query(db);
     query.prepare("SELECT id, key, space, ram, cores,INET_NTOA(address), name FROM workers");
     std::vector<worker_details> workerVector;
