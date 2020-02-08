@@ -17,11 +17,8 @@ class WorkerGatewayEnvironment : public ::testing::Environment{
 public:
     void SetUp() override {
         Repository();
-
     }
 };
-
-WorkerGatewayEnvironment gateway_env;
 
 /**
  * Test to see if the connection to the DB was correctly established.
@@ -46,7 +43,7 @@ protected:
 };
 
 // Test checks if the addWorker method in Gateway works properly given correct parameters
-TEST_F(AddWorkerTest, AddWorkerTest_AddSingleWorkerSuccess_Test){
+TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 
     // To reset the AUTO_INCREMENT, it has to be removed and then added back
     QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL");
