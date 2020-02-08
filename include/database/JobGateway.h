@@ -8,7 +8,7 @@ namespace balancedbanana::database {
     class JobGateway : virtual public IGateway {
     public:
         uint64_t add(job_details details);
-        bool remove(uint64_t id) override;
+        static bool remove(uint64_t id);
         job_details getJob(uint64_t id);
         std::vector<job_details> getJobs();
         bool startJob(uint64_t job_id, uint64_t worker_id, Specs specs);

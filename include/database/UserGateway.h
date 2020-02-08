@@ -8,7 +8,7 @@ namespace balancedbanana::database {
         class UserGateway: virtual public IGateway {
         public:
             uint64_t add(user_details details);
-            bool remove(uint64_t id) override;
+            static bool remove(uint64_t id);
             user_details getUser(uint64_t id);
             std::vector<user_details> getUsers();
 

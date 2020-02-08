@@ -12,7 +12,7 @@ namespace balancedbanana{
         public:
             virtual ~IGateway(){}
             // virtual uint64_t add(details details) = 0;
-            virtual bool remove(uint64_t id) = 0;
+            // virtual static bool remove(uint64_t id) = 0;
         };
     }
 }
