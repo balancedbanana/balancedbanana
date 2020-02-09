@@ -3,15 +3,13 @@ language: cpp
 
 addons:
   apt:
-    sources:
-      - ubuntu-toolchain-r-test
     packages:
       - g++-9
 
 before_install:
   - pip install --user cpp-coveralls
   - sudo apt-get update
-  - sudo apt-get -y install ssl-dev qtbase5-dev cmake make
+  - sudo apt-get -y install libssl-dev qtbase5-dev cmake make
 
 script:
   - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 cmake -DCOVERAGE=1 .
