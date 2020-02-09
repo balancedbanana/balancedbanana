@@ -46,7 +46,8 @@ if (NOT GTest_FOUND)
         include_directories("${gtest_SOURCE_DIR}/include")
     endif()
     set(GTEST gtest gtest_main)
-    endif()
+
+endif()
 
 
 # Download and unpack Webserver at configure time
@@ -84,3 +85,4 @@ add_subdirectory(src/database)
 add_subdirectory(src/scheduler)
 add_subdirectory(testsrc/commandLineInterface)
 add_subdirectory(testsrc/communication)
+add_subdirectory(testsrc/database)

@@ -1,23 +1,19 @@
-#include <database/Gateway.h>
+#include <database/JobGateway.h>
 #include <database/JobStatus.h>
-#include <configfiles/Priority.h>
+#include <configfiles/JobConfig.h>
 
-#include <QSqlDatabase>
-#include <QSqlQuery>
 #include <QVariant>
-#include <QDebug>
-#include <cassert>
-#include <QVector>
-#include <QDateTime>
+#include <QSqlQuery>
+#include <QSqlDatabase>
 #include <QSqlError>
-#include <optional>
-#include <vector>
-#include <QDataStream>
+#include <QDebug>
 #include <QByteArray>
+#include <cassert>
+#include <QDateTime>
+#include <QDataStream>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
-// namespace fs = std::filesystem;
 
 // Stores all details about a Job in QVariants
 struct QVariant_JobConfig{
@@ -38,162 +34,6 @@ struct QVariant_JobConfig{
     QVariant q_status_id;
 };
 
-Gateway::Gateway() {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-    db.setHostName("127.0.0.1");
-    db.setDatabaseName("balancedbanana");
-    db.setUserName("root");
-    db.setPassword("banana");
-    db.setPort(3306);
-    bool success = db.open();
-
-    if(!success){
-        qDebug() << "Error: connection with database failed.";
-    } else {
-        qDebug() << "Database: connection was successful.";
-    }
-}
-
-uint8_t Gateway::addWorker(const std::string& public_key, uint64_t space, uint64_t ram, uint64_t cores, const std::string&
-address, const std::string& name) {
-
-   
-    // Check args
-    assert(!public_key.empty());
-    assert(space > 0);
-    assert(ram > 0);
-    assert(cores > 0);
-    assert(!address.empty());
-    assert(!name.empty());
-
-    // Converting the various args into QVariant Objects
-    QVariant q_public_key = QVariant::fromValue(QString::fromStdString(public_key));
-    QVariant q_space = QVariant::fromValue(space);
-    QVariant q_ram = QVariant::fromValue(ram);
-    QVariant q_cores = QVariant::fromValue(cores);
-    QVariant q_address = QVariant::fromValue(QString::fromStdString(address));
-    QVariant q_name = QVariant::fromValue(QString::fromStdString(name));
-
-    QSqlDatabase db = QSqlDatabase::database();
-
-    // DB must contain table
-    if (!db.tables().contains("workers")){
-        qDebug() << "addWorker error: workers table doesn't exist.";
-    }
-
-    // Create query
-    QSqlQuery query(db);
-
-    // See https://dev.mysql.com/doc/refman/8.0/en/miscellaneous-functions.html#function_inet-aton for info on INET
-    // functions
-    query.prepare("INSERT INTO workers (key, space, ram, cores, INET_ATON(address), name) VALUES (?, ?, ?, ?, ?, ?)");
-    query.addBindValue(q_public_key);
-    query.addBindValue(q_space);
-    query.addBindValue(q_ram);
-    query.addBindValue(q_cores);
-    query.addBindValue(q_address);
-    query.addBindValue(q_name);
-
-    // Executing the query.
-    bool success = query.exec();
-    if (!success){
-        qDebug() << "addWorker error: " << query.lastError();
-    }
-
-    return query.lastInsertId().toUInt();
-}
-
-bool doesWorkerExist(uint8_t id){
-    QSqlDatabase db = QSqlDatabase::database();
-
-    // Check if table exists
-    if (!db.tables().contains("workers")){
-        qDebug() << "error: workers table doesn't exist.";
-    }
-
-    QSqlQuery query(db);
-    query.prepare("SELECT id FROM workers WHERE id = ?");
-    query.addBindValue(QVariant::fromValue(id));
-    if (query.exec()){
-        return query.next();
-    }
-    return false;
-}
-
-//Removes a worker.
-bool Gateway::removeWorker(const uint8_t id) {
-    QSqlDatabase db = QSqlDatabase::database();
-    if (doesWorkerExist(id)){
-        QSqlQuery query(db);
-        query.prepare("DELETE FROM workers WHERE id = (:id)");
-        query.bindValue(":id", QVariant::fromValue(id));
-        bool success = query.exec();
-        if (success){
-            return true;
-        } else {
-            qDebug() << "removeWorker error: " << query.lastError();
-            return false;
-        }
-    } else {
-        return false;
-    }
-
-}
-
-worker_details Gateway::getWorker(const uint8_t worker_id) {
-    QSqlDatabase db = QSqlDatabase::database();
-    assert(db.tables().contains("workers"));
-    QSqlQuery query(db);
-    assert(doesWorkerExist(worker_id));
-    query.prepare("SELECT key, space, ram, cores, INET_NTOA(address), name FROM workers WHERE id = (:id)");
-    query.bindValue(":id", QVariant::fromValue(worker_id));
-    worker_details details;
-    details.id = worker_id;
-    if (query.exec()){
-        if (query.next()){
-            details.public_key = query.value(0).toString().toStdString();
-            Specs specs{};
-            specs.space = query.value(1).toInt();
-            specs.ram = query.value(2).toInt();
-            specs.cores = query.value(3).toInt();
-            details.specs = specs;
-            details.address = query.value(4).toString().toStdString();
-            details.name = query.value(5).toString().toStdString();
-            return details;
-        } else {
-            qDebug() << "getWorker error: record doesn't exist";
-        }
-    } else {
-        qDebug() << "getWorker error: " << query.lastError();
-    }
-}
-
-std::vector<worker_details> Gateway::getWorkers() {
-    QSqlDatabase db = QSqlDatabase::database();
-    assert(db.tables().contains("workers"));
-    QSqlQuery query(db);
-    query.prepare("SELECT id, key, space, ram, cores,INET_NTOA(address), name FROM workers");
-    std::vector<worker_details> workerVector;
-    if (query.exec()) {
-        while(query.next()){
-            worker_details worker;
-            worker.id = query.value(0).toUInt();
-            worker.public_key = query.value(1).toString().toStdString();
-            Specs specs;
-            specs.space = query.value(2).toUInt();
-            specs.ram = query.value(3).toUInt();
-            specs.cores = query.value(4).toUInt();
-            worker.specs = specs;
-            worker.address = query.value(5).toString().toStdString();
-            worker.name = query.value(6).toString().toStdString();
-
-            workerVector.push_back(worker);
-        }
-        return workerVector;
-    } else {
-        qDebug() << "getWorkers error: " << query.lastError();
-    }
-}
 
 // Get the integer value of an enumeration
 template <typename Enumeration>
@@ -293,31 +133,31 @@ uint8_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
 }
 
 //Adds a new Job to the database and returns its ID.
-uint8_t Gateway::addJob(uint8_t user_id, JobConfig& config, const QDateTime& schedule_time
-        , const std::string &command) {
+uint64_t JobGateway::add(job_details details) {
 
+    auto* job = dynamic_cast<job_details*>(&details);
     // Check args
-    assert(user_id > 0);
-    assert(!command.empty());
+    assert(job->user_id > 0);
+    assert(!job->command.empty());
 
     // Note: Not sure how QtSql deals with NULL values. Will assert for values for now, but this might change.
-    assert(config.min_ram().has_value());
-    assert(config.max_ram().has_value());
-    assert(config.min_cpu_count().has_value());
-    assert(config.max_cpu_count().has_value());
-    assert(config.blocking_mode().has_value());
-    assert(!config.email().empty());
-    assert(config.priority().has_value());
-    assert(!config.image().empty());
-    assert(config.interruptible().has_value());
-    assert(config.environment().has_value());
+    assert(job->config.min_ram().has_value());
+    assert(job->config.max_ram().has_value());
+    assert(job->config.min_cpu_count().has_value());
+    assert(job->config.max_cpu_count().has_value());
+    assert(job->config.blocking_mode().has_value());
+    assert(!job->config.email().empty());
+    assert(job->config.priority().has_value());
+    assert(!job->config.image().empty());
+    assert(job->config.interruptible().has_value());
+    assert(job->config.environment().has_value());
 
     // Convert values to QVariants and execute the query.
-    QVariant_JobConfig qstruct = convertJobConfig(user_id, config, schedule_time, command);
+    QVariant_JobConfig qstruct = convertJobConfig(job->user_id, job->config, job->schedule_time, job->command);
     return executeAddJobQuery(qstruct);
 }
 
-bool doesJobExist(uint8_t id){
+bool JobGateway::doesJobExist(uint64_t id){
     QSqlDatabase db = QSqlDatabase::database();
 
     // Check if table exists
@@ -335,7 +175,7 @@ bool doesJobExist(uint8_t id){
 }
 
 
-bool Gateway::removeJob(const uint8_t job_id) {
+bool JobGateway::remove(uint64_t job_id) {
     QSqlDatabase db = QSqlDatabase::database();
     if (doesJobExist(job_id)){
         QSqlQuery query(db);
@@ -361,7 +201,7 @@ std::vector<std::string> convertToVectorString(const QByteArray& buffer){
     return std::vector<std::string>(resultVector.begin(), resultVector.end());
 }
 
-job_details Gateway::getJob(const uint8_t job_id) {
+job_details JobGateway::getJob(uint64_t job_id) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("workers"));
     assert(db.tables().contains("allocated_resources"));
@@ -393,11 +233,11 @@ job_details Gateway::getJob(const uint8_t job_id) {
             config.set_current_working_dir(query.value(11).toString().toStdString());
             details.command = query.value(12).toString().toStdString();
             details.schedule_time = QDateTime::fromString(query.value(13).toString(),
-                    "yyyy-MM-dd hh:mm:ss.zzz000");
+                                                          "yyyy-MM-dd hh:mm:ss.zzz000");
             details.start_time = QDateTime::fromString(query.value(14).toString(),
-                    "yyyy-MM-dd hh:mm:ss.zzz000");
+                                                       "yyyy-MM-dd hh:mm:ss.zzz000");
             details.finish_time = QDateTime::fromString(query.value(15).toString(),
-                    "yyyy-MM-dd hh:mm:ss.zzz000");
+                                                        "yyyy-MM-dd hh:mm:ss.zzz000");
             details.status = query.value(16).toInt();
             details.config = config;
             Specs allocated_specs{};
@@ -414,7 +254,7 @@ job_details Gateway::getJob(const uint8_t job_id) {
     }
 }
 
-std::vector<job_details> Gateway::getJobs() {
+std::vector<job_details> JobGateway::getJobs() {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
     assert(db.tables().contains("allocated_resources"));
@@ -452,7 +292,7 @@ std::vector<job_details> Gateway::getJobs() {
                                                         "yyyy-MM-dd hh:mm:ss.zzz000");
             details.status = query.value(17).toInt();
             details.config = config;
-            Specs allocated_specs;
+            Specs allocated_specs{};
             allocated_specs.cores = query.value(18).toUInt();
             allocated_specs.space = query.value(19).toUInt();
             allocated_specs.ram = query.value(20).toUInt();
@@ -465,51 +305,16 @@ std::vector<job_details> Gateway::getJobs() {
     }
 }
 
-//Adds a user to the database and returns their ID.
-uint8_t Gateway::addUser(const std::string& name, const std::string& email, const std::string& public_key) {
-    // Check args
-    assert(!name.empty());
-    assert(!email.empty());
-    assert(!public_key.empty());
-
-    // Converting the various args into QVariant Objects
-    QVariant q_name = QVariant::fromValue(QString::fromStdString(name));
-    QVariant q_email = QVariant::fromValue(QString::fromStdString(email));
-    QVariant q_public_key = QVariant::fromValue(QString::fromStdString(public_key));
-
-    QSqlDatabase db = QSqlDatabase::database();
-
-    // DB must contain table
-    if (!db.tables().contains("users")){
-        qDebug() << "addUser error: users table doesn't exist.";
-    }
-
-    // Create query
-    QSqlQuery query(db);
-    query.prepare("INSERT INTO users (name, email, key) VALUES (?, ?, ?)");
-    query.addBindValue(q_name);
-    query.addBindValue(q_email);
-    query.addBindValue(q_public_key);
-
-    // Executing the query.
-    bool success = query.exec();
-    if (!success){
-        qDebug() << "addUser error: " << query.lastError();
-    }
-
-    return query.lastInsertId().toUInt();
-}
-
-bool doesUserExist(const uint8_t id){
+bool doesWorkerExist(uint64_t id){
     QSqlDatabase db = QSqlDatabase::database();
 
     // Check if table exists
-    if (!db.tables().contains("users")){
-        qDebug() << "error: users table doesn't exist.";
+    if (!db.tables().contains("workers")){
+        qDebug() << "error: workers table doesn't exist.";
     }
 
     QSqlQuery query(db);
-    query.prepare("SELECT id FROM users WHERE id = ?");
+    query.prepare("SELECT id FROM workers WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return query.next();
@@ -517,70 +322,8 @@ bool doesUserExist(const uint8_t id){
     return false;
 }
 
-bool Gateway::removeUser(const uint8_t user_id) {
-    QSqlDatabase db = QSqlDatabase::database();
-    if (doesUserExist(user_id)){
-        QSqlQuery query(db);
-        query.prepare("DELETE FROM users WHERE id = (:id)");
-        query.bindValue(":id", QVariant::fromValue(user_id));
-        bool success = query.exec();
-        if (success){
-            return true;
-        } else {
-            qDebug() << "removeUser error: " << query.lastError();
-        }
-    } else {
-        return false;
-    }
-}
-
-user_details Gateway::getUser(const uint8_t user_id) {
-    QSqlDatabase db = QSqlDatabase::database();
-    assert(db.tables().contains("users"));
-    QSqlQuery query(db);
-    assert(doesUserExist(user_id));
-    query.prepare("SELECT key, name, email FROM users WHERE id = (:id)");
-    query.bindValue(":id", QVariant::fromValue(user_id));
-    user_details details;
-    details.id = user_id;
-    if (query.exec()){
-        if (query.next()){
-            details.public_key = query.value(0).toString().toStdString();
-            details.name = query.value(1).toString().toStdString();
-            details.email = query.value(2).toString().toStdString();
-            return details;
-        } else {
-            qDebug() << "getUser error: record doesn't exist";
-        }
-    } else {
-        qDebug() << "getUser error: " << query.lastError();
-    }
-}
-
-std::vector<user_details> Gateway::getUsers() {
-    QSqlDatabase db = QSqlDatabase::database();
-    assert(db.tables().contains("users"));
-    QSqlQuery query(db);
-    query.prepare("SELECT id, key, name, email FROM users");
-    std::vector<user_details> userVector;
-    if (query.exec()){
-        while (query.next()){
-            user_details details;
-            details.id = query.value(0).toUInt();
-            details.public_key = query.value(1).toString().toStdString();
-            details.name = query.value(2).toString().toStdString();
-            details.email = query.value(3).toString().toStdString();
-
-            userVector.push_back(details);
-        }
-        return userVector;
-    } else {
-        qDebug() << "getUser error: " << query.lastError();
-    }
-}
-
 //Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
-bool Gateway::startJob(const uint8_t job_id, const uint8_t worker_id, const Specs specs) {
+bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
     assert(db.tables().contains("workers"));
@@ -612,7 +355,7 @@ bool Gateway::startJob(const uint8_t job_id, const uint8_t worker_id, const Spec
     }
 }
 
-bool Gateway::finishJob(const uint8_t job_id, const QDateTime& finish_time
+bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         , const std::string& stdout, const int8_t exit_code) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
@@ -648,7 +391,7 @@ bool Gateway::finishJob(const uint8_t job_id, const QDateTime& finish_time
     }
 }
 
-job_result Gateway::getJobResult(const uint8_t job_id) {
+job_result JobGateway::getJobResult(uint64_t job_id) {
     QSqlDatabase db = QSqlDatabase::database();
     assert(db.tables().contains("jobs"));
     assert(db.tables().contains("job_results"));

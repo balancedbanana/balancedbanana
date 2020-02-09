@@ -1,18 +1,35 @@
 #pragma once
 
-#include <database/job_details.h>
-#include <database/job_result.h>
-#include <database/Gateway.h>
+#include "job_details.h"
+#include "job_result.h"
+#include "Gateway.h"
+#include "Factory.h"
+#include <configfiles/JobConfig.h>
 
 #include <cinttypes>
-#include <QDateTime>>
+#include <QDateTime>
 
-namespace balancedbanana {
-    namespace database {
+using namespace balancedbanana::configfiles;
+
+namespace balancedbanana::database {
+
+    class Worker{
+        // PLACEHOLDER
+    };
+
+    class Job{
+        // PLACEHOLDER
+    };
+
+    class User{
+        // PLACEHOLDER
+    };
 
         //This is the interface that the rest of the program uses to query the database.
         class Repository {
         public:
+            Repository();
+
             //Adds a Worker to the DB and returns its ID
             uint64_t addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const std::string address);
 
@@ -54,7 +71,7 @@ namespace balancedbanana {
         private:
             Factory factory;
 
-            Gateway gateway;
+           // Gateway gateway;
 
 
         public:
@@ -62,4 +79,3 @@ namespace balancedbanana {
 
         };
     }
-}
