@@ -8,6 +8,7 @@
 
 #include <cinttypes>
 #include <QDateTime>
+#include <string>
 
 using namespace balancedbanana::configfiles;
 
@@ -28,7 +29,8 @@ namespace balancedbanana::database {
         //This is the interface that the rest of the program uses to query the database.
         class Repository {
         public:
-            Repository();
+            Repository(const std::string& host_name, const std::string& databasename, const std::string& username,
+                    const std::string& password,  uint64_t port);
 
             //Adds a Worker to the DB and returns its ID
             uint64_t addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const std::string address);
