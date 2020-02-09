@@ -108,25 +108,25 @@ namespace balancedbanana {
             void set_backup_ID(std::optional<uint32_t> backupID);
 
             //Getter for the min_ram_ attribute.
-            std::optional <uint32_t> min_ram();
+            std::optional <uint32_t> &min_ram();
 
             //Getter for the max_ram_ attribute.
-            std::optional <uint32_t> max_ram();
+            std::optional <uint32_t> &max_ram();
 
             //Getter for the min_cpu_count_ attribute.
-            std::optional <uint32_t> min_cpu_count();
+            std::optional <uint32_t> &min_cpu_count();
 
             //Getter for the max_cpu_count_ attribute.
-            std::optional <uint32_t> max_cpu_count();
+            std::optional <uint32_t> &max_cpu_count();
 
             //Getter for the blocking_mode_ attribute.
-            std::optional<bool> blocking_mode();
+            std::optional<bool> &blocking_mode();
 
             //Getter for the email_ attribute.
             std::string &email();
 
             //Getter for the priority_ attribute.
-            std::optional <Priority> priority();
+            std::optional <Priority> &priority();
 
             //Getter for the image_ attribute.
             std::string &image();
@@ -135,16 +135,16 @@ namespace balancedbanana {
             std::optional <std::vector<std::string>> &environment();
 
             //Getter for the interruptible_ attribute.
-            std::optional<bool> interruptible();
+            std::optional<bool> &interruptible();
 
             //Getter for the current_working_dir_ attribute.
             const std::filesystem::path &current_working_dir();
 
             //Getter for the referred jobID
-            std::optional <uint32_t> get_job_ID();
+            std::optional <uint32_t> &get_job_ID();
 
             //Getter for the referred backupID
-            std::optional <uint32_t> get_backup_ID();
+            std::optional <uint32_t> &get_backup_ID();
 
             //This method serializes the JobConfig and saves it in a file with the specified path.
             bool Save(const std::filesystem::path &path);

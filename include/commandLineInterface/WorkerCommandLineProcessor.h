@@ -12,7 +12,7 @@ class WorkerCommandLineProcessor : public balancedbanana::commandLineInterface::
 {
     public:
 
-        virtual std::shared_ptr<Task> process(int argc, char** argv);
+        virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task);
 
     private:
 

@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "Task.h"
-#include "CLI11.hpp"
+#include "CLI11/CLI11.hpp"
 
 #define CLIENT_PROGRAM_NAME "bbc"
 #define SERVER_PROGRAM_NAME "bbs"
@@ -39,7 +39,7 @@ namespace balancedbanana {
 		{
 		public:
 
-			virtual std::shared_ptr<Task> process(int argc, char** argv) { return NULL; }
+			virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task) { return 0; }
 
 		};
 

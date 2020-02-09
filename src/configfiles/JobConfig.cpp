@@ -220,23 +220,24 @@ void JobConfig::set_backup_ID(std::optional<uint32_t> backupID) {
     this->backupID = backupID;
 }
 
-std::optional <uint32_t> JobConfig::min_ram() {
+
+std::optional <uint32_t> &JobConfig::min_ram() {
     return min_ram_;
 }
 
-std::optional <uint32_t> JobConfig::max_ram() {
+std::optional <uint32_t> &JobConfig::max_ram() {
     return max_ram_;
 }
 
-std::optional <uint32_t> JobConfig::min_cpu_count() {
+std::optional <uint32_t> &JobConfig::min_cpu_count() {
     return min_cpu_count_;
 }
 
-std::optional <uint32_t> JobConfig::max_cpu_count() {
+std::optional <uint32_t> &JobConfig::max_cpu_count() {
     return max_cpu_count_;
 }
 
-std::optional<bool> JobConfig::blocking_mode() {
+std::optional<bool> &JobConfig::blocking_mode() {
     return blocking_mode_;
 }
 
@@ -244,7 +245,7 @@ std::string &JobConfig::email() {
     return email_;
 }
 
-std::optional <Priority> JobConfig::priority() {
+std::optional <Priority> &JobConfig::priority() {
     return priority_;
 }
 
@@ -256,7 +257,7 @@ std::optional <std::vector<std::string>> &JobConfig::environment() {
     return environment_;
 }
 
-std::optional<bool> JobConfig::interruptible() {
+std::optional<bool> &JobConfig::interruptible() {
     return interruptible_;
 }
 
@@ -264,11 +265,11 @@ const std::filesystem::path &JobConfig::current_working_dir() {
     return current_working_dir_;
 }
 
-std::optional<uint32_t> JobConfig::get_job_ID() {
+std::optional <uint32_t> &JobConfig::get_job_ID() {
     return jobID;
 }
 
-std::optional<uint32_t> JobConfig::get_backup_ID() {
+std::optional <uint32_t> &JobConfig::get_backup_ID() {
     return backupID;
 }
 

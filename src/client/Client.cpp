@@ -4,14 +4,14 @@
 #include <communication/authenticator/Authenticator.h>
 #include <iostream>
 #include <commandLineInterface/ClientCommandLineProcessor.h>
-#include <communication/message/TaskMessage.h>
+//#include <communication/message/TaskMessage.h>
 
 #include <iostream>
 
 using namespace balancedbanana::commandLineInterface;
 using namespace balancedbanana::communication;
-using balancedbanana::communication::Message;
-using balancedbanana::communication::TaskMessage;
+// using balancedbanana::communication::Message;
+// using balancedbanana::communication::TaskMessage;
 
 /**
  * Handles necessary actions for adding a new docker image.
@@ -45,10 +45,11 @@ void handleRequest(std::shared_ptr<Task> task);
 
 int main(int argc, char** argv) {
     // Create Client CLP
-    CommandLineProcessor clp = ClientCommandLineProcessor();
+    ClientCommandLineProcessor clp = ClientCommandLineProcessor();
 
     // process input
-    auto task = clp.process(argc, argv);
+    auto task = std::make_shared<Task>();
+    int ret = clp.process(argc, argv, task);
 
     auto com = std::make_shared<Communicator>("::1", 8443, std::make_shared<MessageProcessor>());
     balancedbanana::communication::authenticator::Authenticator auth(com);
