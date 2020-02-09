@@ -36,6 +36,7 @@ TEST(communication, Connect)
         com->send(*clauth);
         balancedbanana::communication::authenticator::Authenticator auth(com);
         auth.authenticate("2Te53st8", "6Hidfsg#öl4su93");
+        com->detach();
     });
     EXPECT_ANY_THROW(listener->listen(23453, [](std::shared_ptr<balancedbanana::communication::Communicator> com){}));
     auto listener2 = std::make_shared<CommunicatorListener>([testmp](){

@@ -7,6 +7,9 @@
 #include <openssl/pem.h>
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
+#ifndef _WIN32
+#include <signal.h>
+#endif
 
 using namespace balancedbanana::communication;
 
@@ -14,6 +17,9 @@ std::pair<std::string, std::string> GenerateCert();
 
 CommunicatorListener::CommunicatorListener(std::function<std::shared_ptr<MessageProcessor>()> processorfactory) {
     this->processorfactory = std::move(processorfactory);
+#ifndef _WIN32
+	signal(SIGPIPE, SIG_IGN);
+#endif
 }
 
 CommunicatorListener::~CommunicatorListener() {
