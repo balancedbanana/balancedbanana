@@ -13,4 +13,4 @@ script:
   - "ctest --verbose . || :"
 
 after_success:
-  - coveralls --root . -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"
+  - coveralls --root . --gcov gcov-9 -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"
