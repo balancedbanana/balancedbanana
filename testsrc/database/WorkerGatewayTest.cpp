@@ -24,6 +24,8 @@ public:
     }
 };
 
+::testing::Environment* const worker_env = ::testing::AddGlobalTestEnvironment(new WorkerGatewayEnvironment);
+
 /**
  * Test to see if the connection to the DB was correctly established.
  */
@@ -233,11 +235,4 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
 // Test to see if the remove method fails when it's called with invalid id.
 TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
     ASSERT_FALSE(WorkerGateway::remove(1));
-}
-
-
-int main(int argc, char **argv){
-    ::testing::InitGoogleTest(&argc, argv);
-    ::testing::AddGlobalTestEnvironment(new WorkerGatewayEnvironment);
-    return RUN_ALL_TESTS();
 }
