@@ -8,7 +8,7 @@ before_install:
   - sudo apt-get -y install libssl-dev qtbase5-dev cmake make g++-9 libqt5sql5-mysql mysql
 
 script:
-  - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 cmake -DCOVERAGE=1 ..
+  - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 cmake -DCOVERAGE=1 .
   - cmake --build .
   - "ctest --verbose . || :"
 
