@@ -158,7 +158,7 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
     if (!doesTableExist()){
         throwNoTableException();
     }
-    QSqlQuery query("SELECT id, key, space, ram, cores,INET_NTOA(address), name FROM workers");
+    QSqlQuery query("SELECT id, public_key, space, ram, cores, address, name FROM workers");
     std::vector<worker_details> workerVector;
     if (query.exec()) {
         while(query.next()){

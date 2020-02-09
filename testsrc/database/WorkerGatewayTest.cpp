@@ -220,7 +220,7 @@ TEST_F(NoTableTest, NoTableTest_GetWorker_Test){
     EXPECT_THROW(WorkerGateway::getWorker(id), std::logic_error);
 }
 
-// Test to see if an exception is when the workers getter is called, but no workers' table exists.
+// Test to see if an exception is thrown when the workers getter is called, but no workers' table exists.
 TEST_F(NoTableTest, NoTableTest_GetWorkers_Test){
     EXPECT_THROW(WorkerGateway::getWorkers(), std::logic_error);
 }
@@ -304,6 +304,7 @@ protected:
         details.specs.cores = 4;
         details.address = "0.0.0.0";
         details.name = "CentOS";
+        details.id = 1;
     }
 
     void TearDown() override {
@@ -316,12 +317,10 @@ protected:
 // Test to see if the first worker can be retrieved correctly.
 TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
     // Add the worker. Its id should be 1, since it's the first worker to be added.
-    int id = WorkerGateway::add(details);
-    EXPECT_EQ(id, 1);
-    details.id = 1;
+    EXPECT_EQ(WorkerGateway::add(details), details.id);
 
     // Get the worker and compare it to the added worker. They should be equal.
-    worker_details expected_details = WorkerGateway::getWorker(id);
+    worker_details expected_details = WorkerGateway::getWorker(details.id);
     ASSERT_TRUE(areDetailsEqual(details, expected_details));
 }
 
@@ -329,6 +328,88 @@ TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
 TEST_F(GetWorkerTest, GetWorkerTest_NonExistentWorker_Test){
     worker_details empty_details{};
     ASSERT_TRUE(areDetailsEqual(WorkerGateway::getWorker(1), empty_details));
+}
+
+/**
+ * Fixture class that initializes three workers on setup and resets the table on teardown.
+ */
+class GetWorkersTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Set up the first worker
+        first.public_key = "34nrhk3hkr";
+        first.specs.space = 10240;
+        first.specs.ram = 16384;
+        first.specs.cores = 4;
+        first.address = "0.0.0.0";
+        first.name = "CentOS";
+        first.id = 1;
+
+        // Set up the second worker
+        second.public_key = "fsd8iasdf8sadf";
+        second.specs.space = 14134;
+        second.specs.ram = 12421;
+        second.specs.cores = 3;
+        second.address = "1.1.1.1";
+        second.name = "Ubuntu";
+        second.id = 2;
+
+        // Set up the third worker
+        third.public_key = "asdfascascsd";
+        third.specs.space = 43214;
+        third.specs.ram = 21412;
+        third.specs.cores = 2;
+        third.address = "2.2.2.2";
+        third.name = "Windows";
+        third.id = 3;
+    }
+
+    void TearDown() override {
+        resetTableAI();
+    }
+
+    worker_details first;
+    worker_details second;
+    worker_details third;
+};
+
+/**
+ * Checks if two vectors of worker_details are equal
+ * @param expected The first vector
+ * @param actual The second vectors
+ * @return true if the vectors are equal, otherwise false
+ */
+bool areDetailVectorsEqual(std::vector<worker_details> expected, std::vector<worker_details> actual){
+    if (expected.size() != actual.size()){
+        return false;
+    }
+    for (int i = 0; i < expected.size(); i++){
+        if (!areDetailsEqual(expected[i], actual[i])){
+            return false;
+        }
+    }
+    return true;
+}
+
+// Test to see if getWorkers retrieves a vector of previously added workers from the database
+TEST_F(GetWorkersTest, GetWorkersTest_SuccessfulGet_Test){
+    // Add the workers. Their ids should match the order of their addition.
+    EXPECT_EQ(WorkerGateway::add(first), first.id);
+    EXPECT_EQ(WorkerGateway::add(second), second.id);
+    EXPECT_EQ(WorkerGateway::add(third), third.id);
+
+    std::vector<worker_details> expectedVector;
+    expectedVector.push_back(first);
+    expectedVector.push_back(second);
+    expectedVector.push_back(third);
+
+    std::vector<worker_details> actualVector = WorkerGateway::getWorkers();
+    ASSERT_TRUE(areDetailVectorsEqual(expectedVector, actualVector));
+}
+
+// Test to see if the getter method returns an empty vector if the workers table is empty
+TEST_F(GetWorkersTest, GetWorkersTest_NonExistentWorkers_Test){
+    ASSERT_TRUE(WorkerGateway::getWorkers().empty());
 }
 
 
