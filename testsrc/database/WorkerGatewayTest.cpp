@@ -234,10 +234,3 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
 TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
     ASSERT_FALSE(WorkerGateway::remove(1));
 }
-
-
-int main(int argc, char **argv){
-    ::testing::InitGoogleTest(&argc, argv);
-    ::testing::AddGlobalTestEnvironment(new WorkerGatewayEnvironment);
-    return RUN_ALL_TESTS();
-}
