@@ -1,24 +1,43 @@
 #include <database/WorkerGateway.h>
 #include <database/worker_details.h>
+#include <database/database_utilities.h>
 
-#include <cassert>
 #include <QVariant>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QDebug>
 #include <QSqlError>
 #include <stdexcept>
+#include <iostream>
 
 using namespace balancedbanana::database;
 
-uint64_t WorkerGateway::add(worker_details worker) {
+
+/**
+ * Checks if the args are valid
+ * @param worker  The struct containing the args
+ * @return true if the args are valid, otherwise false
+ */
+bool areArgsValid(const worker_details& worker){
+    return !(worker.public_key.empty()) && worker.specs.space > 0 && worker.specs.ram > 0 && worker.specs.cores > 0
+    && !(worker.address.empty()) && !(worker.name.empty());
+}
+
+/**
+ * Adds a worker to the database, Throws exceptions when errors occur.
+ * @param worker  The worker to be added
+ * @return The id of the worker.
+ */
+uint64_t WorkerGateway::add(const worker_details& worker) {
     // Check args
-    assert(!(worker.public_key).empty());
-    assert(worker.specs.space > 0);
-    assert(worker.specs.ram > 0);
-    assert(worker.specs.cores > 0);
-    assert(!(worker.address).empty());
-    assert(!(worker.name).empty());
+    if (!areArgsValid(worker)){
+        throw std::invalid_argument("addWorker error: invalid arguments");
+    }
+
+    // DB must contain table
+    if (!doesTableExist("workers")){
+        throwNoTableException("workers");
+    }
 
     // Converting the various args into QVariant Objects
     QVariant q_public_key = QVariant::fromValue(QString::fromStdString(worker.public_key));
@@ -28,20 +47,8 @@ uint64_t WorkerGateway::add(worker_details worker) {
     QVariant q_address = QVariant::fromValue(QString::fromStdString(worker.address));
     QVariant q_name = QVariant::fromValue(QString::fromStdString(worker.name));
 
-    QSqlDatabase db = QSqlDatabase::database();
-
-    // DB must contain table
-    if (!db.tables().contains("workers")){
-        throw std::logic_error("addWorker error: workers table doesn't exist");
-    }
-
     // Create query
-    QSqlQuery query(db);
-
-    // See https://dev.mysql.com/doc/refman/8.0/en/miscellaneous-functions.html#function_inet-aton for info on INET
-    // functions
-    query.prepare("INSERT INTO workers (public_key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, "
-                  "?, ?)");
+    QSqlQuery query("INSERT INTO workers (public_key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)");
     query.addBindValue(q_public_key);
     query.addBindValue(q_space);
     query.addBindValue(q_ram);
@@ -50,84 +57,96 @@ uint64_t WorkerGateway::add(worker_details worker) {
     query.addBindValue(q_name);
 
     // Executing the query.
-    bool success = query.exec();
-    if (!success){
-        qDebug() << "addWorker error: " << query.lastError();
+    if (!query.exec()){
+        throw std::runtime_error(query.lastError().databaseText().toStdString());
     }
-
     return query.lastInsertId().toUInt();
 }
 
+/**
+ * Checks if a worker with the given id exists in the database.
+ * @param id The id of the worker.
+ * @return True if the worker exists, otherwise false.
+ */
 bool WorkerGateway::doesWorkerExist(uint64_t id){
-    QSqlDatabase db = QSqlDatabase::database();
-
-    // Check if table exists
-    if (!db.tables().contains("workers")){
-        throw std::logic_error("workers table doesn't exist");
-    }
-
-    QSqlQuery query(db);
-    query.prepare("SELECT id FROM workers WHERE id = ?");
+    QSqlQuery query("SELECT id FROM workers WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return query.next();
     }
-    return false;
+    throw std::runtime_error(query.lastError().databaseText().toStdString());
 }
 
-//Removes a worker.
+/**
+ * Deletes a worker with the given id from the database,
+ * @param id  The id of the worker to be deleted.
+ * @return True if the operation was successful, otherwise false
+ */
 bool WorkerGateway::remove(uint64_t id) {
-    QSqlDatabase db = QSqlDatabase::database();
+    if (!doesTableExist("workers")){
+        throwNoTableException("workers");
+    }
     if (doesWorkerExist(id)){
-        QSqlQuery query(db);
-        query.prepare("DELETE FROM workers WHERE id = (:id)");
-        query.bindValue(":id", QVariant::fromValue(id));
-        bool success = query.exec();
-        if (success){
+        QSqlQuery query("DELETE FROM workers WHERE id = ?");
+        query.addBindValue(QVariant::fromValue(id));
+        if (query.exec()){
             return true;
         } else {
-            qDebug() << "removeWorker error: " << query.lastError();
-            return false;
+            throw std::runtime_error("removeWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
+        std::cerr << "removeWorker error: no worker with id = " << id  << " exists" << std::endl;
         return false;
     }
 }
 
+/**
+ * Getter method for the information of a worker with the given id.
+ * @param id  The id of the worker.
+ * @return The details of the worker.
+ */
 worker_details WorkerGateway::getWorker(uint64_t id) {
-    QSqlDatabase db = QSqlDatabase::database();
-    QSqlQuery query(db);
-    assert(doesWorkerExist(id));
-    query.prepare("SELECT key, space, ram, cores, INET_NTOA(address), name FROM workers WHERE id = (:id)");
-    query.bindValue(":id", QVariant::fromValue(id));
-    worker_details details;
-    details.id = id;
-    if (query.exec()){
-        if (query.next()){
-            details.public_key = query.value(0).toString().toStdString();
-            Specs specs{};
-            specs.space = query.value(1).toInt();
-            specs.ram = query.value(2).toInt();
-            specs.cores = query.value(3).toInt();
-            details.specs = specs;
-            details.address = query.value(4).toString().toStdString();
-            details.name = query.value(5).toString().toStdString();
-            return details;
+    if (!doesTableExist("workers")){
+        throwNoTableException("workers");
+    }
+    worker_details details{};
+    if (doesWorkerExist(id)){
+        QSqlQuery query;
+        query.prepare("SELECT public_key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
+        query.bindValue(":id", QVariant::fromValue(id));
+        if (query.exec()){
+            if (query.next()){
+                details.id = id;
+                details.public_key = query.value(0).toString().toStdString();
+                Specs specs{};
+                specs.space = query.value(1).toInt();
+                specs.ram = query.value(2).toInt();
+                specs.cores = query.value(3).toInt();
+                details.specs = specs;
+                details.address = query.value(4).toString().toStdString();
+                details.name = query.value(5).toString().toStdString();
+            } else {
+                // This would be a very weird error, as I've already checked if the worker exists.
+                throw std::runtime_error("getWorker error: record doesn't exist");
+            }
         } else {
-            qDebug() << "getWorker error: record doesn't exist";
+            throw std::runtime_error("getWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        qDebug() << "getWorker error: " << query.lastError();
+        std::cerr << "getWorker error: no worker with id = " << id  << " exists" << std::endl;
     }
+    return details;
 }
 
+/**
+ * Getter for all the workers in the database.
+ * @return  Vector of all the workers in the database.
+ */
 std::vector<worker_details> WorkerGateway::getWorkers() {
-    QSqlDatabase db = QSqlDatabase::database();
-    if (!db.tables().contains("workers")){
-        throw std::logic_error("workers table doesn't exist");
+    if (!doesTableExist("workers")){
+        throwNoTableException("workers");
     }
-    QSqlQuery query(db);
-    query.prepare("SELECT id, key, space, ram, cores,INET_NTOA(address), name FROM workers");
+    QSqlQuery query("SELECT id, public_key, space, ram, cores, address, name FROM workers");
     std::vector<worker_details> workerVector;
     if (query.exec()) {
         while(query.next()){
@@ -141,11 +160,10 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
             worker.specs = specs;
             worker.address = query.value(5).toString().toStdString();
             worker.name = query.value(6).toString().toStdString();
-
             workerVector.push_back(worker);
         }
         return workerVector;
     } else {
-        qDebug() << "getWorkers error: " << query.lastError();
+        throw std::runtime_error("getWorkers error: " + query.lastError().databaseText().toStdString());
     }
 }

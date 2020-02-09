@@ -86,7 +86,8 @@ address, const std::string& name) {
 
     // See https://dev.mysql.com/doc/refman/8.0/en/miscellaneous-functions.html#function_inet-aton for info on INET
     // functions
-    query.prepare("INSERT INTO workers (key, space, ram, cores, INET_ATON(address), name) VALUES (?, ?, ?, ?, ?, ?)");
+    query.prepare("INSERT INTO workers (public_key, space, ram, cores, INET_ATON(address), name) VALUES (?, ?, ?, ?, "
+                  "?, ?)");
     query.addBindValue(q_public_key);
     query.addBindValue(q_space);
     query.addBindValue(q_ram);
