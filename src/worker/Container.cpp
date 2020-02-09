@@ -42,8 +42,9 @@ void Container::Stop() {
 }
 
 Snapshot Container::CreateSnapshot(bool stop) {
-    return {""};
+    throw std::runtime_error("Not Implemented");
 }
 
 void Container::Resume(const Snapshot & snap) {
+    throw std::runtime_error("Not Implemented");
 }
