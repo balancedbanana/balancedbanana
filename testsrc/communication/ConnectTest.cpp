@@ -11,15 +11,15 @@ using namespace balancedbanana::communication;
 
 struct TestMP : MessageProcessor {
     std::shared_ptr<ClientAuthMessage> sourcemessage;
-    std::condition_variable cnd;
-    std::atomic<int> cnt = 2;
+    // std::condition_variable cnd;
+    // std::atomic<int> cnt = 2;
 
     virtual void processClientAuthMessage(const std::shared_ptr<ClientAuthMessage>& msg) override {
         ASSERT_EQ(sourcemessage->GetPassword(), msg->GetPassword());
         ASSERT_EQ(sourcemessage->GetPublickey(), msg->GetPublickey());
         ASSERT_EQ(sourcemessage->GetUsername(), msg->GetUsername());
-        --cnt;
-        cnd.notify_all();
+        // --cnt;
+        // cnd.notify_all();
     }
 };
 
@@ -31,16 +31,22 @@ TEST(communication, Connect)
     auto listener = std::make_shared<CommunicatorListener>([testmp](){
         return testmp;
     });
-    std::shared_ptr<balancedbanana::communication::Communicator> othercom; 
-    listener->listen([listener, clauth, &othercom](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+    listener->listen([listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
         com->send(*clauth);
-        othercom = std::move(com);
+        com->detach();
     });
     auto com = std::make_shared<Communicator>("localhost", 8443, testmp);
     com->send(*clauth);
-    std::mutex lck;
-    std::unique_lock<std::mutex> lock(lck);
-    testmp->cnd.wait(lock, [testmp]() {
-        return !testmp->cnt.load();
-    });
+    com->detach();
+}
+
+TEST(communication, Connect2)
+{
+    ASSERT_ANY_THROW(auto com = std::make_shared<Communicator>("0..0.0fs..0", 23, std::make_shared<MessageProcessor>()));
+}
+
+TEST(communication, Connect3)
+{
+    ASSERT_THROW(auto com = std::make_shared<Communicator>(nullptr, nullptr), std::invalid_argument);
+    ASSERT_THROW(auto com = std::make_shared<Communicator>(nullptr, std::make_shared<MessageProcessor>()), std::invalid_argument);
 }

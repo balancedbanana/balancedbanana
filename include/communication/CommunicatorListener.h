@@ -17,6 +17,7 @@ namespace balancedbanana {
 
 		public:
 			CommunicatorListener(std::function<std::shared_ptr<MessageProcessor>()> processorfactory);
+			~CommunicatorListener();
 			void listen(const std::function<void(std::shared_ptr<Communicator>)>& callback);
 		};
 	}
