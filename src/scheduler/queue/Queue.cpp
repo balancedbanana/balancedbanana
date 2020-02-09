@@ -3,21 +3,21 @@
 namespace balancedbanana {
     namespace scheduler {
 
-        void Queue::addTask(const Job &job) {
-            list.emplace(job.getId(), job);
+        void Queue::addTask(const std::shared_ptr<Job> jobptr) {
+            list.emplace(jobptr->getId(), jobptr);
         }
 
         uint64_t Queue::getPos(uint64_t id) {
             return 0;
         }
 
-        Job Queue::getJob(uint64_t id) {
+        std::shared_ptr<Job> Queue::pullJob(uint64_t id) {
             if(list.count(id) == 1) {
-                Job job = list.at(id);
+                std::shared_ptr<Job> jobptr = list.at(id);
                 list.erase(id);
-                return job;
+                return jobptr;
             } else {
-                //Fehlerbehandlung
+                return nullptr;
             }
         }
 
