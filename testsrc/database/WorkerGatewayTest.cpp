@@ -232,7 +232,8 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     ASSERT_TRUE(wasRemoveSuccessful(1));
 }
 
-// Test to see if the remove method fails when it's called with invalid id.
+// Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
     ASSERT_FALSE(WorkerGateway::remove(1));
 }
+
