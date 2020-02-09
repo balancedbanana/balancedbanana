@@ -12,7 +12,7 @@ find_package(Threads REQUIRED)
 link_libraries(Threads::Threads)
 enable_testing()
 find_package(GTest)
-set(GTEST GTest::GTest GTest::Main)
+set(GTEST GTest::GTest GTest::Main --coverage)
 if (NOT GTest_FOUND)
     # Download and unpack googletest at configure time
     configure_file(contrib/GTest/CMakeLists.txt.in googletest-download/CMakeLists.txt)
@@ -45,7 +45,7 @@ if (NOT GTest_FOUND)
     if (CMAKE_VERSION VERSION_LESS 2.8.11)
         include_directories("${gtest_SOURCE_DIR}/include")
     endif()
-    set(GTEST gtest gtest_main)
+    set(GTEST gtest gtest_main --coverage)
 
 endif()
 

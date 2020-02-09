@@ -57,9 +57,3 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSingleWorkerSuccess_Test){
     ASSERT_TRUE((*gateway).addWorker(details.public_key, details.specs.space, details.specs.ram, details.specs.cores,
             details.address, details.name) == 1);
 }
-
-int main(int argc, char **argv){
-    ::testing::InitGoogleTest(&argc, argv);
-    ::testing::AddGlobalTestEnvironment(new GatewayEnvironment);
-    return RUN_ALL_TESTS();
-}
