@@ -129,6 +129,48 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSucess_Test){
     ASSERT_TRUE(wasAddSuccessful(seconddetails, 2));
 }
 
+// Test to see if the addWorker method throws an exception when the key arg is invalid.
+TEST_F(AddWorkerTest, AddWorkerTest_InvalidKeyArg_Test){
+    worker_details detailscpy = details;
+    detailscpy.public_key = "";
+    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
+}
+
+// Test to see if the addWorker method throws an exception when the space arg is invalid.
+TEST_F(AddWorkerTest, AddWorkerTest_InvalidSpaceArg_Test){
+    worker_details detailscpy = details;
+    detailscpy.specs.space = 0;
+    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
+}
+
+// Test to see if the addWorker method throws an exception when the ram arg is invalid.
+TEST_F(AddWorkerTest, AddWorkerTest_InvalidRAMArg_Test){
+    worker_details detailscpy = details;
+    detailscpy.specs.ram = 0;
+    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
+}
+
+// Test to see if the addWorker method throws an exception when the cores arg is invalid.
+TEST_F(AddWorkerTest, AddWorkerTest_InvalidCoresArg_Test){
+    worker_details detailscpy = details;
+    detailscpy.specs.cores = 0;
+    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
+}
+
+// Test to see if the addWorker method throws an exception when the address arg is invalid.
+TEST_F(AddWorkerTest, AddWorkerTest_InvalidAddressArg_Test){
+    worker_details detailscpy = details;
+    detailscpy.address = "";
+    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
+}
+
+// Test to see if the addWorker method throws an exception when the name arg is invalid.
+TEST_F(AddWorkerTest, AddWorkerTest_InvalidNameArg_Test){
+    worker_details detailscpy = details;
+    detailscpy.name = "";
+    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
+}
+
 /**
  * Fixture class that deletes the workers table on setup and restores it on teardown.
  */
