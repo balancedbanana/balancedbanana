@@ -65,6 +65,12 @@ if(result)
   message(FATAL_ERROR "Build step for Webserver failed: ${result}")
 endif()
 
+SET(COVERAGE OFF CACHE BOOL "Coverage")
+if(COVERAGE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+endif()
+
 # Add Webserver directly to our build.
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/Webserver-src
                  ${CMAKE_CURRENT_BINARY_DIR}/Webserver-build
