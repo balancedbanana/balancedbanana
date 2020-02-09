@@ -1,5 +1,5 @@
 include(GoogleTest)
 
 add_executable(AuthTest AuthTest.cpp)
-target_link_libraries(AuthTest ${GTEST} communication Message Authenticator)
+target_link_libraries(AuthTest ${GTEST} Authenticator Message communication)
 gtest_discover_tests(AuthTest)
