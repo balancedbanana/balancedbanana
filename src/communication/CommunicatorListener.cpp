@@ -22,15 +22,18 @@ CommunicatorListener::~CommunicatorListener() {
 	}
 }
 
-void CommunicatorListener::listen(const std::function<void(std::shared_ptr<Communicator>)>& callback) {
-    listener = std::make_shared<Net::TLSSocketListener>();
+void CommunicatorListener::listen(short port, const std::function<void(std::shared_ptr<Communicator>)>& callback) {
+    if(listener) {
+		throw std::runtime_error("Already listening");
+	}
+	listener = std::make_shared<Net::TLSSocketListener>();
     listener->SetConnectionHandler([this, callback = callback](std::shared_ptr<Net::Socket> socket) {
         callback(std::make_shared<Communicator>(socket, processorfactory()));
     });
     auto address = std::make_shared<sockaddr_in6>();
 	memset(address.get(), 0, sizeof(sockaddr_in6));
 	address->sin6_family = AF_INET6;
-	address->sin6_port = htons(8443);
+	address->sin6_port = htons(port);
 	address->sin6_addr = in6addr_any;
     auto p = GenerateCert();
     listener->UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
@@ -89,9 +92,6 @@ std::pair<std::string, std::string> GenerateCert() {
     }
 
 	mkcert(&g.x509,g.key,512,0,365);
-
-	PEM_write_PrivateKey(stdout,g.key,NULL,NULL,0,NULL, NULL);
-	PEM_write_X509(stdout,g.x509);
 
 	g.mem = BIO_new(BIO_s_mem());
     if(!g.mem) {
