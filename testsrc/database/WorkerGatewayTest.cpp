@@ -3,6 +3,10 @@
 #include <database/worker_details.h>
 #include <database/Repository.h>
 #include <QSqlQuery>
+#include <QVariant>
+#include <QDebug>
+#include <QSqlError>
+#include <QSqlRecord>
 
 using namespace balancedbanana::database;
 
@@ -58,11 +62,50 @@ protected:
     worker_details details;
 };
 
+/**
+ * Checks if the add query was successful.
+ * @param details The record details that were added with the query.
+ * @param id The id of the added record.
+ * @return true if the add was successful, otherwise false.
+ */
+bool wasAddSuccessful(const worker_details& details, uint64_t id){
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        if (query.next()){
+            int nameIndex = query.record().indexOf("name");
+            int ramIndex = query.record().indexOf("ram");
+            int coresIndex = query.record().indexOf("cores");
+            int spaceIndex = query.record().indexOf("space");
+            int addressIndex = query.record().indexOf("address");
+            int keyIndex = query.record().indexOf("public_key");
+            EXPECT_EQ(query.value(nameIndex).toString().toStdString(), details.name);
+            EXPECT_EQ(query.value(ramIndex).toUInt(), details.specs.ram);
+            EXPECT_EQ(query.value(coresIndex).toUInt(), details.specs.cores);
+            EXPECT_EQ(query.value(spaceIndex).toUInt(), details.specs.space);
+            EXPECT_EQ(query.value(addressIndex).toString().toStdString(), details.address);
+            EXPECT_EQ(query.value(keyIndex).toString().toStdString(), details.public_key);
+            return true;
+        } else {
+            qDebug() << "record not found";
+            return false;
+        }
+    } else {
+        qDebug() << "query failed" << query.lastError();
+        return false;
+    }
+
+}
+
 
 // Test checks if the addWorker method in Gateway works properly given correct parameters
 TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
+
     // The first entry's id should be 1
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
+
+    // The add must be successful
+    ASSERT_TRUE(wasAddSuccessful(details, 1));
 }
 
 // Test to see if the auto increment feature works as expected.
@@ -71,6 +114,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSucess_Test){
 
     // Add the worker from the first test. Since it's the first worker, its id should be 1.
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
+    ASSERT_TRUE(wasAddSuccessful(details, 1));
 
     // Initialize a new worker
     worker_details seconddetails{};
@@ -80,6 +124,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSucess_Test){
     seconddetails.name = "Ubuntu";
 
     ASSERT_TRUE(WorkerGateway::add(seconddetails) == 2);
+    ASSERT_TRUE(wasAddSuccessful(seconddetails, 2));
 }
 
 /**
@@ -136,8 +181,38 @@ TEST_F(NoTableTest, NoTableTest_GetWorkers_Test){
     EXPECT_THROW(WorkerGateway::getWorkers(), std::logic_error);
 }
 
+/**
+ * Check if the remove query on id was successful
+ * @param id The id of the removed record.
+ * @return  true if remove was successful, otherwise false.
+ */
+bool wasRemoveSuccessful(uint64_t id){
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        if (query.next()){
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        qDebug() << "wasRemoveSuccessful error: " << query.lastError();
+        return false;
+    }
+}
+
+/**
+ * Fixture class that resets the auto increment on teardown.
+ */
+class RemoveWorkerTest : public ::testing::Test {
+protected:
+    void TearDown() override{
+        resetTableAI();
+    }
+};
+
 // Test to see if a worker is removed after successfully.
-TEST(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
+TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     // Add a worker
     worker_details details{};
     details.public_key = "34nrhk3hkr";
@@ -148,13 +223,16 @@ TEST(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     details.name = "CentOS";
     // Since this is the first worker, this has to be true.
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
+    ASSERT_TRUE(wasAddSuccessful(details, 1));
 
     // This must return true.
-    ASSERT_EQ(WorkerGateway::remove(1), true);
+    ASSERT_TRUE(WorkerGateway::remove(1));
+    ASSERT_TRUE(wasRemoveSuccessful(1));
 }
 
-TEST(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
-    ASSERT_EQ(WorkerGateway::remove(1), false);
+// Test to see if the remove method fails when it's called with invalid id.
+TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
+    ASSERT_FALSE(WorkerGateway::remove(1));
 }
 
 
