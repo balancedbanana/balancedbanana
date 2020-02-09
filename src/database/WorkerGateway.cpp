@@ -27,7 +27,7 @@ void throwNoTableException(){
 }
 
 /**
- * Checks if the args are vaild
+ * Checks if the args are valid
  * @param worker  The struct containing the args
  * @return true if the args are valid, otherwise false
  */
@@ -46,6 +46,12 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
     if (!areArgsValid(worker)){
         throw std::invalid_argument("addWorker error: invalid arguments");
     }
+
+    // DB must contain table
+    if (!doesTableExist()){
+        throwNoTableException();
+    }
+
     // Converting the various args into QVariant Objects
     QVariant q_public_key = QVariant::fromValue(QString::fromStdString(worker.public_key));
     QVariant q_space = QVariant::fromValue(worker.specs.space);
@@ -53,11 +59,6 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
     QVariant q_cores = QVariant::fromValue(worker.specs.cores);
     QVariant q_address = QVariant::fromValue(QString::fromStdString(worker.address));
     QVariant q_name = QVariant::fromValue(QString::fromStdString(worker.name));
-
-    // DB must contain table
-    if (!doesTableExist()){
-        throwNoTableException();
-    }
 
     // Create query
     QSqlQuery query("INSERT INTO workers (public_key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)");
@@ -92,7 +93,7 @@ bool WorkerGateway::doesWorkerExist(uint64_t id){
 /**
  * Deletes a worker with the given id from the database,
  * @param id  The id of the worker to be deleted.
- * @return True if the operation was successful, otherwiser false
+ * @return True if the operation was successful, otherwise false
  */
 bool WorkerGateway::remove(uint64_t id) {
     if (!doesTableExist()){
@@ -142,7 +143,7 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
                 throw std::runtime_error("getWorker error: record doesn't exist");
             }
         } else {
-            throw std::runtime_error("getWorker error: " + query.lastError().text().toStdString());
+            throw std::runtime_error("getWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
         std::cerr << "getWorker error: no worker with id = " << id  << " exists" << std::endl;
