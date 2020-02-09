@@ -1,6 +1,6 @@
 #pragma once
 
-#include <configfiles/JobConfig.h>
+#include "configfiles/JobConfig.h"
 
 namespace balancedbanana
 {
@@ -21,6 +21,11 @@ class Task
 	short int webAPIPort;
 
 public:
+
+	const std::string configFilePath = "./config.txt";
+
+	Task();
+
 	void setType(int type);
 	int getType() const;
 

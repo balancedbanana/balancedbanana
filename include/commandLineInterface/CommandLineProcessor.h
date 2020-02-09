@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "Task.h"
-#include "CLI11.hpp"
+#include "CLI11/CLI11.hpp"
 
 #define CLIENT_PROGRAM_NAME "bbc"
 #define SERVER_PROGRAM_NAME "bbs"
@@ -39,13 +39,7 @@ namespace balancedbanana {
 		{
 		public:
 
-			std::shared_ptr<Task> process(int* argc, char** argv);
-
-		private:
-
-			int processArguments(int argc, char** argv, Task& task);
-
-			configfiles::Priority evaluatePriority(std::string& priority);
+			virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task) { return 0; }
 
 		};
 

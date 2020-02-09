@@ -33,6 +33,7 @@ jobs:
             cd build
             CC=clang CXX=clang++ cmake -DCMAKE_MAKE_PROGRAM=$PWD/../ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../balancedbanana -DCMAKE_C_FLAGS="-fuse-ld=lld -fPIC" -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -fPIC -Wno-unused-command-line-argument" -G Ninja -DOPENSSL_INCLUDE_DIR=$PWD/../balancedbanana/include -DOPENSSL_CRYPTO_LIBRARY=$PWD/../balancedbanana/lib/libcrypto.so -DOPENSSL_SSL_LIBRARY=$PWD/../balancedbanana/lib/libssl.so ..
             LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../llvm/lib cmake --build . -t install -j 4
+            LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../llvm/lib ctest --verbose .
             cd ..
             cd balancedbanana/ && tar -zcvf ../balancedbanana.tar.gz . && cd -
       - run:
@@ -61,6 +62,7 @@ jobs:
             cd build
             CC=clang CXX=clang++ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../balancedbanana -DCMAKE_C_FLAGS="-fuse-ld=lld -fPIC" -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -fPIC -Wno-unused-command-line-argument" -G Ninja ..
             LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib cmake --build . -t install -j 4
+            LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib ctest --verbose .
             cd ..
             cd balancedbanana/ && tar -zcvf ../balancedbanana.tar.gz . && cd -
       - run:

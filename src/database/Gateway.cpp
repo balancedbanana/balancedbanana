@@ -228,7 +228,7 @@ QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, c
     QVariant q_environment = QVariant::fromValue(qbytearray);
 
     // current_working_dir => std::filesystem::path => std::string => QString => QVariant
-   QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().value().string()));
+    QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().u8string()));
 
     QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
     QVariant q_schedule_time = QVariant::fromValue(schedule_time);
@@ -312,7 +312,6 @@ uint8_t Gateway::addJob(uint8_t user_id, JobConfig& config, const QDateTime& sch
     assert(!config.image().empty());
     assert(config.interruptible().has_value());
     assert(config.environment().has_value());
-    assert(config.current_working_dir().has_value());
 
     // Convert values to QVariants and execute the query.
     QVariant_JobConfig qstruct = convertJobConfig(user_id, config, schedule_time, command);

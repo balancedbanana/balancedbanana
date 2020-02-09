@@ -1,6 +1,7 @@
 #include <database/Repository.h>
 
 #include <QSqlDatabase>
+#include <QDebug>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
