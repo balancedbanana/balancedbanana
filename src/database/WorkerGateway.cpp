@@ -41,7 +41,7 @@ bool areArgsValid(const worker_details& worker){
  * @param worker  The worker to be added
  * @return The id of the worker.
  */
-uint64_t WorkerGateway::add(worker_details worker) {
+uint64_t WorkerGateway::add(const worker_details& worker) {
     // Check args
     if (!areArgsValid(worker)){
         throw std::invalid_argument("addWorker error: invalid arguments");
@@ -121,10 +121,10 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
     if (!doesTableExist()){
         throwNoTableException();
     }
-    worker_details details;
+    worker_details details{};
     if (doesWorkerExist(id)){
         QSqlQuery query;
-        query.prepare("SELECT key, space, ram, cores, INET_NTOA(address), name FROM workers WHERE id = (:id)");
+        query.prepare("SELECT public_key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
         query.bindValue(":id", QVariant::fromValue(id));
         if (query.exec()){
             if (query.next()){
@@ -138,6 +138,7 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
                 details.address = query.value(4).toString().toStdString();
                 details.name = query.value(5).toString().toStdString();
             } else {
+                // This would be a very weird error, as I've already checked if the worker exists.
                 throw std::runtime_error("getWorker error: record doesn't exist");
             }
         } else {

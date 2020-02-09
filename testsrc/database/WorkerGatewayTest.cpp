@@ -279,3 +279,57 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
     ASSERT_FALSE(WorkerGateway::remove(1));
 }
 
+/**
+ * Checks if two worker_details structs are equal
+ */
+bool areDetailsEqual(const worker_details& first, const worker_details& second){
+    return first.address == second.address
+    && first.specs.cores == second.specs.cores
+    && first.specs.ram == second.specs.ram
+    && first.specs.space == second.specs.space
+    && first.public_key == second.public_key
+    && first.name == second.name
+    && first.id == second.id;
+}
+
+/**
+ * Fixture class that initializes a sample worker on setUp and resets the table on teardown.
+ */
+class GetWorkerTest : public ::testing::Test{
+protected:
+    void SetUp() override {
+        details.public_key = "34nrhk3hkr";
+        details.specs.space = 10240;
+        details.specs.ram = 16384;
+        details.specs.cores = 4;
+        details.address = "0.0.0.0";
+        details.name = "CentOS";
+    }
+
+    void TearDown() override {
+        resetTableAI();
+    }
+
+    worker_details details;
+};
+
+// Test to see if the first worker can be retrieved correctly.
+TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
+    // Add the worker. Its id should be 1, since it's the first worker to be added.
+    int id = WorkerGateway::add(details);
+    EXPECT_EQ(id, 1);
+    details.id = 1;
+
+    // Get the worker and compare it to the added worker. They should be equal.
+    worker_details expected_details = WorkerGateway::getWorker(id);
+    ASSERT_TRUE(areDetailsEqual(details, expected_details));
+}
+
+// Test to see if the getter method returns an empty worker_details when its called with an invalid id
+TEST_F(GetWorkerTest, GetWorkerTest_NonExistentWorker_Test){
+    worker_details empty_details{};
+    ASSERT_TRUE(areDetailsEqual(WorkerGateway::getWorker(1), empty_details));
+}
+
+
+
