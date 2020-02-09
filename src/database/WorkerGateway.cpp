@@ -1,7 +1,6 @@
 #include <database/WorkerGateway.h>
 #include <database/worker_details.h>
 
-#include <cassert>
 #include <QVariant>
 #include <QSqlDatabase>
 #include <QSqlQuery>
@@ -12,19 +11,36 @@
 
 using namespace balancedbanana::database;
 
+/**
+ * Checks if the workers table exists
+ * @return true when it exists, otherwise false
+ */
 bool doesTableExist(){
     return QSqlDatabase::database().tables().contains("workers");
 }
 
+/**
+ * Throws an exception for when the workers table doesn't exist
+ */
 void throwNoTableException(){
     throw std::logic_error("workers table doesn't exist");
 }
 
+/**
+ * Checks if the args are vaild
+ * @param worker  The struct containing the args
+ * @return true if the args are valid, otherwise false
+ */
 bool areArgsValid(const worker_details& worker){
     return !(worker.public_key.empty()) && worker.specs.space > 0 && worker.specs.ram > 0 && worker.specs.cores > 0
     && !(worker.address.empty()) && !(worker.name.empty());
 }
 
+/**
+ * Adds a worker to the database, Throws exceptions when errors occur.
+ * @param worker  The worker to be added
+ * @return The id of the worker.
+ */
 uint64_t WorkerGateway::add(worker_details worker) {
     // Check args
     if (!areArgsValid(worker)){
@@ -59,6 +75,11 @@ uint64_t WorkerGateway::add(worker_details worker) {
     return query.lastInsertId().toUInt();
 }
 
+/**
+ * Checks if a worker with the given id exists in the database.
+ * @param id The id of the worker.
+ * @return True if the worker exists, otherwise false.
+ */
 bool WorkerGateway::doesWorkerExist(uint64_t id){
     QSqlQuery query("SELECT id FROM workers WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
@@ -68,7 +89,11 @@ bool WorkerGateway::doesWorkerExist(uint64_t id){
     throw std::runtime_error(query.lastError().databaseText().toStdString());
 }
 
-//Removes a worker.
+/**
+ * Deletes a worker with the given id from the database,
+ * @param id  The id of the worker to be deleted.
+ * @return True if the operation was successful, otherwiser false
+ */
 bool WorkerGateway::remove(uint64_t id) {
     if (!doesTableExist()){
         throwNoTableException();
@@ -87,6 +112,11 @@ bool WorkerGateway::remove(uint64_t id) {
     }
 }
 
+/**
+ * Getter method for the information of a worker with the given id.
+ * @param id  The id of the worker.
+ * @return The details of the worker.
+ */
 worker_details WorkerGateway::getWorker(uint64_t id) {
     if (!doesTableExist()){
         throwNoTableException();
@@ -119,6 +149,10 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
     return details;
 }
 
+/**
+ * Getter for all the workers in the database.
+ * @return  Vector of all the workers in the database.
+ */
 std::vector<worker_details> WorkerGateway::getWorkers() {
     if (!doesTableExist()){
         throwNoTableException();
