@@ -1,3 +1,4 @@
+add_subdirectory(authenticator)
 include(GoogleTest)
 
 add_executable(ConnectTest ConnectTest.cpp)

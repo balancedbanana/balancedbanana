@@ -122,6 +122,9 @@ std::string Authenticator::GenerateSignature(std::string name, std::string privk
 }
 
 balancedbanana::communication::authenticator::Authenticator::Authenticator(const std::shared_ptr<balancedbanana::communication::Communicator> &comm) : comm(comm) {
+    if(!this->comm) {
+        throw std::invalid_argument("Communicator must not null");
+    }
 }
 
 void balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username, const std::string &password) {
