@@ -335,3 +335,10 @@ TEST_F(JobConfigMergeTest, MergeIncompleteWithIncomplete) {
     JobConfig expected(s);
     testEqual(&expected, b);
 }
+
+TEST_F(JobConfigMergeTest, CopyJobConfig) {
+    JobConfig bcopied(*b);
+    testEqual(&bcopied, b);
+    JobConfig ccopied = *c;
+    testEqual(&ccopied, c);
+}
