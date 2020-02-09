@@ -8,9 +8,9 @@ before_install:
   - sudo apt-get -y install libssl-dev qtbase5-dev cmake make g++-9
 
 script:
-  - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 cmake -DCOVERAGE=1 .
+  - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 cmake -DCOVERAGE=1 ..
   - cmake --build .
   - "ctest --verbose . || :"
 
 after_success:
-  - coveralls --root . --gcov gcov-9 -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"
+  - coveralls --root . --gcov gcov-9 -E ".*contrib.*" -E ".*google.*" -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"
