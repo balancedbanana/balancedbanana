@@ -34,7 +34,7 @@ TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
 /**
  * Deletes the all records in the workers table and resets the auto increment for the id.
  */
-void resetTableAI(){
+void resetWorkerTable(){
     QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL");
     query.exec();
     query.prepare("DELETE FROM workers");
@@ -58,7 +58,7 @@ protected:
     }
 
     void TearDown() override {
-        resetTableAI();
+        resetWorkerTable();
     }
 
     worker_details details;
@@ -70,7 +70,7 @@ protected:
  * @param id The id of the added record.
  * @return true if the add was successful, otherwise false.
  */
-bool wasAddSuccessful(const worker_details& details, uint64_t id){
+bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
     QSqlQuery query("SELECT * FROM workers WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
@@ -107,7 +107,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
 
     // The add must be successful
-    ASSERT_TRUE(wasAddSuccessful(details, 1));
+    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
 }
 
 // Test to see if the auto increment feature works as expected.
@@ -116,7 +116,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSucess_Test){
 
     // Add the worker from the first test. Since it's the first worker, its id should be 1.
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
-    ASSERT_TRUE(wasAddSuccessful(details, 1));
+    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
 
     // Initialize a new worker
     worker_details seconddetails{};
@@ -126,7 +126,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSucess_Test){
     seconddetails.name = "Ubuntu";
 
     ASSERT_TRUE(WorkerGateway::add(seconddetails) == 2);
-    ASSERT_TRUE(wasAddSuccessful(seconddetails, 2));
+    ASSERT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
 }
 
 // Test to see if the addWorker method throws an exception when the key arg is invalid.
@@ -174,7 +174,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_InvalidNameArg_Test){
 /**
  * Fixture class that deletes the workers table on setup and restores it on teardown.
  */
-class NoTableTest : public ::testing::Test{
+class NoWorkersTableTest : public ::testing::Test{
 protected:
     void SetUp() override {
         // Deletes the workers table
@@ -206,22 +206,22 @@ protected:
 };
 
 // Test to see if an exception is thrown when a worker is being added, but no workers' table exists.
-TEST_F(NoTableTest, NoTableTest_AddWorker_Test){
+TEST_F(NoWorkersTableTest, NoWorkersTableTest_AddWorker_Test){
     EXPECT_THROW(WorkerGateway::add(details), std::logic_error);
 }
 
 // Test to see if an exception is thrown when a worker is being removed, but no workers' table exists.
-TEST_F(NoTableTest, NoTableTest_RemoveWorker_Test){
+TEST_F(NoWorkersTableTest, NoWorkersTableTest_RemoveWorker_Test){
     EXPECT_THROW(WorkerGateway::remove(id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the worker getter is called, but no workers' table exists.
-TEST_F(NoTableTest, NoTableTest_GetWorker_Test){
+TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorker_Test){
     EXPECT_THROW(WorkerGateway::getWorker(id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the workers getter is called, but no workers' table exists.
-TEST_F(NoTableTest, NoTableTest_GetWorkers_Test){
+TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
     EXPECT_THROW(WorkerGateway::getWorkers(), std::logic_error);
 }
 
@@ -230,7 +230,7 @@ TEST_F(NoTableTest, NoTableTest_GetWorkers_Test){
  * @param id The id of the removed record.
  * @return  true if remove was successful, otherwise false.
  */
-bool wasRemoveSuccessful(uint64_t id){
+bool wasWorkerRemoveSuccessful(uint64_t id){
     QSqlQuery query("SELECT * FROM workers WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
@@ -240,7 +240,7 @@ bool wasRemoveSuccessful(uint64_t id){
             return true;
         }
     } else {
-        qDebug() << "wasRemoveSuccessful error: " << query.lastError();
+        qDebug() << "wasWorkerRemoveSuccessful error: " << query.lastError();
         return false;
     }
 }
@@ -251,7 +251,7 @@ bool wasRemoveSuccessful(uint64_t id){
 class RemoveWorkerTest : public ::testing::Test {
 protected:
     void TearDown() override{
-        resetTableAI();
+        resetWorkerTable();
     }
 };
 
@@ -267,11 +267,11 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     details.name = "CentOS";
     // Since this is the first worker, this has to be true.
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
-    ASSERT_TRUE(wasAddSuccessful(details, 1));
+    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
 
     // This must return true.
     ASSERT_TRUE(WorkerGateway::remove(1));
-    ASSERT_TRUE(wasRemoveSuccessful(1));
+    ASSERT_TRUE(wasWorkerRemoveSuccessful(1));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
@@ -308,7 +308,7 @@ protected:
     }
 
     void TearDown() override {
-        resetTableAI();
+        resetWorkerTable();
     }
 
     worker_details details;
@@ -365,7 +365,7 @@ protected:
     }
 
     void TearDown() override {
-        resetTableAI();
+        resetWorkerTable();
     }
 
     worker_details first;

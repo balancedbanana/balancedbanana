@@ -1,7 +1,7 @@
 #include <database/UserGateway.h>
 #include <database/user_details.h>
+#include <database/database_utilities.h>
 
-#include <cassert>
 #include <QVariant>
 #include <QSqlError>
 #include <QDebug>
@@ -12,20 +12,7 @@
 
 using namespace balancedbanana::database;
 
-/**
- * Checks if the users table exists
- * @return true when it exists, otherwise false
- */
-bool doesTableExist(){
-    return QSqlDatabase::database().tables().contains("users");
-}
 
-/**
- * Throws an exception for when the users table doesn't exist
- */
-void throwNoTableException(){
-    throw std::logic_error("users table doesn't exist");
-}
 
 /**
  * Checks if the args are valid
@@ -49,8 +36,8 @@ uint64_t UserGateway::add(const user_details& user) {
     }
 
     // DB must contain table
-    if (!doesTableExist()){
-        throwNoTableException();
+    if (!doesTableExist("users")){
+        throwNoTableException("users");
     }
 
     // Converting the various args into QVariant Objects
@@ -59,7 +46,7 @@ uint64_t UserGateway::add(const user_details& user) {
     QVariant q_public_key = QVariant::fromValue(QString::fromStdString(user.public_key));
 
     // Create query
-    QSqlQuery query("INSERT INTO users (name, email, key) VALUES (?, ?, ?)");
+    QSqlQuery query("INSERT INTO users (name, email, public_key) VALUES (?, ?, ?)");
     query.addBindValue(q_name);
     query.addBindValue(q_email);
     query.addBindValue(q_public_key);
@@ -75,9 +62,9 @@ uint64_t UserGateway::add(const user_details& user) {
 /**
  * Checks if a user with the given id exists in the database.
  * @param id The id of the user.
- * @return True if the worker exists, otherwise false.
+ * @return True if the user exists, otherwise false.
  */
-bool doesUserExist(uint64_t id){
+bool UserGateway::doesUserExist(uint64_t id){
     QSqlQuery query("SELECT id FROM users WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
@@ -92,8 +79,8 @@ bool doesUserExist(uint64_t id){
  * @return True if the operation was successful, otherwise false
  */
 bool UserGateway::remove(uint64_t user_id) {
-    if (!doesTableExist()){
-        throwNoTableException();
+    if (!doesTableExist("users")){
+        throwNoTableException("users");
     }
     if (doesUserExist(user_id)){
         QSqlQuery query("DELETE FROM users WHERE id = ?");
@@ -115,12 +102,12 @@ bool UserGateway::remove(uint64_t user_id) {
  * @return The details of the user.
  */
 user_details UserGateway::getUser(uint64_t id) {
-    if (!doesTableExist()){
-        throwNoTableException();
+    if (!doesTableExist("users")){
+        throwNoTableException("users");
     }
     user_details details{};
     if (doesUserExist(id)){
-        QSqlQuery query("SELECT key, name, email FROM users WHERE id = ?");
+        QSqlQuery query("SELECT public_key, name, email FROM users WHERE id = ?");
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
             if (query.next()){
@@ -129,14 +116,14 @@ user_details UserGateway::getUser(uint64_t id) {
                 details.name = query.value(1).toString().toStdString();
                 details.email = query.value(2).toString().toStdString();
             } else {
-                // This would be a very weird error, as I've already checked if the worker exists.
+                // This would be a very weird error, as I've already checked if the user exists.
                 throw std::runtime_error("getUser error: record doesn't exist");
             }
         } else {
             throw std::runtime_error("getUser error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        std::cerr << "getUser error: no worker with id = " << id  << " exists" << std::endl;
+        std::cerr << "getUser error: no user with id = " << id  << " exists" << std::endl;
     }
     return details;
 
@@ -147,10 +134,10 @@ user_details UserGateway::getUser(uint64_t id) {
  * @return  Vector of all the users in the database.
  */
 std::vector<user_details> UserGateway::getUsers() {
-    if (!doesTableExist()){
-        throwNoTableException();
+    if (!doesTableExist("users")){
+        throwNoTableException("users");
     }
-    QSqlQuery query("SELECT id, key, name, email FROM users");
+    QSqlQuery query("SELECT id, public_key, name, email FROM users");
     std::vector<user_details> userVector;
     if (query.exec()){
         while (query.next()){

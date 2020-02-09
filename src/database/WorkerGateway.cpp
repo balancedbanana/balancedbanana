@@ -1,5 +1,6 @@
 #include <database/WorkerGateway.h>
 #include <database/worker_details.h>
+#include <database/database_utilities.h>
 
 #include <QVariant>
 #include <QSqlDatabase>
@@ -11,20 +12,6 @@
 
 using namespace balancedbanana::database;
 
-/**
- * Checks if the workers table exists
- * @return true when it exists, otherwise false
- */
-bool doesTableExist(){
-    return QSqlDatabase::database().tables().contains("workers");
-}
-
-/**
- * Throws an exception for when the workers table doesn't exist
- */
-void throwNoTableException(){
-    throw std::logic_error("workers table doesn't exist");
-}
 
 /**
  * Checks if the args are valid
@@ -48,8 +35,8 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
     }
 
     // DB must contain table
-    if (!doesTableExist()){
-        throwNoTableException();
+    if (!doesTableExist("workers")){
+        throwNoTableException("workers");
     }
 
     // Converting the various args into QVariant Objects
@@ -96,8 +83,8 @@ bool WorkerGateway::doesWorkerExist(uint64_t id){
  * @return True if the operation was successful, otherwise false
  */
 bool WorkerGateway::remove(uint64_t id) {
-    if (!doesTableExist()){
-        throwNoTableException();
+    if (!doesTableExist("workers")){
+        throwNoTableException("workers");
     }
     if (doesWorkerExist(id)){
         QSqlQuery query("DELETE FROM workers WHERE id = ?");
@@ -119,8 +106,8 @@ bool WorkerGateway::remove(uint64_t id) {
  * @return The details of the worker.
  */
 worker_details WorkerGateway::getWorker(uint64_t id) {
-    if (!doesTableExist()){
-        throwNoTableException();
+    if (!doesTableExist("workers")){
+        throwNoTableException("workers");
     }
     worker_details details{};
     if (doesWorkerExist(id)){
@@ -156,8 +143,8 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
  * @return  Vector of all the workers in the database.
  */
 std::vector<worker_details> WorkerGateway::getWorkers() {
-    if (!doesTableExist()){
-        throwNoTableException();
+    if (!doesTableExist("workers")){
+        throwNoTableException("workers");
     }
     QSqlQuery query("SELECT id, public_key, space, ram, cores, address, name FROM workers");
     std::vector<worker_details> workerVector;
