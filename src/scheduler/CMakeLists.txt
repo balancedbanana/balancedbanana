@@ -3,3 +3,4 @@ add_subdirectory(queue)
 
 add_executable(bbs Scheduler.cpp Worker.cpp Job.cpp IUser.cpp webserver/Webserver.cpp)
 target_link_libraries(bbs Qt5::Core Qt5::Network Qt5::Sql communication Authenticator Message configfiles commandLineInterface)
+install(TARGETS bbs DESTINATION bin)

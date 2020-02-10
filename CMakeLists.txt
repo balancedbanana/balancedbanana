@@ -71,6 +71,9 @@ if(COVERAGE)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif()
 
+set(CMAKE_MACOSX_RPATH 1)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
 # Add Webserver directly to our build.
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/Webserver-src
                  ${CMAKE_CURRENT_BINARY_DIR}/Webserver-build
