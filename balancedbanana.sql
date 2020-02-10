@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources` (
   `ram` BIGINT(10) UNSIGNED NOT NULL,
   `cores` BIGINT(10) UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`job_results` (
   `stdout` MEDIUMTEXT NOT NULL,
   `exit_code` TINYINT(3) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`users` (
   `email` VARCHAR(60) NOT NULL,
   `key` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `key_UNIQUE` (`key` ASC) VISIBLE)
+  UNIQUE INDEX `key_UNIQUE` (`key` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
@@ -78,9 +78,9 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers` (
   `public_key` VARCHAR(255) NULL DEFAULT NULL,
   `name` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,
-  UNIQUE INDEX `public_key_UNIQUE` (`public_key` ASC) VISIBLE,
-  UNIQUE INDEX `address_UNIQUE` (`address` ASC) VISIBLE)
+  UNIQUE INDEX `id_UNIQUE` (`id` ASC),
+  UNIQUE INDEX `public_key_UNIQUE` (`public_key` ASC),
+  UNIQUE INDEX `address_UNIQUE` (`address` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
