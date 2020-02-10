@@ -5,7 +5,8 @@ before_install:
   - pip install --user cpp-coveralls
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -q update
-  - sudo apt-get -y install libssl-dev qtbase5-dev cmake make g++-9 libqt5sql5-mysql mysql-server 
+  - sudo apt-get -y install libssl-dev qtbase5-dev cmake make g++-9 libqt5sql5-mysql mysql-server
+  - sudo systemctl start mysql
   - cat balancedbanana.sql | sudo mysql
   - echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';"$'\n'"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"$'\n'"FLUSH PRIVILEGES;" | sudo mysql
 
