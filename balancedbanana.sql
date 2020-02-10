@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`users` (
   `id` TINYINT(2) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
   `email` VARCHAR(60) NOT NULL,
-  `key` VARCHAR(100) NOT NULL,
+  `public_key` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `key_UNIQUE` (`key` ASC))
 ENGINE = InnoDB
