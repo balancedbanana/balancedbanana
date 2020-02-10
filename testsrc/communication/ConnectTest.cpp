@@ -12,15 +12,10 @@ using namespace balancedbanana::communication;
 
 struct TestMP : MessageProcessor {
     std::shared_ptr<ClientAuthMessage> sourcemessage;
-    // std::condition_variable cnd;
-    // std::atomic<int> cnt = 2;
 
     virtual void processClientAuthMessage(const std::shared_ptr<ClientAuthMessage>& msg) override {
         ASSERT_EQ(sourcemessage->GetPassword(), msg->GetPassword());
-        ASSERT_EQ(sourcemessage->GetPublickey(), msg->GetPublickey());
         ASSERT_EQ(sourcemessage->GetUsername(), msg->GetUsername());
-        // --cnt;
-        // cnd.notify_all();
     }
 };
 
@@ -32,20 +27,19 @@ TEST(communication, Connect)
     auto listener = std::make_shared<CommunicatorListener>([testmp](){
         return testmp;
     });
-    listener->listen(8443, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
-        com->send(*clauth);
-        balancedbanana::communication::authenticator::Authenticator auth(com);
-        auth.authenticate("2Te53st8", "6Hidfsg#öl4su93");
+    listener->listen(2434, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
         com->detach();
     });
     EXPECT_ANY_THROW(listener->listen(23453, [](std::shared_ptr<balancedbanana::communication::Communicator> com){}));
     auto listener2 = std::make_shared<CommunicatorListener>([testmp](){
         return nullptr;
     });
-    EXPECT_ANY_THROW(listener2->listen(8443, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+    EXPECT_ANY_THROW(listener2->listen(2434, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
     }));
-    auto com = std::make_shared<Communicator>("localhost", 8443, testmp);
-    com->send(*clauth);
+    auto com = std::make_shared<Communicator>("localhost", 2434, testmp);
+    balancedbanana::communication::authenticator::Authenticator auth(com);
+    auth.authenticate("2Te53st8", "6Hidfsg#öl4su93");
+    com->detach();
 }
 
 TEST(communication, Connect2)
