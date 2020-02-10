@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`users` (
   `email` VARCHAR(60) NOT NULL,
   `public_key` VARCHAR(100) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `key_UNIQUE` (`key` ASC))
+  UNIQUE INDEX `public_key_UNIQUE` (`public_key` ASC))
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = latin1;
 
