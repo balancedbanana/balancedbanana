@@ -8,7 +8,7 @@ before_install:
   - sudo apt-get -y install libssl-dev qtbase5-dev cmake make g++-9 libqt5sql5-mysql mysql-server
   - sudo systemctl start mysql
   - cat balancedbanana.sql | sudo mysql
-  - echo "ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';"$'\n'"ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"$'\n'"FLUSH PRIVILEGES;" | sudo mysql
+  - echo "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"$'\n'"ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';"$'\n'"FLUSH PRIVILEGES;" | sudo mysql
 
 script:
   - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 cmake -DCOVERAGE=1 .
