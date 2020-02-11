@@ -16,7 +16,7 @@ TEST(Docker, Start)
     task.getConfig()->set_blocking_mode(false);
     task.getConfig()->set_environment(std::vector<std::string>{"USER=banana", "MSG=Hallo Welt"});
     task.getConfig()->set_min_cpu_count(1);
-    task.getConfig()->set_max_cpu_count(4);
+    task.getConfig()->set_max_cpu_count(1);
     auto container = docker.Start(0, task);
     auto str = container.Tail(100);
     ASSERT_EQ(str, "Hallo Welt\n");
