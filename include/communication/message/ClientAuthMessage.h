@@ -24,7 +24,6 @@ namespace balancedbanana {
 			const std::string& GetPassword() const;
 
 			const std::string& GetPublickey() const;
-
 		};
 
 	}

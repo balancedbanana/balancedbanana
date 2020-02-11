@@ -12,7 +12,11 @@ int main(int argc, char** argv) {
     // CommandLineProcessor proc;
     // // Wieso argc als Zeiger...
     // auto task = proc.process(argc, argv);
+<<<<<<< HEAD
     // std::cout << "Task Type" << task->GetType() << "\n";
+=======
+    // std::cout << "Task Type" << task->getType() << "\n";
+>>>>>>> master
     // CommunicatorListener listener([](){ return std::make_shared<balancedbanana::communication::SchedulerClientMP>(); });
     // listener.listen([](std::shared_ptr<balancedbanana::communication::Communicator> com) {
         

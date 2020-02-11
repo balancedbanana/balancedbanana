@@ -1,7 +1,11 @@
 #include "gtest/gtest.h"
 #include <communication/Communicator.h>
 #include <communication/CommunicatorListener.h>
+<<<<<<< HEAD
 #include <communication/MessageProcessor.h>
+=======
+#include <communication/messageProcessor/MessageProcessor.h>
+>>>>>>> master
 #include <communication/message/ClientAuthMessage.h>
 #include <atomic>
 #include <condition_variable>
@@ -14,6 +18,7 @@ struct TestMP : MessageProcessor {
     std::condition_variable cnd;
     std::atomic<int> cnt = 2;
 
+<<<<<<< HEAD
     TestMP() : MessageProcessor(nullptr) {
     }
 
@@ -21,6 +26,12 @@ struct TestMP : MessageProcessor {
         ASSERT_EQ(sourcemessage->GetPassword(), msg.GetPassword());
         ASSERT_EQ(sourcemessage->GetPublickey(), msg.GetPublickey());
         ASSERT_EQ(sourcemessage->GetUsername(), msg.GetUsername());
+=======
+    virtual void processClientAuthMessage(const std::shared_ptr<ClientAuthMessage>& msg) override {
+        ASSERT_EQ(sourcemessage->GetPassword(), msg->GetPassword());
+        ASSERT_EQ(sourcemessage->GetPublickey(), msg->GetPublickey());
+        ASSERT_EQ(sourcemessage->GetUsername(), msg->GetUsername());
+>>>>>>> master
         --cnt;
         cnd.notify_all();
     }

@@ -34,6 +34,5 @@ namespace balancedbanana {
             std::string extractString(const char *data, size_t &iterator, size_t size);
 
         }
-
     }
 }
