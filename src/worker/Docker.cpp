@@ -46,5 +46,5 @@ Container Docker::Start(int userid, const Task & task) {
         std::string err = proc.readAllStandardError().toStdString();
         throw std::runtime_error("Invalid Argument for docker start:\n" + output + "Error:\n" + err);
     }
-    return Container(output);
+    return Container(output.substr(0, output.length() - 1));
 }
