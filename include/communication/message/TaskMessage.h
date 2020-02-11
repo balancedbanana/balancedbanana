@@ -5,16 +5,17 @@
 
 namespace balancedbanana {
     namespace communication {
-		//Nachticht mit allen Hardware Angaben (CPU RAM OS)
+		
 		class TaskMessage : public Message {
             Task task;
 
 		public:
-            TaskMessage(const Task& task);
+            TaskMessage(const Task &task);
 
-			void process(const MessageProcessor* & msgProcessor);
+            void process(MessageProcessor &mp) const override;
 
-            virtual void serialize(std::ostream &stream) override;
+            std::string serialize() const override;
+
 		};
 	}
 }

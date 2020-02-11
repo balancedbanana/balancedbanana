@@ -5,15 +5,35 @@
 #include <communication/MessageProcessor.h>
 #include <communication/message/MessageType.h>
 
-class balancedbanana::communication::Message {
-protected:
-	const MessageType type;
+namespace balancedbanana {
+    namespace communication {
 
-public:
-    explicit Message(MessageType type);
+        class Message : public std::enable_shared_from_this<Message> {
+        protected:
+            const MessageType type;
 
-	virtual void process(MessageProcessor &mp) = 0;
+        public:
+            explicit Message(MessageType type);
 
-	virtual void serialize(std::ostream &stream);
+            MessageType GetType() const;
 
-};
+            virtual void process(MessageProcessor &mp) const = 0;
+
+            virtual std::string serialize() const;
+
+            static std::shared_ptr<Message> deserialize(const char *data, uint32_t length);
+
+        };
+
+        namespace serialization {
+
+            void insert(std::ostream &stream, const std::string &value);
+            void insert(std::ostream &stream, uint32_t value);
+
+            uint32_t extractUInt32(const char *data, size_t &iterator, size_t size);
+            std::string extractString(const char *data, size_t &iterator, size_t size);
+
+        }
+
+    }
+}

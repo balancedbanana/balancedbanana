@@ -14,9 +14,9 @@ namespace balancedbanana {
 
             explicit PublicKeyAuthMessage(std::istream &stream);
 
-			virtual void process(const std::shared_ptr<MessageProcessor>& mp);
+            void process(MessageProcessor &mp) const override;
 
-            virtual void serialize(std::ostream &stream) override;
+            std::string serialize() const override;
 		};
 	}
 }

@@ -14,6 +14,9 @@ namespace balancedbanana {
 
 
         public:
+            User() : IUser("", "") {
+
+            }
             //Getter for the id_ attribute
             uint64_t id();
 

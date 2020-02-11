@@ -9,16 +9,16 @@ namespace balancedbanana {
 			uint32_t status;
 
 		public:
-		    AuthResultMessage(uint32_t status);
+		    explicit AuthResultMessage(uint32_t status);
 
-		    explicit AuthResultMessage(std::istream &stream);
+		    explicit AuthResultMessage(const char *data, size_t &iterator, size_t length);
 
 			//Gibt den Authentfication status zurück 0 falls erfolgreich sonst ungleich 0
-			uint32_t getStatus();
+			uint32_t getStatus() const;
 
-			virtual void process(const std::shared_ptr<MessageProcessor>& mp);
+			void process(MessageProcessor &mp) const override;
 
-			virtual void serialize(std::ostream &stream) override;
+			std::string serialize() const override;
 		};
 
 	}

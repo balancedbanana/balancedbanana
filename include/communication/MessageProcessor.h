@@ -14,25 +14,25 @@ namespace balancedbanana {
 		class TaskMessage;
 		class WorkerAuthMessage;
 
-        class MessageProcessor {
+        class MessageProcessor : public std::enable_shared_from_this<MessageProcessor> {
         private:
             std::shared_ptr<Communicator> communicator_;
 
-            virtual void handleInvalidMessage(const Message *msg);
+            virtual void handleInvalidMessage(const Message &msg);
 
         public:
-            explicit MessageProcessor(std::shared_ptr<Communicator> &communicator);
+            explicit MessageProcessor(std::shared_ptr<Communicator> communicator);
 
             void process(const std::shared_ptr<Message> &msg);
             std::shared_ptr<Communicator> communicator();
 
-            virtual void processAuthResultMessage(const AuthResultMessage *msg);
-            virtual void processClientAuthMessage(const ClientAuthMessage *msg);
-            virtual void processHardwareDetailMessage(const HardwareDetailMessage *msg);
-            virtual void processPublicKeyAuthMessage(const PublicKeyAuthMessage *msg);
-            virtual void processSnapshotMessage(const SnapshotMessage *msg);
-            virtual void processTaskMessage(const TaskMessage *msg);
-            virtual void processWorkerAuthMessage(const WorkerAuthMessage *msg);
+            virtual void processAuthResultMessage(const AuthResultMessage &msg);
+            virtual void processClientAuthMessage(const ClientAuthMessage &msg);
+            virtual void processHardwareDetailMessage(const HardwareDetailMessage &msg);
+            virtual void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg);
+            virtual void processSnapshotMessage(const SnapshotMessage &msg);
+            virtual void processTaskMessage(const TaskMessage &msg);
+            virtual void processWorkerAuthMessage(const WorkerAuthMessage &msg);
 
         };
 	}

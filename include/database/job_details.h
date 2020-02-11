@@ -1,34 +1,35 @@
 #pragma once
 
+#include <configfiles/JobConfig.h>
+#include <database/Specs.h>
+#include "details.h"
+
 #include <cinttypes>
 #include <string>
-#include <chrono>
-#include <ctime>
-#include "Specs.h"
-#include <configfiles/JobConfig.h>
+#include <QDateTime>
 
 namespace balancedbanana {
     namespace database {
 
 		//This is a struct that includes all relevant information about a Job.
-		struct job_details {
+		struct job_details : details {
 			configfiles::JobConfig config;
 
-			uint64_t user_id;
+			uint8_t user_id;
 
 			//Represented with an ID.
 			int status;
 
 			//The id of the Job.
-			uint64_t id;
+			uint8_t id;
 
 			std::string command;
 
-			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> schedule_time;
+			QDateTime schedule_time;
 
-			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> start_time;
+			QDateTime start_time;
 
-			std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> finish_time;
+			QDateTime finish_time;
 
 			Specs allocated_specs;
 

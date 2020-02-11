@@ -1,6 +1,6 @@
 #pragma once
-#include "SSLSocket.h"
 #include "MessageProcessor.h"
+#include <Net/Socket.h>
 #include "message/Message.h"
 #include <memory>
 
@@ -8,18 +8,17 @@ namespace balancedbanana {
     namespace communication {
 		class Communicator {
 		private:
-			std::shared_ptr<SSLSocket> socket;
+			std::shared_ptr<Net::Socket> socket;
 
 			std::shared_ptr<MessageProcessor> processor;
 
 		public:
-			void Connect();
+			Communicator(const std::shared_ptr<Net::Socket> &socket, const std::shared_ptr<MessageProcessor>& processor);
 
-			void listen(const std::function<void(std::shared_ptr<Message>)>& callback);
+			//TODO shouldnt it be a string& ?
+			Communicator(const std::string address, short port, const std::shared_ptr<MessageProcessor>& processor);
 
 			void send(const Message& message);
-
-            static std::shared_ptr<Message> deserializeMessage(std::istream &stream);
 		};
 	}
 }

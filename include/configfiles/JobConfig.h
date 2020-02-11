@@ -11,7 +11,6 @@ namespace balancedbanana {
 
         //This class contains all necessary information that are needed by the scheduler and the worker to successfully execute a job.
         class JobConfig {
-        private:
             //This attribute specifies how much RAM jobs with this configuration need at least in order to finish successfully.
             std::optional <uint32_t> min_ram_;
 
@@ -43,7 +42,10 @@ namespace balancedbanana {
             std::optional<bool> interruptible_;
 
             //This attribute specifies the current working directory from which the job is executed.
-            std::optional <std::filesystem::path> current_working_dir_;
+            std::filesystem::path current_working_dir_;
+
+            //TODO Are job ids 64 bits long or 32 bits now?
+            //TODO The job id and the backup id should be stored in the job class not in the jobconfig!
 
             //This attribute specifies which job a request is referring to
             std::optional <uint32_t> jobID;
@@ -56,11 +58,15 @@ namespace balancedbanana {
             //This constructor creates an empty JobConfig.
             JobConfig();
 
+            JobConfig(const JobConfig &) = default;
+
             //This constructor creates a JobConfig from a serialized stringstream
-            JobConfig(const std::stringstream &data);
+            explicit JobConfig(std::istream &data);
 
             //This constructor creates a JobConfig from a saved file.
-            JobConfig(const std::filesystem::path &path);
+            explicit JobConfig(const std::filesystem::path &path);
+
+            virtual ~JobConfig();
 
             //Setter for the min_ram_ attribute.
             void set_min_ram(const std::optional <uint32_t> &miB);
@@ -93,34 +99,34 @@ namespace balancedbanana {
             void set_interruptible(const std::optional<bool> &interruptible);
 
             //Setter for the current_working_dir_ attribute.
-            void set_current_working_dir(const std::optional <std::filesystem::path> &cwd);
+            void set_current_working_dir(const std::filesystem::path &cwd);
 
             //Setter for the referred jobID
-            void set_job_ID(uint32_t jobID);
+            void set_job_ID(std::optional<uint32_t> jobID);
 
             //Setter for the referred backupID
-            void set_backup_ID(uint32_t backupID);
+            void set_backup_ID(std::optional<uint32_t> backupID);
 
             //Getter for the min_ram_ attribute.
-            std::optional <uint32_t> min_ram();
+            std::optional <uint32_t> &min_ram();
 
             //Getter for the max_ram_ attribute.
-            std::optional <uint32_t> max_ram();
+            std::optional <uint32_t> &max_ram();
 
             //Getter for the min_cpu_count_ attribute.
-            std::optional <uint32_t> min_cpu_count();
+            std::optional <uint32_t> &min_cpu_count();
 
             //Getter for the max_cpu_count_ attribute.
-            std::optional <uint32_t> max_cpu_count();
+            std::optional <uint32_t> &max_cpu_count();
 
             //Getter for the blocking_mode_ attribute.
-            std::optional<bool> blocking_mode();
+            std::optional<bool> &blocking_mode();
 
             //Getter for the email_ attribute.
             std::string &email();
 
             //Getter for the priority_ attribute.
-            std::optional <Priority> priority();
+            std::optional <Priority> &priority();
 
             //Getter for the image_ attribute.
             std::string &image();
@@ -129,22 +135,22 @@ namespace balancedbanana {
             std::optional <std::vector<std::string>> &environment();
 
             //Getter for the interruptible_ attribute.
-            std::optional<bool> interruptible();
+            std::optional<bool> &interruptible();
 
             //Getter for the current_working_dir_ attribute.
-            std::optional <std::filesystem::path> &current_working_dir();
+            const std::filesystem::path &current_working_dir();
 
             //Getter for the referred jobID
-            std::optional <uint32_t> get_job_ID();
+            std::optional <uint32_t> &get_job_ID();
 
             //Getter for the referred backupID
-            std::optional <uint32_t> get_backup_ID();
+            std::optional <uint32_t> &get_backup_ID();
 
             //This method serializes the JobConfig and saves it in a file with the specified path.
             bool Save(const std::filesystem::path &path);
 
             //This method serializes the JobConfig into a string and pushes it into the passed stream.
-            virtual void Serialize(std::stringstream &destination);
+            virtual void Serialize(std::ostream &destination);
 
             //This method merges the content of the passed JobConfig into this JobConfig. Attributes that are contained in both files are not overwritten.
             void Merge(const JobConfig &config);

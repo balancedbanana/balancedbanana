@@ -6,22 +6,23 @@ AuthResultMessage::AuthResultMessage(uint32_t status) :
 Message(MessageType::AUTH_RESULT), status(status){
 }
 
-AuthResultMessage::AuthResultMessage(std::istream &stream) :
+AuthResultMessage::AuthResultMessage(const char *data, size_t &iterator, size_t length) :
 Message(MessageType::AUTH_RESULT), status(1) {
-    stream.readsome((char *)&status, sizeof(uint32_t));
+    status = serialization::extractUInt32(data, iterator, length);
 }
 
-//Gibt den Authentfication status zurück 0 falls erfolgreich sonst ungleich 0
-uint32_t AuthResultMessage::getStatus() {
+
+uint32_t AuthResultMessage::getStatus() const {
     return status;
 }
 
-void AuthResultMessage::process(const std::shared_ptr<MessageProcessor>& mp) {
-    mp->processAuthResultMessage(this);
+void AuthResultMessage::process(MessageProcessor& mp) const {
+    mp.processAuthResultMessage(*this);
 }
 
-void AuthResultMessage::serialize(std::ostream &stream) {
-    Message::serialize(stream);
-    stream << status;
-    stream.flush();
+std::string AuthResultMessage::serialize() const {
+    std::stringstream stream;
+    stream << Message::serialize();
+    serialization::insert(stream, status);
+    return stream.str();
 }

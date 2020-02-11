@@ -1,31 +1,50 @@
 #include <communication/message/ClientAuthMessage.h>
+#include <Net/Http/V2/Frame.h>
 
 using namespace balancedbanana::communication;
 
-ClientAuthMessage::ClientAuthMessage(const std::string& username, const std::string& password,
-        const std::string& pubkey) :
+using namespace serialization;
+
+ClientAuthMessage::ClientAuthMessage(const std::string &username, const std::string &password,
+        const std::string &pubkey) :
 Message(MessageType::CLIENT_AUTH), username(username), password(password), publickey(pubkey) {
 }
 
-ClientAuthMessage::ClientAuthMessage(std::istream &stream) :
+ClientAuthMessage::ClientAuthMessage(const char *data, size_t &iterator, size_t size) :
 Message(MessageType::CLIENT_AUTH), username(""), password(""), publickey("") {
-    uint64_t size;
-    stream >> size;
-    stream.readsome((char*)&username, size);
-    stream >> size;
-    stream.readsome((char*)&password, size);
-    stream >> size;
-    stream.readsome((char*)&publickey, size);
+    username = extractString(data, iterator, size);
+    password = extractString(data, iterator, size);
+    publickey = extractString(data, iterator, size);
 }
 
-void ClientAuthMessage::process(const std::shared_ptr<MessageProcessor>& mp) {
-    mp->processClientAuthMessage(this);
+void ClientAuthMessage::process(MessageProcessor &mp) const {
+    mp.processClientAuthMessage(*this);
 }
 
-void ClientAuthMessage::serialize(std::ostream &stream) {
-    Message::serialize(stream);
-    stream << (uint64_t) username.size() << username;
-    stream << (uint64_t) password.size() << password;
-    stream << (uint64_t) publickey.size() << publickey;
-    stream.flush();
+std::string ClientAuthMessage::serialize() const {
+    /*
+    std::vector<uint8_t> buf(4);
+    auto it = buf.begin();
+    AddUInt32(type, it);
+    std::stringstream out;
+    out.write((const char*)buf.data(), 4) << username << '\0' << password << '\0' << publickey << '\0';
+    return out.str();*/
+    std::stringstream stream;
+    stream << Message::serialize();
+    insert(stream, username);
+    insert(stream, password);
+    insert(stream, publickey);
+    return stream.str();
+}
+
+const std::string &ClientAuthMessage::GetUsername() const {
+    return username;
+}
+
+const std::string &ClientAuthMessage::GetPassword() const {
+    return password;
+}
+
+const std::string &ClientAuthMessage::GetPublickey() const {
+    return publickey;
 }

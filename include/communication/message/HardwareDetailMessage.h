@@ -18,11 +18,11 @@ namespace balancedbanana {
 		public:
             HardwareDetailMessage(uint32_t coreCount, uint32_t ramSize, const std::string& osIdentifier);
 
-            explicit HardwareDetailMessage(std::istream &stream);
+            HardwareDetailMessage(const char *data, size_t &iterator, size_t size);
 
-			void process(const std::shared_ptr<MessageProcessor> & msgProcessor);
+            void process(MessageProcessor &mp) const override;
 
-            virtual void serialize(std::ostream &stream) override;
+            std::string serialize() const override;
 		};
 	}
 }

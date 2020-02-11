@@ -1,13 +1,15 @@
 #pragma once
 
 #include <cinttypes>
+#include <string>
+#include "details.h"
 
 namespace balancedbanana {
     namespace database {
 
         // Encapsulates all details required to create a user object
-        struct user_details {
-            uint64_t id;
+        struct user_details : details {
+            uint8_t id;
 
             std::string name;
 

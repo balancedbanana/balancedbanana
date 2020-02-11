@@ -12,7 +12,7 @@ void AuthResultMessage::process(const std::shared_ptr<MessageProcessor> & mp) {
 void ClientAuthMessage::process(const std::shared_ptr<MessageProcessor> & mp) {
 }
 
-ClientAuthMessage::ClientAuthMessage(const std::string & username, const std::string & password, const std::string & pubkey) {
+ClientAuthMessage::ClientAuthMessage(const std::string & username, const std::string & password, const std::string & pubkey) : Message(0xf000) {
 }
 
 //main method
