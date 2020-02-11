@@ -11,7 +11,7 @@ namespace balancedbanana {
 		public:
             SnapshotMessage(uint64_t id, bool stop);
 
-            explicit SnapshotMessage(std::istream &stream);
+            explicit SnapshotMessage(const char *data, size_t &iterator, size_t size);
 
             void process(MessageProcessor &mp) const override;
 

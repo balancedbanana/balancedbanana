@@ -11,7 +11,7 @@ namespace balancedbanana {
 		public:
             WorkerAuthMessage(const std::string& workername, const std::string& pubkey);
 
-            explicit WorkerAuthMessage(std::istream &stream);
+            explicit WorkerAuthMessage(const char *data, size_t &iterator, size_t size);
 
             void process(MessageProcessor &mp) const override;
 

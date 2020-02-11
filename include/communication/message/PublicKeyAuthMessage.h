@@ -12,7 +12,7 @@ namespace balancedbanana {
 		public:
             PublicKeyAuthMessage(const std::string& username, const std::string& usernamesignature);
 
-            explicit PublicKeyAuthMessage(std::istream &stream);
+            explicit PublicKeyAuthMessage(const char *data, size_t &iterator, size_t size);
 
             void process(MessageProcessor &mp) const override;
 

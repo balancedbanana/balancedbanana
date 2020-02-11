@@ -10,7 +10,9 @@ namespace balancedbanana {
             Task task;
 
 		public:
-            TaskMessage(const Task &task);
+            explicit TaskMessage(const Task &task);
+
+            TaskMessage(const char *data, size_t &iterator, size_t size);
 
             void process(MessageProcessor &mp) const override;
 
