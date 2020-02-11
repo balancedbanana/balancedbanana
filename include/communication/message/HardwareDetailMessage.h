@@ -16,7 +16,7 @@ namespace balancedbanana {
             //Irgendeine Information, die das Betriebssystem identifiziert
             std::string osIdentifier;
 		public:
-            HardwareDetailMessage(uint32_t coreCount, uint32_t ramSize, const std::string& osIdentifier);
+            HardwareDetailMessage(uint32_t coreCount, uint32_t ramSize, std::string  osIdentifier);
 
             HardwareDetailMessage(const char *data, size_t &iterator, size_t size);
 
