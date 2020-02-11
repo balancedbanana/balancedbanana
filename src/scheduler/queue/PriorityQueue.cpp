@@ -41,6 +41,7 @@ namespace balancedbanana {
                     i++;
                 }
             }
+            return i;
         }
 
         std::shared_ptr<Job> PriorityQueue::getJob(uint32_t ram, uint32_t cores) {
@@ -85,9 +86,7 @@ namespace balancedbanana {
                     }
                 }
             }
-            if(!found) {
-                return nullptr;
-            }
+            return nullptr;
         }
 
         void PriorityQueue::update() {
