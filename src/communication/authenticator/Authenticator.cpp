@@ -127,18 +127,20 @@ balancedbanana::communication::authenticator::Authenticator::Authenticator(const
     }
 }
 
-void balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username, const std::string &password) {
+std::string balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username, const std::string &password) {
     auto res = GeneratePrivatePublicKeyPair();
     auto message = std::make_shared<ClientAuthMessage>(username, password, res.second);
     comm->send(*message);
+    return res.first;
 }
 
-void balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username) {
+void balancedbanana::communication::authenticator::Authenticator::publickeyauthenticate(const std::string& username, const std::string& pubkey) {
+    auto signature = GenerateSignature(username, pubkey);
     // auto message = std::make_shared<PublicKeyAuthMessage>(username, signature);
     // comm->send(*message);
 }
 
-void balancedbanana::communication::authenticator::Authenticator::authenticate() {
+std::pair<std::string, std::string> balancedbanana::communication::authenticator::Authenticator::authenticate() {
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
@@ -146,7 +148,9 @@ void balancedbanana::communication::authenticator::Authenticator::authenticate()
     for (auto &&i : name) {
         i = dis(gen);
     }
-    // auto res = GeneratePrivatePublicKeyPair();
-    // auto message = std::make_shared<PublicKeyAuthMessage>(std::string((char*)name.data(), name.size() * sizeof(uint32_t)), res.second);
+    auto res = GeneratePrivatePublicKeyPair();
+    std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
+    // auto message = std::make_shared<PublicKeyAuthMessage>(sname, res.second);
     // comm->send(*message);
+    return { sname, res.first };
 }
