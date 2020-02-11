@@ -20,7 +20,7 @@ std::string Container::Tail(int lines) {
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
-        throw std::runtime_error("Invalid Argument for docker Tail");
+        throw std::runtime_error("Invalid Argument for docker Tail\n" + output + "Error:\n" + err);
     }
     return output;
 }
@@ -37,7 +37,7 @@ void Container::Stop() {
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
-        throw std::runtime_error("Invalid Argument for docker stop");
+        throw std::runtime_error("Invalid Argument for docker stop\n" + output + "Error:\n" + err);
     }
 }
 
