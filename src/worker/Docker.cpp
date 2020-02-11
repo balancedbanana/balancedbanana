@@ -29,6 +29,8 @@ Container Docker::Start(int userid, const Task & task) {
     }
     if(!config->image().empty()) {
         args.append(QString::fromStdString(config->image()));
+    } else {
+        throw std::runtime_error("Invalid Argument Jobconfig lacks image name");
     }
     args.append(QString::fromStdString(task.getTaskCommand()));
     proc.setArguments(args);

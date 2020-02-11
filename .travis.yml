@@ -11,11 +11,12 @@ before_install:
   - sudo systemctl start mysql
   - cat balancedbanana.sql | sudo mysql
   - echo "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"$'\n'"ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';"$'\n'"FLUSH PRIVILEGES;" | sudo mysql
+  - sudo docker pull centos
 
 script:
   - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 ./cmake-3.16.2-Linux-x86_64/bin/cmake -DCOVERAGE=1 .
   - ./cmake-3.16.2-Linux-x86_64/bin/cmake --build .
-  - "./cmake-3.16.2-Linux-x86_64/bin/ctest --verbose . || :"
+  - "sudo ./cmake-3.16.2-Linux-x86_64/bin/ctest --verbose . || :"
 
 after_success:
   - coveralls --root . --gcov gcov-9 -E ".*cmake.*" -E ".*testsrc.*" -E ".*contrib.*" -E ".*google.*" -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"
