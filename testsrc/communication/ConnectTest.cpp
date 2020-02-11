@@ -69,3 +69,12 @@ TEST(communication, Connect3)
     ASSERT_THROW(auto com = std::make_shared<Communicator>(nullptr, nullptr), std::invalid_argument);
     ASSERT_THROW(auto com = std::make_shared<Communicator>(nullptr, std::make_shared<MessageProcessor>()), std::invalid_argument);
 }
+
+TEST(communication, MessageProcessor)
+{
+    MessageProcessor proc;
+    ASSERT_ANY_THROW(proc.processAuthResultMessage(nullptr));
+    ASSERT_ANY_THROW(proc.processClientAuthMessage(nullptr));
+    ASSERT_ANY_THROW(proc.processPublicKeyAuthMessage(nullptr));
+    ASSERT_ANY_THROW(proc.processWorkerAuthMessage(nullptr));
+}
