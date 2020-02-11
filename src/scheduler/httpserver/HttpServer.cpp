@@ -1,3 +1,4 @@
+#include <scheduler/httpserver/HttpServer.h>
 #include <Net/TLSSocketListener.h>
 #include <Net/Http/V2/Frame.h>
 #include <Net/Http/V2/HPack/Encoder.h>
@@ -20,18 +21,25 @@
 #include <cstring>
 #include <filesystem>
 #include <random>
-using namespace Net::Http;
-using namespace std::filesystem;
-
 #include <scheduler/Worker.h>
 #include <scheduler/Job.h>
 
-std::pair<std::string, std::string> GenerateCert();
+using namespace Net::Http;
+using namespace std::filesystem;
 
-void RunWebServer()
-{
-	Net::SocketListener listener;
-	listener.SetConnectionHandler([](std::shared_ptr<Net::Socket> socket) {
+using namespace balancedbanana::scheduler;
+
+void HttpServer::listen(const std::string & ip, short port) {
+    if(privatekeypath.empty() || certchainpath.empty()) {
+		auto tlslistener = std::make_shared<Net::TLSSocketListener>();
+		tlslistener->AddProtocol("h2");
+		tlslistener->UsePrivateKey(privatekeypath, Net::SSLFileType::PEM);
+		tlslistener->UseCertificate(certchainpath, Net::SSLFileType::PEM);
+		listener = std::move(tlslistener);
+	} else {
+		listener = std::make_shared<Net::TLSSocketListener>();
+	}
+	listener->SetConnectionHandler([](std::shared_ptr<Net::Socket> socket) {
         auto requesthandler = [](std::shared_ptr<Net::Http::Connection> con) {
             auto request = &con->GetRequest();
             auto& response = con->GetResponse();
@@ -179,11 +187,6 @@ void RunWebServer()
 						content = connection->GetRequest().contentlength;
 						requesthandler(connection);
 					}
-					else
-					{
-						content -= count;
-						// connection->OnData(buffer.begin(), count);
-					}
 				}
 				else
 				{
@@ -192,14 +195,22 @@ void RunWebServer()
 			}
 		}
 	});
-    // auto p = GenerateCert();
-    // listener.UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
-    // listener.UsePrivateKey((uint8_t*)p.first.data(), (int)p.first.length(), Net::SSLFileType::PEM);
 	auto address = std::make_shared<sockaddr_in6>();
 	memset(address.get(), 0, sizeof(sockaddr_in6));
 	address->sin6_family = AF_INET6;
 	address->sin6_port = htons(8443);
 	address->sin6_addr = in6addr_any;
-	// listener.AddProtocol("h2");
-	listener.Listen(std::shared_ptr<sockaddr>(address, (sockaddr*)address.get()), sizeof(sockaddr_in6))->join();
+	listener->Listen(std::shared_ptr<sockaddr>(address, (sockaddr*)address.get()), sizeof(sockaddr_in6))->join();
+}
+
+void HttpServer::useSLL(const std::string & privatekeypath, const std::string & certchainpath) {
+	if(listener != nullptr) {
+		throw std::runtime_error("Needed to be called befor listening");
+	}
+	this->privatekeypath = privatekeypath;
+	this->certchainpath = certchainpath;
+}
+
+void HttpServer::Cancel() {
+	listener->Cancel();
 }

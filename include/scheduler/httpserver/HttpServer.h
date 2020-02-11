@@ -1,11 +1,21 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <Net/SocketListener.h>
 
-class HttpServer {
-  public:
-    void listen(const std::string & ip, short port, const std::function<void()> & callback);
+namespace balancedbanana {
+    namespace scheduler {
 
-    void useSLL(const std::string & privatekeypath, const std::string & certchainpath);
+        class HttpServer {
+            std::shared_ptr<Net::SocketListener> listener;
+            std::string privatekeypath;
+            std::string certchainpath;
+        public:
+            void listen(const std::string & ip, short port);
 
-};
+            void useSLL(const std::string & privatekeypath, const std::string & certchainpath);
+
+            void Cancel();
+        };
+    }
+}
