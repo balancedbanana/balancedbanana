@@ -15,10 +15,10 @@ Container Docker::Start(int userid, const Task & task) {
         }
     }
     if(config->max_ram()) {
-        args.append({"-m", QString::fromStdString(std::to_string(*config->max_ram()))});
+        args.append({"-m", QString::fromStdString(std::to_string(*config->max_ram())) + "MB"});
     }
     if(config->min_ram()) {
-        args.append({"--memory-reservation", QString::fromStdString(std::to_string(*config->min_ram()))});
+        args.append({"--memory-reservation", QString::fromStdString(std::to_string(*config->min_ram())) + "MB"});
     }
     if(!config->blocking_mode() || !*config->blocking_mode()) {
         args.append("-d");
