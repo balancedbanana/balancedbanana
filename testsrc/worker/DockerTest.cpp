@@ -12,7 +12,7 @@ TEST(Docker, Start)
     task.setTaskCommand("echo $MSG");
     task.getConfig()->set_image("centos");
     task.getConfig()->set_min_ram(100);
-    task.getConfig()->set_min_ram(1000);
+    task.getConfig()->set_max_ram(1000);
     // task.getConfig()->set_blocking_mode(true);
     task.getConfig()->set_environment(std::vector<std::string>{"USER=banana", "MSG=Hallo Welt"});
     task.getConfig()->set_min_cpu_count(1);
