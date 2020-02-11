@@ -32,6 +32,8 @@ Container Docker::Start(int userid, const Task & task) {
     } else {
         throw std::runtime_error("Invalid Argument Jobconfig lacks image name");
     }
+    args.append("bash");
+    args.append("-c");
     args.append(QString::fromStdString(task.getTaskCommand()));
     proc.setArguments(args);
     proc.start();
