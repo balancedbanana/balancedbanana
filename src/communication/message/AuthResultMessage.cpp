@@ -8,7 +8,7 @@ Message(MessageType::AUTH_RESULT), status(status){
 
 AuthResultMessage::AuthResultMessage(const char *data, size_t &iterator, size_t length) :
 Message(MessageType::AUTH_RESULT), status(1) {
-    status = serialization::extractUInt32(data, iterator, length);
+    status = serialization::extract<uint32_t>(data, iterator, length);
 }
 
 
@@ -23,6 +23,6 @@ void AuthResultMessage::process(MessageProcessor& mp) const {
 std::string AuthResultMessage::serialize() const {
     std::stringstream stream;
     stream << Message::serialize();
-    serialization::insert(stream, status);
+    serialization::insert<uint32_t>(stream, status);
     return stream.str();
 }

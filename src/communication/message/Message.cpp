@@ -43,7 +43,7 @@ std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
         break;
     }*/
     size_t iterator = 0;
-    uint32_t type = serialization::extractUInt32(msg, iterator, size);
+    uint32_t type = serialization::extract<uint32_t>(msg, iterator, size);
     switch(type) {
         case MessageType::AUTH_RESULT:
             return std::make_shared<AuthResultMessage>(msg, iterator, size);
@@ -62,42 +62,4 @@ std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
         default:
             return nullptr;
     }
-}
-
-namespace balancedbanana::communication::serialization {
-
-    void insert(std::ostream &stream, const std::string &value) {
-        insert(stream, value.size());
-        stream.write(value.data(), value.size());
-    }
-
-    void insert(std::ostream &stream, uint32_t value) {
-        stream.write(reinterpret_cast<const char *>(&value), sizeof(uint32_t));
-    }
-
-    uint32_t extractUInt32(const char *data, size_t &iterator, size_t size) {
-        if(data == nullptr) {
-            throw std::invalid_argument("msg must not be null");
-        }
-        if (iterator + sizeof(uint32_t) > size) {
-            throw std::invalid_argument("data is too small");
-        }
-        uint32_t value = *reinterpret_cast<const uint32_t *>(data + iterator);
-        iterator += 4;
-        return value;
-    }
-
-    std::string extractString(const char *data, size_t &iterator, size_t size) {
-        if(data == nullptr) {
-            throw std::invalid_argument("msg must not be null");
-        }
-        uint32_t stringsize = extractUInt32(data, iterator, size);
-        if (iterator + stringsize > size) {
-            throw std::invalid_argument("data is too small");
-        }
-        std::string value(data + iterator, stringsize);
-        iterator += stringsize;
-        return value;
-    }
-
 }

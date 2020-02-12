@@ -23,6 +23,12 @@ namespace balancedbanana {
             void process(MessageProcessor &mp) const override;
 
             std::string serialize() const override;
+
+            uint32_t GetCoreCount() const;
+
+            uint32_t GetRamSize() const;
+
+            const std::string &GetOsIdentifier() const;
 		};
 	}
 }

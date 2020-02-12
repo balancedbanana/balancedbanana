@@ -18,6 +18,8 @@ namespace balancedbanana {
 
             std::string serialize() const override;
 
+            const Task &GetTask() const;
+
 		};
 	}
 }

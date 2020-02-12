@@ -11,14 +11,14 @@ class Task
 {
 	std::string taskCommand;
 	std::shared_ptr<configfiles::JobConfig> config;
-	int type;
+	uint32_t type;
 	std::string addImageName;
 	std::string addImageFilePath;
 	std::string removeImageName;
 	std::string serverIP;
 	std::string webAPIIP;
-	short int serverPort;
-	short int webAPIPort;
+	uint16_t serverPort;
+	uint16_t webAPIPort;
 
 public:
 
@@ -26,8 +26,10 @@ public:
 
 	Task();
 
-	void setType(int type);
-	int getType() const;
+	explicit Task(const std::string &string);
+
+	void setType(uint32_t type);
+	uint32_t getType() const;
 
 	void setTaskCommand(const std::string &taskCommand);
 	const std::string &getTaskCommand() const;
@@ -35,25 +37,27 @@ public:
 	std::shared_ptr<configfiles::JobConfig> getConfig() const;
 
 	void setAddImageName(const std::string &addImageName);
-	const std::string &getAddImageName();
+	const std::string &getAddImageName() const;
 
 	void setAddImageFilePath(const std::string &addImageFilePath);
-	const std::string &getAddImageFilePath();
+	const std::string &getAddImageFilePath() const;
 
 	void setRemoveImageName(const std::string &removeImageName);
-	const std::string &getRemoveImageName();
+	const std::string &getRemoveImageName() const;
 
 	void setServerIP(const std::string &serverIP);
-	const std::string &getServerIP();
+	const std::string &getServerIP() const;
 
 	void setWebAPIIP(const std::string &webAPIIP);
-	const std::string &getWebAPIIP();
+	const std::string &getWebAPIIP() const;
 
-	void setServerPort(short int serverPort);
-	short int getServerPort();
+	void setServerPort(uint16_t serverPort);
+    uint16_t getServerPort() const;
 
-	void setWebAPIPort(short int webAPIPort);
-	short int getWebAPIPort();
+	void setWebAPIPort(uint16_t webAPIPort);
+    uint16_t getWebAPIPort() const;
+
+	std::string serialize() const;
 };
 } // namespace commandLineInterface
 } // namespace balancedbanana

@@ -4,6 +4,7 @@
 #include <sstream>
 #include <communication/MessageProcessor.h>
 #include <communication/message/MessageType.h>
+#include <communication/message/Serialization.h>
 
 namespace balancedbanana {
     namespace communication {
@@ -25,14 +26,5 @@ namespace balancedbanana {
 
         };
 
-        namespace serialization {
-
-            void insert(std::ostream &stream, const std::string &value);
-            void insert(std::ostream &stream, uint32_t value);
-
-            uint32_t extractUInt32(const char *data, size_t &iterator, size_t size);
-            std::string extractString(const char *data, size_t &iterator, size_t size);
-
-        }
     }
 }

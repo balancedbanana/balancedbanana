@@ -16,6 +16,10 @@ namespace balancedbanana {
             void process(MessageProcessor &mp) const override;
 
             std::string serialize() const override;
+
+            const uint64_t GetJobId() const;
+
+            bool GetStop() const;
 		};
 	}
 }

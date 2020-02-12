@@ -31,9 +31,9 @@ std::string ClientAuthMessage::serialize() const {
     return out.str();*/
     std::stringstream stream;
     stream << Message::serialize();
-    insert(stream, username);
-    insert(stream, password);
-    insert(stream, publickey);
+    insertString(stream, username);
+    insertString(stream, password);
+    insertString(stream, publickey);
     return stream.str();
 }
 
