@@ -8,7 +8,7 @@ namespace balancedbanana
 namespace commandLineInterface
 {
 
-int SchedulerCommandLineProcessor::process(int argc, char** argv, const std::shared_ptr<communication::Task>& task)
+int SchedulerCommandLineProcessor::process(int argc, const char** argv, const std::shared_ptr<communication::Task>& task)
 {
     CLI::App app{"Scheduler App"};
 

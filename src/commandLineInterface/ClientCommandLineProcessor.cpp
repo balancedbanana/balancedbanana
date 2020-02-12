@@ -10,7 +10,7 @@ namespace balancedbanana
 namespace commandLineInterface
 {
 
-int ClientCommandLineProcessor::process(int argc, char** argv, const std::shared_ptr<communication::Task>& task)
+int ClientCommandLineProcessor::process(int argc, const char** argv, const std::shared_ptr<communication::Task>& task)
 {
     // extract potential job command from arguments
 

@@ -12,7 +12,7 @@ class SchedulerCommandLineProcessor : public balancedbanana::commandLineInterfac
 {
     public:
 
-        virtual int process(int argc, char** argv, const std::shared_ptr<communication::Task>& task);
+        int process(int argc, const char** argv, const std::shared_ptr<communication::Task>& task) override;
 
     private:
 

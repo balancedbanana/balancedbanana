@@ -7,4 +7,4 @@ add_library(communication STATIC
         MessageProcessor.cpp
         Task.cpp
         )
-target_link_libraries(communication PUBLIC  Net OpenSSL::SSL OpenSSL::Crypto Message)
+target_link_libraries(communication PUBLIC Message Authenticator)

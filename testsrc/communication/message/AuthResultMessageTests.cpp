@@ -24,8 +24,8 @@ TEST(AuthResultMessage, Serialize) {
 
 TEST(AuthResultMessage, Deserialize) {
     std::stringstream stream;
-    insert(stream, AUTH_RESULT);
-    insert(stream, (uint32_t) 32);
+    insert<uint32_t>(stream, AUTH_RESULT);
+    insert<uint32_t>(stream, 32);
     std::string str = stream.str();
     const char *serialized = str.data();
     size_t serializedSize = str.size();

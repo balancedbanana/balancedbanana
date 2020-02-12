@@ -6,6 +6,8 @@ namespace balancedbanana
 namespace communication
 {
 
+const std::string Task::configFilePath = "./config.txt";
+
 Task::Task()
 {
     config = std::make_shared<configfiles::JobConfig>(configFilePath);
@@ -35,6 +37,8 @@ Task::Task(const std::string &string) {
         throw std::invalid_argument("string is too long");
     }
 }
+
+Task::Task(const Task &task) = default;
 
 void Task::setType(uint32_t type) {
     this->type = type;

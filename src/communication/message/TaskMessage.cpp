@@ -13,7 +13,7 @@ Message(TASK), task(){
 
 TaskMessage::TaskMessage(const char *data, size_t &iterator, size_t size) :
 Message(TASK), task(){
-    task = Task::deserialize(serialization::extractString(data, iterator, size));
+    task = Task(serialization::extractString(data, iterator, size));
 }
 
 void TaskMessage::process(MessageProcessor &mp) const {

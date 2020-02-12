@@ -2,14 +2,14 @@
 #include "commandLineInterface/SchedulerCommandLineProcessor.h"
 
 using balancedbanana::commandLineInterface::SchedulerCommandLineProcessor;
-using balancedbanana::commandLineInterface::Task;
+using balancedbanana::communication::Task;
 using balancedbanana::commandLineInterface::TaskType;
 
 TEST(SchedulerCommandLineProcessor, noArguments)
 {
     SchedulerCommandLineProcessor clp;
 
-    char* argv[] = { "./bbs" };
+    const char* argv[] = { "./bbs" };
     int argc = 1;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -24,7 +24,7 @@ TEST(SchedulerCommandLineProcessor, legalArguments)
 {
     SchedulerCommandLineProcessor clp;
 
-    char* argv[] = { "./bbs", "-s", "192.168.0.1", "-w", "192.168.0.2", "-S", "25567", "-W", "25568" };
+    const char* argv[] = { "./bbs", "-s", "192.168.0.1", "-w", "192.168.0.2", "-S", "25567", "-W", "25568" };
     int argc = 9;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();

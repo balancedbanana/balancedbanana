@@ -22,11 +22,13 @@ class Task
 
 public:
 
-	const std::string configFilePath = "./config.txt";
+	const static std::string configFilePath;
 
 	Task();
 
 	explicit Task(const std::string &string);
+
+	Task(const Task &task);
 
 	void setType(uint32_t type);
 	uint32_t getType() const;

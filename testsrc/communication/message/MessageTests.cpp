@@ -8,7 +8,7 @@ using namespace serialization;
 TEST(MessageHelpers, SerializeUInt32) {
     std::stringstream stream;
     uint32_t expected = 472533;
-    insert(stream, expected);
+    insert<uint32_t>(stream, expected);
     std::string str = stream.str();
     EXPECT_EQ(sizeof(uint32_t), str.size());
     EXPECT_EQ(expected, *reinterpret_cast<const uint32_t *>(str.data()));
@@ -17,7 +17,7 @@ TEST(MessageHelpers, SerializeUInt32) {
 TEST(MessageHelpers, SerializeString) {
     std::stringstream stream;
     std::string expected = "this is a test!";
-    insert(stream, expected);
+    insertString(stream, expected);
     std::string str = stream.str();
     const char *data = str.data();
     size_t size = str.size();
@@ -33,17 +33,17 @@ TEST(MessageHelpers, DeserializeUInt32) {
     *reinterpret_cast<uint32_t *>(data) = expected1;
     *reinterpret_cast<uint32_t *>(data + sizeof(uint32_t)) = expected2;
     size_t iterator = 0;
-    EXPECT_EQ(expected1, extractUInt32(data, iterator, size));
-    EXPECT_EQ(expected2, extractUInt32(data, iterator, size));
+    EXPECT_EQ(expected1, extract<uint32_t>(data, iterator, size));
+    EXPECT_EQ(expected2, extract<uint32_t>(data, iterator, size));
 }
 
 TEST(MessageHelpers, DeserializeInvalidUInt32) {
     size_t iterator = 0;
     char value[sizeof(uint32_t)] = {32, 1, 42, 5};
-    EXPECT_THROW(extractUInt32(nullptr, iterator, sizeof(uint32_t)), std::invalid_argument);
-    EXPECT_NO_THROW(extractUInt32(value, iterator, sizeof(uint32_t)));
+    EXPECT_THROW(extract<uint32_t>(nullptr, iterator, sizeof(uint32_t)), std::invalid_argument);
+    EXPECT_NO_THROW(extract<uint32_t>(value, iterator, sizeof(uint32_t)));
     iterator = 1;
-    EXPECT_THROW(extractUInt32(value, iterator, sizeof(uint32_t)), std::invalid_argument);
+    EXPECT_THROW(extract<uint32_t>(value, iterator, sizeof(uint32_t)), std::invalid_argument);
 }
 
 TEST(MessageHelpers, DeserializeString) {

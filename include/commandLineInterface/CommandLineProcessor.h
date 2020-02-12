@@ -45,7 +45,7 @@ namespace balancedbanana {
 
 			configfiles::Priority evaluatePriority(std::string& priority);
 
-			virtual int process(int argc, char** argv, const std::shared_ptr<communication::Task>& task) { return 0; }
+			virtual int process(int argc, const char** argv, const std::shared_ptr<communication::Task>& task) { return 0; }
 
 		};
 
