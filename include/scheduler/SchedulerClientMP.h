@@ -9,13 +9,11 @@ namespace balancedbanana {
         public:
             SchedulerClientMP(Communicator *);
 
-            void processAuthResultMessage(const std::shared_ptr<AuthResultMessage> &msg) override;
-            void processClientAuthMessage(const std::shared_ptr<ClientAuthMessage> &msg) override;
-            void processHardwareDetailMessage(const std::shared_ptr<HardwareDetailMessage> &msg) override;
-            void processPublicKeyAuthMessage(const std::shared_ptr<PublicKeyAuthMessage> &msg) override;
-            void processSnapshotMessage(const std::shared_ptr<SnapshotMessage> &msg) override;
-            void processTaskMessage(const std::shared_ptr<TaskMessage> &msg) override;
-            void processWorkerAuthMessage(const std::shared_ptr<WorkerAuthMessage> &msg) override;
+            void processClientAuthMessage(const ClientAuthMessage &msg) override;
+            void processHardwareDetailMessage(const HardwareDetailMessage &msg) override;
+            void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) override;
+            void processSnapshotMessage(const SnapshotMessage &msg) override;
+            void processTaskMessage(const TaskMessage &msg) override;
         };
     }
 }

@@ -6,30 +6,22 @@ SchedulerWorkerMP::SchedulerWorkerMP(balancedbanana::communication::Communicator
 MessageProcessor(communicator){
 }
 
-void SchedulerWorkerMP::processAuthResultMessage(const std::shared_ptr<AuthResultMessage> &msg) {
+void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
     //TODO implement
 }
 
-void SchedulerWorkerMP::processClientAuthMessage(const std::shared_ptr<ClientAuthMessage> &msg) {
+void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
     //TODO implement
 }
 
-void SchedulerWorkerMP::processHardwareDetailMessage(const std::shared_ptr<HardwareDetailMessage> &msg) {
+void SchedulerWorkerMP::processSnapshotMessage(const SnapshotMessage &msg) {
     //TODO implement
 }
 
-void SchedulerWorkerMP::processPublicKeyAuthMessage(const std::shared_ptr<PublicKeyAuthMessage> &msg) {
+void SchedulerWorkerMP::processTaskMessage(const TaskMessage &msg) {
     //TODO implement
 }
 
-void SchedulerWorkerMP::processSnapshotMessage(const std::shared_ptr<SnapshotMessage> &msg) {
-    //TODO implement
-}
-
-void SchedulerWorkerMP::processTaskMessage(const std::shared_ptr<TaskMessage> &msg) {
-    //TODO implement
-}
-
-void SchedulerWorkerMP::processWorkerAuthMessage(const std::shared_ptr<WorkerAuthMessage> &msg) {
+void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
     //TODO implement
 }

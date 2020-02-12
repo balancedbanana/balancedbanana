@@ -1,4 +1,7 @@
 #include <scheduler/SchedulerClientMP.h>
+#include <scheduler/IUser.h>
+#include <communication/message/ClientAuthMessage.h>
+#include <communication/authenticator/AuthHandler.h>
 
 using namespace balancedbanana::communication;
 
@@ -6,30 +9,23 @@ SchedulerClientMP::SchedulerClientMP(balancedbanana::communication::Communicator
 MessageProcessor(communicator){
 }
 
-void SchedulerClientMP::processAuthResultMessage(const std::shared_ptr<AuthResultMessage> &msg) {
+void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg) {
+    auto user = std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey());
+    authenticator::AuthHandler::GetDefault()->authenticate(user, msg.GetPassword());
+}
+
+void SchedulerClientMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
     //TODO implement
 }
 
-void SchedulerClientMP::processClientAuthMessage(const std::shared_ptr<ClientAuthMessage> &msg) {
+void SchedulerClientMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
     //TODO implement
 }
 
-void SchedulerClientMP::processHardwareDetailMessage(const std::shared_ptr<HardwareDetailMessage> &msg) {
+void SchedulerClientMP::processSnapshotMessage(const SnapshotMessage &msg) {
     //TODO implement
 }
 
-void SchedulerClientMP::processPublicKeyAuthMessage(const std::shared_ptr<PublicKeyAuthMessage> &msg) {
-    //TODO implement
-}
-
-void SchedulerClientMP::processSnapshotMessage(const std::shared_ptr<SnapshotMessage> &msg) {
-    //TODO implement
-}
-
-void SchedulerClientMP::processTaskMessage(const std::shared_ptr<TaskMessage> &msg) {
-    //TODO implement
-}
-
-void SchedulerClientMP::processWorkerAuthMessage(const std::shared_ptr<WorkerAuthMessage> &msg) {
+void SchedulerClientMP::processTaskMessage(const TaskMessage &msg) {
     //TODO implement
 }
