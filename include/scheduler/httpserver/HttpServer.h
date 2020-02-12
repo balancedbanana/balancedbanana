@@ -10,12 +10,15 @@ namespace balancedbanana {
             std::shared_ptr<Net::SocketListener> listener;
             std::string privatekeypath;
             std::string certchainpath;
+            std::shared_ptr<std::thread> listentask;
         public:
             void listen(const std::string & ip, short port);
 
-            void useSLL(const std::string & privatekeypath, const std::string & certchainpath);
+            void useSSL(const std::string & privatekeypath, const std::string & certchainpath);
 
             void Cancel();
+
+            ~HttpServer();
         };
     }
 }

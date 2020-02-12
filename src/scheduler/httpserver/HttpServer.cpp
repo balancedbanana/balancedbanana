@@ -31,13 +31,13 @@ using namespace balancedbanana::scheduler;
 
 void HttpServer::listen(const std::string & ip, short port) {
     if(privatekeypath.empty() || certchainpath.empty()) {
+		listener = std::make_shared<Net::SocketListener>();
+	} else {
 		auto tlslistener = std::make_shared<Net::TLSSocketListener>();
 		tlslistener->AddProtocol("h2");
 		tlslistener->UsePrivateKey(privatekeypath, Net::SSLFileType::PEM);
 		tlslistener->UseCertificate(certchainpath, Net::SSLFileType::PEM);
 		listener = std::move(tlslistener);
-	} else {
-		listener = std::make_shared<Net::TLSSocketListener>();
 	}
 	listener->SetConnectionHandler([](std::shared_ptr<Net::Socket> socket) {
         auto requesthandler = [](std::shared_ptr<Net::Http::Connection> con) {
@@ -198,12 +198,14 @@ void HttpServer::listen(const std::string & ip, short port) {
 	auto address = std::make_shared<sockaddr_in6>();
 	memset(address.get(), 0, sizeof(sockaddr_in6));
 	address->sin6_family = AF_INET6;
-	address->sin6_port = htons(8443);
+	address->sin6_port = htons(port);
 	address->sin6_addr = in6addr_any;
-	listener->Listen(std::shared_ptr<sockaddr>(address, (sockaddr*)address.get()), sizeof(sockaddr_in6))->join();
+	if(!(listentask = listener->Listen(std::shared_ptr<sockaddr>(address, (sockaddr*)address.get()), sizeof(sockaddr_in6)))) {
+		throw std::runtime_error("Listen failed");
+	}
 }
 
-void HttpServer::useSLL(const std::string & privatekeypath, const std::string & certchainpath) {
+void HttpServer::useSSL(const std::string & privatekeypath, const std::string & certchainpath) {
 	if(listener != nullptr) {
 		throw std::runtime_error("Needed to be called befor listening");
 	}
@@ -213,4 +215,10 @@ void HttpServer::useSLL(const std::string & privatekeypath, const std::string & 
 
 void HttpServer::Cancel() {
 	listener->Cancel();
+}
+
+balancedbanana::scheduler::HttpServer::~HttpServer() {
+	if(listentask && listentask->joinable()) {
+		listentask->join();
+	}
 }
