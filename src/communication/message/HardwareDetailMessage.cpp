@@ -26,6 +26,7 @@ std::string HardwareDetailMessage::serialize() const {
     insert<uint32_t>(s, coreCount);
     insert<uint32_t>(s, ramSize);
     insertString(s, osIdentifier);
+    return s.str();
 }
 
 uint32_t HardwareDetailMessage::GetCoreCount() const {

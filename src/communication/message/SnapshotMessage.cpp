@@ -21,6 +21,7 @@ std::string SnapshotMessage::serialize() const {
     stream << Message::serialize();
     serialization::insert<uint64_t>(stream, jobid);
     serialization::insert<bool>(stream, stop);
+    return stream.str();
 }
 
 const uint64_t SnapshotMessage::GetJobId() const {

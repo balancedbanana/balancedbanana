@@ -23,6 +23,7 @@ std::string WorkerAuthMessage::serialize() const {
     stream << Message::serialize();
     serialization::insertString(stream, workername);
     serialization::insertString(stream, publickey);
+    return stream.str();
 }
 
 const std::string &WorkerAuthMessage::GetWorkerName() const {
