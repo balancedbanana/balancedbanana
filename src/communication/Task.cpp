@@ -1,5 +1,6 @@
 #include <communication/Task.h>
 #include <communication/message/Serialization.h>
+#include <sstream>
 
 namespace balancedbanana
 {
