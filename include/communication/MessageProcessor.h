@@ -16,15 +16,21 @@ namespace balancedbanana {
 
         class MessageProcessor : public std::enable_shared_from_this<MessageProcessor> {
         private:
+#if 0
             std::shared_ptr<Communicator> communicator_;
+#endif
 
             virtual void handleInvalidMessage(const Message &msg);
 
         public:
+#if 0
             explicit MessageProcessor(std::shared_ptr<Communicator> communicator = nullptr);
+#endif
 
             void process(const std::shared_ptr<Message> &msg);
+#if 0
             std::shared_ptr<Communicator> communicator();
+#endif
 
             virtual void processAuthResultMessage(const AuthResultMessage &msg);
             virtual void processClientAuthMessage(const ClientAuthMessage &msg);

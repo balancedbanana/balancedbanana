@@ -13,8 +13,10 @@ using namespace balancedbanana::communication;
 struct TestMP : MessageProcessor {
     std::shared_ptr<ClientAuthMessage> sourcemessage;
 
+#if 0
     TestMP() : MessageProcessor(nullptr) {
     }
+#endif
 
     void processClientAuthMessage(const ClientAuthMessage& msg) override {
         ASSERT_EQ(sourcemessage->GetPassword(), msg.GetPassword());

@@ -2,9 +2,11 @@
 
 using namespace balancedbanana::communication;
 
+#if 0
 SchedulerWorkerMP::SchedulerWorkerMP(balancedbanana::communication::Communicator *communicator) :
 MessageProcessor(communicator){
 }
+#endif
 
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
     //TODO implement

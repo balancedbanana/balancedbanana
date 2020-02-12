@@ -11,6 +11,7 @@
 
 using namespace balancedbanana::communication;
 
+#if 0
 MessageProcessor::MessageProcessor(std::shared_ptr<Communicator> communicator) :
 communicator_(std::move(communicator)){
 }
@@ -18,6 +19,7 @@ communicator_(std::move(communicator)){
 std::shared_ptr<Communicator> MessageProcessor::communicator() {
     return communicator_;
 }
+#endif
 
 void MessageProcessor::process(const std::shared_ptr<Message> &msg) {
     msg->process(*this);

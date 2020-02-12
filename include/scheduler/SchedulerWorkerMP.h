@@ -7,7 +7,9 @@ namespace balancedbanana {
         class SchedulerWorkerMP : public MessageProcessor {
             bool authenticated = false;
         public:
+#if 0
             SchedulerWorkerMP(Communicator *);
+#endif
 
             void processAuthResultMessage(const AuthResultMessage &msg) override;
             void processClientAuthMessage(const ClientAuthMessage &msg) override;

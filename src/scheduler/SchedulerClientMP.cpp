@@ -5,9 +5,11 @@
 
 using namespace balancedbanana::communication;
 
+#if 0
 SchedulerClientMP::SchedulerClientMP(balancedbanana::communication::Communicator *communicator) :
 MessageProcessor(communicator){
 }
+#endif
 
 void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg) {
     auto user = std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey());
