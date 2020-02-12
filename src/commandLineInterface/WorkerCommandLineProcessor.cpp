@@ -8,7 +8,7 @@ namespace balancedbanana
 namespace commandLineInterface
 {
 
-int WorkerCommandLineProcessor::process(int argc, char** argv, const std::shared_ptr<Task>& task)
+int WorkerCommandLineProcessor::process(int argc, char** argv, const std::shared_ptr<communication::Task>& task)
 {
     CLI::App app;
 

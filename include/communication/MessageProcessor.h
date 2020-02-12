@@ -21,7 +21,7 @@ namespace balancedbanana {
             virtual void handleInvalidMessage(const Message &msg);
 
         public:
-            explicit MessageProcessor(std::shared_ptr<Communicator> communicator);
+            explicit MessageProcessor(std::shared_ptr<Communicator> communicator = nullptr);
 
             void process(const std::shared_ptr<Message> &msg);
             std::shared_ptr<Communicator> communicator();
