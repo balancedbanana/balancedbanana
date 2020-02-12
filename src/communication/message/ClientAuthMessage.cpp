@@ -22,13 +22,6 @@ void ClientAuthMessage::process(MessageProcessor &mp) const {
 }
 
 std::string ClientAuthMessage::serialize() const {
-    /*
-    std::vector<uint8_t> buf(4);
-    auto it = buf.begin();
-    AddUInt32(type, it);
-    std::stringstream out;
-    out.write((const char*)buf.data(), 4) << username << '\0' << password << '\0' << publickey << '\0';
-    return out.str();*/
     std::stringstream stream;
     stream << Message::serialize();
     insertString(stream, username);
