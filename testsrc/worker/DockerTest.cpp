@@ -3,7 +3,7 @@
 #include <worker/docker/Container.h>
 
 using namespace balancedbanana::worker;
-using namespace balancedbanana::commandLineInterface;
+using namespace balancedbanana::communication;
 
 TEST(Docker, Start)
 {

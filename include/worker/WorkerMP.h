@@ -1,5 +1,6 @@
 #pragma once
 
+#include <communication/MessageProcessor.h>
 
 class WorkerMP : public MessageProcessor {
 public:

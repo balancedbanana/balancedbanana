@@ -5,11 +5,13 @@
 
 using namespace balancedbanana::commandLineInterface;
 
+using namespace balancedbanana::communication;
+
 TEST(ClientCommandLineProcessor, addImage)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "image", "-i", "imageName", "imagePath"};
+    const char* argv[] = {"./bbc", "image", "-i", "imageName", "imagePath"};
     int argc = 5;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -26,7 +28,7 @@ TEST(ClientCommandLineProcessor, removeImage)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "image", "-I", "imageName"};
+    const char* argv[] = {"./bbc", "image", "-I", "imageName"};
     int argc = 4;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -42,7 +44,7 @@ TEST(ClientCommandLineProcessor, backup)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "backup", "1337"};
+    const char* argv[] = {"./bbc", "backup", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -58,7 +60,7 @@ TEST(ClientCommandLineProcessor, resume)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "continue", "1337"};
+    const char* argv[] = {"./bbc", "continue", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -74,7 +76,7 @@ TEST(ClientCommandLineProcessor, pause)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "pause", "1337"};
+    const char* argv[] = {"./bbc", "pause", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -90,7 +92,7 @@ TEST(ClientCommandLineProcessor, restore)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "restore", "1337", "42"};
+    const char* argv[] = {"./bbc", "restore", "1337", "42"};
     int argc = 4;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -107,7 +109,7 @@ TEST(ClientCommandLineProcessor, status)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "status", "1337"};
+    const char* argv[] = {"./bbc", "status", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -123,7 +125,7 @@ TEST(ClientCommandLineProcessor, stop)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "stop", "1337"};
+    const char* argv[] = {"./bbc", "stop", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -139,7 +141,7 @@ TEST(ClientCommandLineProcessor, tail)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "tail", "1337"};
+    const char* argv[] = {"./bbc", "tail", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -155,7 +157,7 @@ TEST(ClientCommandLineProcessor, run)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--command", "run this command!"};
+    const char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--command", "run this command!"};
     int argc = 19;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();

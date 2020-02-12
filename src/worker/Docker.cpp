@@ -2,7 +2,7 @@
 #include <QProcess>
 
 using namespace balancedbanana::worker;
-using Task = balancedbanana::commandLineInterface::Task;
+using namespace balancedbanana::communication;
 
 Container Docker::Start(int userid, const Task & task) {
     QProcess proc;

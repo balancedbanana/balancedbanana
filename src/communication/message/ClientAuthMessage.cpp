@@ -3,33 +3,41 @@
 
 using namespace balancedbanana::communication;
 
-balancedbanana::communication::ClientAuthMessage::ClientAuthMessage(const std::string &username, const std::string &password, const std::string &publickey) : Message(0x223) {
-    this->username = username;
-    this->password = password;
-    this->publickey = publickey;
+using namespace serialization;
+
+ClientAuthMessage::ClientAuthMessage(const std::string &username, const std::string &password,
+        const std::string &pubkey) :
+Message(MessageType::CLIENT_AUTH), username(username), password(password), publickey(pubkey) {
 }
 
-void ClientAuthMessage::process(const std::shared_ptr<MessageProcessor> &mp) {
-    mp->processClientAuthMessage(std::shared_ptr<ClientAuthMessage>(shared_from_this(), this));
+ClientAuthMessage::ClientAuthMessage(const char *data, size_t &iterator, size_t size) :
+Message(MessageType::CLIENT_AUTH), username(""), password(""), publickey("") {
+    username = extractString(data, iterator, size);
+    password = extractString(data, iterator, size);
+    publickey = extractString(data, iterator, size);
 }
 
-std::string balancedbanana::communication::ClientAuthMessage::serialize() {
-    std::vector<uint8_t> buf(4);
-    auto it = buf.begin();
-    AddUInt32(typeId, it);
-    std::stringstream out;
-    out.write((const char*)buf.data(), 4) << username << '\0' << password << '\0' << publickey << '\0';
-    return out.str();
+void ClientAuthMessage::process(MessageProcessor &mp) const {
+    mp.processClientAuthMessage(*this);
 }
 
-const std::string &balancedbanana::communication::ClientAuthMessage::GetUsername() {
+std::string ClientAuthMessage::serialize() const {
+    std::stringstream stream;
+    stream << Message::serialize();
+    insertString(stream, username);
+    insertString(stream, password);
+    insertString(stream, publickey);
+    return stream.str();
+}
+
+const std::string &ClientAuthMessage::GetUsername() const {
     return username;
 }
 
-const std::string &balancedbanana::communication::ClientAuthMessage::GetPassword() {
+const std::string &ClientAuthMessage::GetPassword() const {
     return password;
 }
 
-const std::string &balancedbanana::communication::ClientAuthMessage::GetPublickey() {
+const std::string &ClientAuthMessage::GetPublickey() const {
     return publickey;
 }

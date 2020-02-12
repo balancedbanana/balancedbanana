@@ -1,6 +1,6 @@
 #pragma once
+#include "MessageProcessor.h"
 #include <Net/Socket.h>
-#include "messageProcessor/MessageProcessor.h"
 #include "message/Message.h"
 #include <memory>
 #include <thread>
@@ -17,6 +17,7 @@ namespace balancedbanana {
 		public:
 			Communicator(const std::shared_ptr<Net::Socket> &socket, const std::shared_ptr<MessageProcessor>& processor);
 
+			//TODO shouldnt it be a string& ?
 			Communicator(const std::string address, short port, const std::shared_ptr<MessageProcessor>& processor);
 
 			~Communicator();

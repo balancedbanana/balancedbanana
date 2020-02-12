@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include <communication/Communicator.h>
 #include <communication/CommunicatorListener.h>
-#include <communication/messageProcessor/MessageProcessor.h>
+#include <communication/MessageProcessor.h>
 #include <communication/message/ClientAuthMessage.h>
 #include <communication/authenticator/Authenticator.h>
 #include <atomic>
@@ -13,9 +13,14 @@ using namespace balancedbanana::communication;
 struct TestMP : MessageProcessor {
     std::shared_ptr<ClientAuthMessage> sourcemessage;
 
-    virtual void processClientAuthMessage(const std::shared_ptr<ClientAuthMessage>& msg) override {
-        ASSERT_EQ(sourcemessage->GetPassword(), msg->GetPassword());
-        ASSERT_EQ(sourcemessage->GetUsername(), msg->GetUsername());
+#if 0
+    TestMP() : MessageProcessor(nullptr) {
+    }
+#endif
+
+    void processClientAuthMessage(const ClientAuthMessage& msg) override {
+        ASSERT_EQ(sourcemessage->GetPassword(), msg.GetPassword());
+        ASSERT_EQ(sourcemessage->GetPublickey(), msg.GetPublickey());
     }
 };
 
