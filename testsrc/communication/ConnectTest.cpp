@@ -22,8 +22,8 @@ struct TestMP : MessageProcessor {
 #endif
 
     void processClientAuthMessage(const ClientAuthMessage& msg) override {
+        ASSERT_EQ(sourcemessage->GetUsername(), msg.GetUsername());
         ASSERT_EQ(sourcemessage->GetPassword(), msg.GetPassword());
-        ASSERT_EQ(sourcemessage->GetPublickey(), msg.GetPublickey());
         ASSERT_NE(msg.GetPublickey(), "");
         pubkey = msg.GetPublickey();
         finished = true;
