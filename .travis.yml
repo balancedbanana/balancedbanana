@@ -1,20 +1,22 @@
 dist: bionic
 language: cpp
 
-addons:
-  apt:
-    packages:
-      - g++-9
-
 before_install:
   - pip install --user cpp-coveralls
-  - sudo apt-get update
-  - sudo apt-get -y install libssl-dev qtbase5-dev cmake make
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get -q update
+  - sudo apt-get -y install libssl-dev qtbase5-dev make g++-9 libqt5sql5-mysql mysql-server tar wget
+  - wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz
+  - tar -xf cmake-3.16.2-Linux-x86_64.tar.gz
+  - sudo systemctl start mysql
+  - cat balancedbanana.sql | sudo mysql
+  - echo "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"$'\n'"ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';"$'\n'"FLUSH PRIVILEGES;" | sudo mysql
+  - sudo docker pull centos
 
 script:
-  - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 cmake -DCOVERAGE=1 .
-  - cmake --build .
-  - "ctest --verbose . || :"
+  - CXX=/usr/bin/g++-9 CC=/usr/bin/gcc-9 ./cmake-3.16.2-Linux-x86_64/bin/cmake -DCOVERAGE=1 .
+  - ./cmake-3.16.2-Linux-x86_64/bin/cmake --build .
+  - "sudo ./cmake-3.16.2-Linux-x86_64/bin/ctest --verbose . || :"
 
 after_success:
-  - coveralls --root . -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"
+  - coveralls --root . --gcov gcov-9 -E ".*cmake.*" -E ".*testsrc.*" -E ".*contrib.*" -E ".*google.*" -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"

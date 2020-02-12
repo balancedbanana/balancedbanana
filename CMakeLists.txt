@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED 17)
@@ -12,7 +12,7 @@ find_package(Threads REQUIRED)
 link_libraries(Threads::Threads)
 enable_testing()
 find_package(GTest)
-set(GTEST GTest::GTest GTest::Main)
+set(GTEST GTest::GTest GTest::Main --coverage)
 if (NOT GTest_FOUND)
     # Download and unpack googletest at configure time
     configure_file(contrib/GTest/CMakeLists.txt.in googletest-download/CMakeLists.txt)
@@ -45,7 +45,7 @@ if (NOT GTest_FOUND)
     if (CMAKE_VERSION VERSION_LESS 2.8.11)
         include_directories("${gtest_SOURCE_DIR}/include")
     endif()
-    set(GTEST gtest gtest_main)
+    set(GTEST gtest gtest_main --coverage)
 
 endif()
 
@@ -71,6 +71,9 @@ if(COVERAGE)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 endif()
 
+set(CMAKE_MACOSX_RPATH 1)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
 # Add Webserver directly to our build.
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/Webserver-src
                  ${CMAKE_CURRENT_BINARY_DIR}/Webserver-build
@@ -81,14 +84,17 @@ include_directories(include)
 include_directories(contrib)
 
 add_subdirectory(src/client)
-add_subdirectory(src/worker)
 add_subdirectory(src/commandLineInterface)
-add_subdirectory(testsrc/worker)
 add_subdirectory(src/communication)
 add_subdirectory(src/configfiles)
-add_subdirectory(testsrc/configfiles)
 add_subdirectory(src/database)
 add_subdirectory(src/scheduler)
+add_subdirectory(src/timedevents)
+add_subdirectory(src/worker)
 add_subdirectory(testsrc/commandLineInterface)
 add_subdirectory(testsrc/communication)
+add_subdirectory(testsrc/configfiles)
 add_subdirectory(testsrc/database)
+add_subdirectory(testsrc/scheduler)
+add_subdirectory(testsrc/timedevents)
+add_subdirectory(testsrc/worker)

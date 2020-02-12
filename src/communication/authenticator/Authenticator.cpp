@@ -49,13 +49,13 @@ std::pair<std::string, std::string> Authenticator::GeneratePrivatePublicKeyPair(
     if(!PEM_write_bio_PUBKEY(g.mem, g.key)) {
         throw std::runtime_error("Failed to generate private / public KeyPair (PEM_write_bio_PUBKEY failed)");
     }
-    char buffer[1000];
-    int length = BIO_read(g.mem, buffer, 1000);
+    char buffer[1000000];
+    int length = BIO_read(g.mem, buffer, 1000000);
     std::string pubkey(buffer, length);
     if(!PEM_write_bio_PrivateKey(g.mem, g.key, NULL, NULL, 0, NULL, NULL)) {
         throw std::runtime_error("Failed to generate private / public KeyPair (PEM_write_bio_PrivateKey failed)");
     }
-    length = BIO_read(g.mem, buffer, 1000);
+    length = BIO_read(g.mem, buffer, 1000000);
     std::string privkey(buffer, length);
     return { std::move(privkey), std::move(pubkey) };
 }
@@ -122,6 +122,9 @@ std::string Authenticator::GenerateSignature(std::string name, std::string privk
 }
 
 balancedbanana::communication::authenticator::Authenticator::Authenticator(const std::shared_ptr<balancedbanana::communication::Communicator> &comm) : comm(comm) {
+    if(!this->comm) {
+        throw std::invalid_argument("Communicator must not null");
+    }
 }
 
 void balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username, const std::string &password) {

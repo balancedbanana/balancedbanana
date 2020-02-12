@@ -41,6 +41,7 @@ namespace balancedbanana {
                     i++;
                 }
             }
+            return i;
         }
 
         std::shared_ptr<Job> PriorityQueue::getJob(uint32_t ram, uint32_t cores) {
@@ -85,9 +86,7 @@ namespace balancedbanana {
                     }
                 }
             }
-            if(!found) {
-                return nullptr;
-            }
+            return nullptr;
         }
 
         void PriorityQueue::update() {
@@ -130,7 +129,7 @@ namespace balancedbanana {
             interval = updateInterval;
             (*timer).setInterval(interval);
             std::function<void()> fcnptr = std::bind(&PriorityQueue::update, this);
-            (*timer).addTimerFunction(&fcnptr);
+            (*timer).addTimerFunction(fcnptr);
             (*timer).start();
         }
     }

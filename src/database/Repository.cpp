@@ -1,25 +1,12 @@
 #include <database/Repository.h>
-
-#include <QSqlDatabase>
-#include <QDebug>
+#include <database/IGateway.h>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
 
-Repository::Repository(){
-    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-    db.setHostName("127.0.0.1");
-    db.setDatabaseName("balancedbanana");
-    db.setUserName("root");
-    db.setPassword("banana");
-    db.setPort(3306);
-    bool success = db.open();
-
-    if(!success){
-        qDebug() << "Error: connection with database failed.";
-    } else {
-        qDebug() << "Database: connection was successful.";
-    }
+Repository::Repository(const std::string& host_name, const std::string& databasename, const std::string&
+username, const std::string& password,  uint64_t port){
+    IGateway::createDBConnection(host_name, databasename, username, password, port);
 }
 
 //Adds a Worker to the DB and returns its ID

@@ -29,24 +29,24 @@ public:
 	void setType(int type);
 	int getType() const;
 
-	void setTaskCommand(std::string &taskCommand);
+	void setTaskCommand(const std::string &taskCommand);
 	const std::string &getTaskCommand() const;
 
 	std::shared_ptr<configfiles::JobConfig> getConfig() const;
 
-	void setAddImageName(std::string &addImageName);
+	void setAddImageName(const std::string &addImageName);
 	const std::string &getAddImageName();
 
-	void setAddImageFilePath(std::string &addImageFilePath);
+	void setAddImageFilePath(const std::string &addImageFilePath);
 	const std::string &getAddImageFilePath();
 
-	void setRemoveImageName(std::string &removeImageName);
+	void setRemoveImageName(const std::string &removeImageName);
 	const std::string &getRemoveImageName();
 
-	void setServerIP(std::string &serverIP);
+	void setServerIP(const std::string &serverIP);
 	const std::string &getServerIP();
 
-	void setWebAPIIP(std::string &webAPIIP);
+	void setWebAPIIP(const std::string &webAPIIP);
 	const std::string &getWebAPIIP();
 
 	void setServerPort(short int serverPort);

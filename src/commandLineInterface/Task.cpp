@@ -19,7 +19,7 @@ int Task::getType() const {
     return this->type;
 }
 
-void Task::setTaskCommand(std::string &taskCommand) {
+void Task::setTaskCommand(const std::string &taskCommand) {
     this->taskCommand = taskCommand;
 }
 const std::string & Task::getTaskCommand() const {
@@ -30,35 +30,35 @@ std::shared_ptr<configfiles::JobConfig> Task::getConfig() const {
     return this->config;
 }
 
-void Task::setAddImageName(std::string &addImageName) {
+void Task::setAddImageName(const std::string &addImageName) {
     this->addImageName = addImageName;
 }
 const std::string & Task::getAddImageName() {
     return this->addImageName;
 }
 
-void Task::setAddImageFilePath(std::string &addImageFilePath) {
+void Task::setAddImageFilePath(const std::string &addImageFilePath) {
     this->addImageFilePath = addImageFilePath;
 }
 const std::string & Task::getAddImageFilePath() {
     return this->addImageFilePath;
 }
 
-void Task::setRemoveImageName(std::string &removeImageName) {
+void Task::setRemoveImageName(const std::string &removeImageName) {
     this->removeImageName = removeImageName;
 }
 const std::string & Task::getRemoveImageName() {
     return this->removeImageName;
 }
 
-void Task::setServerIP(std::string &serverIP) {
+void Task::setServerIP(const std::string &serverIP) {
     this->serverIP = serverIP;
 }
 const std::string & Task::getServerIP() {
     return this->serverIP;
 }
 
-void Task::setWebAPIIP(std::string &webAPIIP) {
+void Task::setWebAPIIP(const std::string &webAPIIP) {
     this->webAPIIP = webAPIIP;
 }
 const std::string & Task::getWebAPIIP() {
