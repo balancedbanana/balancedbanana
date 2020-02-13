@@ -1,23 +1,25 @@
 #pragma once
 
-#include "Message.h"
+#include <communication/message/Message.h>
 
 namespace balancedbanana {
     namespace communication {
 		class SnapshotMessage : public Message {
+            uint64_t jobid;
+
+            bool stop;
 		public:
-			virtual void process(const std::shared_ptr<MessageProcessor>& mp);
+            SnapshotMessage(uint64_t id, bool stop);
 
+            explicit SnapshotMessage(const char *data, size_t &iterator, size_t size);
 
-		private:
-			unsigned long jobid;
+            void process(MessageProcessor &mp) const override;
 
-			bool stop;
+            std::string serialize() const override;
 
+            const uint64_t GetJobId() const;
 
-		public:
-			SnapshotMessage(unsigned long tid, bool stop);
-
+            bool GetStop() const;
 		};
 	}
 }

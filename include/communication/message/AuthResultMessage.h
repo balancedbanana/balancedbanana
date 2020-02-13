@@ -1,26 +1,25 @@
-﻿#ifndef AUTHRESULTMESSAGE_H
-#define AUTHRESULTMESSAGE_H
+﻿#pragma once
 
-#include "Message.h"
+#include <communication/message/Message.h>
 
 namespace balancedbanana {
     namespace communication {
 
 		class AuthResultMessage : public Message {
-		private:
-			unsigned long status;
-
+			uint32_t status;
 
 		public:
-			AuthResultMessage();
-			//Status of Authentification zero success, nonzero failure
-			unsigned long getStatus();
+		    explicit AuthResultMessage(uint32_t status);
 
-			virtual void process(const std::shared_ptr<MessageProcessor>& mp);
+		    explicit AuthResultMessage(const char *data, size_t &iterator, size_t length);
 
+			//Gibt den Authentfication status zurück 0 falls erfolgreich sonst ungleich 0
+			uint32_t getStatus() const;
+
+			void process(MessageProcessor &mp) const override;
+
+			std::string serialize() const override;
 		};
 
 	}
 }
-
-#endif // !AUTHRESULTMESSAGE_H

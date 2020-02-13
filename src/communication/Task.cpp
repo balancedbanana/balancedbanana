@@ -1,0 +1,134 @@
+#include <communication/Task.h>
+#include <communication/message/Serialization.h>
+#include <sstream>
+
+namespace balancedbanana
+{
+namespace communication
+{
+
+const std::string Task::configFilePath = "./config.txt";
+
+Task::Task()
+{
+    config = std::make_shared<configfiles::JobConfig>(configFilePath);
+}
+
+Task::Task(const std::string &string) {
+    using namespace serialization;
+    const char *data = string.data();
+    size_t iterator = 0;
+    size_t size = string.size();
+    taskCommand = extractString(data, iterator, size);
+    bool conf = extract<bool>(data, iterator, size);
+    if(conf) {
+        config = std::make_shared<configfiles::JobConfig>(extractString(data, iterator, size));
+    } else {
+        config = nullptr;
+    }
+    type = extract<uint32_t>(data, iterator, size);
+    addImageName = extractString(data, iterator, size);
+    addImageFilePath = extractString(data, iterator, size);
+    removeImageName = extractString(data, iterator, size);
+    serverIP = extractString(data, iterator, size);
+    webAPIIP = extractString(data, iterator, size);
+    serverPort = extract<uint16_t>(data, iterator, size);
+    webAPIPort = extract<uint16_t>(data, iterator, size);
+    if(iterator != size) {
+        throw std::invalid_argument("string is too long");
+    }
+}
+
+Task::Task(const Task &task) = default;
+
+void Task::setType(uint32_t type) {
+    this->type = type;
+}
+uint32_t Task::getType() const {
+    return this->type;
+}
+
+void Task::setTaskCommand(const std::string &taskCommand) {
+    this->taskCommand = taskCommand;
+}
+const std::string & Task::getTaskCommand() const {
+    return this->taskCommand;
+}
+
+std::shared_ptr<configfiles::JobConfig> Task::getConfig() const {
+    return this->config;
+}
+
+void Task::setAddImageName(const std::string &addImageName) {
+    this->addImageName = addImageName;
+}
+const std::string & Task::getAddImageName() const {
+    return this->addImageName;
+}
+
+void Task::setAddImageFilePath(const std::string &addImageFilePath) {
+    this->addImageFilePath = addImageFilePath;
+}
+const std::string & Task::getAddImageFilePath() const {
+    return this->addImageFilePath;
+}
+
+void Task::setRemoveImageName(const std::string &removeImageName) {
+    this->removeImageName = removeImageName;
+}
+const std::string & Task::getRemoveImageName() const {
+    return this->removeImageName;
+}
+
+void Task::setServerIP(const std::string &serverIP) {
+    this->serverIP = serverIP;
+}
+const std::string & Task::getServerIP() const {
+    return this->serverIP;
+}
+
+void Task::setWebAPIIP(const std::string &webAPIIP) {
+    this->webAPIIP = webAPIIP;
+}
+const std::string & Task::getWebAPIIP() const {
+    return this->webAPIIP;
+}
+
+void Task::setServerPort(uint16_t serverPort) {
+    this->serverPort = serverPort;
+}
+uint16_t Task::getServerPort() const {
+    return this->serverPort;
+}
+
+void Task::setWebAPIPort(uint16_t webAPIPort) {
+    this->webAPIPort = webAPIPort;
+}
+uint16_t Task::getWebAPIPort() const {
+    return this->webAPIPort;
+}
+
+std::string Task::serialize() const {
+    using namespace serialization;
+    std::stringstream stream;
+    insertString(stream, taskCommand);
+    insert<bool>(stream, (bool) config);
+    if(config) {
+        std::stringstream configstream;
+        config->Serialize(configstream);
+        insertString(stream, configstream.str());
+    }
+    insert<uint32_t>(stream, type);
+    insertString(stream, addImageName);
+    insertString(stream, addImageFilePath);
+    insertString(stream, removeImageName);
+    insertString(stream, serverIP);
+    insertString(stream, webAPIIP);
+    insert<uint16_t>(stream, serverPort);
+    insert<uint16_t>(stream, webAPIPort);
+    return stream.str();
+}
+
+} // namespace commandLineInterface
+
+} // namespace balancedbanana

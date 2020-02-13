@@ -1,26 +1,30 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+#include <communication/MessageProcessor.h>
+#include <communication/message/MessageType.h>
+#include <communication/message/Serialization.h>
+
 namespace balancedbanana {
     namespace communication {
-		class Message;
-	}
+
+        class Message : public std::enable_shared_from_this<Message> {
+        protected:
+            const MessageType type;
+
+        public:
+            explicit Message(MessageType type);
+
+            MessageType GetType() const;
+
+            virtual void process(MessageProcessor &mp) const = 0;
+
+            virtual std::string serialize() const;
+
+            static std::shared_ptr<Message> deserialize(const char *data, uint32_t length);
+
+        };
+
+    }
 }
-
-#include <communication/messageProcessor/MessageProcessor.h>
-#include <string>
-
-class balancedbanana::communication::Message : public std::enable_shared_from_this<Message> {
-protected:
-	const unsigned int typeId;
-
-public:
-	Message(unsigned int typeId);
-
-	virtual void process(const std::shared_ptr<MessageProcessor>& mp) = 0;
-
-	virtual std::string serialize() = 0;
-
-	static std::shared_ptr<Message> deserialize(const char* msg, unsigned int size);
-
-	Message();
-};

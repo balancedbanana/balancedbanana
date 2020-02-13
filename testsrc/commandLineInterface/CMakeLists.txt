@@ -1,5 +1,5 @@
 include(GoogleTest)
 
 add_executable(commandLineInterfaceTests ClientCommandLineProcessorTest.cpp SchedulerCommandLineProcessorTest.cpp WorkerCommandLineProcessorTest.cpp)
-target_link_libraries(commandLineInterfaceTests ${GTEST} commandLineInterface configfiles)
+target_link_libraries(commandLineInterfaceTests ${GTEST} commandLineInterface communication)
 gtest_discover_tests(commandLineInterfaceTests)

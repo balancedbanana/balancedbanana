@@ -34,8 +34,11 @@ public:
 	 * The same function can be registered multiple times.
 	 * Note that removing functions is currently not supported.
 	 * Functions can currently not take any parameters.
+	 * 
+	 * Note: Try using lambda expressions or create a std::function<void()> to pass to this function
+	 * as raw function pointers tend to not work here.
 	 */
-	void addTimerFunction(std::function<void()>* function);
+	void addTimerFunction(std::function<void()>& function);
 
 	/**
 	 * Start the timer.
@@ -68,7 +71,7 @@ private:
 	/**
 	 * The list of all callback functions.
 	 */
-	std::vector<std::function<void()>>* timerFunctions;
+	std::vector<std::function<void()>> timerFunctions;
 
 	/**
 	 * This thread is responsible for sleeping until one interval has passed, then calling all callback functions.

@@ -1,6 +1,6 @@
 #include <commandLineInterface/CommandLineProcessor.h>
 #include <communication/Communicator.h>
-#include <communication/messageProcessor/MessageProcessor.h>
+#include <communication/MessageProcessor.h>
 #include <communication/authenticator/Authenticator.h>
 #include <iostream>
 #include <commandLineInterface/ClientCommandLineProcessor.h>

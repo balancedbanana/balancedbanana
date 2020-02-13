@@ -1,24 +1,26 @@
 #pragma once
 
-#include "Message.h"
+#include <communication/message/Message.h>
 
 namespace balancedbanana {
     namespace communication {
 
 		class PublicKeyAuthMessage : public Message {
+            std::string username;
+
+            std::string usernamesignature;
 		public:
-			virtual void process(const std::shared_ptr<MessageProcessor>& mp);
+            PublicKeyAuthMessage(std::string username, std::string usernamesignature);
 
+            explicit PublicKeyAuthMessage(const char *data, size_t &iterator, size_t size);
 
-		private:
-			std::string username;
+            void process(MessageProcessor &mp) const override;
 
-			std::string usernamesignature;
+            std::string serialize() const override;
 
+            const std::string &GetUserName() const;
 
-		public:
-			PublicKeyAuthMessage(const std::string& username, const std::string& usernamesignature);
-
+            const std::string &GetUserNameSignature() const;
 		};
 	}
 }
