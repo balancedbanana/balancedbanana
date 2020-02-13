@@ -5,7 +5,6 @@
 #include <QVariant>
 #include <QSqlError>
 #include <QDebug>
-#include <QSqlDatabase>
 #include <QSqlQuery>
 #include <stdexcept>
 #include <iostream>
@@ -60,20 +59,6 @@ uint64_t UserGateway::add(const user_details& user) {
 }
 
 /**
- * Checks if a user with the given id exists in the database.
- * @param id The id of the user.
- * @return True if the user exists, otherwise false.
- */
-bool UserGateway::doesUserExist(uint64_t id){
-    QSqlQuery query("SELECT id FROM users WHERE id = ?");
-    query.addBindValue(QVariant::fromValue(id));
-    if (query.exec()){
-        return query.next();
-    }
-    throw std::runtime_error(query.lastError().databaseText().toStdString());
-}
-
-/**
  * Deletes a user with the given id from the database,
  * @param id  The id of the user to be deleted.
  * @return True if the operation was successful, otherwise false
@@ -82,7 +67,7 @@ bool UserGateway::remove(uint64_t user_id) {
     if (!doesTableExist("users")){
         throwNoTableException("users");
     }
-    if (doesUserExist(user_id)){
+    if (doesRecordExist("users", user_id)){
         QSqlQuery query("DELETE FROM users WHERE id = ?");
         query.addBindValue(QVariant::fromValue(user_id));
         if (query.exec()){
@@ -106,7 +91,7 @@ user_details UserGateway::getUser(uint64_t id) {
         throwNoTableException("users");
     }
     user_details details{};
-    if (doesUserExist(id)){
+    if (doesRecordExist("users", id)){
         QSqlQuery query("SELECT public_key, name, email FROM users WHERE id = ?");
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){

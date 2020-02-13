@@ -1,7 +1,6 @@
 #pragma once
 
 #include <database/Specs.h>
-#include "details.h"
 
 #include <string>
 #include <cstdint>
@@ -10,7 +9,7 @@ namespace balancedbanana {
     namespace database {
 
         //Encapsulates all details required to create Worker object.
-        struct worker_details : details {
+        struct worker_details {
             //The id of the Worker.
             uint8_t id;
 
