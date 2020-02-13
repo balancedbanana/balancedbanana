@@ -6,6 +6,9 @@
 #include <QStringList>
 #include <iostream>
 #include <QString>
+#include <QSqlQuery>
+#include <QVariant>
+#include <QSqlError>
 
 using namespace balancedbanana::database;
 
@@ -44,4 +47,18 @@ bool doesTableExist(std::string table_name){
  */
 void throwNoTableException(std::string table_name){
     throw std::logic_error(table_name + " table doesn't exist");
+}
+
+/**
+ * Checks if a record with the given id exists in the database.
+ * @param id The id of the record.
+ * @return True if the record exists, otherwise false.
+ */
+bool doesRecordExist(std::string table_name, uint64_t id){
+    QSqlQuery query(QString::fromStdString("SELECT id FROM " + table_name + " WHERE id = ?"));
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        return query.next();
+    }
+    throw std::runtime_error(query.lastError().databaseText().toStdString());
 }

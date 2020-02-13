@@ -2,7 +2,6 @@
 
 #include <configfiles/JobConfig.h>
 #include <database/Specs.h>
-#include "details.h"
 
 #include <cinttypes>
 #include <string>
@@ -12,7 +11,7 @@ namespace balancedbanana {
     namespace database {
 
 		//This is a struct that includes all relevant information about a Job.
-		struct job_details : details {
+		struct job_details {
 			configfiles::JobConfig config;
 
 			uint8_t user_id;

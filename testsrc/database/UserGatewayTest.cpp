@@ -298,8 +298,6 @@ class GetUsersTest : public ::testing::Test {
 protected:
     void SetUp() override {
         // Set up the first user
-
-
         first.public_key = "34nrhk3hkr";
         first.email = "someemail@kit.edu";
         first.name = "CentOS";
