@@ -25,23 +25,6 @@ std::string Message::serialize() const {
 }
 
 std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
-    /*uint32_t type;
-    auto next = Net::Http::V2::GetUInt32(msg, type);
-    switch (type)
-    {
-        case MessageType::AUTH_RESULT:
-
-
-    case MessageType::CLIENT_AUTH: {
-        std::string username(next);
-        next += username.length() + 1;
-        std::string password(next);
-        next += password.length() + 1;
-        return std::make_shared<ClientAuthMessage>(username, password, next);
-    }
-    default:
-        break;
-    }*/
     size_t iterator = 0;
     uint32_t type = serialization::extract<uint32_t>(msg, iterator, size);
     switch(type) {
