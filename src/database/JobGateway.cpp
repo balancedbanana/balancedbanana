@@ -273,7 +273,7 @@ job_details JobGateway::getJob(uint64_t job_id) {
     } else {
         std::cerr << "getJob error: no job with id = " << job_id  << " exists" << std::endl;
     }
-
+    return details;
 }
 
 /**
