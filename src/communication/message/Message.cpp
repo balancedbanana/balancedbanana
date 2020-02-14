@@ -20,7 +20,7 @@ MessageType Message::GetType() const {
 
 std::string Message::serialize() const {
     std::stringstream stream;
-    stream.write(reinterpret_cast<const char *>(&type), sizeof(MessageType));
+    serialization::insert(stream, (uint32_t) type);
     return stream.str();
 }
 
