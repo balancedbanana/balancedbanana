@@ -13,6 +13,8 @@ namespace balancedbanana {
 		class SnapshotMessage;
 		class TaskMessage;
 		class WorkerAuthMessage;
+		class WorkerLoadRequestMessage;
+		class WorkerLoadResponseMessage;
 
         class MessageProcessor : public std::enable_shared_from_this<MessageProcessor> {
         private:
@@ -39,7 +41,8 @@ namespace balancedbanana {
             virtual void processSnapshotMessage(const SnapshotMessage &msg);
             virtual void processTaskMessage(const TaskMessage &msg);
             virtual void processWorkerAuthMessage(const WorkerAuthMessage &msg);
-
+            virtual void processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg);
+            virtual void processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg);
         };
 	}
 }

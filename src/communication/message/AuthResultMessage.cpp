@@ -1,4 +1,7 @@
 #include <communication/message/AuthResultMessage.h>
+#include <communication/message/Serialization.h>
+#include <communication/MessageProcessor.h>
+#include <sstream>
 
 using namespace balancedbanana::communication;
 

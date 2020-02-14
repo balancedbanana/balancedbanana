@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <communication/message/Message.h>
+#include <communication/message/Serialization.h>
 
 using namespace balancedbanana::communication;
 

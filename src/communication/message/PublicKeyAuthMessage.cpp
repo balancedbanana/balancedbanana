@@ -1,5 +1,7 @@
 #include <communication/message/PublicKeyAuthMessage.h>
-
+#include <communication/message/Serialization.h>
+#include <communication/MessageProcessor.h>
+#include <sstream>
 #include <utility>
 
 using namespace balancedbanana::communication;

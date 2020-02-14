@@ -1,4 +1,7 @@
 #include <communication/message/ClientAuthMessage.h>
+#include <communication/message/Serialization.h>
+#include <communication/MessageProcessor.h>
+#include <sstream>
 #include <Net/Http/V2/Frame.h>
 
 using namespace balancedbanana::communication;

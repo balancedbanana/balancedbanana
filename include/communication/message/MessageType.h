@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 enum MessageType : uint32_t {
     INVALID = 0,
@@ -8,6 +9,7 @@ enum MessageType : uint32_t {
     PUBLIC_KEY_AUTH = 4,
     SNAPSHOT = 5,
     TASK = 6,
-    WORKER_AUTH = 7
-
+    WORKER_AUTH = 7,
+    WORKERLOADREQUEST,
+    WORKERLOADRESPONSE,
 };

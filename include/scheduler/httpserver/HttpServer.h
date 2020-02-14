@@ -2,6 +2,8 @@
 #include <string>
 #include <functional>
 #include <Net/SocketListener.h>
+#include <scheduler/Worker.h>
+#include <scheduler/Job.h>
 
 namespace balancedbanana {
     namespace scheduler {
@@ -11,6 +13,8 @@ namespace balancedbanana {
             std::string privatekeypath;
             std::string certchainpath;
             std::shared_ptr<std::thread> listentask;
+            std::function<std::vector<Worker>()> getAllWorker;
+            std::function<std::vector<Job>(int userid)> getJobsByUserId;
         public:
             void listen(const std::string & ip, short port);
 

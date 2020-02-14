@@ -6,6 +6,9 @@
 #include <communication/message/SnapshotMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
+#include <communication/message/WorkerLoadRequestMessage.h>
+#include <communication/message/WorkerLoadResponseMessage.h>
+#include <communication/message/Serialization.h>
 #include <Net/Http/V2/Stream.h>
 
 using namespace balancedbanana::communication;
@@ -42,6 +45,10 @@ std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
             return std::make_shared<TaskMessage>(msg, iterator, size);
         case MessageType::WORKER_AUTH:
             return std::make_shared<WorkerAuthMessage>(msg, iterator, size);
+        case MessageType::WORKERLOADREQUEST:
+            return std::make_shared<WorkerLoadRequestMessage>(msg, iterator, size);
+        case MessageType::WORKERLOADRESPONSE:
+            return std::make_shared<WorkerLoadResponseMessage>(msg, iterator, size);
         default:
             return nullptr;
     }

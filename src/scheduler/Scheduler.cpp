@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
         return -1;
     }
     std::cout << "Task Type" << task->getType() << "\n";
-    CommunicatorListener listener([](){ return std::make_shared<balancedbanana::communication::SchedulerClientMP>(); });
+    // CommunicatorListener listener([](){ return std::make_shared<balancedbanana::communication::SchedulerClientMP>(); });
     // std::vector<Worker> worker;
     // listener.listen(task->getServerPort(), [&worker](std::shared_ptr<balancedbanana::communication::Communicator> com) {
     //     worker.emplace_back()

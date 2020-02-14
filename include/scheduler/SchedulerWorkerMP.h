@@ -1,23 +1,27 @@
 #pragma once
 #include <communication/MessageProcessor.h>
+#include <functional>
 
 namespace balancedbanana {
-    namespace communication {
+    namespace scheduler {
 
-        class SchedulerWorkerMP : public MessageProcessor {
+        class SchedulerWorkerMP : public communication::MessageProcessor {
             bool authenticated = false;
+            std::function<void(const communication::WorkerLoadResponseMessage &msg)> onWorkerLoadResponseMessage;
         public:
 #if 0
             SchedulerWorkerMP(Communicator *);
 #endif
 
-            void processAuthResultMessage(const AuthResultMessage &msg) override;
-            void processClientAuthMessage(const ClientAuthMessage &msg) override;
-            void processHardwareDetailMessage(const HardwareDetailMessage &msg) override;
-            void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) override;
-            void processSnapshotMessage(const SnapshotMessage &msg) override;
-            void processTaskMessage(const TaskMessage &msg) override;
-            void processWorkerAuthMessage(const WorkerAuthMessage &msg) override;
+            void processAuthResultMessage(const communication::AuthResultMessage &msg) override;
+            void processClientAuthMessage(const communication::ClientAuthMessage &msg) override;
+            void processHardwareDetailMessage(const communication::HardwareDetailMessage &msg) override;
+            void processPublicKeyAuthMessage(const communication::PublicKeyAuthMessage &msg) override;
+            void processSnapshotMessage(const communication::SnapshotMessage &msg) override;
+            void processTaskMessage(const communication::TaskMessage &msg) override;
+            void processWorkerAuthMessage(const communication::WorkerAuthMessage &msg) override;
+            void processWorkerLoadResponseMessage(const communication::WorkerLoadResponseMessage &msg) override;
+            void OnWorkerLoadResponse(std::function<void(const communication::WorkerLoadResponseMessage &msg)>&& func);
         };
     }
 }
