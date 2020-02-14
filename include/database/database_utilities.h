@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 
 bool doesTableExist(std::string table_name);
