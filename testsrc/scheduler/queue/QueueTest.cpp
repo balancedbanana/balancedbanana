@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "scheduler/queue/Queue.h"
-#include "scheduler/Job.h"
+#include "data/Job.h"
 #include "configfiles/JobConfig.h"
 #include <memory>
 #include "cstdint"

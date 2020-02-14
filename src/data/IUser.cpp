@@ -1,4 +1,4 @@
-#include <scheduler/IUser.h>
+#include <data/IUser.h>
 
 balancedbanana::scheduler::IUser::IUser(const std::string &username, const std::string &pubkey) {
     this->name_ = username;

@@ -1,5 +1,5 @@
 #pragma once
-#include "scheduler/Job.h"
+#include "data/Job.h"
 #include <cstdint>
 #include <memory>
 #include <unordered_map>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <configfiles/JobConfig.h>
-#include <database/Specs.h>
+#include <data/Specs.h>
 
 #include <cinttypes>
 #include <string>

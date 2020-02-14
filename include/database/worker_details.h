@@ -1,6 +1,6 @@
 #pragma once
 
-#include <database/Specs.h>
+#include <data/Specs.h>
 
 #include <string>
 #include <cstdint>

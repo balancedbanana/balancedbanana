@@ -23,8 +23,8 @@
 using namespace Net::Http;
 using namespace std::filesystem;
 
-#include <scheduler/Worker.h>
-#include <scheduler/Job.h>
+#include <data/Worker.h>
+#include <data/Job.h>
 
 std::pair<std::string, std::string> GenerateCert();
 

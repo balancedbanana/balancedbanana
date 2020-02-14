@@ -6,7 +6,7 @@
 #include <cstring>
 #include <vector>
 
-#include <communication/Task.h>
+#include <data/Task.h>
 #include "CLI11/CLI11.hpp"
 
 #define CLIENT_PROGRAM_NAME "bbc"

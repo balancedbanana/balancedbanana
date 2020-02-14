@@ -2,9 +2,9 @@
 #include <database/job_details.h>
 #include <database/worker_details.h>
 #include <database/user_details.h>
-#include <scheduler/Job.h>
-#include <scheduler/Worker.h>
-#include <scheduler/User.h>
+#include <data/Job.h>
+#include <data/Worker.h>
+#include <data/User.h>
 
 namespace balancedbanana {
     namespace database {

@@ -1,5 +1,5 @@
 #include <scheduler/SchedulerClientMP.h>
-#include <scheduler/IUser.h>
+#include <data/IUser.h>
 #include <communication/message/ClientAuthMessage.h>
 #include <communication/authenticator/AuthHandler.h>
 

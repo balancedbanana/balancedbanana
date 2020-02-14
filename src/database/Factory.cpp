@@ -1,7 +1,7 @@
 #include <database/Factory.h>
-#include <scheduler/User.h>
-#include <scheduler/Worker.h>
-#include <scheduler/Job.h>
+#include <data/User.h>
+#include <data/Worker.h>
+#include <data/Job.h>
 #include <stdexcept>
 
 using namespace balancedbanana::scheduler;

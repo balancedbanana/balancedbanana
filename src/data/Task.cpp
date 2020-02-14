@@ -1,4 +1,4 @@
-#include <communication/Task.h>
+#include <data/Task.h>
 #include <communication/message/Serialization.h>
 #include <sstream>
 

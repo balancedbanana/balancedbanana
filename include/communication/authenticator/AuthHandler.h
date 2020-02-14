@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <scheduler/IUser.h>
+#include <data/IUser.h>
 
 namespace balancedbanana {
     namespace communication {
