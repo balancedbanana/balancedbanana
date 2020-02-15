@@ -157,7 +157,7 @@ TEST(ClientCommandLineProcessor, run)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--command", "run this command!"};
+    const char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--job", "echo run this command!"};
     int argc = 19;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -173,5 +173,5 @@ TEST(ClientCommandLineProcessor, run)
     ASSERT_EQ(task->getConfig()->min_cpu_count().value(), 1);
     ASSERT_EQ(task->getConfig()->max_ram().value(), 4096);
     ASSERT_EQ(task->getConfig()->min_ram().value(), 256);
-    ASSERT_STREQ(task->getTaskCommand().c_str(), "run this command!");
+    ASSERT_STREQ(task->getTaskCommand().c_str(), "echo run this command!");
 }
