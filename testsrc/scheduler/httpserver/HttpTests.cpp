@@ -7,7 +7,16 @@ using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
 
 struct TestMP : SchedulerWorkerMP {
+    std::shared_ptr<Communicator> wcom;
+    void handleInvalidMessage(const Message &msg) override {
+        std::cout << "Invalid Message Ignore it\n";
+    }
 
+    void processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg) override {
+        WorkerLoadResponseMessage resp(1, 2, 3, 4, 5, 6, 7);
+        wcom->send(resp);
+    }
+    
 };
 
 int main() {
@@ -16,8 +25,9 @@ int main() {
     auto listener = std::make_shared<CommunicatorListener>([testmp](){
         return testmp;
     });
-    listener->listen(2435, [listener, &worker](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+    listener->listen(2435, [listener, &worker, testmp](std::shared_ptr<balancedbanana::communication::Communicator> com) {
         worker.emplace_back(std::make_shared<Worker>(com));
+        testmp->wcom = com;
         com->detach();
     });
     HttpServer server = HttpServer([&]() -> std::vector<std::shared_ptr<Worker>> {
