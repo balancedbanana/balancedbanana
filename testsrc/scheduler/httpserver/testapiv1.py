@@ -14,6 +14,17 @@ try:
     result = yaml.safe_load(res.content)
     for job in result['jobs']:
         print(job['job_id'])
+    res = requests.get("http://localhost:8234/v1/workmachines/0/jobs")
+    result = yaml.safe_load(res.content)
+    for job in result['jobs']:
+        print(job['job_id'])
+    res = requests.get("http://localhost:8234/v1/user/330")
+    result = yaml.safe_load(res.content)
+    for job in result['jobs']:
+        print(job['job_id'])
+    res = requests.get("http://localhost:8234/v1/user/")
+    res = requests.get("http://localhost:8234/v1/workmachines/workload")
+    result = yaml.safe_load(res.content)
 except:
     sample.communicate(input=b'stop\n')
     sample.wait()
