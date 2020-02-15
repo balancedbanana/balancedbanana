@@ -7,7 +7,7 @@ before_install:
   - sudo apt-get -q update
   - sudo apt-get -y install libssl-dev qtbase5-dev make g++-9 libqt5sql5-mysql mysql-server tar wget sshpass
   - sudo useradd -m steve
-  - echo "steve:thePassword" | chpasswd
+  - echo "steve:thePassword" | sudo chpasswd
   - wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz
   - tar -xf cmake-3.16.2-Linux-x86_64.tar.gz
   - sudo systemctl start mysql
