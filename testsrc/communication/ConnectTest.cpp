@@ -78,7 +78,6 @@ TEST(communication, Connect)
     com->detach();
 }
 
-#if 0
 TEST(communication, Connect2)
 {
     ASSERT_ANY_THROW(auto com = std::make_shared<Communicator>("0..0.0fs..0", 23, std::make_shared<MessageProcessor>()));
@@ -89,6 +88,8 @@ TEST(communication, Connect3)
     ASSERT_THROW(auto com = std::make_shared<Communicator>(nullptr, nullptr), std::invalid_argument);
     ASSERT_THROW(auto com = std::make_shared<Communicator>(nullptr, std::make_shared<MessageProcessor>()), std::invalid_argument);
 }
+
+#if 0
 
 TEST(communication, MessageProcessor)
 {
