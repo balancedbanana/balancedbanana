@@ -3,6 +3,8 @@
 #include <communication/CommunicatorListener.h>
 #include <communication/MessageProcessor.h>
 #include <communication/message/ClientAuthMessage.h>
+#include <communication/message/WorkerAuthMessage.h>
+#include <communication/message/PublicKeyAuthMessage.h>
 #include <communication/authenticator/Authenticator.h>
 #include <atomic>
 #include <condition_variable>
@@ -14,7 +16,7 @@ struct TestMP : MessageProcessor {
     std::shared_ptr<ClientAuthMessage> sourcemessage;
     std::string pubkey;
     std::condition_variable cnd;
-    std::atomic_bool finished = false;
+    std::atomic<int> todo = 3;
 
 #if 0
     TestMP() : MessageProcessor(nullptr) {
@@ -26,9 +28,24 @@ struct TestMP : MessageProcessor {
         ASSERT_EQ(sourcemessage->GetPassword(), msg.GetPassword());
         ASSERT_NE(msg.GetPublickey(), "");
         pubkey = msg.GetPublickey();
-        finished = true;
+        --todo;
         cnd.notify_all();
     }
+
+    void processWorkerAuthMessage(const WorkerAuthMessage &msg) override {
+        ASSERT_NE(msg.GetWorkerName(), "");
+        ASSERT_NE(msg.GetPublicKey(), "");
+        --todo;
+        cnd.notify_all();
+    }
+
+    void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) override {
+        ASSERT_NE(msg.GetUserName(), "");
+        ASSERT_NE(msg.GetUserNameSignature(), "");
+        --todo;
+        cnd.notify_all();
+    }
+
 };
 
 TEST(communication, Connect)
@@ -54,7 +71,7 @@ TEST(communication, Connect)
     std::mutex mtx;
     std::unique_lock<std::mutex> lock(mtx);
     testmp->cnd.wait_for(lock, std::chrono::seconds(5), [testmp]() {
-        return testmp->finished.load();
+        return !testmp->todo.load();
     });
     com->detach();
 }
