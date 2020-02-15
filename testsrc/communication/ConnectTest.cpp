@@ -68,6 +68,8 @@ TEST(communication, Connect)
     auto com = std::make_shared<Communicator>("localhost", 2434, testmp);
     balancedbanana::communication::authenticator::Authenticator auth(com);
     auth.authenticate("2Te53st8", "6Hidfsg#öl4su93");
+    auth.publickeyauthenticate("2Te53st8", "efjevrgmgrirerv");
+    auth.authenticate();
     std::mutex mtx;
     std::unique_lock<std::mutex> lock(mtx);
     testmp->cnd.wait_for(lock, std::chrono::seconds(5), [testmp]() {
