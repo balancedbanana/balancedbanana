@@ -28,6 +28,6 @@ TEST(authenticator, AuthHandler)
     auto sig = balancedbanana::communication::authenticator::Authenticator::GenerateSignature("steve", p.first);
     ASSERT_NO_THROW(handler->authenticate(std::make_shared<balancedbanana::scheduler::IUser>("steve", p.second), "thePassword"));
     ASSERT_ANY_THROW(handler->authenticate(std::make_shared<balancedbanana::scheduler::IUser>("steve2", p.second), "thePassword"));
-    ASSERT_ANY_THROW(handler->publickeyauthenticate(std::make_shared<balancedbanana::scheduler::IUser>("steve", p.second), sig));
+    ASSERT_NO_THROW(handler->publickeyauthenticate(std::make_shared<balancedbanana::scheduler::IUser>("steve", p.second), sig));
     ASSERT_ANY_THROW(handler->publickeyauthenticate(std::make_shared<balancedbanana::scheduler::IUser>("steve2", p.second), sig));
 }
