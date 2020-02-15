@@ -64,20 +64,6 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
 }
 
 /**
- * Checks if a worker with the given id exists in the database.
- * @param id The id of the worker.
- * @return True if the worker exists, otherwise false.
- */
-bool WorkerGateway::doesWorkerExist(uint64_t id){
-    QSqlQuery query("SELECT id FROM workers WHERE id = ?");
-    query.addBindValue(QVariant::fromValue(id));
-    if (query.exec()){
-        return query.next();
-    }
-    throw std::runtime_error(query.lastError().databaseText().toStdString());
-}
-
-/**
  * Deletes a worker with the given id from the database,
  * @param id  The id of the worker to be deleted.
  * @return True if the operation was successful, otherwise false
@@ -86,7 +72,7 @@ bool WorkerGateway::remove(uint64_t id) {
     if (!doesTableExist("workers")){
         throwNoTableException("workers");
     }
-    if (doesWorkerExist(id)){
+    if (doesRecordExist("workers", id)){
         QSqlQuery query("DELETE FROM workers WHERE id = ?");
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
@@ -110,7 +96,7 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
         throwNoTableException("workers");
     }
     worker_details details{};
-    if (doesWorkerExist(id)){
+    if (doesRecordExist("workers", id)){
         QSqlQuery query;
         query.prepare("SELECT public_key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
         query.bindValue(":id", QVariant::fromValue(id));
