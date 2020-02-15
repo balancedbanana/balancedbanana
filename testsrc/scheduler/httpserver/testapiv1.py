@@ -18,11 +18,11 @@ try:
     result = yaml.safe_load(res.content)
     for job in result['jobs']:
         print(job['job_id'])
-    res = requests.get("http://localhost:8234/v1/user/330")
+    res = requests.get("http://localhost:8234/v1/user/330/jobs")
     result = yaml.safe_load(res.content)
     for job in result['jobs']:
         print(job['job_id'])
-    res = requests.get("http://localhost:8234/v1/user/")
+    res = requests.get("http://localhost:8234/v1/user//jobs")
     res = requests.get("http://localhost:8234/v1/workmachines/workload")
     result = yaml.safe_load(res.content)
 except:
