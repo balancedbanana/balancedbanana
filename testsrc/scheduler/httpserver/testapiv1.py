@@ -13,7 +13,7 @@ try:
     res = requests.get("http://localhost:8234/v1/jobs/hours/3")
     result = yaml.safe_load(res.content)
     for job in result['jobs']:
-        stuff = result['jobs'][job]['Stuff']
+        print(job['job_id'])
 except:
     sample.terminate()
     raise
