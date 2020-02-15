@@ -13,9 +13,14 @@ namespace balancedbanana {
             std::string privatekeypath;
             std::string certchainpath;
             std::shared_ptr<std::thread> listentask;
-            std::function<std::vector<Worker>()> getAllWorker;
-            std::function<std::vector<Job>(int userid)> getJobsByUserId;
+            std::function<std::vector<std::shared_ptr<Worker>>()> getAllWorker;
+            std::function<std::vector<int>(int workerid)> getJobIDsByWorkerId;
+            std::function<std::vector<int>(int userid)> getJobIDsByUserId;
+            std::function<std::vector<int>(int hours)> getJobIDsOfLastHours;
+            std::function<Job(int id)> getJobByID;
         public:
+            HttpServer(std::function<std::vector<std::shared_ptr<Worker>>()> && getAllWorker, std::function<std::vector<int>(int workerid)> && getJobIDsByWorkerId, std::function<std::vector<int>(int userid)> && getJobIDsByUserId, std::function<std::vector<int>(int hours)> && getJobIDsOfLastHours, std::function<Job(int id)> && getJobByID);
+
             void listen(const std::string & ip, short port);
 
             void useSSL(const std::string & privatekeypath, const std::string & certchainpath);

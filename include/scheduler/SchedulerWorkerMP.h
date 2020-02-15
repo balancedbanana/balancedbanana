@@ -13,8 +13,6 @@ namespace balancedbanana {
             SchedulerWorkerMP(Communicator *);
 #endif
 
-            void processAuthResultMessage(const communication::AuthResultMessage &msg) override;
-            void processClientAuthMessage(const communication::ClientAuthMessage &msg) override;
             void processHardwareDetailMessage(const communication::HardwareDetailMessage &msg) override;
             void processPublicKeyAuthMessage(const communication::PublicKeyAuthMessage &msg) override;
             void processSnapshotMessage(const communication::SnapshotMessage &msg) override;

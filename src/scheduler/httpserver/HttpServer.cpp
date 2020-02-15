@@ -27,6 +27,11 @@ using namespace std::filesystem;
 
 using namespace balancedbanana::scheduler;
 
+HttpServer::HttpServer(std::function<std::vector<std::shared_ptr<Worker>>()> && getAllWorker, std::function<std::vector<int>(int workerid)> && getJobIDsByWorkerId, std::function<std::vector<int>(int userid)> && getJobIDsByUserId, std::function<std::vector<int>(int hours)> && getJobIDsOfLastHours, std::function<Job(int id)> && getJobByID) : getAllWorker(getAllWorker), getJobIDsByWorkerId(getJobIDsByWorkerId), getJobIDsByUserId(getJobIDsByUserId), getJobIDsOfLastHours(getJobIDsOfLastHours), getJobByID(getJobByID) {
+	
+}
+
+
 void HttpServer::listen(const std::string & ip, short port) {
     if(privatekeypath.empty() || certchainpath.empty()) {
 		listener = std::make_shared<Net::SocketListener>();
@@ -48,8 +53,8 @@ void HttpServer::listen(const std::string & ip, short port) {
 						std::stringstream resp;
 						resp << "machines:\n";
 						for(auto && worker : getAllWorker()) {
-							resp << "- id:" << worker.name() << "\n";
-							auto& load = worker.GetWorkerLoad();
+							resp << "- id:" << worker->name() << "\n";
+							auto& load = worker->GetWorkerLoad();
 							resp << "  cpu_load: " << load.GetCpuLoad() << "\n";
 							resp << "  cpu_threads:\n";
 							resp << "    used: " << load.GetUsedThreads() << "\n";
@@ -68,15 +73,15 @@ void HttpServer::listen(const std::string & ip, short port) {
 						return;
 					}
 					char * endptr;
-					int workmachineid = std::strtol(request->path.data() + 17, &endptr, 10);
-					if(!strcmp(endptr, "/jobs")) {
+					auto bid = request->path.data() + 17;
+					int workmachineid = std::strtol(bid, &endptr, 10);
+					if(bid < endptr && !strcmp(endptr, "/jobs")) {
 						response.status = 200;
 						std::stringstream resp;
 
 						resp << "jobs:\n";
-						std::vector<balancedbanana::scheduler::Job> jobs;
-						for(auto && job : jobs) {
-							resp << "- job_id: " << "0" << "\n";
+						for(auto && jobid : getJobIDsByWorkerId(workmachineid)) {
+							resp << "- job_id: " << jobid << "\n";
 						}
 					
 						auto responsedata = resp.str();
@@ -95,8 +100,7 @@ void HttpServer::listen(const std::string & ip, short port) {
 							std::stringstream resp;
 
 							resp << "jobs:\n";
-							std::vector<balancedbanana::scheduler::Job> jobs;
-							for(auto && job : jobs) {
+							for(auto && job : getJobIDsOfLastHours(hours)) {
 								resp << "- job_id: " << "0" << "\n";
 							}
 						
@@ -108,10 +112,10 @@ void HttpServer::listen(const std::string & ip, short port) {
 						}
 					} else {
 						char * number = request->path.data() + 9, *end = number;
-						int userid = std::strtol(number, &end, 10);
+						int jobid = std::strtol(number, &end, 10);
 						if(number < end && (end - request->path.data()) == request->path.length()) {
 							response.status = 200;
-							balancedbanana::scheduler::Job job(23, std::make_shared<balancedbanana::configfiles::JobConfig>());
+							balancedbanana::scheduler::Job job = getJobByID(jobid);
 							std::stringstream resp;
 							resp << "user_name: " << "Missing" << "\n";
 							resp << "user_id: " << "0" << "\n";
@@ -139,8 +143,7 @@ void HttpServer::listen(const std::string & ip, short port) {
 						std::stringstream resp;
 
 						resp << "jobs:\n";
-						std::vector<balancedbanana::scheduler::Job> jobs;
-						for(auto && job : jobs) {
+						for(auto && job : getJobIDsByUserId(userid)) {
 							resp << "- job_id: " << "0" << "\n";
 						}
 					

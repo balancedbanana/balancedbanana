@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     //     worker.emplace_back()
     // });
     
-    HttpServer server;
-    server.listen(task->getWebAPIIP(), task->getWebAPIPort());
+    // HttpServer server;
+    // server.listen(task->getWebAPIIP(), task->getWebAPIPort());
     return 0;
 }
