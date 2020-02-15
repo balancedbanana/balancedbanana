@@ -4,7 +4,7 @@ import sys
 import subprocess
 import time
 import os
-sample = subprocess.Popen("./HttpTests");
+sample = subprocess.Popen("./HttpTests", stdin=subprocess.PIPE);
 try:
     time.sleep(1)
     res = requests.get("http://localhost:8234/v1/jobs/2365")
@@ -15,8 +15,10 @@ try:
     for job in result['jobs']:
         print(job['job_id'])
 except:
-    sample.terminate()
+    sample.communicate(input=b'stop\n')
+    sample.wait()
     raise
 else:
-    sample.terminate()
+    sample.communicate(input=b'stop\n')
+    sample.wait()
     sys.exit(0)

@@ -1,7 +1,7 @@
-#include "gtest/gtest.h"
 #include <scheduler/httpserver/HttpServer.h>
 #include <scheduler/SchedulerWorkerMP.h>
 #include <communication/CommunicatorListener.h>
+#include <iostream>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
@@ -10,8 +10,7 @@ struct TestMP : SchedulerWorkerMP {
 
 };
 
-TEST(HttpServer, ApiTest)
-{
+int main() {
     std::vector<std::shared_ptr<Worker>> worker;
     auto testmp = std::make_shared<TestMP>();
     auto listener = std::make_shared<CommunicatorListener>([testmp](){
@@ -35,4 +34,13 @@ TEST(HttpServer, ApiTest)
     auto com = std::make_shared<Communicator>("localhost", 2435, testmp);
     server.listen("localhost", 8234);
     com->detach();
+    std::string cmd;
+    while(1) {
+        std::cin >> cmd;
+        if(cmd == "stop") {
+            server.Cancel();
+            return 0;
+        }
+    }
+    return -1;
 }
