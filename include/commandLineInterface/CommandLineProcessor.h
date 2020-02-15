@@ -39,6 +39,14 @@ namespace balancedbanana {
 		{
 		public:
 
+			/**
+			 * Process an array of command line arguments (argv : &char[argc])
+			 * Write processed arguments into the provided Task instance
+			 * Since a set of global standard values is provided by the scheduler,
+			 * the task instance is not tested to posess all necessary arguments.
+			 * 
+			 * Returns 0 on success and an error code on failure.
+			 */
 			virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task) { return 0; }
 
 		};

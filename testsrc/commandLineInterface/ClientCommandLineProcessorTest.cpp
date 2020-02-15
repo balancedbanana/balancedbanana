@@ -9,11 +9,11 @@ TEST(ClientCommandLineProcessor, addImage)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "image", "-i", "imageName", "imagePath"};
-    int argc = 5;
+    char* argv[] = {"./bbc", "addImage", "imageName", "imagePath"};
+    int argc = 4;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
-
+    
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::ADD_IMAGE);
@@ -26,8 +26,8 @@ TEST(ClientCommandLineProcessor, removeImage)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "image", "-I", "imageName"};
-    int argc = 4;
+    char* argv[] = {"./bbc", "removeImage", "imageName"};
+    int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
 
@@ -155,7 +155,7 @@ TEST(ClientCommandLineProcessor, run)
 {
     ClientCommandLineProcessor clp;
 
-    char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--command", "run this command!"};
+    char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--job", "run this command!"};
     int argc = 19;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();

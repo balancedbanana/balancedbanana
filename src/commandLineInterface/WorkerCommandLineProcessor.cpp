@@ -1,6 +1,5 @@
 #include <commandLineInterface/WorkerCommandLineProcessor.h>
 
-
 using balancedbanana::commandLineInterface::WorkerCommandLineProcessor;
 
 namespace balancedbanana
@@ -8,7 +7,20 @@ namespace balancedbanana
 namespace commandLineInterface
 {
 
-int WorkerCommandLineProcessor::process(int argc, char** argv, const std::shared_ptr<Task>& task)
+/**
+ * A Helper function to make the process method cleaner.
+ * Gets called after the parsing step is complete.
+ * Sets task type and attributes of task instance.
+ */
+void callbackWorkerStart(const std::shared_ptr<Task>& task, std::string& ipAddress, short serverPort)
+{
+    task->setType((int)TaskType::WORKERSTART);
+        
+    task->setServerIP(ipAddress);
+    task->setServerPort(serverPort);
+}
+
+int WorkerCommandLineProcessor::process(int argc, char **argv, const std::shared_ptr<Task> &task)
 {
     CLI::App app;
 
@@ -20,12 +32,9 @@ int WorkerCommandLineProcessor::process(int argc, char** argv, const std::shared
     app.add_option("--server,-s", ipAddress, "Start Scheduler at ipAddress");
     app.add_option("--serverport,-S", serverPort, "Server Port");
 
-    CLI11_PARSE(app, argc, argv);
+    app.callback([&]() { callbackWorkerStart(task, ipAddress, serverPort); });
 
-    task->setType((int)TaskType::WORKERSTART);
-        
-    task->setServerIP(ipAddress);
-    task->setServerPort(serverPort);
+    CLI11_PARSE(app, argc, argv);
 
     return 0;
 }
