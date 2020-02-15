@@ -134,10 +134,10 @@ std::string balancedbanana::communication::authenticator::Authenticator::authent
     return res.first;
 }
 
-void balancedbanana::communication::authenticator::Authenticator::publickeyauthenticate(const std::string& username, const std::string& pubkey) {
-    auto signature = GenerateSignature(username, pubkey);
-    // auto message = std::make_shared<PublicKeyAuthMessage>(username, signature);
-    // comm->send(*message);
+void balancedbanana::communication::authenticator::Authenticator::publickeyauthenticate(const std::string& username, const std::string& privkey) {
+    auto signature = GenerateSignature(username, privkey);
+    auto message = std::make_shared<PublicKeyAuthMessage>(username, signature);
+    comm->send(*message);
 }
 
 std::pair<std::string, std::string> balancedbanana::communication::authenticator::Authenticator::authenticate() {
@@ -150,7 +150,7 @@ std::pair<std::string, std::string> balancedbanana::communication::authenticator
     }
     auto res = GeneratePrivatePublicKeyPair();
     std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
-    // auto message = std::make_shared<PublicKeyAuthMessage>(sname, res.second);
-    // comm->send(*message);
+    auto message = std::make_shared<PublicKeyAuthMessage>(sname, res.second);
+    comm->send(*message);
     return { sname, res.first };
 }

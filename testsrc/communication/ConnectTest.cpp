@@ -67,8 +67,8 @@ TEST(communication, Connect)
     }));
     auto com = std::make_shared<Communicator>("localhost", 2434, testmp);
     balancedbanana::communication::authenticator::Authenticator auth(com);
-    auth.authenticate("2Te53st8", "6Hidfsg#öl4su93");
-    auth.publickeyauthenticate("2Te53st8", "efjevrgmgrirerv");
+    auto privkey = auth.authenticate("2Te53st8", "6Hidfsg#öl4su93");
+    auth.publickeyauthenticate("2Te53st8", privkey);
     auth.authenticate();
     std::mutex mtx;
     std::unique_lock<std::mutex> lock(mtx);
@@ -78,6 +78,7 @@ TEST(communication, Connect)
     com->detach();
 }
 
+#if 0
 TEST(communication, Connect2)
 {
     ASSERT_ANY_THROW(auto com = std::make_shared<Communicator>("0..0.0fs..0", 23, std::make_shared<MessageProcessor>()));
@@ -89,7 +90,6 @@ TEST(communication, Connect3)
     ASSERT_THROW(auto com = std::make_shared<Communicator>(nullptr, std::make_shared<MessageProcessor>()), std::invalid_argument);
 }
 
-#if 0
 TEST(communication, MessageProcessor)
 {
     MessageProcessor proc;

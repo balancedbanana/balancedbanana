@@ -19,7 +19,7 @@ namespace balancedbanana {
 				std::string authenticate(const std::string& username, const std::string& password);
                 
                 // authenticates client / worker agaist the server
-				void publickeyauthenticate(const std::string& username, const std::string& pubkey);
+				void publickeyauthenticate(const std::string& username, const std::string& privkey);
 
 				// worker auth returns worker name and private key
 				std::pair<std::string, std::string> authenticate();
