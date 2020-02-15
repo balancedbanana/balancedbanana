@@ -100,8 +100,8 @@ void HttpServer::listen(const std::string & ip, short port) {
 							std::stringstream resp;
 
 							resp << "jobs:\n";
-							for(auto && job : getJobIDsOfLastHours(hours)) {
-								resp << "- job_id: " << "0" << "\n";
+							for(auto && jobid : getJobIDsOfLastHours(hours)) {
+								resp << "- job_id: " << jobid << "\n";
 							}
 						
 							auto responsedata = resp.str();
@@ -119,15 +119,15 @@ void HttpServer::listen(const std::string & ip, short port) {
 							std::stringstream resp;
 							resp << "user_name: " << "Missing" << "\n";
 							resp << "user_id: " << "0" << "\n";
-							resp << "status: " << "0" << "\n";
+							resp << "status: " << (int)*job.getStatus() << "\n";
 							resp << "scheduled_at: " << job.getScheduled_at().toString().toStdString() << "\n";
 							resp << "finished_at: " << job.getFinished_at().toString().toStdString() << "\n";
 							resp << "spent_in_queue: " << "0" << "\n";
 							resp << "time_spend_running: " << "0" << "\n";
 							resp << "allocated_threads: " << job.getAllocated_cores() << "\n";
-							resp << "utilization_of_threads: " << "-0" << "\n";
+							resp << "utilization_of_threads: " << job.getAllocated_cores() << "\n";
 							resp << "allocated_ram: " << job.getAllocated_ram() << "\n";
-							resp << "utilization_of_ram: " << "0" << "\n";
+							resp << "utilization_of_ram: " << job.getAllocated_ram() << "\n";
 							auto responsedata = resp.str();
 							response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
 							con->SendResponse(false);
