@@ -10,15 +10,14 @@ WorkerLoadResponseMessage::WorkerLoadResponseMessage(uint64_t cpuload, uint64_t 
 }
 
 balancedbanana::communication::WorkerLoadResponseMessage::WorkerLoadResponseMessage(const char *data, size_t &iterator, size_t size) : Message(MessageType::WORKERLOADRESPONSE) {
-    size_t it;
-    cpuload = serialization::extract<uint64_t>(data, it, size);
-    freeMemory = serialization::extract<uint64_t>(data, it, size);
-    freeSwap = serialization::extract<uint64_t>(data, it, size);
-    freethreads = serialization::extract<uint64_t>(data, it, size);
-    usedMemory = serialization::extract<uint64_t>(data, it, size);
-    usedSwap = serialization::extract<uint64_t>(data, it, size);
-    usedthreads = serialization::extract<uint64_t>(data, it, size);
-    if(it != size) {
+    cpuload = serialization::extract<uint64_t>(data, iterator, size);
+    freeMemory = serialization::extract<uint64_t>(data, iterator, size);
+    freeSwap = serialization::extract<uint64_t>(data, iterator, size);
+    freethreads = serialization::extract<uint64_t>(data, iterator, size);
+    usedMemory = serialization::extract<uint64_t>(data, iterator, size);
+    usedSwap = serialization::extract<uint64_t>(data, iterator, size);
+    usedthreads = serialization::extract<uint64_t>(data, iterator, size);
+    if(iterator != size) {
         throw std::runtime_error("size error");
     }
 }

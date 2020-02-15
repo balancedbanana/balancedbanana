@@ -6,8 +6,8 @@ balancedbanana::communication::WorkerLoadRequestMessage::WorkerLoadRequestMessag
 }
 
 balancedbanana::communication::WorkerLoadRequestMessage::WorkerLoadRequestMessage(const char *data, size_t &iterator, size_t size)  : Message(MessageType::WORKERLOADREQUEST) {
-    if(size != 0) {
-        throw std::runtime_error("Error");
+    if(iterator != size) {
+        throw std::runtime_error("size error");
     }
 }
 
