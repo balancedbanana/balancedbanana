@@ -53,8 +53,6 @@ protected:
         details.user_id = 1;
         details.command = "mkdir build";
         details.schedule_time = QDateTime::currentDateTime();
-        details.finish_time = QDateTime::currentDateTime();
-        details.start_time = QDateTime::currentDateTime();
         details.empty = false;
         details.config.set_min_ram(123456);
         details.config.set_max_ram(654321);
@@ -125,8 +123,8 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             int dir_index = query.record().indexOf("working_dir");
             int command_index = query.record().indexOf("command");
             int schedule_time_index = query.record().indexOf("schedule_time");
-            int finish_time_index = query.record().indexOf("finish_time");
-            int start_time_index = query.record().indexOf("start_time");
+            //int finish_time_index = query.record().indexOf("finish_time");
+            //int start_time_index = query.record().indexOf("start_time");
             int worker_id_index = query.record().indexOf("worker_id");
             int status_id_index = query.record().indexOf("status_id");
             int allocated_id_index = query.record().indexOf("allocated_id");
@@ -142,15 +140,16 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             queryDetails.config.set_priority(static_cast<Priority> (query.value(priority_index).toUInt()));
             queryDetails.config.set_image(query.value(image_index).toString().toStdString());
             queryDetails.config.set_interruptible(query.value(interruptible_index).toBool());
-            queryDetails.config.set_environment(deserializeVector<std::string>(query.value(environment_index).toString()
-            .toStdString()));
+            queryDetails.config.set_environment(Utilities::deserializeVector<std::string>(query.value(environment_index)
+            .toString().toStdString()));
             queryDetails.config.set_current_working_dir(query.value(dir_index).toString().toStdString());
             queryDetails.command = query.value(command_index).toString().toStdString();
             queryDetails.schedule_time = QDateTime::fromString(query.value(schedule_time_index).toString(), "yyyy.MM.dd.hh.mm:ss.z");
-            queryDetails.finish_time = QDateTime::fromString(query.value(finish_time_index).toString());
-            queryDetails.start_time = QDateTime::fromString(query.value(start_time_index).toString());
+            //queryDetails.finish_time = QDateTime::fromString(query.value(finish_time_index).toString());
+            //queryDetails.start_time = QDateTime::fromString(query.value(start_time_index).toString());
             queryDetails.worker_id = query.value(worker_id_index).toUInt();
             queryDetails.status = query.value(status_id_index).toInt();
+            queryDetails.empty = false;
 
             if (!query.value(allocated_id_index).isNull()){
                 query.prepare("SELECT space, cores, ram FROM users WHERE id = ?");
@@ -159,14 +158,34 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
                     qDebug() << "allocated_resources query failed";
                 } else {
                     if (query.next()){
-                        queryDetails.allocated_specs.value().space = query.value(1).toUInt();
-                        queryDetails.allocated_specs.value().cores = query.value(2).toUInt();
-                        queryDetails.allocated_specs.value().ram = query.value(3).toUInt();
+                        queryDetails.allocated_specs->space = query.value(1).toUInt();
+                        queryDetails.allocated_specs->cores = query.value(2).toUInt();
+                        queryDetails.allocated_specs->ram = query.value(3).toUInt();
                     }
                 }
             }
-// Environment is the problem
-// use the format above for times
+/*
+ *  Keeping this for debugging
+            EXPECT_TRUE(queryDetails.user_id == details.user_id);
+            EXPECT_TRUE(queryDetails.status == details.status);
+            EXPECT_TRUE(queryDetails.schedule_time == details.schedule_time);
+            EXPECT_TRUE(queryDetails.finish_time == details.finish_time);
+            EXPECT_TRUE(queryDetails.start_time == details.start_time);
+            EXPECT_TRUE(((!queryDetails.allocated_specs.has_value() && !details.allocated_specs.has_value()) ||
+                         (queryDetails.allocated_specs.value() == details.allocated_specs.value())));
+            EXPECT_TRUE(queryDetails.empty == details.empty);
+            EXPECT_TRUE(queryDetails.config.min_ram() == details.config.min_ram());
+            EXPECT_TRUE(queryDetails.config.max_ram() == details.config.max_ram());
+            EXPECT_TRUE(queryDetails.config.min_cpu_count() == details.config.min_cpu_count());
+            EXPECT_TRUE(queryDetails.config.max_cpu_count() == details.config.max_cpu_count());
+            EXPECT_TRUE(queryDetails.config.blocking_mode() == details.config.blocking_mode());
+            EXPECT_TRUE(queryDetails.config.email() == details.config.email());
+            EXPECT_TRUE(queryDetails.config.priority() == details.config.priority());
+            EXPECT_TRUE(queryDetails.config.image() == details.config.image());
+            EXPECT_TRUE(queryDetails.config.environment() == details.config.environment());
+            EXPECT_TRUE(queryDetails.config.interruptible() == details.config.interruptible());
+            EXPECT_TRUE(queryDetails.config.current_working_dir() == details.config.current_working_dir());
+            */
             EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
@@ -183,9 +202,12 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
 
 // Test checks if the addJob method works properly given all the args.
 TEST_F(AddAllJobTest, AddAllJobTest_FirstJobSuccess_Test){
+    //qDebug() << "details.starttime = " << details.start_time.value().toString();
 
+    u_int64_t id = JobGateway::add(details);
+    qDebug() << id;
     // The first entry's id should be 1
-    ASSERT_TRUE(JobGateway::add(details) == 1);
+    ASSERT_TRUE(id == 1);
 
     // The add must be successful
     ASSERT_TRUE(wasJobAddSuccessful(details, 1));

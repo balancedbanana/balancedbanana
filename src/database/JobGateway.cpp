@@ -104,8 +104,8 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
     }
      */
     if (config.environment().has_value()){
-        q_environment = QVariant::fromValue(QString::fromStdString(serializeVector<std::string>(config.environment()
-                .value())));
+        q_environment = QVariant::fromValue(QString::fromStdString(Utilities::serializeVector<std::string>(config
+                .environment().value())));
     }
 
     // Convert the mandatory args
@@ -225,8 +225,8 @@ uint64_t JobGateway::add(job_details details) {
     }
 
     // DB must contain table
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
 
     QVariant_JobConfig qstruct = convertJobConfig(details.user_id, details.config, details.schedule_time, details.command);
@@ -239,10 +239,10 @@ uint64_t JobGateway::add(job_details details) {
  * @return true if the operation was successful, otherwise false;
  */
 bool JobGateway::remove(uint64_t job_id) {
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
-    if (doesRecordExist("jobs", job_id)){
+    if (Utilities::doesRecordExist("jobs", job_id)){
         QSqlQuery query("DELETE FROM jobs WHERE id = ?");
         query.addBindValue(QVariant::fromValue(job_id));
         if (query.exec()){
@@ -360,14 +360,14 @@ job_details getDetailsAfterSet(const QSqlQuery& query){
  * @return The details of the job
  */
 job_details JobGateway::getJob(uint64_t job_id) {
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
-    if (!doesTableExist("allocated_resources")){
-        throwNoTableException("allocated_resources");
+    if (!Utilities::doesTableExist("allocated_resources")){
+        Utilities::throwNoTableException("allocated_resources");
     }
     job_details details{};
-    if (doesRecordExist("jobs", job_id)){
+    if (Utilities::doesRecordExist("jobs", job_id)){
         QSqlQuery query("SELECT jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cores, jobs.max_cores, "
                         "jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs.environment, "
                         "jobs.current_working_dir, jobs.command, jobs.schedule_time, jobs.start_time, jobs.finish_time, "
@@ -397,11 +397,11 @@ job_details JobGateway::getJob(uint64_t job_id) {
  * @return  Vector of all the jobs in the database.
  */
 std::vector<job_details> JobGateway::getJobs() {
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
-    if (!doesTableExist("allocated_resources")){
-        throwNoTableException("allocated_resources");
+    if (!Utilities::doesTableExist("allocated_resources")){
+        Utilities::throwNoTableException("allocated_resources");
     }
     QSqlQuery query("SELECT jobs.id, jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cores, "
                     "jobs.max_cores, jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs"
@@ -432,14 +432,14 @@ std::vector<job_details> JobGateway::getJobs() {
  * @return true if the operation was succesful, otherwise false.
  */
 bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
-    if (!doesTableExist("workers")){
-        throwNoTableException("workers");
+    if (!Utilities::doesTableExist("workers")){
+        Utilities::throwNoTableException("workers");
     }
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
-    if (doesRecordExist("jobs", job_id)){
-        if (doesRecordExist("workers", worker_id)) {
+    if (Utilities::doesRecordExist("jobs", job_id)){
+        if (Utilities::doesRecordExist("workers", worker_id)) {
             QSqlQuery queryAlloc("INSERT INTO allocated_resources (cores, space, ram) VALUES (?, ?, ?)");
             queryAlloc.addBindValue(QVariant::fromValue(specs.cores));
             queryAlloc.addBindValue(QVariant::fromValue(specs.space));
@@ -479,14 +479,14 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
  */
 bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         , const std::string& stdout, const int8_t exit_code) {
-    if (!doesTableExist("job_results")){
-        throwNoTableException("job_results");
+    if (!Utilities::doesTableExist("job_results")){
+        Utilities::throwNoTableException("job_results");
     }
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
 
-    if (doesRecordExist("jobs", job_id)){
+    if (Utilities::doesRecordExist("jobs", job_id)){
         // TODO Check if this assertion is actually necessary
         assert(!stdout.empty());
 
@@ -521,14 +521,14 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
  * @return The results of the job
  */
 job_result JobGateway::getJobResult(uint64_t job_id) {
-    if (!doesTableExist("job_results")){
-        throwNoTableException("job_results");
+    if (!Utilities::doesTableExist("job_results")){
+        Utilities::throwNoTableException("job_results");
     }
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
 
-    if (doesRecordExist("jobs", job_id)){
+    if (Utilities::doesRecordExist("jobs", job_id)){
         QSqlQuery query("SELECT job_results.exit_code, job_results.stdout FROM jobs JOIN ON job_results WHERE "
                         "job_results.id = jobs.result");
         if (query.exec()){

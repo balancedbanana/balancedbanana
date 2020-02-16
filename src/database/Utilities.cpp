@@ -1,6 +1,7 @@
 #include <database/Utilities.h>
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/binary.hpp>
+#include <cereal/types/string.hpp>
 
 
 #include <QSqlDatabase>
@@ -9,19 +10,20 @@
 #include <QSqlError>
 #include <sstream>
 
+using namespace balancedbanana::database;
 
 /**
  * Checks if table_name exists
  * @return true when it exists, otherwise false
  */
-bool balancedbanana::database::doesTableExist(const std::string& table_name){
+bool Utilities::doesTableExist(const std::string& table_name){
     return QSqlDatabase::database().tables().contains(QString::fromStdString(table_name));
 }
 
 /**
 * Throws an exception for when a table doesn't exist
 */
-void balancedbanana::database::throwNoTableException(const std::string& table_name){
+void Utilities::throwNoTableException(const std::string& table_name){
     throw std::logic_error(table_name + " table doesn't exist");
 }
 
@@ -30,7 +32,7 @@ void balancedbanana::database::throwNoTableException(const std::string& table_na
 * @param id The id of the record.
 * @return True if the record exists, otherwise false.
 */
-bool balancedbanana::database::doesRecordExist(const std::string& table_name, uint64_t id){
+bool Utilities::doesRecordExist(const std::string& table_name, uint64_t id){
     QSqlQuery query(QString::fromStdString("SELECT id FROM " + table_name + " WHERE id = ?"));
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
@@ -40,7 +42,7 @@ bool balancedbanana::database::doesRecordExist(const std::string& table_name, ui
 }
 
 template<typename T>
-std::string balancedbanana::database::serializeVector(std::vector<T> vector){
+std::string Utilities::serializeVector(std::vector<T> vector){
     std::stringstream ss;
     std::string serializedVec;
     {
@@ -52,7 +54,7 @@ std::string balancedbanana::database::serializeVector(std::vector<T> vector){
 }
 
 template<typename T>
-std::vector<T> balancedbanana::database::deserializeVector(std::string string){
+std::vector<T> Utilities::deserializeVector(std::string string){
     std::stringstream ss;
     ss << string;
     std::vector<T> deserializedVec;
@@ -67,3 +69,6 @@ std::vector<T> balancedbanana::database::deserializeVector(std::string string){
     }
     return deserializedVec;
 }
+
+template std::string Utilities::serializeVector(std::vector<std::string> vector);
+template std::vector<std::string> Utilities::deserializeVector(std::string string);

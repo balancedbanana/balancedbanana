@@ -35,8 +35,8 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
     }
 
     // DB must contain table
-    if (!doesTableExist("workers")){
-        throwNoTableException("workers");
+    if (!Utilities::doesTableExist("workers")){
+        Utilities::throwNoTableException("workers");
     }
 
     // Converting the various args into QVariant Objects
@@ -69,10 +69,10 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
  * @return True if the operation was successful, otherwise false
  */
 bool WorkerGateway::remove(uint64_t id) {
-    if (!doesTableExist("workers")){
-        throwNoTableException("workers");
+    if (!Utilities::doesTableExist("workers")){
+        Utilities::throwNoTableException("workers");
     }
-    if (doesRecordExist("workers", id)){
+    if (Utilities::doesRecordExist("workers", id)){
         QSqlQuery query("DELETE FROM workers WHERE id = ?");
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
@@ -92,11 +92,11 @@ bool WorkerGateway::remove(uint64_t id) {
  * @return The details of the worker.
  */
 worker_details WorkerGateway::getWorker(uint64_t id) {
-    if (!doesTableExist("workers")){
-        throwNoTableException("workers");
+    if (!Utilities::doesTableExist("workers")){
+        Utilities::throwNoTableException("workers");
     }
     worker_details details{};
-    if (doesRecordExist("workers", id)){
+    if (Utilities::doesRecordExist("workers", id)){
         QSqlQuery query;
         query.prepare("SELECT public_key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
         query.bindValue(":id", QVariant::fromValue(id));
@@ -131,8 +131,8 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
  * @return  Vector of all the workers in the database.
  */
 std::vector<worker_details> WorkerGateway::getWorkers() {
-    if (!doesTableExist("workers")){
-        throwNoTableException("workers");
+    if (!Utilities::doesTableExist("workers")){
+        Utilities::throwNoTableException("workers");
     }
     QSqlQuery query("SELECT id, public_key, space, ram, cores, address, name FROM workers");
     std::vector<worker_details> workerVector;

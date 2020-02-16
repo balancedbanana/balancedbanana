@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`users`
 (
     `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `name`  VARCHAR(45)         NOT NULL,
-    `email` VARCHAR(60)         NOT NULL,
-    `key`   VARCHAR(100)        NOT NULL,
+    `email` VARCHAR(255)         NOT NULL,
+    `key`   VARCHAR(255)        NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `key_UNIQUE` (`key` ASC)
 )
@@ -82,34 +82,33 @@ DEFAULT CHARACTER SET = utf8;
 -- Table `balancedbanana`.`jobs`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (
-    `id`            BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `min_ram`       BIGINT(10) UNSIGNED DEFAULT NULL,
-    `max_ram`       BIGINT(10) UNSIGNED DEFAULT NULL,
-    `started_at`    TIMESTAMP(6) NULL DEFAULT NULL,
-    `scheduled_at`  TIMESTAMP(6) NULL DEFAULT NULL,
-    `finished_at`   TIMESTAMP(6) NULL DEFAULT NULL,
-    `command`       VARCHAR(21844) NOT NULL,
-    `image`         VARCHAR(500) NOT NULL,
+    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,
+    `start_time` timestamp(6) NULL DEFAULT NULL,
+    `schedule_time` VARCHAR(60) DEFAULT NULL,
+    `finish_time` VARCHAR(60) DEFAULT NULL,
+    `command` VARCHAR(21844) NOT NULL,
+    `image` VARCHAR(500) NOT NULL,
     `blocking_mode` TINYINT(1) DEFAULT NULL,
-    `working_dir`   VARCHAR(21844) NOT NULL,
-    `allocated_id`  BIGINT(10) UNSIGNED DEFAULT NULL,
+    `working_dir` VARCHAR(21844) NOT NULL,
+    `allocated_id` BIGINT(10) UNSIGNED DEFAULT NULL,
     `interruptible` TINYINT(1) DEFAULT NULL,
-    `environment`   BLOB DEFAULT NULL,
-    `min_cores`     INT(10) UNSIGNED DEFAULT NULL,
-    `max_cores`     INT(10) UNSIGNED DEFAULT NULL,
-    `priority`      INT(10) UNSIGNED DEFAULT NULL,
-    `status_id`     INT(10) UNSIGNED NOT NULL DEFAULT '1',
-    `user_id`       BIGINT(10) UNSIGNED NOT NULL,
-    `worker_id`     BIGINT(10) DEFAULT NULL,
-    `email`         VARCHAR(255) NOT NULL,
+    `environment` TEXT,
+    `min_cores` INT(10) UNSIGNED DEFAULT NULL,
+    `max_cores` INT(10) UNSIGNED DEFAULT NULL,
+    `priority` INT(10) UNSIGNED DEFAULT NULL,
+    `status_id` INT(10) UNSIGNED NOT NULL DEFAULT '1',
+    `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,
+    `user_id` BIGINT(10) UNSIGNED NOT NULL,
+    `worker_id` BIGINT(10) DEFAULT NULL,
+    `email` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `id_UNIQUE` (`id`),
-    UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`),
-    KEY `user_id_idx` (`user_id`),
-    CONSTRAINT `user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+    UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`)
 )
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
+ENGINE=InnoDB
+DEFAULT CHARSET=utf8;
+
 
 
 SET SQL_MODE=@OLD_SQL_MODE;

@@ -43,9 +43,12 @@ namespace balancedbanana {
                 return this->user_id == rhs.user_id
                        && this->status == rhs.status
                        && this->schedule_time == rhs.schedule_time
-                       && this->finish_time == rhs.finish_time
-                       && this->start_time == rhs.start_time
-                       && this->allocated_specs.operator=(rhs.allocated_specs)
+                       && ((!this->finish_time.has_value() && !rhs.finish_time.has_value()) ||
+                       (this->finish_time.value() == rhs.finish_time.value()))
+                       && ((!this->start_time.has_value() && !rhs.start_time.has_value()) ||
+                           (this->start_time.value() == rhs.start_time.value()))
+                       && ((!this->allocated_specs.has_value() && !rhs.allocated_specs.has_value()) ||
+                       (this->allocated_specs.value() == rhs.allocated_specs.value()))
                        && this->empty == rhs.empty
                        && this->config.min_ram() == rhs.config.min_ram()
                        && this->config.max_ram() == rhs.config.max_ram()

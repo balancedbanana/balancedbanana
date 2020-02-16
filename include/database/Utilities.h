@@ -7,14 +7,16 @@
 #include "user_details.h"
 
 namespace balancedbanana::database {
-    bool doesTableExist(const std::string& table_name);
-    void throwNoTableException(const std::string& table_name);
-    bool doesRecordExist(const std::string& table_name, uint64_t id);
-    template<typename T>
-    std::string serializeVector(std::vector<T> vector);
-
-    template<typename T>
-    std::vector<T> deserializeVector(std::string string);
+    class Utilities {
+    public:
+        static bool doesTableExist(const std::string& table_name);
+        static void throwNoTableException(const std::string& table_name);
+        static bool doesRecordExist(const std::string& table_name, uint64_t id);
+        template<typename T>
+        static std::string serializeVector(std::vector<T> vector);
+        template<typename T>
+        static std::vector<T> deserializeVector(std::string string);
+    };
 }
 
 
