@@ -2,7 +2,6 @@
 #include <database/WorkerGateway.h>
 #include <database/worker_details.h>
 #include <database/Repository.h>
-#include <database/Utilities.h>
 
 #include <QSqlQuery>
 #include <QVariant>
@@ -56,6 +55,8 @@ protected:
         details.specs.cores = 4;
         details.address = "0.0.0.0";
         details.name = "CentOS";
+        details.empty = false;
+        details.id = 1;
     }
 
     void TearDown() override {
@@ -90,6 +91,8 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
             queryDetails.specs.space = query.value(spaceIndex).toUInt();
             queryDetails.address = query.value(addressIndex).toString().toStdString();
             queryDetails.public_key = query.value(keyIndex).toString().toStdString();
+            queryDetails.id = id;
+            queryDetails.empty = false;
             EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
@@ -116,7 +119,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 
 // Test to see if the auto increment feature works as expected.
 // Adds the workers from the AddWorkerTest fixture
-TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSucess_Test){
+TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
 
     // Add the worker from the first test. Since it's the first worker, its id should be 1.
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
@@ -128,6 +131,8 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSucess_Test){
     seconddetails.specs = details.specs;
     seconddetails.address = "1.2.3.4";
     seconddetails.name = "Ubuntu";
+    seconddetails.id = 2;
+    seconddetails.empty = false;
 
     ASSERT_TRUE(WorkerGateway::add(seconddetails) == 2);
     ASSERT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
@@ -193,6 +198,7 @@ protected:
         details.address = "0.0.0.0";
         details.name = "CentOS";
         id = 1;
+        details.empty = false;
     }
 
     void TearDown() override {
@@ -265,6 +271,8 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     details.specs.cores = 4;
     details.address = "0.0.0.0";
     details.name = "CentOS";
+    details.id = 1;
+    details.empty = false;
     // Since this is the first worker, this has to be true.
     ASSERT_TRUE(WorkerGateway::add(details) == 1);
     ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
@@ -293,6 +301,7 @@ protected:
         details.address = "0.0.0.0";
         details.name = "CentOS";
         details.id = 1;
+        details.empty = false;
     }
 
     void TearDown() override {
@@ -332,6 +341,7 @@ protected:
         first.address = "0.0.0.0";
         first.name = "CentOS";
         first.id = 1;
+        first.empty = false;
 
         // Set up the second worker
         second.public_key = "fsd8iasdf8sadf";
@@ -341,6 +351,7 @@ protected:
         second.address = "1.1.1.1";
         second.name = "Ubuntu";
         second.id = 2;
+        second.empty = false;
 
         // Set up the third worker
         third.public_key = "asdfascascsd";
@@ -350,6 +361,7 @@ protected:
         third.address = "2.2.2.2";
         third.name = "Windows";
         third.id = 3;
+        third.empty = false;
     }
 
     void TearDown() override {
