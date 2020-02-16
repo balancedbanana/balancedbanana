@@ -4,7 +4,8 @@ set(SOURCES
         UserGateway.cpp
         JobGateway.cpp
         Repository.cpp
-        IGateway.cpp)
+        IGateway.cpp
+        Utilities.cpp)
 
 set(HEADERS
         ../../include/database/Factory.h
@@ -12,7 +13,8 @@ set(HEADERS
         ../../include/database/UserGateway.h
         ../../include/database/JobGateway.h
         ../../include/database/Repository.h
-        ../../include/database/IGateway.h)
+        ../../include/database/IGateway.h
+        ../../include/database/Utilities.h)
 
 add_library(database ${SOURCES} ${HEADERS})
 target_link_libraries(database PUBLIC Qt5::Core Qt5::Network Qt5::Sql configfiles)

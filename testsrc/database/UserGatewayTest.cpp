@@ -2,6 +2,7 @@
 #include <database/UserGateway.h>
 #include <database/user_details.h>
 #include <database/Repository.h>
+#include <database/Utilities.h>
 
 #include <QSqlQuery>
 #include <QVariant>
@@ -72,9 +73,11 @@ bool wasUserAddSuccessful(const user_details& details, uint64_t id){
             int nameIndex = query.record().indexOf("name");
             int emailIndex = query.record().indexOf("email");
             int keyIndex = query.record().indexOf("public_key");
-            EXPECT_EQ(query.value(nameIndex).toString().toStdString(), details.name);
-            EXPECT_EQ(query.value(emailIndex).toString().toStdString(), details.email);
-            EXPECT_EQ(query.value(keyIndex).toString().toStdString(), details.public_key);
+            user_details queryDetails{};
+            queryDetails.name = query.value(nameIndex).toString().toStdString();
+            queryDetails.email = query.value(emailIndex).toString().toStdString();
+            queryDetails.public_key = query.value(keyIndex).toString().toStdString();
+            EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
             qDebug() << "record not found";
@@ -201,11 +204,7 @@ bool wasUserRemoveSuccessful(uint64_t id){
     QSqlQuery query("SELECT * FROM users WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
-        if (query.next()){
-            return false;
-        } else {
-            return true;
-        }
+        return !query.next();
     } else {
         qDebug() << "wasUserRemoveSuccessful error: " << query.lastError();
         return false;
@@ -244,16 +243,6 @@ TEST_F(RemoveUserTest, RemoveUserTest_FailureRemove_Test){
 }
 
 /**
- * Checks if two user_details structs are equal
- */
-bool areDetailsEqual(const user_details& first, const user_details& second){
-    return first.email == second.email
-           && first.public_key == second.public_key
-           && first.name == second.name
-           && first.id == second.id;
-}
-
-/**
  * Fixture class that initializes a sample user on setUp and resets the table on teardown.
  */
 class GetUserTest : public ::testing::Test{
@@ -282,13 +271,13 @@ TEST_F(GetUserTest, GetUserTest_SuccessfulGet_Test){
 
     // Get the user and compare it to the added user. They should be equal.
     user_details expected_details = UserGateway::getUser(details.id);
-    ASSERT_TRUE(areDetailsEqual(details, expected_details));
+    ASSERT_TRUE(details == expected_details);
 }
 
 // Test to see if the getter method returns an empty user_details when its called with an invalid id
 TEST_F(GetUserTest, GetUserTest_NonExistentWorker_Test){
     user_details empty_details{};
-    ASSERT_TRUE(areDetailsEqual(UserGateway::getUser(1), empty_details));
+    ASSERT_TRUE(UserGateway::getUser(1) == empty_details);
 }
 
 /**
@@ -336,7 +325,7 @@ bool areDetailVectorsEqual(std::vector<user_details> expected, std::vector<user_
         return false;
     }
     for (int i = 0; i < expected.size(); i++){
-        if (!areDetailsEqual(expected[i], actual[i])){
+        if (!(expected[i] == actual[i])){
             return false;
         }
     }

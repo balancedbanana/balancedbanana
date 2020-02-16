@@ -1,7 +1,7 @@
 #include <database/JobGateway.h>
 #include <database/JobStatus.h>
 #include <configfiles/JobConfig.h>
-#include <database/database_utilities.h>
+#include <database/Utilities.h>
 
 #include <QVariant>
 #include <QSqlQuery>

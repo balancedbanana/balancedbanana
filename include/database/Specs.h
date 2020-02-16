@@ -18,6 +18,12 @@ namespace balancedbanana {
 
             // true if empty, otherwise false;
             bool empty = true;
+
+            inline bool operator==(const Specs& rhs){
+                return this->cores == rhs.cores
+                       && this->ram == rhs.ram
+                       && this->space == rhs.space;
+            }
 		};
 	}
 }

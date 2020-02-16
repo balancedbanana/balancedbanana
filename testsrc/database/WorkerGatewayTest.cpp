@@ -2,6 +2,8 @@
 #include <database/WorkerGateway.h>
 #include <database/worker_details.h>
 #include <database/Repository.h>
+#include <database/Utilities.h>
+
 #include <QSqlQuery>
 #include <QVariant>
 #include <QDebug>
@@ -9,7 +11,6 @@
 #include <QSqlRecord>
 
 using namespace balancedbanana::database;
-
 
 /**
  * Test environment that has a global SetUp and TearDown methods for all test suites/tests.
@@ -81,12 +82,15 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
             int spaceIndex = query.record().indexOf("space");
             int addressIndex = query.record().indexOf("address");
             int keyIndex = query.record().indexOf("public_key");
-            EXPECT_EQ(query.value(nameIndex).toString().toStdString(), details.name);
-            EXPECT_EQ(query.value(ramIndex).toUInt(), details.specs.ram);
-            EXPECT_EQ(query.value(coresIndex).toUInt(), details.specs.cores);
-            EXPECT_EQ(query.value(spaceIndex).toUInt(), details.specs.space);
-            EXPECT_EQ(query.value(addressIndex).toString().toStdString(), details.address);
-            EXPECT_EQ(query.value(keyIndex).toString().toStdString(), details.public_key);
+
+            worker_details queryDetails{};
+            queryDetails.name = query.value(nameIndex).toString().toStdString();
+            queryDetails.specs.cores = query.value(coresIndex).toUInt();
+            queryDetails.specs.ram = query.value(ramIndex).toUInt();
+            queryDetails.specs.space = query.value(spaceIndex).toUInt();
+            queryDetails.address = query.value(addressIndex).toString().toStdString();
+            queryDetails.public_key = query.value(keyIndex).toString().toStdString();
+            EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
             qDebug() << "record not found";
@@ -197,12 +201,12 @@ protected:
                         "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
                         "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
                         "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
-                        "ENGINE=InnoDB DEFAULT CHARSET=latin1");
+                        "ENGINE=InnoDB DEFAULT CHARSET=utf8");
         query.exec();
     }
 
     worker_details details;
-    uint64_t id;
+    uint64_t id{};
 };
 
 // Test to see if an exception is thrown when a worker is being added, but no workers' table exists.
@@ -234,11 +238,7 @@ bool wasWorkerRemoveSuccessful(uint64_t id){
     QSqlQuery query("SELECT * FROM workers WHERE id = ?");
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
-        if (query.next()){
-            return false;
-        } else {
-            return true;
-        }
+        return !query.next();
     } else {
         qDebug() << "wasWorkerRemoveSuccessful error: " << query.lastError();
         return false;
@@ -279,18 +279,6 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
     ASSERT_FALSE(WorkerGateway::remove(1));
 }
 
-/**
- * Checks if two worker_details structs are equal
- */
-bool areDetailsEqual(const worker_details& first, const worker_details& second){
-    return first.address == second.address
-    && first.specs.cores == second.specs.cores
-    && first.specs.ram == second.specs.ram
-    && first.specs.space == second.specs.space
-    && first.public_key == second.public_key
-    && first.name == second.name
-    && first.id == second.id;
-}
 
 /**
  * Fixture class that initializes a sample worker on setUp and resets the table on teardown.
@@ -321,13 +309,13 @@ TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
 
     // Get the worker and compare it to the added worker. They should be equal.
     worker_details expected_details = WorkerGateway::getWorker(details.id);
-    ASSERT_TRUE(areDetailsEqual(details, expected_details));
+    ASSERT_TRUE(details == expected_details);
 }
 
 // Test to see if the getter method returns an empty worker_details when its called with an invalid id
 TEST_F(GetWorkerTest, GetWorkerTest_NonExistentWorker_Test){
     worker_details empty_details{};
-    ASSERT_TRUE(areDetailsEqual(WorkerGateway::getWorker(1), empty_details));
+    ASSERT_TRUE(WorkerGateway::getWorker(1) == empty_details);
 }
 
 /**
@@ -384,13 +372,12 @@ bool areDetailVectorsEqual(std::vector<worker_details> expected, std::vector<wor
         return false;
     }
     for (int i = 0; i < expected.size(); i++){
-        if (!areDetailsEqual(expected[i], actual[i])){
+        if (!(expected[i] == actual[i])){
             return false;
         }
     }
     return true;
 }
-
 // Test to see if getWorkers retrieves a vector of previously added workers from the database
 TEST_F(GetWorkersTest, GetWorkersTest_SuccessfulGet_Test){
     // Add the workers. Their ids should match the order of their addition.

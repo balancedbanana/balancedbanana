@@ -1,6 +1,6 @@
 #include <database/WorkerGateway.h>
 #include <database/worker_details.h>
-#include <database/database_utilities.h>
+#include <database/Utilities.h>
 
 #include <QVariant>
 #include <QSqlDatabase>
