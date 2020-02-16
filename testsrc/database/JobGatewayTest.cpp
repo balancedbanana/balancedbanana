@@ -113,29 +113,51 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             int interruptible_index = query.record().indexOf("interruptible");
             int environment_index = query.record().indexOf("environment");
             int dir_index = query.record().indexOf("working_dir");
-            int command = query.record().indexOf("command");
+            int command_index = query.record().indexOf("command");
             int schedule_time_index = query.record().indexOf("schedule_time");
-            int finish_time = query.record().indexOf("finish_time");
-            int start_time = query.record().indexOf("start_time");
+            int finish_time_index = query.record().indexOf("finish_time");
+            int start_time_index = query.record().indexOf("start_time");
             int worker_id_index = query.record().indexOf("worker_id");
             int status_id_index = query.record().indexOf("status_id");
             int allocated_id_index = query.record().indexOf("allocated_id");
 
-            EXPECT_EQ(details.user_id, query.value(user_id_index).toUInt());
-            EXPECT_EQ(details.config.min_ram().value(), query.value(min_ram_index).toUInt());
-            EXPECT_EQ(details.config.max_ram().value(), query.value(max_ram_index).toUInt());
-            EXPECT_EQ(details.config.min_cpu_count().value(), query.value(min_cores_index).toUInt());
-            EXPECT_EQ(details.config.max_cpu_count().value(), query.value(max_cores_index).toUInt());
-            EXPECT_EQ(details.config.blocking_mode().value(), query.value(blocking_mode_index).toBool());
-            EXPECT_EQ(details.config.email(), query.value(email_index).toString().toStdString());
-            EXPECT_EQ((uint) details.config.priority().value(), query.value(priority_index).toUInt());
-            EXPECT_EQ(details.config.image(), query.value(image_index).toString().toStdString());
-            EXPECT_EQ(details.config.interruptible().value(), query.value(interruptible_index).toBool());
-//            EXPECT_EQ(details.config.environment().value(), )
+            job_details queryDetails{};
 
+            queryDetails.user_id = query.value(user_id_index).toUInt();
+            queryDetails.config.set_min_ram(query.value(min_ram_index).toUInt());
+            queryDetails.config.set_max_ram(query.value(max_ram_index).toUInt());
+            queryDetails.config.set_min_cpu_count(query.value(min_cores_index).toUInt());
+            queryDetails.config.set_max_cpu_count(query.value(max_cores_index).toUInt());
+            queryDetails.config.set_blocking_mode(query.value(blocking_mode_index).toBool());
+            queryDetails.config.set_email(query.value(email_index).toString().toStdString());
+            queryDetails.config.set_priority(static_cast<Priority> (query.value(priority_index).toUInt()));
+            queryDetails.config.set_image(query.value(image_index).toString().toStdString());
+            queryDetails.config.set_interruptible(query.value(interruptible_index).toBool());
+            queryDetails.config.set_environment(convertToVectorString(query.value(environment_index).toByteArray()));
+            queryDetails.config.set_current_working_dir(query.value(dir_index).toString().toStdString());
+            queryDetails.command = query.value(command_index).toString().toStdString();
+            queryDetails.schedule_time = QDateTime::fromString(query.value(schedule_time_index).toString(),
+                                                               "yyyy-MM-dd hh:mm:ss.zzz000");
+            queryDetails.finish_time = QDateTime::fromString(query.value(finish_time_index).toString(),
+                                                             "yyyy-MM-dd hh:mm:ss.zzz000");
+            queryDetails.start_time = QDateTime::fromString(query.value(start_time_index).toString(),
+                                                            "yyyy-MM-dd hh:mm:ss.zzz000");
+            queryDetails.worker_id = query.value(worker_id_index).toUInt();
+            queryDetails.status = query.value(status_id_index).toInt();
 
+            query.prepare("SELECT space, cores, ram FROM users WHERE id = ?");
+            query.addBindValue(query.value(allocated_id_index).toUInt());
+            if (!query.exec()){
+                qDebug() << "allocated_resources query failed";
+            } else {
+                if (query.next()){
+                    queryDetails.allocated_specs.value().space = query.value(1).toUInt();
+                    queryDetails.allocated_specs.value().cores = query.value(2).toUInt();
+                    queryDetails.allocated_specs.value().ram = query.value(3).toUInt();
+                }
+            }
 
-
+            EXPECT_EQ(queryDetails, details);
             return true;
         } else {
             qDebug() << "record not found";

@@ -21,6 +21,8 @@ namespace balancedbanana {
 			//Represented with an ID.
 			int status;
 
+			std::optional <uint64_t > worker_id;
+
 			//The id of the Job.
 			uint64_t id;
 
@@ -32,7 +34,7 @@ namespace balancedbanana {
 
 			std::optional<QDateTime> finish_time;
 
-			Specs allocated_specs;
+			std::optional<Specs> allocated_specs;
 
             // true if empty, otherwise false;
             bool empty = true;
