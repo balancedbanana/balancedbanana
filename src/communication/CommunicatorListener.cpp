@@ -125,6 +125,9 @@ std::pair<std::string, std::string> GenerateCert() {
 void mkcert(X509 *&x509p, EVP_PKEY *pk, int bits, int serial, int days) {
 	X509_NAME *name=NULL;
 
+	if(!(x509p = X509_new())) {
+		throw std::runtime_error("Failed to create x509 cert object");
+	}
 	X509_set_version(x509p,2);
 	ASN1_INTEGER_set(X509_get_serialNumber(x509p),serial);
 	X509_gmtime_adj(X509_get_notBefore(x509p),0);
