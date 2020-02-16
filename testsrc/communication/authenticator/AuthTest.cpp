@@ -37,3 +37,8 @@ TEST(authenticator, GenerateSignatureInvalidArgumenst)
     ASSERT_THROW(balancedbanana::communication::authenticator::Authenticator::GenerateSignature("Hallo Welt", ""), std::invalid_argument);
     ASSERT_THROW(balancedbanana::communication::authenticator::Authenticator::GenerateSignature("Hallo Welt", "943fd7"), std::invalid_argument);
 }
+
+TEST(authenticator, VerifyPublicKeyInvalidArgumenst)
+{
+    ASSERT_THROW(balancedbanana::communication::authenticator::AuthHandler::GetDefault()->publickeyauthenticate(std::make_shared<balancedbanana::scheduler::IUser>("Hallo Welt", "fdf"), "5445"), std::invalid_argument);
+}

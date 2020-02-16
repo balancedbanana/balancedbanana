@@ -27,13 +27,17 @@ void AuthHandler::publickeyauthenticate(const std::shared_ptr<IUser>& user, cons
         }
     } g;
 
-    g.mem = BIO_new_mem_buf(user->pubkey().data(), user->pubkey().length());
+    if(!(g.mem = BIO_new_mem_buf(user->pubkey().data(), user->pubkey().length()))){
+        throw std::runtime_error("Failed to verify signature (BIO_new_mem_buf failed)");
+    }
 
-    g.key = PEM_read_bio_PUBKEY(g.mem, NULL, NULL, NULL);
+    if(!(g.key = PEM_read_bio_PUBKEY(g.mem, NULL, NULL, NULL))) {
+        throw std::invalid_argument("Invalid public key!");
+    }
 
     /* Create the Message Digest Context */
     if(!(g.mdctx = EVP_MD_CTX_create())) {
-        throw std::runtime_error("Failed to generate signature (EVP_MD_CTX_create failed)");
+        throw std::runtime_error("Failed to verify signature (EVP_MD_CTX_create failed)");
     }
 
     /* Initialize `key` with a public key */
