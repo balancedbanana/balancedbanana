@@ -5,6 +5,7 @@
 #include <communication/message/ClientAuthMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
+#include <communication/message/HardwareDetailMessage.h>
 #include <communication/authenticator/Authenticator.h>
 #include <atomic>
 #include <condition_variable>
@@ -16,7 +17,10 @@ struct TestMP : MessageProcessor {
     std::shared_ptr<ClientAuthMessage> sourcemessage;
     std::string pubkey;
     std::condition_variable cnd;
-    std::atomic<int> todo = 3;
+    std::atomic_bool clmsg = false;
+    std::atomic_bool wmsg = false;
+    std::atomic_bool pubmsg = false;
+    std::atomic_bool hwmsg = false;
 
 #if 0
     TestMP() : MessageProcessor(nullptr) {
@@ -24,25 +28,37 @@ struct TestMP : MessageProcessor {
 #endif
 
     void processClientAuthMessage(const ClientAuthMessage& msg) override {
+        ASSERT_EQ(msg.GetType(), MessageType::CLIENT_AUTH);
         ASSERT_EQ(sourcemessage->GetUsername(), msg.GetUsername());
         ASSERT_EQ(sourcemessage->GetPassword(), msg.GetPassword());
         ASSERT_NE(msg.GetPublickey(), "");
         pubkey = msg.GetPublickey();
-        --todo;
+        clmsg = true;
         cnd.notify_all();
     }
 
     void processWorkerAuthMessage(const WorkerAuthMessage &msg) override {
+        ASSERT_EQ(msg.GetType(), MessageType::WORKER_AUTH);
         ASSERT_NE(msg.GetWorkerName(), "");
         ASSERT_NE(msg.GetPublicKey(), "");
-        --todo;
+        wmsg = true;
         cnd.notify_all();
     }
 
     void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) override {
+        ASSERT_EQ(msg.GetType(), MessageType::PUBLIC_KEY_AUTH);
         ASSERT_NE(msg.GetUserName(), "");
         ASSERT_NE(msg.GetUserNameSignature(), "");
-        --todo;
+        pubmsg = true;
+        cnd.notify_all();
+    }
+
+    void processHardwareDetailMessage(const HardwareDetailMessage &msg) override {
+        ASSERT_EQ(msg.GetType(), MessageType::HARDWARE_DETAIL);
+        ASSERT_NE(msg.GetCoreCount(), 0);
+        ASSERT_NE(msg.GetOsIdentifier(), "");
+        ASSERT_GT(msg.GetRamSize(), 100);
+        hwmsg = true;
         cnd.notify_all();
     }
 
@@ -72,9 +88,9 @@ TEST(communication, Connect)
     auth.authenticate();
     std::mutex mtx;
     std::unique_lock<std::mutex> lock(mtx);
-    testmp->cnd.wait_for(lock, std::chrono::seconds(5), [testmp]() {
-        return !testmp->todo.load();
-    });
+    ASSERT_TRUE(testmp->cnd.wait_for(lock, std::chrono::seconds(10), [testmp]() {
+        return testmp->clmsg.load() && testmp->wmsg.load() && testmp->pubmsg.load() && testmp->hwmsg.load();
+    }));
     com->detach();
 }
 
