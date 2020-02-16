@@ -6,6 +6,8 @@
 #include <communication/message/SnapshotMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
+#include <communication/message/WorkerLoadRequestMessage.h>
+#include <communication/message/WorkerLoadResponseMessage.h>
 #include <stdexcept>
 #include <utility>
 
@@ -54,5 +56,13 @@ void MessageProcessor::processTaskMessage(const TaskMessage &msg) {
 }
 
 void MessageProcessor::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
+    handleInvalidMessage(msg);
+}
+
+void balancedbanana::communication::MessageProcessor::processWorkerLoadRequestMessage(const balancedbanana::communication::WorkerLoadRequestMessage &msg) {
+    handleInvalidMessage(msg);
+}
+
+void balancedbanana::communication::MessageProcessor::processWorkerLoadResponseMessage(const balancedbanana::communication::WorkerLoadResponseMessage &msg) {
     handleInvalidMessage(msg);
 }

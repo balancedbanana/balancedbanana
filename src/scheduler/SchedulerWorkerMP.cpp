@@ -1,5 +1,6 @@
 #include <scheduler/SchedulerWorkerMP.h>
 
+using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
 
 #if 0
@@ -26,4 +27,12 @@ void SchedulerWorkerMP::processTaskMessage(const TaskMessage &msg) {
 
 void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
     //TODO implement
+}
+
+void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg) {
+    this->onWorkerLoadResponseMessage(msg);
+}
+
+void SchedulerWorkerMP::OnWorkerLoadResponse(std::function<void(const WorkerLoadResponseMessage &msg)>&& func) {
+    this->onWorkerLoadResponseMessage = std::move(func);
 }

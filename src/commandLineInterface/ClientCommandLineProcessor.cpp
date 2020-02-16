@@ -16,10 +16,10 @@ int ClientCommandLineProcessor::process(int argc, const char*const* argv, const 
 
     for (int arg = 0; arg < argc; ++arg)
     {
-        if (strcmp(argv[arg], "--command") == 0 || strcmp(argv[arg], "-c") == 0)
+        if (strcmp(argv[arg], "--job") == 0 || strcmp(argv[arg], "-j") == 0)
         {
-            // Job Command must be marked by --command or -c
-            // everything after --command or -c is treated as the Job Command
+            // Job Command must be marked by --job or -j
+            // everything after --job or -j is treated as the Job Command
 
             std::stringstream job;
             for (int jobArg = arg + 1; jobArg < argc; ++jobArg)

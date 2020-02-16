@@ -1,5 +1,7 @@
 #include <communication/message/WorkerAuthMessage.h>
-
+#include <communication/message/Serialization.h>
+#include <communication/MessageProcessor.h>
+#include <sstream>
 #include <utility>
 
 using namespace balancedbanana::communication;
@@ -9,7 +11,7 @@ Message(WORKER_AUTH), workername(std::move(workername)), publickey(std::move(pub
 }
 
 WorkerAuthMessage::WorkerAuthMessage(const char *data, size_t &iterator, size_t size) :
-Message(WORKER_AUTH), workername(""), publickey(""){
+Message(WORKER_AUTH) {
     workername = serialization::extractString(data, iterator, size);
     publickey = serialization::extractString(data, iterator, size);
 }

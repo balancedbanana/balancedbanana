@@ -3,6 +3,9 @@
 #include <Net/Http/V2/Stream.h>
 #include <thread>
 #include <stdexcept>
+#include <communication/MessageProcessor.h>
+#include <communication/message/Message.h>
+#include <sstream>
 
 using namespace balancedbanana::communication;
 
@@ -12,6 +15,7 @@ Communicator::Communicator(const std::shared_ptr<Net::Socket> &socket, const std
     }
     keeprunning = std::make_shared<std::atomic_bool>(true);
     this->socket = socket;
+    this->processor = processor;
     msghandlerthread = std::thread(std::bind(&Communicator::msghandler, socket, processor, keeprunning));
 }
 
@@ -36,6 +40,10 @@ void Communicator::msghandler(std::shared_ptr<Net::Socket> socket, std::shared_p
         }
         uint32_t length;
         auto data = Net::Http::V2::GetUInt32(buf.data(), length);
+        if(length > buf.size()) {
+            // Resize skipping copying the old data
+            buf = std::vector<uint8_t>(length);
+        }
         if(!in.ReceiveAll(data, length)) {
             return;
         }
@@ -48,6 +56,10 @@ Communicator::~Communicator() {
         *keeprunning = false;
         msghandlerthread.join();
     }
+}
+
+const std::shared_ptr<MessageProcessor>& Communicator::GetMP() {
+    return processor;
 }
 
 void Communicator::send(const Message & message) {

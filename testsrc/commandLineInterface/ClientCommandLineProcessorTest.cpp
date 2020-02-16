@@ -157,7 +157,7 @@ TEST(ClientCommandLineProcessor, run)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--command", "run this command!"};
+    const char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--job", "echo run this command!"};
     int argc = 19;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -173,5 +173,29 @@ TEST(ClientCommandLineProcessor, run)
     ASSERT_EQ(task->getConfig()->min_cpu_count().value(), 1);
     ASSERT_EQ(task->getConfig()->max_ram().value(), 4096);
     ASSERT_EQ(task->getConfig()->min_ram().value(), 256);
-    ASSERT_STREQ(task->getTaskCommand().c_str(), "run this command!");
+    ASSERT_STREQ(task->getTaskCommand().c_str(), "echo run this command!");
+}
+
+
+TEST(ClientCommandLineProcessor, run2)
+{
+    ClientCommandLineProcessor clp;
+
+    const char* argv[] = {"./bbc", "run", "-i", "docker Image", "--job", "echo run this command!"};
+    int argc = sizeof(argv);
+
+    std::shared_ptr<Task> task = std::make_shared<Task>();
+
+    clp.process(argc, argv, task);
+
+    ASSERT_EQ(task->getType(), (int)TaskType::RUN);
+    ASSERT_FALSE(task->getConfig()->blocking_mode());
+    ASSERT_EQ(task->getConfig()->email(), "");
+    ASSERT_STREQ(task->getConfig()->image().c_str(), "docker Image");
+    ASSERT_EQ(task->getConfig()->priority(), std::nullopt);
+    ASSERT_EQ(task->getConfig()->max_cpu_count(), std::nullopt);
+    ASSERT_EQ(task->getConfig()->min_cpu_count(), std::nullopt);
+    ASSERT_EQ(task->getConfig()->max_ram(), std::nullopt);
+    ASSERT_EQ(task->getConfig()->min_ram(), std::nullopt);
+    ASSERT_STREQ(task->getTaskCommand().c_str(), "echo run this command!");
 }
