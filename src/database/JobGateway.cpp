@@ -36,6 +36,40 @@ struct QVariant_JobConfig{
     QVariant q_status_id;
 };
 
+void deserializeVector(std::vector<std::string> &restore, char* buffer, int total_count) {
+    for(int i = 0; i < total_count; i ++ ) {
+        const char *begin = &buffer[i];
+        int size = 0;
+        while(buffer[i++]) {
+            size += 1;
+        }
+        restore.push_back(std::string(begin, size));
+    }
+}
+
+char* serializeVector(std::vector<std::string> &v, unsigned int *count) {
+    unsigned int total_count = 0;
+
+    for(int i = 0; i < v.size(); i++ ) {
+        total_count += v[i].length() + 1;
+    }
+
+    char *buffer = new char[total_count];
+
+    int idx = 0;
+
+    for(int i = 0; i < v.size(); i++ ) {
+        std::string s = v[i];
+        for (int j = 0; j < s.size(); j ++ ) {
+            buffer[idx ++] = s[j];
+        }
+        buffer[idx ++] = 0;
+    }
+
+    *count  = total_count;
+
+    return buffer;
+}
 
 // Get the integer value of an enumeration
 template <typename Enumeration>
@@ -53,7 +87,7 @@ auto as_integer(Enumeration const value)
  * @param command The job command.
  * @return QVariant_JobConfig that has all the QVariant version of the Job args
  */
-QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, const QDateTime &schedule_time
+QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const QDateTime &schedule_time
         , const std::string &command){
     // Conver the optional args
     QVariant q_min_ram;
@@ -92,6 +126,7 @@ QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, c
     }
 
     QVariant q_environment;
+    /*
     if (config.environment().has_value()){
         // Convert environment => QVector => QByteArray. QByteArray will then be mapped to BLOB in the database
         QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment().value());
@@ -101,6 +136,7 @@ QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, c
         );
         q_environment = QVariant::fromValue(qbytearray);
     }
+     */
 
     // Convert the mandatory args
     QVariant q_user_id = QVariant::fromValue(user_id);
@@ -110,8 +146,8 @@ QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, c
     QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().u8string()));
 
     QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
-    QVariant q_schedule_time = QVariant::fromValue(schedule_time);
-    QVariant q_status_id = QVariant::fromValue(int(JobStatus::scheduled));
+    QVariant q_schedule_time = QVariant::fromValue(schedule_time.toString("yyyy.MM.dd.hh.mm:ss.z"));
+    QVariant q_status_id = QVariant::fromValue((int)JobStatus::scheduled);
 
     // Save all of them in a struct
     QVariant_JobConfig qstruct;
@@ -140,6 +176,7 @@ QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, c
  * @return true if the args are valid, otherwise false
  */
 bool areArgsValid(job_details& details){
+
     // Check the optional arguments
     if (details.config.min_ram().has_value() && details.config.min_ram().value() == 0){
         // TODO check the min values for the args
@@ -160,16 +197,14 @@ bool areArgsValid(job_details& details){
     if (details.start_time.has_value() && !details.start_time.value().isValid()){
         return false;
     }
-    if (!details.allocated_specs.empty){
-        if (details.allocated_specs.ram == 0 || details.allocated_specs.space == 0 || details.allocated_specs.cores
+    if (!details.allocated_specs->empty){
+        if (details.allocated_specs->ram == 0 || details.allocated_specs->space == 0 || details.allocated_specs->cores
         == 0){
             return false;
         }
     }
-
     // Check the required arguments
     return !(details.command.empty()
-             || details.schedule_time.isNull()
              || !details.schedule_time.isValid()
              || details.config.email().empty()
              || details.user_id == 0);
@@ -180,10 +215,10 @@ bool areArgsValid(job_details& details){
  * @param qstruct The struct that contains all the QVariants of the record information
  * @return The id of the added Job
  */
-uint64_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
+uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
     // Create the query
     QSqlQuery query("INSERT INTO jobs (user_id, min_ram, max_ram, min_cores, max_cores, "
-                    "blocking_mode, email, priority, image, interruptible, environment, current_working_dir, command, "
+                    "blocking_mode, email, priority, image, interruptible, environment, working_dir, command, "
                     "schedule_time, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     query.addBindValue(qstruct.q_user_id);
     query.addBindValue(qstruct.q_min_ram);
@@ -248,19 +283,6 @@ bool JobGateway::remove(uint64_t job_id) {
     } else {
         return false;
     }
-}
-
-/**
- * Converts a QByteArray to a vector of strings.
- * @param buffer The QByteArray
- * @return A vector of strings.
- */
-std::vector<std::string> convertToVectorString(const QByteArray& buffer){
-    QVector<char*> result;
-    QDataStream bRead(buffer);
-    bRead >> result;
-    std::vector<char*> resultVector = result.toStdVector();
-    return std::vector<std::string>(resultVector.begin(), resultVector.end());
 }
 
 /**
@@ -555,4 +577,17 @@ job_result JobGateway::getJobResult(uint64_t job_id) {
     } else {
         throw std::runtime_error("getJobResult error: no job with id = " + std::to_string(job_id));
     }
+}
+
+/**
+ * Converts a QByteArray to a vector of strings.
+ * @param buffer The QByteArray
+ * @return A vector of strings.
+ */
+std::vector<std::string> balancedbanana::database::convertToVectorString(const QByteArray &buffer) {
+    QVector<char*> result;
+    QDataStream bRead(buffer);
+    bRead >> result;
+    std::vector<char*> resultVector = result.toStdVector();
+    return std::vector<std::string>(resultVector.begin(), resultVector.end());
 }

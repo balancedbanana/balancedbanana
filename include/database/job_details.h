@@ -45,7 +45,7 @@ namespace balancedbanana {
                        && this->schedule_time == rhs.schedule_time
                        && this->finish_time == rhs.finish_time
                        && this->start_time == rhs.start_time
-                       && this->allocated_specs == rhs.allocated_specs
+                       && this->allocated_specs.operator=(rhs.allocated_specs)
                        && this->empty == rhs.empty
                        && this->config.min_ram() == rhs.config.min_ram()
                        && this->config.max_ram() == rhs.config.max_ram()
