@@ -45,7 +45,7 @@ void resetJobTable() {
 /**
  * Fixture class that initializes a sample job's details.
  */
-class AddAllJobTest : public ::testing::Test {
+class AddJobTest : public ::testing::Test {
 protected:
     void SetUp() override {
         details.id = 1;
@@ -54,8 +54,8 @@ protected:
         details.command = "mkdir build";
         details.schedule_time = QDateTime::currentDateTime();
         details.empty = false;
-        details.config.set_min_ram(123456);
-        details.config.set_max_ram(654321);
+        details.config.set_min_ram(4194304);
+        details.config.set_max_ram(4194304);
         details.config.set_min_cpu_count(42);
         details.config.set_max_cpu_count(43);
         details.config.set_blocking_mode(true);
@@ -144,9 +144,8 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             .toString().toStdString()));
             queryDetails.config.set_current_working_dir(query.value(dir_index).toString().toStdString());
             queryDetails.command = query.value(command_index).toString().toStdString();
-            queryDetails.schedule_time = QDateTime::fromString(query.value(schedule_time_index).toString(), "yyyy.MM.dd.hh.mm:ss.z");
-            //queryDetails.finish_time = QDateTime::fromString(query.value(finish_time_index).toString());
-            //queryDetails.start_time = QDateTime::fromString(query.value(start_time_index).toString());
+            queryDetails.schedule_time = QDateTime::fromString(query.value(schedule_time_index).toString(),
+                    "yyyy.MM.dd:hh.mm.ss.z");
             queryDetails.worker_id = query.value(worker_id_index).toUInt();
             queryDetails.status = query.value(status_id_index).toInt();
             queryDetails.empty = false;
@@ -201,14 +200,75 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
 
 
 // Test checks if the addJob method works properly given all the args.
-TEST_F(AddAllJobTest, AddAllJobTest_FirstJobSuccess_Test){
-    //qDebug() << "details.starttime = " << details.start_time.value().toString();
-
-    u_int64_t id = JobGateway::add(details);
-    qDebug() << id;
+TEST_F(AddJobTest, AddAllJobTest_FirstJobSuccess_Test){
     // The first entry's id should be 1
-    ASSERT_TRUE(id == 1);
+    EXPECT_TRUE(JobGateway::add(details) == 1);
 
     // The add must be successful
-    ASSERT_TRUE(wasJobAddSuccessful(details, 1));
+    EXPECT_TRUE(wasJobAddSuccessful(details, 1));
+}
+
+// Test to see if the auto increment feature works as expected.
+TEST_F(AddJobTest, AddWorkerTest_AddSecondJobSucess_Test){
+
+    // Add the user from the first test. Since it's the first user, its id should be 1.
+    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(wasJobAddSuccessful(details, 1));
+
+    // Initialize another job
+    // Note that basically all the fields can be equal
+    job_details seconddetails{};
+    seconddetails.id = 2;
+    seconddetails.status = 1; //scheduled
+    seconddetails.user_id = 1;
+    seconddetails.command = "mkdir build";
+    seconddetails.schedule_time = QDateTime::currentDateTime();
+    seconddetails.empty = false;
+    seconddetails.config.set_min_ram(4194304);
+    seconddetails.config.set_max_ram(4194304);
+    seconddetails.config.set_min_cpu_count(42);
+    seconddetails.config.set_max_cpu_count(43);
+    seconddetails.config.set_blocking_mode(true);
+    seconddetails.config.set_email("mail@test.com");
+    seconddetails.config.set_priority(Priority::low);
+    seconddetails.config.set_image("testimage");
+    seconddetails.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+    seconddetails.config.set_interruptible(false);
+    seconddetails.config.set_current_working_dir(".");
+    seconddetails.allocated_specs->ram = 1324;
+    seconddetails.allocated_specs->cores = 4;
+    seconddetails.allocated_specs->space = 55;
+
+    EXPECT_TRUE(JobGateway::add(seconddetails) == 2);
+    EXPECT_TRUE(wasJobAddSuccessful(seconddetails, 2));
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_User_id_Test){
+    details.user_id = 0;
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_Command_Test){
+    details.command = "";
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_Schedule_Time_Test){
+    details.schedule_time = QDateTime::fromString("0.13.54.13.01:5.5");
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_Min_RAM_TOO_SMALL_Test){
+    details.config.set_min_ram(123);
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_Max_RAM_TOO_SMALL_Test){
+    details.config.set_max_ram(123);
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_Min_Larger_Than_Max_Test){
+    details.config.set_min_ram(4194305);
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }

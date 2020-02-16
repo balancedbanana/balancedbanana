@@ -104,7 +104,7 @@ TEST_F(AddUserTest, AddUserTest_AddFirstUserSuccess_Test){
 }
 
 // Test to see if the auto increment feature works as expected.
-TEST_F(AddUserTest, AddWorkerTest_AddSecondWorkerSucess_Test){
+TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
 
     // Add the user from the first test. Since it's the first user, its id should be 1.
     ASSERT_TRUE(UserGateway::add(details) == 1);
@@ -123,7 +123,7 @@ TEST_F(AddUserTest, AddWorkerTest_AddSecondWorkerSucess_Test){
 }
 
 // Test to see if the addUser method throws an exception when the key arg is invalid.
-TEST_F(AddUserTest, AddWorkerTest_InvalidKeyArg_Test){
+TEST_F(AddUserTest, AddUserTest_InvalidKeyArg_Test){
     user_details detailscpy = details;
     detailscpy.public_key = "";
     ASSERT_THROW(UserGateway
@@ -131,7 +131,7 @@ TEST_F(AddUserTest, AddWorkerTest_InvalidKeyArg_Test){
 }
 
 // Test to see if the addUser method throws an exception when the email arg is invalid.
-TEST_F(AddUserTest, AddWorkerTest_InvalidAddressArg_Test){
+TEST_F(AddUserTest, AddUserTest_InvalidAddressArg_Test){
     user_details detailscpy = details;
     detailscpy.email = "";
     ASSERT_THROW(UserGateway
@@ -139,7 +139,7 @@ TEST_F(AddUserTest, AddWorkerTest_InvalidAddressArg_Test){
 }
 
 // Test to see if the addUser method throws an exception when the name arg is invalid.
-TEST_F(AddUserTest, AddWorkerTest_InvalidNameArg_Test){
+TEST_F(AddUserTest, AddUserTest_InvalidNameArg_Test){
     user_details detailscpy = details;
     detailscpy.name = "";
     ASSERT_THROW(UserGateway
@@ -181,22 +181,22 @@ protected:
 };
 
 // Test to see if an exception is thrown when a user is being added, but no users' table exists.
-TEST_F(NoUsersTableTest, NoUsersTableTest_AddWorker_Test){
+TEST_F(NoUsersTableTest, NoUsersTableTest_AddUser_Test){
     EXPECT_THROW(UserGateway::add(details), std::logic_error);
 }
 
 // Test to see if an exception is thrown when a user is being removed, but no users' table exists.
-TEST_F(NoUsersTableTest, NoUsersTableTest_RemoveWorker_Test){
+TEST_F(NoUsersTableTest, NoUsersTableTest_RemoveUser_Test){
     EXPECT_THROW(UserGateway::remove(details.id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the user getter is called, but no users' table exists.
-TEST_F(NoUsersTableTest, NoUsersTableTest_GetWorker_Test){
+TEST_F(NoUsersTableTest, NoUsersTableTest_GetUser_Test){
     EXPECT_THROW(UserGateway::getUser(details.id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the users getter is called, but no users' table exists.
-TEST_F(NoUsersTableTest, NoUsersTableTest_GetWorkers_Test){
+TEST_F(NoUsersTableTest, NoUsersTableTest_GetUsers_Test){
     EXPECT_THROW(UserGateway::getUsers(), std::logic_error);
 }
 
@@ -283,7 +283,7 @@ TEST_F(GetUserTest, GetUserTest_SuccessfulGet_Test){
 }
 
 // Test to see if the getter method returns an empty user_details when its called with an invalid id
-TEST_F(GetUserTest, GetUserTest_NonExistentWorker_Test){
+TEST_F(GetUserTest, GetUserTest_NonExistentUser_Test){
     user_details empty_details{};
     ASSERT_TRUE(UserGateway::getUser(1) == empty_details);
 }
@@ -343,7 +343,7 @@ bool areDetailVectorsEqual(std::vector<user_details> expected, std::vector<user_
     return true;
 }
 
-// Test to see if getWorkers retrieves a vector of previously added users from the database
+// Test to see if getUsers retrieves a vector of previously added users from the database
 TEST_F(GetUsersTest, GetUsersTest_SuccessfulGet_Test){
     // Add the users. Their ids should match the order of their addition.
     EXPECT_EQ(UserGateway::add(first), first.id);
@@ -360,7 +360,7 @@ TEST_F(GetUsersTest, GetUsersTest_SuccessfulGet_Test){
 }
 
 // Test to see if the getter method returns an empty vector if the users table is empty
-TEST_F(GetUsersTest, GetUsersTest_NonExistentWorkers_Test){
+TEST_F(GetUsersTest, GetUsersTest_NonExistentUsers_Test){
     ASSERT_TRUE(UserGateway::getUsers().empty());
 }
 

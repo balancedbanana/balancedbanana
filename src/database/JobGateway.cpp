@@ -18,6 +18,8 @@
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 
+#define FOUR_MB (4194304) // If RAM is under this amount, errors might occur in docker.
+
 // Stores all details about a Job in QVariants
 struct QVariant_JobConfig{
     QVariant q_user_id;
@@ -116,7 +118,7 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
     QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().u8string()));
 
     QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
-    QVariant q_schedule_time = QVariant::fromValue(schedule_time.toString("yyyy.MM.dd.hh.mm:ss.z"));
+    QVariant q_schedule_time = QVariant::fromValue(schedule_time.toString("yyyy.MM.dd:hh.mm.ss.z"));
     QVariant q_status_id = QVariant::fromValue((int)JobStatus::scheduled);
 
     // Save all of them in a struct
@@ -148,11 +150,13 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
 bool areArgsValid(job_details& details){
 
     // Check the optional arguments
-    if (details.config.min_ram().has_value() && details.config.min_ram().value() == 0){
+    if (details.config.min_ram().has_value() && (details.config.min_ram().value() == 0 || details.config.min_ram() <
+    FOUR_MB)){
         // TODO check the min values for the args
        return false;
     }
-    if (details.config.max_ram().has_value() && details.config.max_ram().value() == 0){
+    if (details.config.max_ram().has_value() && (details.config.max_ram().value() == 0 || details.config.max_ram() <
+    FOUR_MB)){
         return false;
     }
     if (details.config.min_cpu_count().has_value() && details.config.min_cpu_count().value() == 0){
@@ -173,6 +177,20 @@ bool areArgsValid(job_details& details){
             return false;
         }
     }
+
+    // the mins cant be larger than the maxs
+    if (details.config.min_ram().has_value() && details.config.max_ram().has_value()){
+        if (details.config.min_ram().value() > details.config.max_ram().value()){
+            return false;
+        }
+    }
+
+    if (details.config.min_cpu_count().has_value() && details.config.max_cpu_count().has_value()){
+        if (details.config.min_cpu_count().value() > details.config.max_cpu_count().value()){
+            return false;
+        }
+    }
+
     // Check the required arguments
     return !(details.command.empty()
              || !details.schedule_time.isValid()
@@ -327,16 +345,16 @@ job_details getDetailsAfterSet(const QSqlQuery& query){
     config.set_current_working_dir(query.value(11).toString().toStdString());
     details.command = query.value(12).toString().toStdString();
     details.schedule_time = QDateTime::fromString(query.value(13).toString(),
-                                                  "yyyy-MM-dd hh:mm:ss.zzz000");
+                                                  "yyyy.MM.dd:hh.mm.ss.z");
 
     if (query.value(14).isValid()){
-        details.start_time = QDateTime::fromString(query.value(14).toString(),"yyyy-MM-dd hh:mm:ss.zzz000");
+        details.start_time = QDateTime::fromString(query.value(14).toString(),"yyyy.MM.dd:hh.mm.ss.z");
     } else {
         details.start_time = std::nullopt;
     }
 
     if (query.value(15).isValid()){
-        details.finish_time = QDateTime::fromString(query.value(15).toString(), "yyyy-MM-dd hh:mm:ss.zzz000");
+        details.finish_time = QDateTime::fromString(query.value(15).toString(), "yyyy.MM.dd:hh.mm.ss.z");
     } else {
         details.finish_time = std::nullopt;
     }
