@@ -9,9 +9,9 @@ namespace communication
 
 const std::string Task::configFilePath = "./config.txt";
 
-Task::Task()
+Task::Task() :
+config(std::make_shared<configfiles::JobConfig>(configFilePath))
 {
-    config = std::make_shared<configfiles::JobConfig>(configFilePath);
 }
 
 Task::Task(const std::string &string) {
@@ -21,11 +21,7 @@ Task::Task(const std::string &string) {
     size_t size = string.size();
     taskCommand = extractString(data, iterator, size);
     bool conf = extract<bool>(data, iterator, size);
-    if(conf) {
-        config = std::make_shared<configfiles::JobConfig>(extractString(data, iterator, size));
-    } else {
-        config = nullptr;
-    }
+    config = std::make_shared<configfiles::JobConfig>(extractString(data, iterator, size));
     type = extract<uint32_t>(data, iterator, size);
     addImageName = extractString(data, iterator, size);
     addImageFilePath = extractString(data, iterator, size);
@@ -112,12 +108,12 @@ std::string Task::serialize() const {
     using namespace serialization;
     std::stringstream stream;
     insertString(stream, taskCommand);
-    insert<bool>(stream, (bool) config);
-    if(config) {
-        std::stringstream configstream;
-        config->Serialize(configstream);
-        insertString(stream, configstream.str());
+    if(!config) {
+        throw std::bad_exception();
     }
+    std::stringstream configstream;
+    config->Serialize(configstream);
+    insertString(stream, configstream.str());
     insert<uint32_t>(stream, type);
     insertString(stream, addImageName);
     insertString(stream, addImageFilePath);
