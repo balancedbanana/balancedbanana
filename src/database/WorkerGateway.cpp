@@ -108,9 +108,11 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
                 specs.space = query.value(1).toInt();
                 specs.ram = query.value(2).toInt();
                 specs.cores = query.value(3).toInt();
+                specs.empty = false;
                 details.specs = specs;
                 details.address = query.value(4).toString().toStdString();
                 details.name = query.value(5).toString().toStdString();
+                details.empty = false;
             } else {
                 // This would be a very weird error, as I've already checked if the worker exists.
                 throw std::runtime_error("getWorker error: record doesn't exist");
@@ -143,9 +145,11 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
             specs.space = query.value(2).toUInt();
             specs.ram = query.value(3).toUInt();
             specs.cores = query.value(4).toUInt();
+            specs.empty = false;
             worker.specs = specs;
             worker.address = query.value(5).toString().toStdString();
             worker.name = query.value(6).toString().toStdString();
+            worker.empty = false;
             workerVector.push_back(worker);
         }
         return workerVector;

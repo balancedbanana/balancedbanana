@@ -14,7 +14,7 @@ using namespace balancedbanana::database;
 /**
  * Test environment that has a global SetUp and TearDown methods for all test suites/tests.
  *
- * Sets up the global Gateway variable to access the methods.
+ * Sets up the database connection.
  *
  */
 class WorkerGatewayEnvironment : public ::testing::Environment{

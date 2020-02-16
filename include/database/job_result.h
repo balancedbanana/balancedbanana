@@ -10,7 +10,6 @@ namespace balancedbanana {
 			std::string stdout;
 
 			int8_t exit_code;
-
 		};
 	}
 }

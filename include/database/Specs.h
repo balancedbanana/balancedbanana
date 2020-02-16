@@ -14,8 +14,10 @@ namespace balancedbanana {
 			uint64_t ram;
 
 			//CPU cores
-			uint64_t cores;
+			uint32_t cores;
 
+            // true if empty, otherwise false;
+            bool empty = true;
 		};
 	}
 }

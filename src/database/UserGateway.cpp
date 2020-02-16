@@ -100,6 +100,7 @@ user_details UserGateway::getUser(uint64_t id) {
                 details.public_key = query.value(0).toString().toStdString();
                 details.name = query.value(1).toString().toStdString();
                 details.email = query.value(2).toString().toStdString();
+                details.empty = false;
             } else {
                 // This would be a very weird error, as I've already checked if the user exists.
                 throw std::runtime_error("getUser error: record doesn't exist");
@@ -131,6 +132,7 @@ std::vector<user_details> UserGateway::getUsers() {
             details.public_key = query.value(1).toString().toStdString();
             details.name = query.value(2).toString().toStdString();
             details.email = query.value(3).toString().toStdString();
+            details.empty = false;
 
             userVector.push_back(details);
         }

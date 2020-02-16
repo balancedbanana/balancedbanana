@@ -8,13 +8,16 @@ namespace balancedbanana {
 
         // Encapsulates all details required to create a user object
         struct user_details {
-            uint8_t id;
+            uint64_t id;
 
             std::string name;
 
             std::string email;
 
             std::string public_key;
+
+            // true if empty, otherwise false;
+            bool empty = true;
         };
     }
 }
