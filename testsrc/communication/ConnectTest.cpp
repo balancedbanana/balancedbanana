@@ -89,14 +89,17 @@ TEST(communication, Connect3)
     ASSERT_THROW(auto com = std::make_shared<Communicator>(nullptr, std::make_shared<MessageProcessor>()), std::invalid_argument);
 }
 
-#if 0
-
+// Dirty Test to avoid constructor of unused message
 TEST(communication, MessageProcessor)
 {
     MessageProcessor proc;
-    ASSERT_ANY_THROW(proc.processAuthResultMessage(nullptr));
-    ASSERT_ANY_THROW(proc.processClientAuthMessage(nullptr));
-    ASSERT_ANY_THROW(proc.processPublicKeyAuthMessage(nullptr));
-    ASSERT_ANY_THROW(proc.processWorkerAuthMessage(nullptr));
+    ASSERT_ANY_THROW(proc.processAuthResultMessage(*((AuthResultMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processClientAuthMessage(*((ClientAuthMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processPublicKeyAuthMessage(*((PublicKeyAuthMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processWorkerAuthMessage(*((WorkerAuthMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processHardwareDetailMessage(*((HardwareDetailMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processSnapshotMessage(*((SnapshotMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processTaskMessage(*((TaskMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processWorkerLoadRequestMessage(*((WorkerLoadRequestMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processWorkerLoadResponseMessage(*((WorkerLoadResponseMessage*)nullptr)));
 }
-#endif
