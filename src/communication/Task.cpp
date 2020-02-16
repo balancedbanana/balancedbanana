@@ -20,7 +20,6 @@ Task::Task(const std::string &string) {
     size_t iterator = 0;
     size_t size = string.size();
     taskCommand = extractString(data, iterator, size);
-    bool conf = extract<bool>(data, iterator, size);
     config = std::make_shared<configfiles::JobConfig>(extractString(data, iterator, size));
     type = extract<uint32_t>(data, iterator, size);
     addImageName = extractString(data, iterator, size);
@@ -30,6 +29,8 @@ Task::Task(const std::string &string) {
     webAPIIP = extractString(data, iterator, size);
     serverPort = extract<uint16_t>(data, iterator, size);
     webAPIPort = extract<uint16_t>(data, iterator, size);
+    jobId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
+    backupId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     if(iterator != size) {
         throw std::invalid_argument("string is too long");
     }
@@ -104,6 +105,20 @@ uint16_t Task::getWebAPIPort() const {
     return this->webAPIPort;
 }
 
+void Task::setJobId(std::optional<uint64_t> jobId) {
+    this->jobId = jobId;
+}
+std::optional<uint64_t> Task::getJobId() const {
+    return jobId;
+}
+
+void Task::setBackupId(std::optional<uint64_t> backupId) {
+    this->backupId = backupId;
+}
+std::optional<uint64_t> Task::getBackupId() const {
+    return backupId;
+}
+
 std::string Task::serialize() const {
     using namespace serialization;
     std::stringstream stream;
@@ -122,6 +137,14 @@ std::string Task::serialize() const {
     insertString(stream, webAPIIP);
     insert<uint16_t>(stream, serverPort);
     insert<uint16_t>(stream, webAPIPort);
+    insert<bool>(stream, (bool) jobId);
+    if(jobId) {
+        insert<uint64_t>(stream, jobId.value());
+    }
+    insert<bool>(stream, (bool) backupId);
+    if(backupId) {
+        insert<uint64_t>(stream, backupId.value());
+    }
     return stream.str();
 }
 

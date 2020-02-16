@@ -19,6 +19,8 @@ class Task
 	std::string webAPIIP;
 	uint16_t serverPort;
 	uint16_t webAPIPort;
+	std::optional<uint64_t> jobId;
+	std::optional<uint64_t> backupId;
 
 public:
 
@@ -58,6 +60,12 @@ public:
 
 	void setWebAPIPort(uint16_t webAPIPort);
     uint16_t getWebAPIPort() const;
+
+    void setJobId(std::optional<uint64_t> jobId);
+    std::optional<uint64_t> getJobId() const;
+
+    void setBackupId(std::optional<uint64_t> backupId);
+    std::optional<uint64_t> getBackupId() const;
 
 	std::string serialize() const;
 };
