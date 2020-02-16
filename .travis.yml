@@ -21,4 +21,4 @@ script:
   - "sudo ./cmake-3.16.2-Linux-x86_64/bin/ctest --verbose . || :"
 
 after_success:
-  - coveralls --root . --gcov gcov-9 -E ".*cmake.*" -E ".*testsrc.*" -E ".*contrib.*" -E ".*google.*" -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"
+  - coveralls --root . --gcov gcov-9 -E ".*include/libs.*" -E ".*cmake.*" -E ".*testsrc.*" -E ".*contrib.*" -E ".*google.*" -E ".*gtest.*" -E ".*Webserver.*" -E ".*Net.*" -E ".*CMakeFiles.*"
