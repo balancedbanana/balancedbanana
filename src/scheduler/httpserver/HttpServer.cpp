@@ -33,8 +33,11 @@ HttpServer::HttpServer(std::function<std::vector<std::shared_ptr<Worker>>()> && 
 
 
 void HttpServer::listen(const std::string & ip, short port) {
+#ifdef WEBAPITLS
     if(privatekeypath.empty() || certchainpath.empty()) {
+#endif
 		listener = std::make_shared<Net::SocketListener>();
+#ifdef WEBAPITLS
 	} else {
 		auto tlslistener = std::make_shared<Net::TLSSocketListener>();
 		tlslistener->AddProtocol("h2");
@@ -42,6 +45,7 @@ void HttpServer::listen(const std::string & ip, short port) {
 		tlslistener->UseCertificate(certchainpath, Net::SSLFileType::PEM);
 		listener = std::move(tlslistener);
 	}
+#endif
 	listener->SetConnectionHandler([this](std::shared_ptr<Net::Socket> socket) {
         auto requesthandler = [this](std::shared_ptr<Net::Http::Connection> con) {
             auto request = &con->GetRequest();
@@ -163,6 +167,7 @@ void HttpServer::listen(const std::string & ip, short port) {
 			con->SendResponse(false);
 			con->SendData((const uint8_t*)content.data(), content.length(), true);
         };
+#ifdef WEBAPITLS
 		if (socket->GetProtocol() == "h2")
 		{
 			using namespace V2;
@@ -179,29 +184,26 @@ void HttpServer::listen(const std::string & ip, short port) {
 		}
 		else
 		{
+#endif
             std::vector<uint8_t> buffer(100000);
 			int content = 0;
 			std::shared_ptr<V1::Connection> connection;
-			while (true)
-			{
+			while (true) {
 				int count = socket->GetInputStream().Receive(buffer.data(), content == 0 ? buffer.size() : std::min(content, (int)buffer.size()));
-				if (count > 0)
-				{
-					if (content <= 0)
-					{
-						connection = std::make_shared<V1::Connection>(socket);
-                        auto rbuf = buffer.cbegin();
-						connection->GetRequest().Decode(rbuf, buffer.cend());
-						content = connection->GetRequest().contentlength;
-						requesthandler(connection);
-					}
+				if (count > 0 && content == 0) {
+					connection = std::make_shared<V1::Connection>(socket);
+					auto rbuf = buffer.cbegin();
+					connection->GetRequest().Decode(rbuf, buffer.cend());
+					content = connection->GetRequest().contentlength;
+					requesthandler(connection);
 				}
-				else
-				{
+				else {
 					break;
 				}
 			}
+#ifdef WEBAPITLS
 		}
+#endif
 	});
 	auto address = std::make_shared<sockaddr_in6>();
 	memset(address.get(), 0, sizeof(sockaddr_in6));
@@ -213,6 +215,7 @@ void HttpServer::listen(const std::string & ip, short port) {
 	}
 }
 
+#ifdef WEBAPITLS
 void HttpServer::useSSL(const std::string & privatekeypath, const std::string & certchainpath) {
 	if(listener != nullptr) {
 		throw std::runtime_error("Needed to be called befor listening");
@@ -220,6 +223,7 @@ void HttpServer::useSSL(const std::string & privatekeypath, const std::string & 
 	this->privatekeypath = privatekeypath;
 	this->certchainpath = certchainpath;
 }
+#endif
 
 void HttpServer::Cancel() {
 	listener->Cancel();
