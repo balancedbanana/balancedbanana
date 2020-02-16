@@ -31,3 +31,9 @@ TEST(authenticator, AuthHandler)
     ASSERT_NO_THROW(handler->publickeyauthenticate(std::make_shared<balancedbanana::scheduler::IUser>("steve", p.second), sig));
     ASSERT_ANY_THROW(handler->publickeyauthenticate(std::make_shared<balancedbanana::scheduler::IUser>("steve2", p.second), sig));
 }
+
+TEST(authenticator, GenerateSignatureInvalidArgumenst)
+{
+    ASSERT_THROW(balancedbanana::communication::authenticator::Authenticator::GenerateSignature("Hallo Welt", ""), std::invalid_argument);
+    ASSERT_THROW(balancedbanana::communication::authenticator::Authenticator::GenerateSignature("Hallo Welt", "943fd7"), std::invalid_argument);
+}

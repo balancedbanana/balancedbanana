@@ -84,9 +84,13 @@ std::string Authenticator::GenerateSignature(std::string name, std::string privk
         }
     } g;
 
-    g.mem = BIO_new_mem_buf(privkey.data(), (int)privkey.length());
+    if(!(g.mem = BIO_new_mem_buf(privkey.data(), (int)privkey.length()))){
+        throw std::runtime_error("Failed to generate signature (BIO_new_mem_buf failed)");
+    }
 
-    g.key = PEM_read_bio_PrivateKey(g.mem, NULL, NULL, NULL);
+    if(!(g.key = PEM_read_bio_PrivateKey(g.mem, NULL, NULL, NULL))) {
+        throw std::invalid_argument("Not a private key");
+    }
     
     /* Create the Message Digest Context */
     if(!(g.mdctx = EVP_MD_CTX_create())) {
