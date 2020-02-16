@@ -63,7 +63,7 @@ const std::shared_ptr<MessageProcessor>& Communicator::GetMP() {
 }
 
 void Communicator::send(const Message & message) {
-    std::string str = ((Message&)message).serialize();
+    std::string str = message.serialize();
     std::vector<uint8_t> buf(4);
     auto it = buf.begin();
     AddUInt32((uint32_t)str.length(), it);
