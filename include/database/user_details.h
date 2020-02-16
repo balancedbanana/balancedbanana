@@ -23,7 +23,8 @@ namespace balancedbanana {
                 return this->email == rhs.email
                        && this->public_key == rhs.public_key
                        && this->name == rhs.name
-                       && this->id == rhs.id;
+                       && this->id == rhs.id
+                       && this->empty == rhs.empty;
             }
         };
     }

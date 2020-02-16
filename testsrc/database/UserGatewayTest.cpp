@@ -2,7 +2,6 @@
 #include <database/UserGateway.h>
 #include <database/user_details.h>
 #include <database/Repository.h>
-#include <database/Utilities.h>
 
 #include <QSqlQuery>
 #include <QVariant>
@@ -50,6 +49,7 @@ protected:
         details.public_key = "asdjfascd3";
         details.email = "balanced@banana.kit.edu";
         details.name = "Rakan";
+        details.empty = false;
     }
 
     void TearDown() override {
@@ -77,6 +77,8 @@ bool wasUserAddSuccessful(const user_details& details, uint64_t id){
             queryDetails.name = query.value(nameIndex).toString().toStdString();
             queryDetails.email = query.value(emailIndex).toString().toStdString();
             queryDetails.public_key = query.value(keyIndex).toString().toStdString();
+            queryDetails.id = id;
+            queryDetails.empty = false;
             EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
@@ -113,6 +115,8 @@ TEST_F(AddUserTest, AddWorkerTest_AddSecondWorkerSucess_Test){
     seconddetails.public_key = "sadfjsaljdf";
     seconddetails.email = "example@email.com";
     seconddetails.name = "John";
+    seconddetails.empty = false;
+    seconddetails.id = 2;
 
     ASSERT_TRUE(UserGateway::add(seconddetails) == 2);
     ASSERT_TRUE(wasUserAddSuccessful(seconddetails, 2));
@@ -157,6 +161,7 @@ protected:
         details.email = "someemail@google.com";
         details.name = "Max";
         details.id = 1;
+        details.empty = false;
     }
 
     void TearDown() override {
@@ -228,6 +233,8 @@ TEST_F(RemoveUserTest, RemoveUserTest_SuccessfulRemove_Test){
     details.public_key = "34nrhk3hkr";
     details.email = "email@email.com";
     details.name = "CentOS";
+    details.empty = false;
+    details.id = 1;
     // Since this is the first user, this has to be true.
     ASSERT_TRUE(UserGateway::add(details) == 1);
     ASSERT_TRUE(wasUserAddSuccessful(details, 1));
@@ -252,6 +259,7 @@ protected:
         details.email = "email@email.com";
         details.name = "CentOS";
         details.id = 1;
+        details.empty = false;
     }
 
     void TearDown() override {
@@ -291,18 +299,21 @@ protected:
         first.email = "someemail@kit.edu";
         first.name = "CentOS";
         first.id = 1;
+        first.empty = false;
 
         // Set up the second user
         second.public_key = "fsd8iasdf8sadf";
         second.email = "someotheremail@kit.edu";
         second.name = "Ubuntu";
         second.id = 2;
+        second.empty = false;
 
         // Set up the third user
         third.public_key = "asdfascascsd";
         third.email = "anotheremail@kit.edu";
         third.name = "Windows";
         third.id = 3;
+        third.empty = false;
     }
 
     void TearDown() override {

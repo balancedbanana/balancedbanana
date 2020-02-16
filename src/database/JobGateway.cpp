@@ -55,7 +55,7 @@ auto as_integer(Enumeration const value)
  */
 QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const QDateTime &schedule_time
         , const std::string &command){
-    // Conver the optional args
+    // Convert the optional args
     QVariant q_min_ram;
     if (config.min_ram().has_value()){
         q_min_ram = QVariant::fromValue(config.min_ram().value());
