@@ -173,7 +173,7 @@ protected:
                         "  PRIMARY KEY (`id`),\n"
                         "  UNIQUE KEY `public_key_UNIQUE` (`public_key`),\n"
                         "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8;");
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
         query.exec();
     }
 

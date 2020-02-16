@@ -243,13 +243,18 @@ TEST_F(AddJobTest, AddWorkerTest_AddSecondJobSucess_Test){
     EXPECT_TRUE(wasJobAddSuccessful(seconddetails, 2));
 }
 
-TEST_F(AddJobTest, AddJobTest_Invalid_User_id_Test){
+TEST_F(AddJobTest, AddJobTest_Invalid_Job_id_Test){
     details.user_id = 0;
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
 TEST_F(AddJobTest, AddJobTest_Invalid_Command_Test){
     details.command = "";
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_EMAIL_Test){
+    details.config.set_email("");
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
@@ -268,7 +273,111 @@ TEST_F(AddJobTest, AddJobTest_Invalid_Max_RAM_TOO_SMALL_Test){
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
-TEST_F(AddJobTest, AddJobTest_Invalid_Min_Larger_Than_Max_Test){
+TEST_F(AddJobTest, AddJobTest_Invalid_Min_RAM_Larger_Than_Max_Test){
     details.config.set_min_ram(4194305);
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
+
+TEST_F(AddJobTest, AddJobTest_Invalid_Invalid_Min_CPU_Count_Test){
+    details.config.set_min_cpu_count(0);
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_Max_CPU_Count_Test){
+    details.config.set_max_cpu_count(0);
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+TEST_F(AddJobTest, AddJobTest_Invalid_Min_CPU_Count_Larger_Than_Max_Test){
+    details.config.set_min_cpu_count(2);
+    details.config.set_max_cpu_count(1);
+    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
+}
+
+/**
+ * Fixture class that deletes the jobs table on setup and restores it on teardown.
+ */
+class NoJobsTableTest : public ::testing::Test{
+protected:
+    void SetUp() override {
+        // Deletes the jobs table
+        QSqlQuery query("DROP TABLE jobs");
+        query.exec();
+
+        // Setup the variables needed
+        details.id = 1;
+        details.status = 1; //scheduled
+        details.user_id = 1;
+        details.command = "mkdir build";
+        details.schedule_time = QDateTime::currentDateTime();
+        details.empty = false;
+        details.config.set_min_ram(4194304);
+        details.config.set_max_ram(4194304);
+        details.config.set_min_cpu_count(42);
+        details.config.set_max_cpu_count(43);
+        details.config.set_blocking_mode(true);
+        details.config.set_email("mail@test.com");
+        details.config.set_priority(Priority::low);
+        details.config.set_image("testimage");
+        details.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        details.config.set_interruptible(false);
+        details.config.set_current_working_dir(".");
+        details.allocated_specs->ram = 1324;
+        details.allocated_specs->cores = 4;
+        details.allocated_specs->space = 55;
+    }
+
+    void TearDown() override {
+        QSqlQuery query("CREATE TABLE IF NOT EXISTS `jobs` (\n"
+                        "    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                        "    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                        "    `start_time` VARCHAR(60) NULL DEFAULT NULL,\n"
+                        "    `schedule_time` VARCHAR(60) DEFAULT NULL,\n"
+                        "    `finish_time` VARCHAR(60) DEFAULT NULL,\n"
+                        "    `command` TEXT NOT NULL,\n"
+                        "    `image` VARCHAR(500) NOT NULL,\n"
+                        "    `blocking_mode` TINYINT(1) DEFAULT NULL,\n"
+                        "    `working_dir` TEXT NOT NULL,\n"
+                        "    `allocated_id` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                        "    `interruptible` TINYINT(1) DEFAULT NULL,\n"
+                        "    `environment` TEXT,\n"
+                        "    `min_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
+                        "    `max_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
+                        "    `priority` INT(10) UNSIGNED DEFAULT NULL,\n"
+                        "    `status_id` INT(10) UNSIGNED NOT NULL DEFAULT '1',\n"
+                        "    `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                        "    `user_id` BIGINT(10) UNSIGNED NOT NULL,\n"
+                        "    `worker_id` BIGINT(10) DEFAULT NULL,\n"
+                        "    `email` VARCHAR(255) NOT NULL,\n"
+                        "    PRIMARY KEY (`id`),\n"
+                        "    UNIQUE KEY `id_UNIQUE` (`id`),\n"
+                        "    UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`)\n"
+                        ")\n"
+                        "ENGINE=InnoDB\n"
+                        "DEFAULT CHARSET=utf8");
+        query.exec();
+    }
+
+    job_details details;
+};
+
+// Test to see if an exception is thrown when a job is being added, but no jobs' table exists.
+TEST_F(NoJobsTableTest, NoJobsTableTest_AddJob_Test){
+    EXPECT_THROW(JobGateway::add(details), std::logic_error);
+}
+
+// Test to see if an exception is thrown when a job is being removed, but no jobs' table exists.
+TEST_F(NoJobsTableTest, NoJobsTableTest_RemoveJob_Test){
+    EXPECT_THROW(JobGateway::remove(details.id), std::logic_error);
+}
+
+// Test to see if an exception is thrown when the job getter is called, but no jobs' table exists.
+TEST_F(NoJobsTableTest, NoJobsTableTest_GetJob_Test){
+    EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
+}
+
+// Test to see if an exception is thrown when the jobs getter is called, but no jobs' table exists.
+TEST_F(NoJobsTableTest, NoJobsTableTest_GetJobs_Test){
+    EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
+}
+

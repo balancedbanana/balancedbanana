@@ -237,14 +237,14 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
  * @return The id of the added Job
  */
 uint64_t JobGateway::add(job_details details) {
-    // Check args
-    if (!areArgsValid(details)){
-        throw std::invalid_argument("addJob error: invalid arguments");
-    }
-
     // DB must contain table
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
+    }
+
+    // Check args
+    if (!areArgsValid(details)){
+        throw std::invalid_argument("addJob error: invalid arguments");
     }
 
     QVariant_JobConfig qstruct = convertJobConfig(details.user_id, details.config, details.schedule_time, details.command);
