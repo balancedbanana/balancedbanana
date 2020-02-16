@@ -1,7 +1,8 @@
 #include <database/JobGateway.h>
 #include <database/JobStatus.h>
 #include <configfiles/JobConfig.h>
-#include <database/database_utilities.h>
+#include <database/Utilities.h>
+
 
 #include <QVariant>
 #include <QSqlQuery>
@@ -16,6 +17,8 @@
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
+
+#define FOUR_MB (4194304) // If RAM is under this amount, errors might occur in docker.
 
 // Stores all details about a Job in QVariants
 struct QVariant_JobConfig{
@@ -36,7 +39,6 @@ struct QVariant_JobConfig{
     QVariant q_status_id;
 };
 
-
 // Get the integer value of an enumeration
 template <typename Enumeration>
 auto as_integer(Enumeration const value)
@@ -53,34 +55,71 @@ auto as_integer(Enumeration const value)
  * @param command The job command.
  * @return QVariant_JobConfig that has all the QVariant version of the Job args
  */
-QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, const QDateTime &schedule_time
+QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const QDateTime &schedule_time
         , const std::string &command){
-    // Converting the various args into QVariant Objects
+    // Convert the optional args
+    QVariant q_min_ram;
+    if (config.min_ram().has_value()){
+        q_min_ram = QVariant::fromValue(config.min_ram().value());
+    }
+
+    QVariant q_max_ram;
+    if (config.max_ram().has_value()){
+        q_max_ram = QVariant::fromValue(config.max_ram().value());
+    }
+
+    QVariant q_min_cpu_count;
+    if (config.min_cpu_count().has_value()){
+        q_min_cpu_count = QVariant::fromValue(config.min_cpu_count().value());
+    }
+
+    QVariant q_max_cpu_count;
+    if (config.max_cpu_count().has_value()){
+        q_max_cpu_count = QVariant::fromValue(config.max_cpu_count().value());
+    }
+
+    QVariant q_blocking_mode;
+    if (config.blocking_mode().has_value()){
+        q_blocking_mode = QVariant::fromValue(config.blocking_mode().value());
+    }
+
+    QVariant q_priority;
+    if (config.priority().has_value()){
+        q_priority = QVariant::fromValue(as_integer(config.priority().value()));
+    }
+
+    QVariant q_interruptible;
+    if(config.interruptible().has_value()){
+        q_interruptible = QVariant::fromValue(config.interruptible().value());
+    }
+
+    QVariant q_environment;
+    /*
+    if (config.environment().has_value()){
+        // Convert environment => QVector => QByteArray. QByteArray will then be mapped to BLOB in the database
+        QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment().value());
+        QByteArray qbytearray = QByteArray::fromRawData(
+                reinterpret_cast<const char*>(qvec.constData()),
+                sizeof(std::string) * qvec.size()
+        );
+        q_environment = QVariant::fromValue(qbytearray);
+    }
+     */
+    if (config.environment().has_value()){
+        q_environment = QVariant::fromValue(QString::fromStdString(Utilities::serializeVector<std::string>(config
+                .environment().value())));
+    }
+
+    // Convert the mandatory args
     QVariant q_user_id = QVariant::fromValue(user_id);
-    QVariant q_min_ram = QVariant::fromValue(config.min_ram().value());
-    QVariant q_max_ram = QVariant::fromValue(config.max_ram().value());
-    QVariant q_min_cpu_count = QVariant::fromValue(config.min_cpu_count().value());
-    QVariant q_max_cpu_count = QVariant::fromValue(config.max_cpu_count().value());
-    QVariant q_blocking_mode = QVariant::fromValue(config.blocking_mode().value());
     QVariant q_email = QVariant::fromValue(QString::fromStdString(config.email()));
-    QVariant q_priority = QVariant::fromValue(as_integer(config.priority().value()));
     QVariant q_image = QVariant::fromValue(QString::fromStdString(config.image()));
-    QVariant q_interruptible = QVariant::fromValue(config.interruptible().value());
-
-    // Convert environment => QVector => QByteArray. QByteArray will then be mapped to BLOB in the database
-    QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment().value());
-    QByteArray qbytearray = QByteArray::fromRawData(
-            reinterpret_cast<const char*>(qvec.constData()),
-            sizeof(std::string) * qvec.size()
-    );
-    QVariant q_environment = QVariant::fromValue(qbytearray);
-
     // current_working_dir => std::filesystem::path => std::string => QString => QVariant
     QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().u8string()));
 
     QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
-    QVariant q_schedule_time = QVariant::fromValue(schedule_time);
-    QVariant q_status_id = QVariant::fromValue(int(JobStatus::scheduled));
+    QVariant q_schedule_time = QVariant::fromValue(schedule_time.toString("yyyy.MM.dd:hh.mm.ss.z"));
+    QVariant q_status_id = QVariant::fromValue((int)JobStatus::scheduled);
 
     // Save all of them in a struct
     QVariant_JobConfig qstruct;
@@ -109,18 +148,54 @@ QVariant_JobConfig convertJobConfig(const uint8_t &user_id, JobConfig& config, c
  * @return true if the args are valid, otherwise false
  */
 bool areArgsValid(job_details& details){
-    return details.user_id > 0
-    && !details.command.empty()
-    && details.config.min_ram().has_value()
-    && details.config.max_ram().has_value()
-    && details.config.min_cpu_count().has_value()
-    && details.config.max_cpu_count().has_value()
-    && details.config.blocking_mode().has_value()
-    && !details.config.email().empty()
-    && details.config.priority().has_value()
-    && !details.config.image().empty()
-    && details.config.interruptible().has_value()
-    && details.config.environment().has_value();
+
+    // Check the optional arguments
+    if (details.config.min_ram().has_value() && (details.config.min_ram().value() == 0 || details.config.min_ram() <
+    FOUR_MB)){
+        // TODO check the min values for the args
+       return false;
+    }
+    if (details.config.max_ram().has_value() && (details.config.max_ram().value() == 0 || details.config.max_ram() <
+    FOUR_MB)){
+        return false;
+    }
+    if (details.config.min_cpu_count().has_value() && details.config.min_cpu_count().value() == 0){
+        return false;
+    }
+    if (details.config.max_cpu_count().has_value() && details.config.max_cpu_count().value() == 0){
+        return false;
+    }
+    if (details.finish_time.has_value() && !details.finish_time.value().isValid()){
+        return false;
+    }
+    if (details.start_time.has_value() && !details.start_time.value().isValid()){
+        return false;
+    }
+    if (!details.allocated_specs->empty){
+        if (details.allocated_specs->ram == 0 || details.allocated_specs->space == 0 || details.allocated_specs->cores
+        == 0){
+            return false;
+        }
+    }
+
+    // the mins cant be larger than the maxs
+    if (details.config.min_ram().has_value() && details.config.max_ram().has_value()){
+        if (details.config.min_ram().value() > details.config.max_ram().value()){
+            return false;
+        }
+    }
+
+    if (details.config.min_cpu_count().has_value() && details.config.max_cpu_count().has_value()){
+        if (details.config.min_cpu_count().value() > details.config.max_cpu_count().value()){
+            return false;
+        }
+    }
+
+    // Check the required arguments
+    return !(details.command.empty()
+             || !details.schedule_time.isValid()
+             || details.config.email().empty()
+             || details.user_id == 0);
 }
 
 /**
@@ -128,10 +203,10 @@ bool areArgsValid(job_details& details){
  * @param qstruct The struct that contains all the QVariants of the record information
  * @return The id of the added Job
  */
-uint64_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
+uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
     // Create the query
-    QSqlQuery query("INSERT INTO jobs (user_id, min_ram, max_ram, min_cpu_count, max_cpu_count, "
-                    "blocking_mode, email, priority, image, interruptible, environment, current_working_dir, command, "
+    QSqlQuery query("INSERT INTO jobs (user_id, min_ram, max_ram, min_cores, max_cores, "
+                    "blocking_mode, email, priority, image, interruptible, environment, working_dir, command, "
                     "schedule_time, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     query.addBindValue(qstruct.q_user_id);
     query.addBindValue(qstruct.q_min_ram);
@@ -162,14 +237,14 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig &qstruct){
  * @return The id of the added Job
  */
 uint64_t JobGateway::add(job_details details) {
+    // DB must contain table
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
+    }
+
     // Check args
     if (!areArgsValid(details)){
         throw std::invalid_argument("addJob error: invalid arguments");
-    }
-
-    // DB must contain table
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
     }
 
     QVariant_JobConfig qstruct = convertJobConfig(details.user_id, details.config, details.schedule_time, details.command);
@@ -182,10 +257,10 @@ uint64_t JobGateway::add(job_details details) {
  * @return true if the operation was successful, otherwise false;
  */
 bool JobGateway::remove(uint64_t job_id) {
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
-    if (doesRecordExist("jobs", job_id)){
+    if (Utilities::doesRecordExist("jobs", job_id)){
         QSqlQuery query("DELETE FROM jobs WHERE id = ?");
         query.addBindValue(QVariant::fromValue(job_id));
         if (query.exec()){
@@ -199,16 +274,102 @@ bool JobGateway::remove(uint64_t job_id) {
 }
 
 /**
- * Converts a QByteArray to a vector of strings.
- * @param buffer The QByteArray
- * @return A vector of strings.
+ * Returns a job_details struct after all the values from the query are set.
+ *
+ * A lot of the values in JobConfig are marked as std::optional, which means that they could be NULL in the database.
+ * For those values, the method has to check if their values are valid before converting them to standard C++
+ * types, otherwise they will be set to std::nullopt. The mandatory values are JobConfig are set normally.
+ *
+ * @param query The query from which the values are to be set
+ * @return The struct containing the query values.
  */
-std::vector<std::string> convertToVectorString(const QByteArray& buffer){
-    QVector<char*> result;
-    QDataStream bRead(buffer);
-    bRead >> result;
-    std::vector<char*> resultVector = result.toStdVector();
-    return std::vector<std::string>(resultVector.begin(), resultVector.end());
+job_details getDetailsAfterSet(const QSqlQuery& query){
+    job_details details{};
+    details.user_id = query.value(0).toUInt();
+    JobConfig config;
+
+    //
+
+    if (query.value(1).isValid()){
+        config.set_min_ram(query.value(1).toUInt());
+    } else {
+        config.set_min_ram(std::nullopt);
+    }
+
+    if (query.value(2).isValid()){
+        config.set_max_ram(query.value(2).toUInt());
+    } else {
+        config.set_max_ram(std::nullopt);
+    }
+
+    if (query.value(3).isValid()){
+        config.set_min_cpu_count(query.value(3).toUInt());
+    } else {
+        config.set_min_cpu_count(std::nullopt);
+    }
+
+    if (query.value(4).isValid()){
+        config.set_max_cpu_count(query.value(4).toUInt());
+    } else {
+        config.set_max_cpu_count(std::nullopt);
+    }
+
+    if (query.value(5).isValid()){
+        config.set_blocking_mode(query.value(5).toBool());
+    } else {
+        config.set_blocking_mode(std::nullopt);
+    }
+
+    config.set_email(query.value(6).toString().toStdString());
+
+    if (query.value(7).isValid()){
+        config.set_priority(static_cast<Priority>(query.value(7).toInt()));
+    } else {
+        config.set_priority(std::nullopt);
+    }
+
+    config.set_image(query.value(8).toString().toStdString());
+
+    if (query.value(9).isValid()){
+        config.set_interruptible(query.value(9).toBool());
+    } else {
+        config.set_interruptible(std::nullopt);
+    }
+
+    if (query.value(10).isValid()){
+        config.set_environment(convertToVectorString(query.value(10).toByteArray()));
+    } else {
+        config.set_environment(std::nullopt);
+    }
+
+    config.set_current_working_dir(query.value(11).toString().toStdString());
+    details.command = query.value(12).toString().toStdString();
+    details.schedule_time = QDateTime::fromString(query.value(13).toString(),
+                                                  "yyyy.MM.dd:hh.mm.ss.z");
+
+    if (query.value(14).isValid()){
+        details.start_time = QDateTime::fromString(query.value(14).toString(),"yyyy.MM.dd:hh.mm.ss.z");
+    } else {
+        details.start_time = std::nullopt;
+    }
+
+    if (query.value(15).isValid()){
+        details.finish_time = QDateTime::fromString(query.value(15).toString(), "yyyy.MM.dd:hh.mm.ss.z");
+    } else {
+        details.finish_time = std::nullopt;
+    }
+
+    details.status = query.value(16).toInt();
+    details.config = config;
+    if (query.value(17).isValid() && query.value(18).isValid() && query.value(19).isValid()){
+        Specs allocated_specs{};
+        allocated_specs.cores = query.value(17).toUInt();
+        allocated_specs.space = query.value(18).toUInt();
+        allocated_specs.ram = query.value(19).toUInt();
+        allocated_specs.empty = false;
+        details.allocated_specs = allocated_specs;
+    }
+    return details;
 }
 
 /**
@@ -217,15 +378,15 @@ std::vector<std::string> convertToVectorString(const QByteArray& buffer){
  * @return The details of the job
  */
 job_details JobGateway::getJob(uint64_t job_id) {
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
-    if (!doesTableExist("allocated_resources")){
-        throwNoTableException("allocated_resources");
+    if (!Utilities::doesTableExist("allocated_resources")){
+        Utilities::throwNoTableException("allocated_resources");
     }
     job_details details{};
-    if (doesRecordExist("jobs", job_id)){
-        QSqlQuery query("SELECT jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cpu_count, jobs.max_cpu_count, "
+    if (Utilities::doesRecordExist("jobs", job_id)){
+        QSqlQuery query("SELECT jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cores, jobs.max_cores, "
                         "jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs.environment, "
                         "jobs.current_working_dir, jobs.command, jobs.schedule_time, jobs.start_time, jobs.finish_time, "
                         "jobs.status_id, allocated_resources.cores, allocated_resources.space, allocated_resources.ram FROM "
@@ -234,35 +395,8 @@ job_details JobGateway::getJob(uint64_t job_id) {
         query.addBindValue(QVariant::fromValue(job_id));
         if (query.exec()){
             if (query.next()) {
+                details = getDetailsAfterSet(query);
                 details.id = job_id;
-                details.user_id = query.value(0).toUInt();
-                JobConfig config;
-                config.set_min_ram(query.value(1).toUInt());
-                config.set_max_ram(query.value(2).toUInt());
-                config.set_min_cpu_count(query.value(3).toUInt());
-                config.set_max_cpu_count(query.value(4).toUInt());
-                config.set_blocking_mode(query.value(5).toBool());
-                config.set_email(query.value(6).toString().toStdString());
-                config.set_priority(static_cast<Priority >(query.value(7).toInt()));
-                config.set_image(query.value(8).toString().toStdString());
-                config.set_interruptible(query.value(9).toBool());
-                config.set_environment(convertToVectorString(query.value(10).toByteArray()));
-                config.set_current_working_dir(query.value(11).toString().toStdString());
-                details.command = query.value(12).toString().toStdString();
-                details.schedule_time = QDateTime::fromString(query.value(13).toString(),
-                                                              "yyyy-MM-dd hh:mm:ss.zzz000");
-                details.start_time = QDateTime::fromString(query.value(14).toString(),
-                                                           "yyyy-MM-dd hh:mm:ss.zzz000");
-                details.finish_time = QDateTime::fromString(query.value(15).toString(),
-                                                            "yyyy-MM-dd hh:mm:ss.zzz000");
-                details.status = query.value(16).toInt();
-                details.config = config;
-                Specs allocated_specs{};
-                allocated_specs.cores = query.value(17).toUInt();
-                allocated_specs.space = query.value(18).toUInt();
-                allocated_specs.ram = query.value(19).toUInt();
-                details.allocated_specs = allocated_specs;
-                return details;
             } else {
                 // This would be a very weird error, as I've already checked if the job exists.
                 throw std::runtime_error("getJob error: record doesn't exist");
@@ -281,14 +415,14 @@ job_details JobGateway::getJob(uint64_t job_id) {
  * @return  Vector of all the jobs in the database.
  */
 std::vector<job_details> JobGateway::getJobs() {
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
-    if (!doesTableExist("allocated_resources")){
-        throwNoTableException("allocated_resources");
+    if (!Utilities::doesTableExist("allocated_resources")){
+        Utilities::throwNoTableException("allocated_resources");
     }
-    QSqlQuery query("SELECT jobs.id, jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cpu_count, "
-                    "jobs.max_cpu_count, jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs"
+    QSqlQuery query("SELECT jobs.id, jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cores, "
+                    "jobs.max_cores, jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs"
                     ".environment, jobs.current_working_dir, jobs.command, jobs.schedule_time, jobs.start_time, "
                     "jobs.finish_time, jobs.status_id, allocated_resources.cores, allocated_resources.space, "
                     "allocated_resources.ram FROM jobs JOIN allocated_resources "
@@ -297,40 +431,15 @@ std::vector<job_details> JobGateway::getJobs() {
     if (query.exec()) {
         while(query.next()){
             job_details details;
+            details = getDetailsAfterSet(query);
             details.id = query.value(0).toUInt();
-            details.user_id = query.value(1).toUInt();
-            JobConfig config;
-            config.set_min_ram(query.value(2).toUInt());
-            config.set_max_ram(query.value(3).toUInt());
-            config.set_min_cpu_count(query.value(4).toUInt());
-            config.set_max_cpu_count(query.value(5).toUInt());
-            config.set_blocking_mode(query.value(6).toBool());
-            config.set_email(query.value(7).toString().toStdString());
-            config.set_priority(static_cast<Priority >(query.value(8).toInt()));
-            config.set_image(query.value(9).toString().toStdString());
-            config.set_interruptible(query.value(10).toBool());
-            config.set_environment(convertToVectorString(query.value(11).toByteArray()));
-            config.set_current_working_dir(query.value(12).toString().toStdString());
-            details.command = query.value(13).toString().toStdString();
-            details.schedule_time = QDateTime::fromString(query.value(14).toString(),
-                                                          "yyyy-MM-dd hh:mm:ss.zzz000");
-            details.start_time = QDateTime::fromString(query.value(15).toString(),
-                                                       "yyyy-MM-dd hh:mm:ss.zzz000");
-            details.finish_time = QDateTime::fromString(query.value(16).toString(),
-                                                        "yyyy-MM-dd hh:mm:ss.zzz000");
-            details.status = query.value(17).toInt();
-            details.config = config;
-            Specs allocated_specs{};
-            allocated_specs.cores = query.value(18).toUInt();
-            allocated_specs.space = query.value(19).toUInt();
-            allocated_specs.ram = query.value(20).toUInt();
-            details.allocated_specs = allocated_specs;
             jobVector.push_back(details);
         }
-        return jobVector;
     } else {
         throw std::runtime_error("getJobs error: " + query.lastError().databaseText().toStdString());
     }
+
+    return jobVector;
 }
 
 /**
@@ -341,14 +450,14 @@ std::vector<job_details> JobGateway::getJobs() {
  * @return true if the operation was succesful, otherwise false.
  */
 bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
-    if (!doesTableExist("workers")){
-        throwNoTableException("workers");
+    if (!Utilities::doesTableExist("workers")){
+        Utilities::throwNoTableException("workers");
     }
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
-    if (doesRecordExist("jobs", job_id)){
-        if (doesRecordExist("workers", worker_id)) {
+    if (Utilities::doesRecordExist("jobs", job_id)){
+        if (Utilities::doesRecordExist("workers", worker_id)) {
             QSqlQuery queryAlloc("INSERT INTO allocated_resources (cores, space, ram) VALUES (?, ?, ?)");
             queryAlloc.addBindValue(QVariant::fromValue(specs.cores));
             queryAlloc.addBindValue(QVariant::fromValue(specs.space));
@@ -388,14 +497,14 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
  */
 bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         , const std::string& stdout, const int8_t exit_code) {
-    if (!doesTableExist("job_results")){
-        throwNoTableException("job_results");
+    if (!Utilities::doesTableExist("job_results")){
+        Utilities::throwNoTableException("job_results");
     }
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
 
-    if (doesRecordExist("jobs", job_id)){
+    if (Utilities::doesRecordExist("jobs", job_id)){
         // TODO Check if this assertion is actually necessary
         assert(!stdout.empty());
 
@@ -430,14 +539,14 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
  * @return The results of the job
  */
 job_result JobGateway::getJobResult(uint64_t job_id) {
-    if (!doesTableExist("job_results")){
-        throwNoTableException("job_results");
+    if (!Utilities::doesTableExist("job_results")){
+        Utilities::throwNoTableException("job_results");
     }
-    if (!doesTableExist("jobs")){
-        throwNoTableException("jobs");
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
     }
 
-    if (doesRecordExist("jobs", job_id)){
+    if (Utilities::doesRecordExist("jobs", job_id)){
         QSqlQuery query("SELECT job_results.exit_code, job_results.stdout FROM jobs JOIN ON job_results WHERE "
                         "job_results.id = jobs.result");
         if (query.exec()){
@@ -454,6 +563,19 @@ job_result JobGateway::getJobResult(uint64_t job_id) {
             throw std::runtime_error("getJobResult error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("getJobResult error: no job with id = " + job_id);
+        throw std::runtime_error("getJobResult error: no job with id = " + std::to_string(job_id));
     }
+}
+
+/**
+ * Converts a QByteArray to a vector of strings.
+ * @param buffer The QByteArray
+ * @return A vector of strings.
+ */
+std::vector<std::string> balancedbanana::database::convertToVectorString(const QByteArray &buffer) {
+    QVector<char*> result;
+    QDataStream bRead(buffer);
+    bRead >> result;
+    std::vector<char*> resultVector = result.toStdVector();
+    return std::vector<std::string>(resultVector.begin(), resultVector.end());
 }
