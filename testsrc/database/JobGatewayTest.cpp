@@ -142,7 +142,8 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             queryDetails.config.set_priority(static_cast<Priority> (query.value(priority_index).toUInt()));
             queryDetails.config.set_image(query.value(image_index).toString().toStdString());
             queryDetails.config.set_interruptible(query.value(interruptible_index).toBool());
-            queryDetails.config.set_environment(convertToVectorString(query.value(environment_index).toByteArray()));
+            queryDetails.config.set_environment(deserializeVector<std::string>(query.value(environment_index).toString()
+            .toStdString()));
             queryDetails.config.set_current_working_dir(query.value(dir_index).toString().toStdString());
             queryDetails.command = query.value(command_index).toString().toStdString();
             queryDetails.schedule_time = QDateTime::fromString(query.value(schedule_time_index).toString(), "yyyy.MM.dd.hh.mm:ss.z");
@@ -166,7 +167,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             }
 // Environment is the problem
 // use the format above for times
-            EXPECT_TRUE(queryDetails.status == details.status);
+            EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
             qDebug() << "record not found";

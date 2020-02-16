@@ -82,6 +82,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/Webserver-src)
 
 include_directories(include)
 include_directories(contrib)
+include_directories(include/libs)
 
 add_subdirectory(src/client)
 add_subdirectory(src/commandLineInterface)

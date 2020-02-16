@@ -3,6 +3,7 @@
 #include <configfiles/JobConfig.h>
 #include <database/Utilities.h>
 
+
 #include <QVariant>
 #include <QSqlQuery>
 #include <QSqlDatabase>
@@ -35,41 +36,6 @@ struct QVariant_JobConfig{
     QVariant q_schedule_time;
     QVariant q_status_id;
 };
-
-void deserializeVector(std::vector<std::string> &restore, char* buffer, int total_count) {
-    for(int i = 0; i < total_count; i ++ ) {
-        const char *begin = &buffer[i];
-        int size = 0;
-        while(buffer[i++]) {
-            size += 1;
-        }
-        restore.push_back(std::string(begin, size));
-    }
-}
-
-char* serializeVector(std::vector<std::string> &v, unsigned int *count) {
-    unsigned int total_count = 0;
-
-    for(int i = 0; i < v.size(); i++ ) {
-        total_count += v[i].length() + 1;
-    }
-
-    char *buffer = new char[total_count];
-
-    int idx = 0;
-
-    for(int i = 0; i < v.size(); i++ ) {
-        std::string s = v[i];
-        for (int j = 0; j < s.size(); j ++ ) {
-            buffer[idx ++] = s[j];
-        }
-        buffer[idx ++] = 0;
-    }
-
-    *count  = total_count;
-
-    return buffer;
-}
 
 // Get the integer value of an enumeration
 template <typename Enumeration>
@@ -137,6 +103,10 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
         q_environment = QVariant::fromValue(qbytearray);
     }
      */
+    if (config.environment().has_value()){
+        q_environment = QVariant::fromValue(QString::fromStdString(serializeVector<std::string>(config.environment()
+                .value())));
+    }
 
     // Convert the mandatory args
     QVariant q_user_id = QVariant::fromValue(user_id);

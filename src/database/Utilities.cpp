@@ -1,10 +1,13 @@
 #include <database/Utilities.h>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/binary.hpp>
 
 
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QVariant>
 #include <QSqlError>
+#include <sstream>
 
 
 /**
@@ -34,4 +37,33 @@ bool balancedbanana::database::doesRecordExist(const std::string& table_name, ui
         return query.next();
     }
     throw std::runtime_error(query.lastError().databaseText().toStdString());
+}
+
+template<typename T>
+std::string balancedbanana::database::serializeVector(std::vector<T> vector){
+    std::stringstream ss;
+    std::string serializedVec;
+    {
+        cereal::BinaryOutputArchive oarchive(ss);
+        oarchive(vector);
+        serializedVec = ss.str();
+    }
+    return serializedVec;
+}
+
+template<typename T>
+std::vector<T> balancedbanana::database::deserializeVector(std::string string){
+    std::stringstream ss;
+    ss << string;
+    std::vector<T> deserializedVec;
+    {
+        cereal::BinaryInputArchive iarchive(ss);
+        try {
+            iarchive(deserializedVec);
+        }
+        catch (std::runtime_error error){
+            error.what();
+        }
+    }
+    return deserializedVec;
 }
