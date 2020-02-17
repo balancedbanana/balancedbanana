@@ -52,7 +52,7 @@ TEST(ClientCommandLineProcessor, backup)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::BACKUP);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -68,7 +68,7 @@ TEST(ClientCommandLineProcessor, resume)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::CONTINUE);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -84,7 +84,7 @@ TEST(ClientCommandLineProcessor, pause)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::PAUSE);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -100,8 +100,8 @@ TEST(ClientCommandLineProcessor, restore)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::RESTORE);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
-    ASSERT_EQ(task->getConfig()->get_backup_ID(), 42);
+    ASSERT_EQ(task->getJobId(), 1337);
+    ASSERT_EQ(task->getBackupId(), 42);
 }
 
 
@@ -117,7 +117,7 @@ TEST(ClientCommandLineProcessor, status)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::STATUS);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -133,7 +133,7 @@ TEST(ClientCommandLineProcessor, stop)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::STOP);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -149,7 +149,7 @@ TEST(ClientCommandLineProcessor, tail)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::TAIL);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 

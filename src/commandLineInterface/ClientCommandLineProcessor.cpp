@@ -2,6 +2,7 @@
 
 using balancedbanana::commandLineInterface::ClientCommandLineProcessor;
 using balancedbanana::configfiles::Priority;
+using balancedbanana::communication::Task;
 
 namespace balancedbanana
 {
@@ -163,11 +164,9 @@ void addSubCommandsImage(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandStatus(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    auto config = task->getConfig();
-
     task->setType((int)TaskType::STATUS);
 
-    config->set_job_ID(jobID);
+    task->setJobId(jobID);
 }
 
 void addSubCommandStatus(const std::shared_ptr<Task> &task, CLI::App &app)
@@ -184,11 +183,9 @@ void addSubCommandStatus(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandTail(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    auto config = task->getConfig();
-
     task->setType((int)TaskType::TAIL);
 
-    config->set_job_ID(jobID);
+    task->setJobId(jobID);
 }
 
 void addSubCommandTail(const std::shared_ptr<Task> &task, CLI::App &app)
@@ -205,11 +202,9 @@ void addSubCommandTail(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandStop(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    auto config = task->getConfig();
-
     task->setType((int)TaskType::STOP);
 
-    config->set_job_ID(jobID);
+    task->setJobId(jobID);
 }
 
 void addSubCommandStop(const std::shared_ptr<Task> &task, CLI::App &app)
@@ -226,11 +221,9 @@ void addSubCommandStop(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandPause(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    auto config = task->getConfig();
-
     task->setType((int)TaskType::PAUSE);
 
-    config->set_job_ID(jobID);
+    task->setJobId(jobID);
 }
 
 void addSubCommandPause(const std::shared_ptr<Task> &task, CLI::App &app)
@@ -247,11 +240,9 @@ void addSubCommandPause(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandContinue(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    auto config = task->getConfig();
-
     task->setType((int)TaskType::CONTINUE);
 
-    config->set_job_ID(jobID);
+    task->setJobId(jobID);
 }
 
 void addSubCommandContinue(const std::shared_ptr<Task> &task, CLI::App &app)
@@ -268,11 +259,9 @@ void addSubCommandContinue(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandBackup(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    auto config = task->getConfig();
-
     task->setType((int)TaskType::BACKUP);
 
-    config->set_job_ID(jobID);
+    task->setJobId(jobID);
 }
 
 void addSubCommandBackup(const std::shared_ptr<Task> &task, CLI::App &app)
@@ -289,14 +278,12 @@ void addSubCommandBackup(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandRestore(const std::shared_ptr<Task> &task, std::vector<uint64_t> &jobAndBackupID)
 {
-    auto config = task->getConfig();
-
     task->setType((int)TaskType::RESTORE);
 
     //jobAndBackupID
 
-    config->set_job_ID(jobAndBackupID[0]);
-    config->set_backup_ID(jobAndBackupID[1]);
+    task->setJobId(jobAndBackupID[0]);
+    task->setBackupId(jobAndBackupID[1]);
 }
 
 void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app)

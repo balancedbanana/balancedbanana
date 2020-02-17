@@ -9,11 +9,6 @@
 #include <communication/Task.h>
 #include "CLI11/CLI11.hpp"
 
-#define CLIENT_PROGRAM_NAME "bbc"
-#define SERVER_PROGRAM_NAME "bbs"
-#define WORKER_PROGRAM_NAME "bbd"
-
-
 
 #define ERROR_UNCLEAR_TASK_TYPE -1
 
@@ -48,7 +43,7 @@ namespace balancedbanana {
 			 * 
 			 * Returns 0 on success and an error code on failure.
 			 */
-			virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task) { return 0; }
+			virtual int process(int argc, char** argv, const std::shared_ptr<balancedbanana::communication::Task>& task) { return 0; }
 
 		};
 
