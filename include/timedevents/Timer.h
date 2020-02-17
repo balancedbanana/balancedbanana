@@ -3,6 +3,7 @@
 #include <functional>
 #include <vector>
 #include <thread>
+#include <mutex>
 
 
 namespace balancedbanana
@@ -17,7 +18,14 @@ namespace timedevents
 class Timer {
 public:
 
+	/**
+	 * Create a new uninitialized Timer instance.
+	 * Use dedicated setters to initialize the Timer.
+	 * (See setInterval and addTimerFunction)
+	 */
 	Timer();
+
+	~Timer();
 
 	/**
 	 * Set the timer interval.
@@ -38,7 +46,7 @@ public:
 	 * Note: Try using lambda expressions or create a std::function<void()> to pass to this function
 	 * as raw function pointers tend to not work here.
 	 */
-	void addTimerFunction(std::function<void()>& function);
+	void addTimerFunction(const std::function<void()>& function);
 
 	/**
 	 * Start the timer.
@@ -52,7 +60,8 @@ public:
 	/**
 	 * Stop the timer.
 	 * If the timer gets stopped while calling a callback function, the timer will proceed to call each registered callback function before stopping completely.
-	 * After the timer is stopped, it may take up to a full interval before the timer can be restarted.
+	 * The stop method returns only after the timer has been stopped completely.
+	 * The process of stopping completely may take additional time (up to 10 seconds) depending on the set interval and other internal settings.
 	 */
 	void stop();
 
@@ -77,6 +86,11 @@ private:
 	 * This thread is responsible for sleeping until one interval has passed, then calling all callback functions.
 	 */
 	std::thread sleeperThread;
+
+	/**
+	 * Some synchronization locks
+	 */
+	std::mutex mutex_timerFuncitons;
 
 };
 
