@@ -39,15 +39,15 @@ void Communicator::msghandler(std::shared_ptr<Net::Socket> socket, std::shared_p
             return;
         }
         uint32_t length;
-        auto data = Net::Http::V2::GetUInt32(buf.data(), length);
+        Net::Http::V2::GetUInt32(buf.data(), length);
         if(length > buf.size()) {
             // Resize skipping copying the old data
             buf = std::vector<uint8_t>(length);
         }
-        if(!in.ReceiveAll(data, length)) {
+        if(!in.ReceiveAll(buf.data(), length)) {
             return;
         }
-        processor->process(Message::deserialize((char*)data, length));
+        processor->process(Message::deserialize((char*)buf.data(), length));
     }
 }
 
