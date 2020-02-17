@@ -11,6 +11,7 @@ add_executable(MessageTests
         message/HardwareDetailMessageTests.cpp
         message/MessageTests.cpp
         message/PublicKeyAuthMessageTests.cpp
-        message/SnapshotMessageTests.cpp)
+        message/SnapshotMessageTests.cpp
+        message/TaskMessageTests.cpp)
 target_link_libraries(MessageTests ${GTEST} communication scheduler)
 gtest_discover_tests(MessageTests)
