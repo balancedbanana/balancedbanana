@@ -19,7 +19,6 @@
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 
-#define FOUR_MB (4194304) // If RAM is under this amount, errors might occur in docker.
 
 // Stores all details about a Job in QVariants
 struct QVariant_JobConfig{
@@ -596,7 +595,7 @@ std::vector<job_details> JobGateway::getJobs() {
  * @param job_id The id of the job
  * @param worker_id The id of the worker (or partition of the worker)
  * @param specs The resources assigned to the job
- * @return true if the operation was succesful, otherwise false.
+ * @return true if the operation was successful, otherwise false.
  */
 bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
     if (!Utilities::doesTableExist("workers")){
@@ -618,9 +617,10 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
                 throw std::runtime_error("startJob error: allocated_resources query failed: " + queryAlloc.lastError
                 ().databaseText().toStdString());
             }
-            QSqlQuery query("UPDATE jobs SET allocated_resources = ?, worker_id = ? WHERE id = ?");
+            QSqlQuery query("UPDATE jobs SET allocated_id = ?, worker_id = ?, status_id = ? WHERE id = ?");
             query.addBindValue(QVariant::fromValue(allocated_specs));
             query.addBindValue(QVariant::fromValue(worker_id));
+            query.addBindValue(QVariant::fromValue((int) JobStatus::processing));
             query.addBindValue(QVariant::fromValue(job_id));
             if (query.exec()){
                 return true;
