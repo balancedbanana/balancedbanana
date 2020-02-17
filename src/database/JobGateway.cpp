@@ -14,6 +14,7 @@
 #include <QDateTime>
 #include <QDataStream>
 #include <iostream>
+#include <QSqlRecord>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
@@ -364,6 +365,99 @@ job_details getDetailsAfterSet(const QSqlQuery& query){
     return details;
 }
 
+void setJobTableValues(job_details& details, QSqlQuery& query){
+    details.user_id = query.value(0).toUInt();
+    details.config.set_min_ram(Utilities::castToOptional(query.value(1).toUInt()));
+    details.config.set_max_ram(Utilities::castToOptional(query.value(2).toUInt()));
+    details.config.set_min_cpu_count(Utilities::castToOptional(query.value(3).toUInt()));
+    details.config.set_max_cpu_count(Utilities::castToOptional(query.value(4).toUInt()));
+
+    std::optional<QVariant> castedBlocking = Utilities::castToOptional(query.value(5));
+    if (castedBlocking != std::optional<QVariant>{std::nullopt}){
+        details.config.set_blocking_mode(castedBlocking.value().toBool());
+    } else {
+        details.config.set_blocking_mode(std::nullopt);
+    }
+    details.config.set_email(query.value(6).toString().toStdString());
+
+    std::optional<uint> castedPriorityId = Utilities::castToOptional(query.value(7).toUInt());
+    if (castedPriorityId != std::nullopt){
+        details.config.set_priority(static_cast<Priority> (query.value(7).toUInt()));
+    } else {
+        details.config.set_priority(std::nullopt);
+    }
+    details.config.set_image(query.value(8).toString().toStdString());
+
+    std::optional<QVariant> castedInterruptible = Utilities::castToOptional(query.value(9));
+    if (castedInterruptible != std::optional<QVariant>{std::nullopt}){
+        details.config.set_interruptible(castedInterruptible->toBool());
+    } else {
+        details.config.set_interruptible(std::nullopt);
+    }
+
+    if(query.value(10).isNull()){
+        details.config.set_environment(std::nullopt);
+    } else {
+        details.config.set_environment(Utilities::deserializeVector<std::string>(query.value(10)
+        .toString()
+        .toStdString()));
+    }
+
+    details.config.set_current_working_dir(query.value(11).toString().toStdString());
+    details.command = query.value(12).toString().toStdString();
+    details.schedule_time = QDateTime::fromString(query.value(13).toString(),
+                                                       "yyyy.MM.dd:hh.mm.ss.z");
+    details.worker_id = Utilities::castToOptional(query.value(14).toUInt());
+    details.status = query.value(15).toInt();
+
+    if (query.value(16).isNull()){
+        details.start_time = std::nullopt;
+    } else {
+        details.start_time = QDateTime::fromString(query.value(16).toString(),
+                                                      "yyyy.MM.dd:hh.mm.ss.z");
+    }
+
+    if (query.value(17).isNull()){
+        details.finish_time = std::nullopt;
+    } else {
+        details.finish_time = QDateTime::fromString(query.value(17).toString(),
+                                                   "yyyy.MM.dd:hh.mm.ss.z");
+    }
+}
+
+void setAllocatedTableValues(job_details& details, QSqlQuery& query){
+    if (Utilities::castToOptional(query.value(18).toUInt()) == std::nullopt){
+        details.allocated_specs = std::nullopt;
+    } else {
+        QSqlQuery allocateQuery("SELECT space, ram, cores FROM allocated_resources WHERE id = ?");
+        allocateQuery.addBindValue(query.value(18).toUInt());
+        if (allocateQuery.exec()){
+            details.allocated_specs->space = allocateQuery.value(0).toUInt();
+            details.allocated_specs->ram = allocateQuery.value(1).toUInt();
+            details.allocated_specs->cores = allocateQuery.value(2).toUInt();
+        } else {
+            throw std::runtime_error("getJob error: setting of allocated_resources failed: " + allocateQuery
+            .lastError().databaseText().toStdString());
+        }
+    }
+}
+
+void setResultTableValues(job_details&  details, QSqlQuery& query){
+    if (Utilities::castToOptional(query.value(19).toUInt()) == std::nullopt){
+        details.result = std::nullopt;
+    } else {
+        QSqlQuery resultQuery("SELECT stdout, exit_code FROM job_results WHERE id = ?");
+        resultQuery.addBindValue(query.value(19).toUInt());
+        if (resultQuery.exec()){
+            details.result->stdout = resultQuery.value(0).toString().toStdString();
+            details.result->exit_code = resultQuery.value(1).toInt();
+        } else {
+            throw std::runtime_error("getJob error: setting of allocated_resources failed: " + resultQuery
+                    .lastError().databaseText().toStdString());
+        }
+    }
+}
+
 /**
  * Getter method for the information of a job with the given id.
  * @param job_id The job's id
@@ -378,17 +472,43 @@ job_details JobGateway::getJob(uint64_t job_id) {
     }
     job_details details{};
     if (Utilities::doesRecordExist("jobs", job_id)){
+        /*
         QSqlQuery query("SELECT jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cores, jobs.max_cores, "
                         "jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs.environment, "
                         "jobs.current_working_dir, jobs.command, jobs.schedule_time, jobs.start_time, jobs.finish_time, "
                         "jobs.status_id, allocated_resources.cores, allocated_resources.space, allocated_resources.ram FROM "
                         "jobs WHERE id = ? JOIN allocated_resources ON jobs"
                         ".allocated_specs=allocated_resources.id");
+                        */
+        QSqlQuery query("SELECT user_id, \n"
+                        "    min_ram,\n"
+                        "    max_ram,\n"
+                        "    min_cores,\n"
+                        "    max_cores,\n"
+                        "    blocking_mode,\n"
+                        "    email,\n"
+                        "    priority,\n"
+                        "    image,\n"
+                        "    interruptible,\n"
+                        "    environment,\n"
+                        "    working_dir,\n"
+                        "    command,\n"
+                        "    schedule_time,\n"
+                        "    worker_id,\n"
+                        "    status_id,\n"
+                        "    start_time,\n"
+                        "    finish_time,\n"
+                        "    allocated_id,\n"
+                        "    result_id\n"
+                        "FROM jobs");
         query.addBindValue(QVariant::fromValue(job_id));
         if (query.exec()){
             if (query.next()) {
-                details = getDetailsAfterSet(query);
+                setJobTableValues(details, query);
+                setAllocatedTableValues(details, query);
+                setResultTableValues(details, query);
                 details.id = job_id;
+                details.empty = false;
             } else {
                 // This would be a very weird error, as I've already checked if the job exists.
                 throw std::runtime_error("getJob error: record doesn't exist");

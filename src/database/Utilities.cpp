@@ -102,7 +102,7 @@ std::optional<uint> Utilities::castToOptional(uint value) {
  */
 std::optional<QVariant> Utilities::castToOptional(QVariant value) {
     if (value.isNull()){
-        return std::nullopt;
+        return std::optional<QVariant> {std::nullopt};
     } else {
         return value;
     }

@@ -318,6 +318,37 @@ TEST_F(AddJobTest, AddJobTest_Invalid_Min_CPU_Count_Larger_Than_Max_Test){
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+void restoreJobsTable(){
+    QSqlQuery query("CREATE TABLE `jobs` (\n"
+                    "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
+                    "  `min_ram` bigint(10) unsigned DEFAULT NULL,\n"
+                    "  `start_time` varchar(60) DEFAULT NULL,\n"
+                    "  `schedule_time` varchar(60) DEFAULT NULL,\n"
+                    "  `finish_time` varchar(60) DEFAULT NULL,\n"
+                    "  `command` text NOT NULL,\n"
+                    "  `image` varchar(500) NOT NULL,\n"
+                    "  `blocking_mode` tinyint(1) DEFAULT NULL,\n"
+                    "  `working_dir` text NOT NULL,\n"
+                    "  `allocated_id` bigint(10) unsigned DEFAULT NULL,\n"
+                    "  `interruptible` tinyint(1) DEFAULT NULL,\n"
+                    "  `environment` text,\n"
+                    "  `min_cores` int(10) unsigned DEFAULT NULL,\n"
+                    "  `max_cores` int(10) unsigned DEFAULT NULL,\n"
+                    "  `priority` int(10) unsigned DEFAULT NULL,\n"
+                    "  `status_id` int(10) unsigned NOT NULL DEFAULT '1',\n"
+                    "  `max_ram` bigint(10) unsigned DEFAULT NULL,\n"
+                    "  `user_id` bigint(10) unsigned NOT NULL,\n"
+                    "  `worker_id` bigint(10) DEFAULT NULL,\n"
+                    "  `email` varchar(255) NOT NULL,\n"
+                    "  `result_id` bigint(10) unsigned DEFAULT NULL,\n"
+                    "  PRIMARY KEY (`id`),\n"
+                    "  UNIQUE KEY `id_UNIQUE` (`id`),\n"
+                    "  UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`),\n"
+                    "  UNIQUE KEY `result_id` (`result_id`)\n"
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.exec();
+}
+
 /**
  * Fixture class that deletes the jobs table on setup and restores it on teardown.
  */
@@ -352,34 +383,7 @@ protected:
     }
 
     void TearDown() override {
-        QSqlQuery query("CREATE TABLE IF NOT EXISTS `jobs` (\n"
-                        "    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
-                        "    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
-                        "    `start_time` VARCHAR(60) NULL DEFAULT NULL,\n"
-                        "    `schedule_time` VARCHAR(60) DEFAULT NULL,\n"
-                        "    `finish_time` VARCHAR(60) DEFAULT NULL,\n"
-                        "    `command` TEXT NOT NULL,\n"
-                        "    `image` VARCHAR(500) NOT NULL,\n"
-                        "    `blocking_mode` TINYINT(1) DEFAULT NULL,\n"
-                        "    `working_dir` TEXT NOT NULL,\n"
-                        "    `allocated_id` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
-                        "    `interruptible` TINYINT(1) DEFAULT NULL,\n"
-                        "    `environment` TEXT,\n"
-                        "    `min_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
-                        "    `max_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
-                        "    `priority` INT(10) UNSIGNED DEFAULT NULL,\n"
-                        "    `status_id` INT(10) UNSIGNED NOT NULL DEFAULT '1',\n"
-                        "    `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
-                        "    `user_id` BIGINT(10) UNSIGNED NOT NULL,\n"
-                        "    `worker_id` BIGINT(10) DEFAULT NULL,\n"
-                        "    `email` VARCHAR(255) NOT NULL,\n"
-                        "    PRIMARY KEY (`id`),\n"
-                        "    UNIQUE KEY `id_UNIQUE` (`id`),\n"
-                        "    UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`)\n"
-                        ")\n"
-                        "ENGINE=InnoDB\n"
-                        "DEFAULT CHARSET=utf8");
-        query.exec();
+        restoreJobsTable();
     }
 
     job_details details;
@@ -480,5 +484,71 @@ TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveJobTest, RemoveJobTest_FailureRemove_Test){
     EXPECT_FALSE(JobGateway::remove(1));
+}
+
+class GetJobTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Setup the variables needed
+        details.id = 1;
+        details.status = 1; //scheduled
+        details.user_id = 1;
+        details.command = "mkdir build";
+        details.schedule_time = QDateTime::currentDateTime();
+        details.empty = false;
+        details.config.set_min_ram(4194304);
+        details.config.set_max_ram(4194305);
+        details.config.set_min_cpu_count(42);
+        details.config.set_max_cpu_count(43);
+        details.config.set_blocking_mode(true);
+        details.config.set_email("mail@test.com");
+        details.config.set_priority(Priority::low);
+        details.config.set_image("testimage");
+        details.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        details.config.set_interruptible(false);
+        details.config.set_current_working_dir(".");
+        details.allocated_specs->ram = 1324;
+        details.allocated_specs->cores = 4;
+        details.allocated_specs->space = 55;
+    }
+
+    void TearDown() override {
+        resetJobTable();
+    }
+
+    job_details details;
+};
+
+TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
+    // Deletes the allocated_resources table
+    QSqlQuery query("DROP TABLE allocated_resources");
+    query.exec();
+
+    EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
+
+    // Restore the table
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
+                  "(\n"
+                  "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `space` BIGINT(10) UNSIGNED NOT NULL,\n"
+                  "    `ram`   BIGINT(10) UNSIGNED NOT NULL,\n"
+                  "    `cores` INT(10) UNSIGNED NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8");
+    query.exec();
+}
+
+TEST_F(GetJobTest, GetJobTest_NonExistentJob_Test){
+    EXPECT_TRUE(JobGateway::getJob(details.id).empty);
+}
+
+TEST_F(GetJobTest, GetJobTest_FirstAdd_Test){
+    // Add the job. Should work without issues
+    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(wasJobAddSuccessful(details, details.id));
+    EXPECT_TRUE(JobGateway::getJob(details.id) == details);
 }
 

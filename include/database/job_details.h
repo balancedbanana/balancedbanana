@@ -2,6 +2,7 @@
 
 #include <configfiles/JobConfig.h>
 #include <database/Specs.h>
+#include <database/job_result.h>
 
 #include <cinttypes>
 #include <string>
@@ -36,6 +37,8 @@ namespace balancedbanana {
 
 			std::optional<Specs> allocated_specs;
 
+			std::optional<job_result> result;
+
             // true if empty, otherwise false;
             bool empty = true;
 
@@ -60,7 +63,9 @@ namespace balancedbanana {
                        && this->config.image() == rhs.config.image()
                        && this->config.environment() == rhs.config.environment()
                        && this->config.interruptible() == rhs.config.interruptible()
-                       && this->config.current_working_dir() == rhs.config.current_working_dir();
+                       && this->config.current_working_dir() == rhs.config.current_working_dir()
+                && ((!this->result.has_value() && !rhs.result.has_value()) ||
+                    (this->result.value() == rhs.result.value()));
             }
 		};
 	}
