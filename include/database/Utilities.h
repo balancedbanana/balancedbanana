@@ -16,6 +16,8 @@ namespace balancedbanana::database {
         static std::string serializeVector(std::vector<T> vector);
         template<typename T>
         static std::vector<T> deserializeVector(std::string string);
+        template<typename T>
+        static std::optional<T> castToOptional(T foo);
     };
 }
 

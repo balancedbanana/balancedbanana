@@ -149,10 +149,13 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
  */
 bool areArgsValid(job_details& details){
 
+    if (details.empty){
+        return false;
+    }
+
     // Check the optional arguments
     if (details.config.min_ram().has_value() && (details.config.min_ram().value() == 0 || details.config.min_ram() <
     FOUR_MB)){
-        // TODO check the min values for the args
        return false;
     }
     if (details.config.max_ram().has_value() && (details.config.max_ram().value() == 0 || details.config.max_ram() <
@@ -171,7 +174,7 @@ bool areArgsValid(job_details& details){
     if (details.start_time.has_value() && !details.start_time.value().isValid()){
         return false;
     }
-    if (!details.allocated_specs->empty){
+    if (details.allocated_specs.has_value() && !details.allocated_specs->empty){
         if (details.allocated_specs->ram == 0 || details.allocated_specs->space == 0 || details.allocated_specs->cores
         == 0){
             return false;

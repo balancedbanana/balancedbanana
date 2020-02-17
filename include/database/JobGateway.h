@@ -4,6 +4,8 @@
 #include "job_details.h"
 #include "job_result.h"
 
+#define DEFAULT_MIN_RAM (0)
+
 namespace balancedbanana::database {
     class JobGateway : virtual public IGateway {
     public:
@@ -16,6 +18,4 @@ namespace balancedbanana::database {
         exit_code);
         static job_result getJobResult(uint64_t job_id);
     };
-
-    std::vector<std::string> convertToVectorString(const QByteArray& buffer);
 }

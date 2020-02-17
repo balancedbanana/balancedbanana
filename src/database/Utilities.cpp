@@ -70,5 +70,9 @@ std::vector<T> Utilities::deserializeVector(std::string string){
     return deserializedVec;
 }
 
+template<typename T>
+std::optional<T> Utilities::castToOptional(T foo) {
+}
+
 template std::string Utilities::serializeVector(std::vector<std::string> vector);
 template std::vector<std::string> Utilities::deserializeVector(std::string string);

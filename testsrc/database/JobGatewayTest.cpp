@@ -131,7 +131,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
 
             job_details queryDetails{};
             queryDetails.user_id = query.value(user_id_index).toUInt();
-            queryDetails.config.set_min_ram(query.value(min_ram_index).toUInt());
+            queryDetails.config.set_min_ram(query.value(min_ram_index));
             queryDetails.config.set_max_ram(query.value(max_ram_index).toUInt());
             queryDetails.config.set_min_cpu_count(query.value(min_cores_index).toUInt());
             queryDetails.config.set_max_cpu_count(query.value(max_cores_index).toUInt());
@@ -163,8 +163,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
                     }
                 }
             }
-/*
- *  Keeping this for debugging
+            // Keeping this for debugging
             EXPECT_TRUE(queryDetails.user_id == details.user_id);
             EXPECT_TRUE(queryDetails.status == details.status);
             EXPECT_TRUE(queryDetails.schedule_time == details.schedule_time);
@@ -174,6 +173,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
                          (queryDetails.allocated_specs.value() == details.allocated_specs.value())));
             EXPECT_TRUE(queryDetails.empty == details.empty);
             EXPECT_TRUE(queryDetails.config.min_ram() == details.config.min_ram());
+            qDebug() << queryDetails.config.min_ram().value() << " " << details.config.min_ram().has_value();
             EXPECT_TRUE(queryDetails.config.max_ram() == details.config.max_ram());
             EXPECT_TRUE(queryDetails.config.min_cpu_count() == details.config.min_cpu_count());
             EXPECT_TRUE(queryDetails.config.max_cpu_count() == details.config.max_cpu_count());
@@ -184,7 +184,6 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             EXPECT_TRUE(queryDetails.config.environment() == details.config.environment());
             EXPECT_TRUE(queryDetails.config.interruptible() == details.config.interruptible());
             EXPECT_TRUE(queryDetails.config.current_working_dir() == details.config.current_working_dir());
-            */
             EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
@@ -379,5 +378,31 @@ TEST_F(NoJobsTableTest, NoJobsTableTest_GetJob_Test){
 // Test to see if an exception is thrown when the jobs getter is called, but no jobs' table exists.
 TEST_F(NoJobsTableTest, NoJobsTableTest_GetJobs_Test){
     EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
+}
+
+class AddJobMandatoryTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        details.id = 1;
+        details.status = 1; //scheduled
+        details.user_id = 1;
+        details.command = "mkdir build";
+        details.schedule_time = QDateTime::currentDateTime();
+        details.empty = false;
+        details.config.set_email("mail@test.com");
+        details.config.set_image("testimage");
+        details.config.set_current_working_dir(".");
+    }
+
+    void TearDown() override {
+        resetJobTable();
+    }
+
+    job_details details;
+};
+
+TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
+    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(wasJobAddSuccessful(details, 1));
 }
 
