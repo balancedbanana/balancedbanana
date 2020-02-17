@@ -5,6 +5,10 @@ add_executable(ConnectTest ConnectTest.cpp)
 target_link_libraries(ConnectTest ${GTEST} communication Message)
 gtest_discover_tests(ConnectTest)
 
-add_executable(MessageTests message/MessageTests.cpp message/AuthResultMessageTests.cpp message/ClientAuthMessageTests.cpp)
+add_executable(MessageTests
+        message/AuthResultMessageTests.cpp
+        message/ClientAuthMessageTests.cpp
+        message/HardwareDetailMessageTests.cpp
+        message/MessageTests.cpp)
 target_link_libraries(MessageTests ${GTEST} communication scheduler)
 gtest_discover_tests(MessageTests)
