@@ -267,57 +267,70 @@ TEST_F(AddJobTest, AddWorkerTest_AddSecondJobSucess_Test){
     EXPECT_TRUE(wasJobAddSuccessful(seconddetails, 2));
 }
 
+// Test to see if the addJob method throws an exception when the id is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_Job_id_Test){
     details.user_id = 0;
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the command arg is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_Command_Test){
     details.command = "";
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the email arg is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_EMAIL_Test){
     details.config.set_email("");
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the schedule_time arg is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_Schedule_Time_Test){
     details.schedule_time = QDateTime::fromString("0.13.54.13.01:5.5");
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the min_ram arg is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_Min_RAM_TOO_SMALL_Test){
     details.config.set_min_ram(123);
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the max_ram arg is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_Max_RAM_TOO_SMALL_Test){
     details.config.set_max_ram(123);
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the min_ram arg is larger than the max_ram arg.
 TEST_F(AddJobTest, AddJobTest_Invalid_Min_RAM_Larger_Than_Max_Test){
     details.config.set_min_ram(4194305);
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the min_cpu_count arg is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_Invalid_Min_CPU_Count_Test){
     details.config.set_min_cpu_count(0);
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the max_cpu_count arg is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_Max_CPU_Count_Test){
     details.config.set_max_cpu_count(0);
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+// Test to see if the addJob method throws an exception when the min_cpu_count arg is larger than the max_cpu_count arg
 TEST_F(AddJobTest, AddJobTest_Invalid_Min_CPU_Count_Larger_Than_Max_Test){
     details.config.set_min_cpu_count(2);
     details.config.set_max_cpu_count(1);
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
+/**
+ * Restores the jobs table
+ */
 void restoreJobsTable(){
     QSqlQuery query("CREATE TABLE `jobs` (\n"
                     "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
@@ -409,6 +422,10 @@ TEST_F(NoJobsTableTest, NoJobsTableTest_GetJobs_Test){
     EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
 }
 
+/**
+ * Fixture class that initializes a sample job with only the mandatory information (a.k.a the optionals don't have
+ * values)
+ */
 class AddJobMandatoryTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -430,6 +447,7 @@ protected:
     job_details details;
 };
 
+// First add with only the mandatory information
 TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
 
     EXPECT_TRUE(JobGateway::add(details) == 1);
@@ -452,6 +470,9 @@ bool wasJobRemoveSuccessful(uint64_t id){
     }
 }
 
+/**
+ * Fixture class that resets the jobs table on teardown
+ */
 class RemoveJobTest : public ::testing::Test {
 protected:
     void TearDown() override{
@@ -459,6 +480,7 @@ protected:
     }
 };
 
+// Test if remove works properly
 TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
     // Add a job
     job_details details{};
@@ -486,6 +508,9 @@ TEST_F(RemoveJobTest, RemoveJobTest_FailureRemove_Test){
     EXPECT_FALSE(JobGateway::remove(1));
 }
 
+/**
+ * Fixture class that initializes a sample job on setup and resets the jobs table on teardown
+ */
 class GetJobTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -519,6 +544,7 @@ protected:
     job_details details;
 };
 
+// Test to see if an exception is thrown when the getter is called but no allocated_resorces table exists
 TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
     // Deletes the allocated_resources table
     QSqlQuery query("DROP TABLE allocated_resources");
@@ -538,6 +564,25 @@ TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
                   ")\n"
                   "ENGINE = InnoDB\n"
                   "DEFAULT CHARACTER SET = utf8");
+    query.exec();
+}
+
+// Test to see if an exception is thrown when the getter is called but no job_results table exists
+TEST_F(GetJobTest, GetJobTest_NoJobResultsTable_Test){
+    // Deletes the allocated_resources table
+    QSqlQuery query("DROP TABLE job_results");
+    query.exec();
+
+    EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
+
+    // Restore the table
+    query.prepare("CREATE TABLE `job_results` (\n"
+                  "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
+                  "  `stdout` text NOT NULL,\n"
+                  "  `exit_code` tinyint(3) NOT NULL,\n"
+                  "  PRIMARY KEY (`id`),\n"
+                  "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
+                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     query.exec();
 }
 

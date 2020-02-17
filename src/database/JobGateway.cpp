@@ -266,6 +266,7 @@ bool JobGateway::remove(uint64_t job_id) {
     }
 }
 
+/*
 /**
  * Returns a job_details struct after all the values from the query are set.
  *
@@ -275,7 +276,7 @@ bool JobGateway::remove(uint64_t job_id) {
  *
  * @param query The query from which the values are to be set
  * @return The struct containing the query values.
- */
+ *
 job_details getDetailsAfterSet(const QSqlQuery& query){
     job_details details{};
     details.user_id = query.value(0).toUInt();
@@ -364,7 +365,17 @@ job_details getDetailsAfterSet(const QSqlQuery& query){
     }
     return details;
 }
+*/
 
+/**
+ * Sets all the values from the jobs table in details
+ *
+ * A lot of the values are marked std::optional, so the method checks if these values are valid or not. If valid then
+ * the value is set in details, otherwise std::nullopt is set instead.
+ *
+ * @param details The struct that will store the query data
+ * @param query The query
+ */
 void setJobTableValues(job_details& details, QSqlQuery& query){
     details.user_id = query.value(0).toUInt();
     details.config.set_min_ram(Utilities::castToOptional(query.value(1).toUInt()));
@@ -425,6 +436,11 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     }
 }
 
+/**
+ * Sets the values from the allocated_resources table in details
+ * @param details The struct that will store the query data
+ * @param query The query
+ */
 void setAllocatedTableValues(job_details& details, QSqlQuery& query){
     if (Utilities::castToOptional(query.value(18).toUInt()) == std::nullopt){
         details.allocated_specs = std::nullopt;
@@ -442,6 +458,11 @@ void setAllocatedTableValues(job_details& details, QSqlQuery& query){
     }
 }
 
+/**
+* Sets the values from the job_results table in details
+* @param details The struct that will store the query data
+* @param query The query
+*/
 void setResultTableValues(job_details&  details, QSqlQuery& query){
     if (Utilities::castToOptional(query.value(19).toUInt()) == std::nullopt){
         details.result = std::nullopt;
@@ -470,16 +491,11 @@ job_details JobGateway::getJob(uint64_t job_id) {
     if (!Utilities::doesTableExist("allocated_resources")){
         Utilities::throwNoTableException("allocated_resources");
     }
+    if (!Utilities::doesTableExist("job_results")){
+        Utilities::throwNoTableException("job_results");
+    }
     job_details details{};
     if (Utilities::doesRecordExist("jobs", job_id)){
-        /*
-        QSqlQuery query("SELECT jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cores, jobs.max_cores, "
-                        "jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs.environment, "
-                        "jobs.current_working_dir, jobs.command, jobs.schedule_time, jobs.start_time, jobs.finish_time, "
-                        "jobs.status_id, allocated_resources.cores, allocated_resources.space, allocated_resources.ram FROM "
-                        "jobs WHERE id = ? JOIN allocated_resources ON jobs"
-                        ".allocated_specs=allocated_resources.id");
-                        */
         QSqlQuery query("SELECT user_id, \n"
                         "    min_ram,\n"
                         "    max_ram,\n"
@@ -543,7 +559,10 @@ std::vector<job_details> JobGateway::getJobs() {
     if (query.exec()) {
         while(query.next()){
             job_details details;
-            details = getDetailsAfterSet(query);
+            setJobTableValues(details, query);
+            setAllocatedTableValues(details, query);
+            setResultTableValues(details, query);
+            details.empty = false;
             details.id = query.value(0).toUInt();
             jobVector.push_back(details);
         }
