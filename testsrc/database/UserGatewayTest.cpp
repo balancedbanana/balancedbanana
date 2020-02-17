@@ -97,18 +97,18 @@ bool wasUserAddSuccessful(const user_details& details, uint64_t id){
 TEST_F(AddUserTest, AddUserTest_AddFirstUserSuccess_Test){
 
     // The first entry's id should be 1
-    ASSERT_TRUE(UserGateway::add(details) == 1);
+    EXPECT_TRUE(UserGateway::add(details) == 1);
 
     // The add must be successful
-    ASSERT_TRUE(wasUserAddSuccessful(details, 1));
+    EXPECT_TRUE(wasUserAddSuccessful(details, 1));
 }
 
 // Test to see if the auto increment feature works as expected.
 TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
 
     // Add the user from the first test. Since it's the first user, its id should be 1.
-    ASSERT_TRUE(UserGateway::add(details) == 1);
-    ASSERT_TRUE(wasUserAddSuccessful(details, 1));
+    EXPECT_TRUE(UserGateway::add(details) == 1);
+    EXPECT_TRUE(wasUserAddSuccessful(details, 1));
 
     // Initialize a new user
     user_details seconddetails{};
@@ -118,15 +118,15 @@ TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
     seconddetails.empty = false;
     seconddetails.id = 2;
 
-    ASSERT_TRUE(UserGateway::add(seconddetails) == 2);
-    ASSERT_TRUE(wasUserAddSuccessful(seconddetails, 2));
+    EXPECT_TRUE(UserGateway::add(seconddetails) == 2);
+    EXPECT_TRUE(wasUserAddSuccessful(seconddetails, 2));
 }
 
 // Test to see if the addUser method throws an exception when the key arg is invalid.
 TEST_F(AddUserTest, AddUserTest_InvalidKeyArg_Test){
     user_details detailscpy = details;
     detailscpy.public_key = "";
-    ASSERT_THROW(UserGateway
+    EXPECT_THROW(UserGateway
     ::add(detailscpy), std::invalid_argument);
 }
 
@@ -134,7 +134,7 @@ TEST_F(AddUserTest, AddUserTest_InvalidKeyArg_Test){
 TEST_F(AddUserTest, AddUserTest_InvalidAddressArg_Test){
     user_details detailscpy = details;
     detailscpy.email = "";
-    ASSERT_THROW(UserGateway
+    EXPECT_THROW(UserGateway
     ::add(detailscpy), std::invalid_argument);
 }
 
@@ -142,7 +142,7 @@ TEST_F(AddUserTest, AddUserTest_InvalidAddressArg_Test){
 TEST_F(AddUserTest, AddUserTest_InvalidNameArg_Test){
     user_details detailscpy = details;
     detailscpy.name = "";
-    ASSERT_THROW(UserGateway
+    EXPECT_THROW(UserGateway
     ::add(detailscpy), std::invalid_argument);
 }
 
@@ -236,17 +236,17 @@ TEST_F(RemoveUserTest, RemoveUserTest_SuccessfulRemove_Test){
     details.empty = false;
     details.id = 1;
     // Since this is the first user, this has to be true.
-    ASSERT_TRUE(UserGateway::add(details) == 1);
-    ASSERT_TRUE(wasUserAddSuccessful(details, 1));
+    EXPECT_TRUE(UserGateway::add(details) == 1);
+    EXPECT_TRUE(wasUserAddSuccessful(details, 1));
 
     // This must return true.
-    ASSERT_TRUE(UserGateway::remove(1));
-    ASSERT_TRUE(wasUserRemoveSuccessful(1));
+    EXPECT_TRUE(UserGateway::remove(1));
+    EXPECT_TRUE(wasUserRemoveSuccessful(1));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveUserTest, RemoveUserTest_FailureRemove_Test){
-    ASSERT_FALSE(UserGateway::remove(1));
+    EXPECT_FALSE(UserGateway::remove(1));
 }
 
 /**
@@ -269,23 +269,20 @@ protected:
     user_details details;
 };
 
-// Test to see if the first user
-//
-//
-// can be retrieved correctly.
+// Test to see if the first user can be retrieved correctly.
 TEST_F(GetUserTest, GetUserTest_SuccessfulGet_Test){
     // Add the user. Its id should be 1, since it's the first to be added.
     EXPECT_EQ(UserGateway::add(details), details.id);
 
     // Get the user and compare it to the added user. They should be equal.
     user_details expected_details = UserGateway::getUser(details.id);
-    ASSERT_TRUE(details == expected_details);
+    EXPECT_TRUE(details == expected_details);
 }
 
 // Test to see if the getter method returns an empty user_details when its called with an invalid id
 TEST_F(GetUserTest, GetUserTest_NonExistentUser_Test){
     user_details empty_details{};
-    ASSERT_TRUE(UserGateway::getUser(1) == empty_details);
+    EXPECT_TRUE(UserGateway::getUser(1) == empty_details);
 }
 
 /**
@@ -356,12 +353,12 @@ TEST_F(GetUsersTest, GetUsersTest_SuccessfulGet_Test){
     expectedVector.push_back(third);
 
     std::vector<user_details> actualVector = UserGateway::getUsers();
-    ASSERT_TRUE(areDetailVectorsEqual(expectedVector, actualVector));
+    EXPECT_TRUE(areDetailVectorsEqual(expectedVector, actualVector));
 }
 
 // Test to see if the getter method returns an empty vector if the users table is empty
 TEST_F(GetUsersTest, GetUsersTest_NonExistentUsers_Test){
-    ASSERT_TRUE(UserGateway::getUsers().empty());
+    EXPECT_TRUE(UserGateway::getUsers().empty());
 }
 
 

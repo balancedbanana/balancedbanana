@@ -41,6 +41,12 @@ bool Utilities::doesRecordExist(const std::string& table_name, uint64_t id){
     throw std::runtime_error(query.lastError().databaseText().toStdString());
 }
 
+/**
+ * Serializes a vector of type T into a string
+ * @tparam T The type
+ * @param vector The vector containing values of type T
+ * @return The serialized vector in string format
+ */
 template<typename T>
 std::string Utilities::serializeVector(std::vector<T> vector){
     std::stringstream ss;
@@ -53,6 +59,12 @@ std::string Utilities::serializeVector(std::vector<T> vector){
     return serializedVec;
 }
 
+/**
+ * Deserializes a string into a vector of type T
+ * @tparam T The type
+ * @param string The serialized vector in string format
+ * @return The vector represented by the string
+ */
 template<typename T>
 std::vector<T> Utilities::deserializeVector(std::string string){
     std::stringstream ss;
@@ -70,8 +82,30 @@ std::vector<T> Utilities::deserializeVector(std::string string){
     return deserializedVec;
 }
 
-template<typename T>
-std::optional<T> Utilities::castToOptional(T foo) {
+/**
+ * Casts an uint to a std::optional<uint>
+ * @param value The uint
+ * @return Either the value itself if it's valid, otherwise std::nullopt
+ */
+std::optional<uint> Utilities::castToOptional(uint value) {
+    if(value > 0) {
+        return value;
+    } else {
+        return std::nullopt;
+    }
+}
+
+/**
+ * Casts a QVariant to a std::optional<QVariant>
+ * @param value The QVariant
+ * @return Either the value if itself if it's valid, otherwise std::nullopt
+ */
+std::optional<QVariant> Utilities::castToOptional(QVariant value) {
+    if (value.isNull()){
+        return std::nullopt;
+    } else {
+        return value;
+    }
 }
 
 template std::string Utilities::serializeVector(std::vector<std::string> vector);

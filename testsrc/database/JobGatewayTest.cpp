@@ -11,6 +11,7 @@
 #include <QSqlError>
 #include <QDebug>
 #include <QDataStream>
+#include <QVariant>
 #include <QDateTime>
 
 using namespace balancedbanana::database;
@@ -96,7 +97,6 @@ bool areDetailVectorsEqual(std::vector<job_details> expected, std::vector<job_de
     return true;
 }
 
-
 /**
  * Checks if the add query was successful, when all values are added.
  * @param details The record details that were added with the query.
@@ -131,17 +131,40 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
 
             job_details queryDetails{};
             queryDetails.user_id = query.value(user_id_index).toUInt();
-            queryDetails.config.set_min_ram(query.value(min_ram_index));
-            queryDetails.config.set_max_ram(query.value(max_ram_index).toUInt());
-            queryDetails.config.set_min_cpu_count(query.value(min_cores_index).toUInt());
-            queryDetails.config.set_max_cpu_count(query.value(max_cores_index).toUInt());
-            queryDetails.config.set_blocking_mode(query.value(blocking_mode_index).toBool());
+            queryDetails.config.set_min_ram(Utilities::castToOptional(query.value(min_ram_index).toUInt()));
+            queryDetails.config.set_max_ram(Utilities::castToOptional(query.value(max_ram_index).toUInt()));
+            queryDetails.config.set_min_cpu_count(Utilities::castToOptional(query.value(min_cores_index).toUInt()));
+            queryDetails.config.set_max_cpu_count(Utilities::castToOptional(query.value(max_cores_index).toUInt()));
+
+            std::optional<QVariant> castedBlocking = Utilities::castToOptional(query.value(blocking_mode_index));
+            if (castedBlocking != std::nullopt){
+                queryDetails.config.set_blocking_mode(castedBlocking.value().toBool());
+            } else {
+                queryDetails.config.set_blocking_mode(std::nullopt);
+            }
             queryDetails.config.set_email(query.value(email_index).toString().toStdString());
-            queryDetails.config.set_priority(static_cast<Priority> (query.value(priority_index).toUInt()));
+
+            std::optional<uint> castedPriorityId = Utilities::castToOptional(query.value(priority_index).toUInt());
+            if (castedPriorityId != std::nullopt){
+                queryDetails.config.set_priority(static_cast<Priority> (query.value(priority_index).toUInt()));
+            } else {
+                queryDetails.config.set_priority(std::nullopt);
+            }
             queryDetails.config.set_image(query.value(image_index).toString().toStdString());
-            queryDetails.config.set_interruptible(query.value(interruptible_index).toBool());
-            queryDetails.config.set_environment(Utilities::deserializeVector<std::string>(query.value(environment_index)
-            .toString().toStdString()));
+
+            std::optional<QVariant> castedInterruptible = Utilities::castToOptional(query.value(interruptible_index));
+            if (castedInterruptible != std::nullopt){
+                queryDetails.config.set_interruptible(castedInterruptible->toBool());
+            } else {
+                queryDetails.config.set_interruptible(std::nullopt);
+            }
+
+            if(query.value(environment_index).isNull()){
+                queryDetails.config.set_environment(std::nullopt);
+            } else {
+                queryDetails.config.set_environment(Utilities::deserializeVector<std::string>(query.value(environment_index).toString().toStdString()));
+            }
+
             queryDetails.config.set_current_working_dir(query.value(dir_index).toString().toStdString());
             queryDetails.command = query.value(command_index).toString().toStdString();
             queryDetails.schedule_time = QDateTime::fromString(query.value(schedule_time_index).toString(),
@@ -163,6 +186,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
                     }
                 }
             }
+            /*
             // Keeping this for debugging
             EXPECT_TRUE(queryDetails.user_id == details.user_id);
             EXPECT_TRUE(queryDetails.status == details.status);
@@ -173,7 +197,6 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
                          (queryDetails.allocated_specs.value() == details.allocated_specs.value())));
             EXPECT_TRUE(queryDetails.empty == details.empty);
             EXPECT_TRUE(queryDetails.config.min_ram() == details.config.min_ram());
-            qDebug() << queryDetails.config.min_ram().value() << " " << details.config.min_ram().has_value();
             EXPECT_TRUE(queryDetails.config.max_ram() == details.config.max_ram());
             EXPECT_TRUE(queryDetails.config.min_cpu_count() == details.config.min_cpu_count());
             EXPECT_TRUE(queryDetails.config.max_cpu_count() == details.config.max_cpu_count());
@@ -184,6 +207,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             EXPECT_TRUE(queryDetails.config.environment() == details.config.environment());
             EXPECT_TRUE(queryDetails.config.interruptible() == details.config.interruptible());
             EXPECT_TRUE(queryDetails.config.current_working_dir() == details.config.current_working_dir());
+             */
             EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
@@ -200,6 +224,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
 
 // Test checks if the addJob method works properly given all the args.
 TEST_F(AddJobTest, AddAllJobTest_FirstJobSuccess_Test){
+
     // The first entry's id should be 1
     EXPECT_TRUE(JobGateway::add(details) == 1);
 
@@ -402,7 +427,58 @@ protected:
 };
 
 TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
+
     EXPECT_TRUE(JobGateway::add(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1));
+}
+
+/**
+ * Check if the remove query on id was successful
+ * @param id The id of the removed record.
+ * @return  true if remove was successful, otherwise false.
+ */
+bool wasJobRemoveSuccessful(uint64_t id){
+    QSqlQuery query("SELECT * FROM jobs WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        return !query.next();
+    } else {
+        qDebug() << "wasJobRemoveSuccessful error: " << query.lastError();
+        return false;
+    }
+}
+
+class RemoveJobTest : public ::testing::Test {
+protected:
+    void TearDown() override{
+        resetJobTable();
+    }
+};
+
+TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
+    // Add a job
+    job_details details{};
+    details.id = 1;
+    details.status = 1; //scheduled
+    details.user_id = 1;
+    details.command = "mkdir build";
+    details.schedule_time = QDateTime::currentDateTime();
+    details.empty = false;
+    details.config.set_email("mail@test.com");
+    details.config.set_image("testimage");
+    details.config.set_current_working_dir(".");
+
+    // Since this is the first job, this has to be true.
+    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(wasJobAddSuccessful(details, 1));
+
+    // This must return true.
+    EXPECT_TRUE(JobGateway::remove(1));
+    EXPECT_TRUE(wasJobRemoveSuccessful(1));
+}
+
+// Test to see if the remove method fails when it's called with an invalid id.
+TEST_F(RemoveJobTest, RemoveJobTest_FailureRemove_Test){
+    EXPECT_FALSE(JobGateway::remove(1));
 }
 

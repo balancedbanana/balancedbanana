@@ -94,17 +94,6 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
     }
 
     QVariant q_environment;
-    /*
-    if (config.environment().has_value()){
-        // Convert environment => QVector => QByteArray. QByteArray will then be mapped to BLOB in the database
-        QVector<std::string> qvec = QVector<std::string>::fromStdVector(config.environment().value());
-        QByteArray qbytearray = QByteArray::fromRawData(
-                reinterpret_cast<const char*>(qvec.constData()),
-                sizeof(std::string) * qvec.size()
-        );
-        q_environment = QVariant::fromValue(qbytearray);
-    }
-     */
     if (config.environment().has_value()){
         q_environment = QVariant::fromValue(QString::fromStdString(Utilities::serializeVector<std::string>(config
                 .environment().value())));
@@ -340,7 +329,7 @@ job_details getDetailsAfterSet(const QSqlQuery& query){
     }
 
     if (query.value(10).isValid()){
-        config.set_environment(convertToVectorString(query.value(10).toByteArray()));
+        config.set_environment(Utilities::deserializeVector<std::string>(query.value(10).toString().toStdString()));
     } else {
         config.set_environment(std::nullopt);
     }
@@ -568,17 +557,4 @@ job_result JobGateway::getJobResult(uint64_t job_id) {
     } else {
         throw std::runtime_error("getJobResult error: no job with id = " + std::to_string(job_id));
     }
-}
-
-/**
- * Converts a QByteArray to a vector of strings.
- * @param buffer The QByteArray
- * @return A vector of strings.
- */
-std::vector<std::string> balancedbanana::database::convertToVectorString(const QByteArray &buffer) {
-    QVector<char*> result;
-    QDataStream bRead(buffer);
-    bRead >> result;
-    std::vector<char*> resultVector = result.toStdVector();
-    return std::vector<std::string>(resultVector.begin(), resultVector.end());
 }
