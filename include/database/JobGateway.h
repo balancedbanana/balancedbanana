@@ -4,6 +4,8 @@
 #include "job_details.h"
 #include "job_result.h"
 
+#define DEFAULT_MIN_RAM (0)
+
 namespace balancedbanana::database {
     class JobGateway : virtual public IGateway {
     public:
