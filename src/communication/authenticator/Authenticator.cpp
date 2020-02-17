@@ -148,7 +148,7 @@ std::pair<std::string, std::string> balancedbanana::communication::authenticator
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
-    std::vector<uint32_t> name(25);
+    std::vector<uint32_t> name(4);
     for (auto &&i : name) {
         i = dis(gen);
     }
