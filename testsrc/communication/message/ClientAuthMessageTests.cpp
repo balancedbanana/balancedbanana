@@ -27,7 +27,7 @@ protected:
 
     void TearDown() override {
         delete msg;
-        delete serialized;
+        delete[] serialized;
         delete size;
     }
 
