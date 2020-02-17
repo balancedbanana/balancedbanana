@@ -586,14 +586,171 @@ TEST_F(GetJobTest, GetJobTest_NoJobResultsTable_Test){
     query.exec();
 }
 
+// Test to see if getter returns empty struct when no job was added
 TEST_F(GetJobTest, GetJobTest_NonExistentJob_Test){
     EXPECT_TRUE(JobGateway::getJob(details.id).empty);
 }
 
+// Test to see if getter returns correct struct when a job was added
 TEST_F(GetJobTest, GetJobTest_FirstAdd_Test){
     // Add the job. Should work without issues
-    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(JobGateway::add(details) == details.id);
     EXPECT_TRUE(wasJobAddSuccessful(details, details.id));
     EXPECT_TRUE(JobGateway::getJob(details.id) == details);
+}
+
+// Test to see if getter works when only mandatory job memebers were added
+TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
+    job_details details;
+    details.id = 1;
+    details.status = 1; //scheduled
+    details.user_id = 1;
+    details.command = "mkdir build";
+    details.schedule_time = QDateTime::currentDateTime();
+    details.empty = false;
+    details.config.set_email("mail@test.com");
+    details.config.set_image("testimage");
+    details.config.set_current_working_dir(".");
+
+    EXPECT_TRUE(JobGateway::add(details) == details.id);
+    EXPECT_TRUE(wasJobAddSuccessful(details, details.id));
+    EXPECT_TRUE(JobGateway::getJob(details.id) == details);
+}
+
+/**
+ * Fixture class that initializes three jobs on setup and resets the table on teardown.
+ */
+class GetJobsTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Set up the first user
+        first.id = 1;
+        first.status = 1; //scheduled
+        first.user_id = 1;
+        first.command = "mkdir build";
+        first.schedule_time = QDateTime::currentDateTime();
+        first.empty = false;
+        first.config.set_min_ram(4194304);
+        first.config.set_max_ram(4194305);
+        first.config.set_min_cpu_count(42);
+        first.config.set_max_cpu_count(43);
+        first.config.set_blocking_mode(true);
+        first.config.set_email("mail@test.com");
+        first.config.set_priority(Priority::low);
+        first.config.set_image("testimage");
+        first.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        first.config.set_interruptible(false);
+        first.config.set_current_working_dir(".");
+
+        // Set up the second user
+        second.id = 2;
+        second.status = 1; //scheduled
+        second.user_id = 1;
+        second.command = "mkdir build";
+        second.schedule_time = QDateTime::currentDateTime();
+        second.empty = false;
+        second.config.set_min_ram(4194304);
+        second.config.set_max_ram(4194305);
+        second.config.set_min_cpu_count(42);
+        second.config.set_max_cpu_count(43);
+        second.config.set_blocking_mode(true);
+        second.config.set_email("mail@test.com");
+        second.config.set_priority(Priority::high);
+        second.config.set_image("testimage");
+        second.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        second.config.set_interruptible(false);
+        second.config.set_current_working_dir(".");
+
+        // Set up the third user
+        third.id = 3;
+        third.status = 1; //scheduled
+        third.user_id = 1;
+        third.command = "mkdir build";
+        third.schedule_time = QDateTime::currentDateTime();
+        third.empty = false;
+        third.config.set_min_ram(4194304);
+        third.config.set_max_ram(4194305);
+        third.config.set_min_cpu_count(42);
+        third.config.set_max_cpu_count(43);
+        third.config.set_blocking_mode(true);
+        third.config.set_email("mail@test.com");
+        third.config.set_priority(Priority::emergency);
+        third.config.set_image("testimage");
+        third.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        third.config.set_interruptible(false);
+        third.config.set_current_working_dir(".");
+
+    }
+
+    void TearDown() override {
+        resetJobTable();
+    }
+
+    job_details first;
+    job_details second;
+    job_details third;
+};
+
+// Test to see if getJobs retrieves a vector of previously added jobs from the database
+TEST_F(GetJobsTest, GetJobsTest_SuccessfulGet_Test){
+    // Add the users. Their ids should match the order of their addition.
+    EXPECT_EQ(JobGateway::add(first), first.id);
+    EXPECT_EQ(JobGateway::add(second), second.id);
+    EXPECT_EQ(JobGateway::add(third), third.id);
+
+    std::vector<job_details> expectedVector;
+    expectedVector.push_back(first);
+    expectedVector.push_back(second);
+    expectedVector.push_back(third);
+
+    std::vector<job_details> actualVector = JobGateway::getJobs();
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
+}
+
+// Test to see if an exception is thrown when the getter is called but no allocated_resorces table exists
+TEST_F(GetJobsTest, GetJobsTest_NoAllocatedResourcesTable_Test){
+    // Deletes the allocated_resources table
+    QSqlQuery query("DROP TABLE allocated_resources");
+    query.exec();
+
+    EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
+
+    // Restore the table
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
+                  "(\n"
+                  "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `space` BIGINT(10) UNSIGNED NOT NULL,\n"
+                  "    `ram`   BIGINT(10) UNSIGNED NOT NULL,\n"
+                  "    `cores` INT(10) UNSIGNED NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8");
+    query.exec();
+}
+
+// Test to see if an exception is thrown when the getter is called but no job_results table exists
+TEST_F(GetJobsTest, GetJobsTest_NoJobResultsTable_Test){
+    // Deletes the allocated_resources table
+    QSqlQuery query("DROP TABLE job_results");
+    query.exec();
+
+    EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
+
+    // Restore the table
+    query.prepare("CREATE TABLE `job_results` (\n"
+                  "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
+                  "  `stdout` text NOT NULL,\n"
+                  "  `exit_code` tinyint(3) NOT NULL,\n"
+                  "  PRIMARY KEY (`id`),\n"
+                  "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
+                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.exec();
+}
+
+// Test to see if the getter method returns an empty vector if the users table is empty
+TEST_F(GetJobsTest, GetJobsTest_NonExistentJobs_Test){
+    EXPECT_TRUE(JobGateway::getJobs().empty());
 }
 

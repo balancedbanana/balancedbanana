@@ -516,7 +516,7 @@ job_details JobGateway::getJob(uint64_t job_id) {
                         "    finish_time,\n"
                         "    allocated_id,\n"
                         "    result_id\n"
-                        "FROM jobs");
+                        "FROM jobs WHERE id = ?");
         query.addBindValue(QVariant::fromValue(job_id));
         if (query.exec()){
             if (query.next()) {
@@ -549,12 +549,30 @@ std::vector<job_details> JobGateway::getJobs() {
     if (!Utilities::doesTableExist("allocated_resources")){
         Utilities::throwNoTableException("allocated_resources");
     }
-    QSqlQuery query("SELECT jobs.id, jobs.user_id, jobs.min_ram, jobs.max_ram, jobs.min_cores, "
-                    "jobs.max_cores, jobs.blocking_mode, jobs.email, jobs.priority,image, jobs.interruptible, jobs"
-                    ".environment, jobs.current_working_dir, jobs.command, jobs.schedule_time, jobs.start_time, "
-                    "jobs.finish_time, jobs.status_id, allocated_resources.cores, allocated_resources.space, "
-                    "allocated_resources.ram FROM jobs JOIN allocated_resources "
-                    "ON jobs.allocated_specs=allocated_resources.id");
+    if (!Utilities::doesTableExist("job_results")){
+        Utilities::throwNoTableException("job_results");
+    }
+    QSqlQuery query("SELECT user_id, \n"
+                    "    min_ram,\n"
+                    "    max_ram,\n"
+                    "    min_cores,\n"
+                    "    max_cores,\n"
+                    "    blocking_mode,\n"
+                    "    email,\n"
+                    "    priority,\n"
+                    "    image,\n"
+                    "    interruptible,\n"
+                    "    environment,\n"
+                    "    working_dir,\n"
+                    "    command,\n"
+                    "    schedule_time,\n"
+                    "    worker_id,\n"
+                    "    status_id,\n"
+                    "    start_time,\n"
+                    "    finish_time,\n"
+                    "    allocated_id,\n"
+                    "    result_id\n"
+                    "FROM jobs");
     std::vector<job_details> jobVector;
     if (query.exec()) {
         while(query.next()){
@@ -664,11 +682,12 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
     }
 }
 
+/*
 /**
  * Getter for the job result of a job with a given id
  * @param job_id The id of the job
  * @return The results of the job
- */
+ *
 job_result JobGateway::getJobResult(uint64_t job_id) {
     if (!Utilities::doesTableExist("job_results")){
         Utilities::throwNoTableException("job_results");
@@ -697,3 +716,4 @@ job_result JobGateway::getJobResult(uint64_t job_id) {
         throw std::runtime_error("getJobResult error: no job with id = " + std::to_string(job_id));
     }
 }
+*/

@@ -2,6 +2,7 @@
 #include <database/UserGateway.h>
 #include <database/user_details.h>
 #include <database/Repository.h>
+#include <database/Utilities.h>
 
 #include <QSqlQuery>
 #include <QVariant>
@@ -322,24 +323,6 @@ protected:
     user_details third;
 };
 
-/**
- * Checks if two vectors of user_details are equal
- * @param expected The first vector
- * @param actual The second vectors
- * @return true if the vectors are equal, otherwise false
- */
-bool areDetailVectorsEqual(std::vector<user_details> expected, std::vector<user_details> actual){
-    if (expected.size() != actual.size()){
-        return false;
-    }
-    for (int i = 0; i < expected.size(); i++){
-        if (!(expected[i] == actual[i])){
-            return false;
-        }
-    }
-    return true;
-}
-
 // Test to see if getUsers retrieves a vector of previously added users from the database
 TEST_F(GetUsersTest, GetUsersTest_SuccessfulGet_Test){
     // Add the users. Their ids should match the order of their addition.
@@ -353,7 +336,7 @@ TEST_F(GetUsersTest, GetUsersTest_SuccessfulGet_Test){
     expectedVector.push_back(third);
 
     std::vector<user_details> actualVector = UserGateway::getUsers();
-    EXPECT_TRUE(areDetailVectorsEqual(expectedVector, actualVector));
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
 }
 
 // Test to see if the getter method returns an empty vector if the users table is empty
