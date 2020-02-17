@@ -212,15 +212,6 @@ void JobConfig::set_current_working_dir(const std::filesystem::path &cwd) {
     current_working_dir_ = cwd;
 }
 
-void JobConfig::set_job_ID(std::optional<uint32_t> jobID) {
-    this->jobID = jobID;
-}
-
-void JobConfig::set_backup_ID(std::optional<uint32_t> backupID) {
-    this->backupID = backupID;
-}
-
-
 std::optional <uint32_t> &JobConfig::min_ram() {
     return min_ram_;
 }
@@ -263,14 +254,6 @@ std::optional<bool> &JobConfig::interruptible() {
 
 const std::filesystem::path &JobConfig::current_working_dir() {
     return current_working_dir_;
-}
-
-std::optional <uint32_t> &JobConfig::get_job_ID() {
-    return jobID;
-}
-
-std::optional <uint32_t> &JobConfig::get_backup_ID() {
-    return backupID;
 }
 
 bool JobConfig::Save(const std::filesystem::path &path) {

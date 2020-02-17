@@ -1,10 +1,14 @@
 #pragma once
+#include <communication/message/WorkerLoadResponseMessage.h>
+
 #include <communication/Communicator.h>
 #include <database/Specs.h>
 #include "IUser.h"
+#include <condition_variable>
 
 namespace balancedbanana {
     namespace scheduler {
+        class SchedulerWorkerMP;
         class Worker : public IUser {
         public:
             void send(const communication::Message & msg);
@@ -12,11 +16,12 @@ namespace balancedbanana {
             void getStatus();
 
             database::Specs getSpec();
-            Worker() : IUser("", "") {
-
-            }
+            const communication::WorkerLoadResponseMessage& GetWorkerLoad();
+            Worker(const std::shared_ptr<communication::Communicator>& comm);
         private:
             std::shared_ptr<communication::Communicator> comm;
+            communication::WorkerLoadResponseMessage resp;
+            std::condition_variable cnd;
         };
     }
 }

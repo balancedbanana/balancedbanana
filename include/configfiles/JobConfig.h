@@ -44,16 +44,6 @@ namespace balancedbanana {
             //This attribute specifies the current working directory from which the job is executed.
             std::filesystem::path current_working_dir_;
 
-            //TODO Are job ids 64 bits long or 32 bits now?
-            //TODO The job id and the backup id should be stored in the job class not in the jobconfig!
-
-            //This attribute specifies which job a request is referring to
-            std::optional <uint32_t> jobID;
-
-            // This attibute specifies which backup is beeing referred to when restoring a job
-            std::optional <uint32_t> backupID;
-
-
         public:
             //This constructor creates an empty JobConfig.
             JobConfig();
@@ -101,12 +91,6 @@ namespace balancedbanana {
             //Setter for the current_working_dir_ attribute.
             void set_current_working_dir(const std::filesystem::path &cwd);
 
-            //Setter for the referred jobID
-            void set_job_ID(std::optional<uint32_t> jobID);
-
-            //Setter for the referred backupID
-            void set_backup_ID(std::optional<uint32_t> backupID);
-
             //Getter for the min_ram_ attribute.
             std::optional <uint32_t> &min_ram();
 
@@ -139,12 +123,6 @@ namespace balancedbanana {
 
             //Getter for the current_working_dir_ attribute.
             const std::filesystem::path &current_working_dir();
-
-            //Getter for the referred jobID
-            std::optional <uint32_t> &get_job_ID();
-
-            //Getter for the referred backupID
-            std::optional <uint32_t> &get_backup_ID();
 
             //This method serializes the JobConfig and saves it in a file with the specified path.
             bool Save(const std::filesystem::path &path);

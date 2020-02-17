@@ -5,14 +5,14 @@
 #include <vector>
 
 namespace balancedbanana::database {
-        class UserGateway: virtual public IGateway {
-        public:
-            uint64_t add(user_details details);
-            static bool remove(uint64_t id);
-            user_details getUser(uint64_t id);
-            std::vector<user_details> getUsers();
+    class UserGateway : virtual public IGateway {
+    public:
+        static uint64_t add(const user_details &user);
 
-        private:
-            static bool doesUserExist(uint64_t id);
-        };
-    }
+        static bool remove(uint64_t id);
+
+        static user_details getUser(uint64_t id);
+
+        static std::vector<user_details> getUsers();
+    };
+}

@@ -2,7 +2,7 @@
 #include <QProcess>
 
 using namespace balancedbanana::worker;
-using Task = balancedbanana::commandLineInterface::Task;
+using namespace balancedbanana::communication;
 
 Container Docker::Start(int userid, const Task & task) {
     QProcess proc;
@@ -15,10 +15,10 @@ Container Docker::Start(int userid, const Task & task) {
         }
     }
     if(config->max_ram()) {
-        args.append({"-m", QString::fromStdString(std::to_string(*config->max_ram()))});
+        args.append({"-m", QString::fromStdString(std::to_string(*config->max_ram())) + "MB"});
     }
     if(config->min_ram()) {
-        args.append({"--memory-reservation", QString::fromStdString(std::to_string(*config->min_ram()))});
+        args.append({"--memory-reservation", QString::fromStdString(std::to_string(*config->min_ram())) + "MB"});
     }
     if(!config->blocking_mode() || !*config->blocking_mode()) {
         args.append("-d");
@@ -29,18 +29,19 @@ Container Docker::Start(int userid, const Task & task) {
     }
     if(!config->image().empty()) {
         args.append(QString::fromStdString(config->image()));
+    } else {
+        throw std::runtime_error("Invalid Argument Jobconfig lacks image name");
     }
+    args.append("bash");
+    args.append("-c");
     args.append(QString::fromStdString(task.getTaskCommand()));
     proc.setArguments(args);
     proc.start();
     proc.waitForFinished(-1);
-    if(proc.exitStatus() != QProcess::NormalExit) {
-        throw std::runtime_error("Invalid Argument for docker start");
-    }
     std::string output = proc.readAllStandardOutput().toStdString();
-    if(proc.exitCode() != 0) {
+    if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
-        throw std::runtime_error("Invalid Argument for docker start");
+        throw std::runtime_error("Invalid Argument for docker start:\n" + output + "Error:\n" + err);
     }
-    return Container(output);
+    return Container(output.substr(0, output.length() - 1));
 }

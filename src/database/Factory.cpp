@@ -15,7 +15,8 @@ Job Factory::createJob(const job_details det) {
 
 //Creates a Worker object.
 Worker Factory::createWorker(const worker_details) {
-    return {};
+    // return {};
+    throw std::runtime_error("NOT IMPLEMENTED");
 }
 
 //Creates a User object.

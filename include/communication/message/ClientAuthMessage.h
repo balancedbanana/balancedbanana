@@ -1,25 +1,30 @@
-﻿#ifndef CLIENTAUTHMESSAGE_H
-#define CLIENTAUTHMESSAGE_H
+﻿#pragma once
 
-#include "Message.h"
+#include <communication/message/Message.h>
 
 namespace balancedbanana {
     namespace communication {
 
 		//Authenticates the client for its first connection to the scheduler
 		class ClientAuthMessage : public Message {
-			std::string username;
-			std::string password;
-			std::string publickey;
+            std::string username;
+            std::string password;
+            std::string publickey;
 		public:
-			ClientAuthMessage(const std::string& username, const std::string& password, const std::string& publickey);
-			virtual void process(const std::shared_ptr<MessageProcessor>& mp) override;
-			virtual std::string serialize();
-			const std::string& GetUsername();
-			const std::string& GetPassword();
-			const std::string& GetPublickey();
+            ClientAuthMessage(const std::string &username, const std::string &password, const std::string &publickey);
+
+		    ClientAuthMessage(const char *data, size_t &iterator, size_t size);
+
+            void process(MessageProcessor &mp) const override;
+
+            std::string serialize() const override;
+
+			const std::string& GetUsername() const;
+
+			const std::string& GetPassword() const;
+
+			const std::string& GetPublickey() const;
 		};
+
 	}
 }
-
-#endif // !CLIENTAUTHMESSAGE_H

@@ -1,27 +1,24 @@
 ﻿#pragma once
 
-#include "Message.h"
-
-#include <commandLineInterface/Task.h>
-
-using balancedbanana::commandLineInterface::Task;
+#include <communication/message/Message.h>
+#include <communication/Task.h>
 
 namespace balancedbanana {
     namespace communication {
 		
 		class TaskMessage : public Message {
+            Task task;
+
 		public:
-			virtual void process(const MessageProcessor* & msgProcessor);
+            explicit TaskMessage(const Task &task);
 
-			virtual std::string serialize();
+            TaskMessage(const char *data, size_t &iterator, size_t size);
 
-			TaskMessage(const Task& task);
+            void process(MessageProcessor &mp) const override;
 
+            std::string serialize() const override;
 
-		private:
-			//Informationen des zu übermittelnden Tasks
-
-			Task task;
+            const Task &GetTask() const;
 
 		};
 	}
