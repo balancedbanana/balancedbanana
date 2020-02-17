@@ -121,13 +121,13 @@ int ClientCommandLineProcessor::process(int argc, const char*const* argv, const 
     {
         task->setType((int)TaskType::BACKUP);
 
-        config->set_job_ID(jobID);
+        task->setJobId(jobID);
     }
     if (continueSubCommand->parsed())
     {
         task->setType((int)TaskType::CONTINUE);
 
-        config->set_job_ID(jobID);
+        task->setJobId(jobID);
     }
     if (imageSubCommand->parsed())
     {
@@ -147,7 +147,7 @@ int ClientCommandLineProcessor::process(int argc, const char*const* argv, const 
     {
         task->setType((int)TaskType::PAUSE);
 
-        config->set_job_ID(jobID);
+        task->setJobId(jobID);
     }
     if (restoreSubCommand->parsed())
     {
@@ -155,8 +155,8 @@ int ClientCommandLineProcessor::process(int argc, const char*const* argv, const 
 
         //jobAndBackupID
 
-        config->set_job_ID(jobAndBackupID[0]);
-        config->set_backup_ID(jobAndBackupID[1]);
+        task->setJobId(jobAndBackupID[0]);
+        task->setBackupId(jobAndBackupID[1]);
     }
     if (runSubCommand->parsed())
     {
@@ -180,19 +180,19 @@ int ClientCommandLineProcessor::process(int argc, const char*const* argv, const 
     {
         task->setType((int)TaskType::STATUS);
 
-        config->set_job_ID(jobID);
+        task->setJobId(jobID);
     }
     if (stopSubCommand->parsed())
     {
         task->setType((int)TaskType::STOP);
 
-        config->set_job_ID(jobID);
+        task->setJobId(jobID);
     }
     if (tailSubCommand->parsed())
     {
         task->setType((int)TaskType::TAIL);
 
-        config->set_job_ID(jobID);
+        task->setJobId(jobID);
     }
 
     return 0;
