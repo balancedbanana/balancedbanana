@@ -11,11 +11,11 @@ TEST(ClientCommandLineProcessor, addImage)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "image", "-i", "imageName", "imagePath"};
-    int argc = 5;
+    char* argv[] = {"./bbc", "addImage", "imageName", "imagePath"};
+    int argc = 4;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
-
+    
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::ADD_IMAGE);
@@ -28,8 +28,8 @@ TEST(ClientCommandLineProcessor, removeImage)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "image", "-I", "imageName"};
-    int argc = 4;
+    char* argv[] = {"./bbc", "removeImage", "imageName"};
+    int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
 

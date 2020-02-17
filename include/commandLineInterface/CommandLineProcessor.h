@@ -40,12 +40,15 @@ namespace balancedbanana {
 		public:
 			std::shared_ptr<communication::Task> process(int* argc, char** argv);
 
-		private:
-			int processArguments(int argc, char** argv, communication::Task& task);
-
-			configfiles::Priority evaluatePriority(std::string& priority);
-
-			virtual int process(int argc, const char*const* argv, const std::shared_ptr<communication::Task>& task) { return 0; }
+			/**
+			 * Process an array of command line arguments (argv : &char[argc])
+			 * Write processed arguments into the provided Task instance
+			 * Since a set of global standard values is provided by the scheduler,
+			 * the task instance is not tested to posess all necessary arguments.
+			 * 
+			 * Returns 0 on success and an error code on failure.
+			 */
+			virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task) { return 0; }
 
 		};
 

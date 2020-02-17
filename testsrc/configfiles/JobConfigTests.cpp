@@ -130,22 +130,6 @@ TEST_F(JobConfigGetterSetterTests, CurrentWorkingDir) {
     EXPECT_NE(currentDir, conf->current_working_dir());
 }
 
-TEST_F(JobConfigGetterSetterTests, JobId) {
-    EXPECT_EQ(std::nullopt, conf->get_job_ID());
-    conf->set_job_ID(32);
-    EXPECT_EQ(32, conf->get_job_ID());
-    conf->set_job_ID(std::nullopt);
-    EXPECT_NE(32, conf->get_job_ID());
-}
-
-TEST_F(JobConfigGetterSetterTests, BackupId) {
-    EXPECT_EQ(std::nullopt, conf->get_backup_ID());
-    conf->set_backup_ID(31);
-    EXPECT_EQ(31, conf->get_backup_ID());
-    conf->set_backup_ID(std::nullopt);
-    EXPECT_NE(31, conf->get_backup_ID());
-}
-
 class JobConfigSerializationTest : public testing::Test {
 protected:
     JobConfig *config;
