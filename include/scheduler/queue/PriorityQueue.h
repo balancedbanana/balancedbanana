@@ -22,7 +22,7 @@ namespace balancedbanana {
 
             virtual void update();
 
-            PriorityQueue(std::shared_ptr<timedevents::Timer> timerptr, unsigned int updateInterval);
+            PriorityQueue(std::shared_ptr<timedevents::Timer> timerptr, unsigned int updateInterval, uint64_t PriorityUpgradeTime);
 
         private:
             std::shared_ptr<timedevents::Timer> timer;
@@ -37,6 +37,8 @@ namespace balancedbanana {
             std::list<std::shared_ptr<Job>> lowList;
 
             std::unordered_map<uint64_t,time_t> submissionTimes;
+
+            uint64_t pUpgradeTime;
 
         };
     }

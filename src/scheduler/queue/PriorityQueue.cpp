@@ -91,19 +91,20 @@ namespace balancedbanana {
 
         void PriorityQueue::update() {
             uint64_t currTime = (uint64_t) time(nullptr);
+            currTime = currTime / 1000;
             for(std::shared_ptr<Job> job : normalList) {
-                if(currTime - (uint64_t) submissionTimes.at((*job).getId()) >= 86400) {
+                if(currTime - (uint64_t) submissionTimes.at((*job).getId()) >= pUpgradeTime) {
                     normalList.remove(job);
                     highList.emplace_back(job);
                 }
             }
             for(std::shared_ptr<Job> job : lowList) {
-                if(currTime - (uint64_t) submissionTimes.at((*job).getId()) >= 86400) {
+                if(currTime - (uint64_t) submissionTimes.at((*job).getId()) >= pUpgradeTime) {
                     lowList.remove(job);
                     normalList.emplace_back(job);
                 }
             }
-
+            //Actually we dont check if a job has updated already, It can therefore upgrade twice, should hopefully not be a big problem
         }
 
         void PriorityQueue::addTask(const std::shared_ptr<Job> job) {
@@ -111,6 +112,7 @@ namespace balancedbanana {
                 return;
             }
             time_t insertionTime = time(nullptr);
+            insertionTime = insertionTime / 1000;
             submissionTimes.emplace((*job).getId(), insertionTime);
             configfiles::Priority priority = (*job).getConfig()->priority().value_or(configfiles::Priority::normal);
             if(priority == configfiles::Priority::low) {
@@ -124,8 +126,9 @@ namespace balancedbanana {
             }
         }
 
-        PriorityQueue::PriorityQueue(std::shared_ptr<Timer> timerptr, unsigned int updateInterval) {
+        PriorityQueue::PriorityQueue(std::shared_ptr<Timer> timerptr, unsigned int updateInterval, uint64_t PriorityUpgradeTime) {
             timer = timerptr;
+            pUpgradeTime = PriorityUpgradeTime;
             interval = updateInterval;
             (*timer).setInterval(interval);
             std::function<void()> fcnptr = std::bind(&PriorityQueue::update, this);
