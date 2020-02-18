@@ -36,7 +36,7 @@ void Timer::start()
     {
         this->active = true;
 
-        sleeperThread = std::thread([&]() {
+        this->sleeperThread = std::thread([&]() {
             // Maximum number of seconds the internal timer thread is allowed to sleep at a time
             // Lower values decrease response time to a stop call but increase activity of the hidden timer thread
             static const unsigned int maxInternalIntervalLength = 10;
@@ -64,10 +64,13 @@ void Timer::start()
 
                 if (this->active)
                 {
-                    for (auto i = this->timerFunctions.begin(); i != this->timerFunctions.end(); ++i)
-                    {
-                        (*i)();
-                    }
+                    std::thread callerThread([&]() {
+                        for (auto i = this->timerFunctions.begin(); i != this->timerFunctions.end(); ++i)
+                        {
+                            (*i)();
+                        }
+                    });
+                    callerThread.detach();
                 }
             }
         });
