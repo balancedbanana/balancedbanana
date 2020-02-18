@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 using Timer = balancedbanana::timedevents::Timer;
+//Consider adding a mutex
 
 namespace balancedbanana {
     namespace scheduler {
@@ -61,7 +62,7 @@ namespace balancedbanana {
                     if ((*job).getConfig()->min_ram() <= ram && (*job).getConfig()->min_cpu_count() <= cores) {
                         found = true;
                         submissionTimes.erase((*job).getId());
-                        emergencyList.remove(job);
+                        highList.remove(job);
                         return job;
                     }
                 }
@@ -71,7 +72,7 @@ namespace balancedbanana {
                     if ((*job).getConfig()->min_ram() <= ram && (*job).getConfig()->min_cpu_count() <= cores) {
                         found = true;
                         submissionTimes.erase((*job).getId());
-                        emergencyList.remove(job);
+                        normalList.remove(job);
                         return job;
                     }
                 }
@@ -81,7 +82,7 @@ namespace balancedbanana {
                     if ((*job).getConfig()->min_ram() <= ram && (*job).getConfig()->min_cpu_count() <= cores) {
                         found = true;
                         submissionTimes.erase((*job).getId());
-                        emergencyList.remove(job);
+                        lowList.remove(job);
                         return job;
                     }
                 }
@@ -91,15 +92,14 @@ namespace balancedbanana {
 
         void PriorityQueue::update() {
             uint64_t currTime = (uint64_t) time(nullptr);
-            currTime = currTime / 1000;
             for(std::shared_ptr<Job> job : normalList) {
-                if(currTime - (uint64_t) submissionTimes.at((*job).getId()) >= pUpgradeTime) {
+                if((currTime - (uint64_t) submissionTimes.at((*job).getId())) >= pUpgradeTime) {
                     normalList.remove(job);
                     highList.emplace_back(job);
                 }
             }
             for(std::shared_ptr<Job> job : lowList) {
-                if(currTime - (uint64_t) submissionTimes.at((*job).getId()) >= pUpgradeTime) {
+                if((currTime - (uint64_t) submissionTimes.at((*job).getId())) >= pUpgradeTime) {
                     lowList.remove(job);
                     normalList.emplace_back(job);
                 }
@@ -112,7 +112,6 @@ namespace balancedbanana {
                 return;
             }
             time_t insertionTime = time(nullptr);
-            insertionTime = insertionTime / 1000;
             submissionTimes.emplace((*job).getId(), insertionTime);
             configfiles::Priority priority = (*job).getConfig()->priority().value_or(configfiles::Priority::normal);
             if(priority == configfiles::Priority::low) {
