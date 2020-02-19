@@ -312,7 +312,7 @@ TEST_F(AddJobTest, AddJobTest_Invalid_Min_CPU_Count_Larger_Than_Max_Test){
 /**
  * Restores the jobs table
  */
-void restoreJobsTable(){
+void createJobsTable(){
     QSqlQuery query("CREATE TABLE `jobs` (\n"
                     "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                     "  `min_ram` bigint(10) unsigned DEFAULT NULL,\n"
@@ -343,6 +343,11 @@ void restoreJobsTable(){
     query.exec();
 }
 
+void deleteJobsTable() {
+    QSqlQuery query("DROP TABLE jobs");
+    query.exec();
+}
+
 /**
  * Fixture class that deletes the jobs table on setup and restores it on teardown.
  */
@@ -350,8 +355,7 @@ class NoJobsTableTest : public ::testing::Test{
 protected:
     void SetUp() override {
         // Deletes the jobs table
-        QSqlQuery query("DROP TABLE jobs");
-        query.exec();
+        deleteJobsTable();
 
         // Setup the variables needed
         details.id = 1;
@@ -377,7 +381,7 @@ protected:
     }
 
     void TearDown() override {
-        restoreJobsTable();
+        createJobsTable();
     }
 
     job_details details;
@@ -525,16 +529,14 @@ protected:
     job_details details;
 };
 
-// Test to see if an exception is thrown when the getter is called but no allocated_resorces table exists
-TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
-    // Deletes the allocated_resources table
+void deleteAllocResTable() {
     QSqlQuery query("DROP TABLE allocated_resources");
     query.exec();
 
-    EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
+}
 
-    // Restore the table
-    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
+void createAllocResTable() {
+    QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
                   "(\n"
                   "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
                   "    `space` BIGINT(10) UNSIGNED NOT NULL,\n"
@@ -548,16 +550,24 @@ TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
     query.exec();
 }
 
-// Test to see if an exception is thrown when the getter is called but no job_results table exists
-TEST_F(GetJobTest, GetJobTest_NoJobResultsTable_Test){
+// Test to see if an exception is thrown when the getter is called but no allocated_resorces table exists
+TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
     // Deletes the allocated_resources table
-    QSqlQuery query("DROP TABLE job_results");
-    query.exec();
+    deleteAllocResTable();
 
     EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
 
     // Restore the table
-    query.prepare("CREATE TABLE `job_results` (\n"
+    createAllocResTable();
+}
+
+void deleteResultsTable() {
+    QSqlQuery query("DROP TABLE job_results");
+    query.exec();
+}
+
+void createResultsTable() {
+    QSqlQuery query("CREATE TABLE `job_results` (\n"
                   "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                   "  `stdout` text NOT NULL,\n"
                   "  `exit_code` tinyint(3) NOT NULL,\n"
@@ -565,6 +575,17 @@ TEST_F(GetJobTest, GetJobTest_NoJobResultsTable_Test){
                   "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
                   ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     query.exec();
+}
+
+// Test to see if an exception is thrown when the getter is called but no job_results table exists
+TEST_F(GetJobTest, GetJobTest_NoJobResultsTable_Test){
+    // Deletes the job_results table
+    deleteResultsTable();
+
+    EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
+
+    // Restore the table
+    createResultsTable();
 }
 
 // Test to see if getter returns empty struct when no job was added
@@ -691,45 +712,22 @@ TEST_F(GetJobsTest, GetJobsTest_SuccessfulGet_Test){
 // Test to see if an exception is thrown when the getter is called but no allocated_resorces table exists
 TEST_F(GetJobsTest, GetJobsTest_NoAllocatedResourcesTable_Test){
     // Deletes the allocated_resources table
-    QSqlQuery query("DROP TABLE allocated_resources");
-    query.exec();
-
+    deleteAllocResTable();
     EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
 
     // Restore the table
-    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
-                  "(\n"
-                  "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
-                  "    `space` BIGINT(10) UNSIGNED NOT NULL,\n"
-                  "    `ram`   BIGINT(10) UNSIGNED NOT NULL,\n"
-                  "    `cores` INT(10) UNSIGNED NOT NULL,\n"
-                  "    PRIMARY KEY (`id`),\n"
-                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC)\n"
-                  ")\n"
-                  "ENGINE = InnoDB\n"
-                  "DEFAULT CHARACTER SET = utf8");
-    if (!query.exec()){
-        ADD_FAILURE();
-    }
+    createAllocResTable();
 }
 
 // Test to see if an exception is thrown when the getter is called but no job_results table exists
 TEST_F(GetJobsTest, GetJobsTest_NoJobResultsTable_Test){
-    // Deletes the allocated_resources table
-    QSqlQuery query("DROP TABLE job_results");
-    query.exec();
+    // Deletes the job_results table
+    deleteResultsTable();
 
     EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
 
     // Restore the table
-    query.prepare("CREATE TABLE `job_results` (\n"
-                  "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
-                  "  `stdout` text NOT NULL,\n"
-                  "  `exit_code` tinyint(3) NOT NULL,\n"
-                  "  PRIMARY KEY (`id`),\n"
-                  "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
-    query.exec();
+    createResultsTable();
 }
 
 // Test to see if the getter method returns an empty vector if the users table is empty
@@ -855,12 +853,11 @@ TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
 
 // Test to see if exception is thrown when no jobs table exists
 TEST_F(StartJobTest, StartJobTest_NoJobsTable_Test){
-    QSqlQuery query("DROP TABLE jobs");
-    query.exec();
+    deleteJobsTable();
 
     EXPECT_THROW(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()), std::logic_error);
 
-    restoreJobsTable();
+    createJobsTable();
 }
 
 // Test to see if exception is thrown when no job with the id arg exists in the database
@@ -954,4 +951,31 @@ TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
     } else {
         ADD_FAILURE();
     }
+}
+
+// Test to see if exception is thrown when finishJob is called, but no job_results table exists
+TEST_F(FinishJobTest, FinishJobTest_NoJobResultsTable_Test){
+    deleteResultsTable();
+    EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
+    createResultsTable();
+}
+
+// Test to see if exception is thrown when finishJob is called, but no jobs table exists
+TEST_F(FinishJobTest, FinishJobTest_NoJobsTable_Test){
+    deleteJobsTable();
+    EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
+    createJobsTable();
+}
+
+// Test to see if finishJob returns false, when no job exists with the id arg
+TEST_F(FinishJobTest, FinishJobTest_NonExistentJob_Test){
+    EXPECT_FALSE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
+}
+
+// Test to see if an exception is thrown when finishJob is called with an invalid finish_time
+TEST_F(FinishJobTest, FinishJobTest_InvalidFinishTime_Test){
+    EXPECT_TRUE(JobGateway::add(job) == job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.finish_time = std::make_optional(QDateTime::fromString("0.13.54.13.01:5.5"));
+    EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::invalid_argument);
 }
