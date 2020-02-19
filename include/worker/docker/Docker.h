@@ -7,7 +7,7 @@ namespace balancedbanana {
 		class Docker {
 		public:
 			Container Run(int userid, const communication::Task& task);
-
+			void BuildImage(const std::string& name, const std::string& dockerfilecontent);
 		};
 	}
 }
