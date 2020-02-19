@@ -73,7 +73,15 @@ std::vector<Checkpoint> Container::GetCheckpoints(const std::filesystem::path& c
         std::string err = proc.readAllStandardError().toStdString();
         throw std::runtime_error("Failed to get checkpoints:\n" + output + "Error:\n" + err);
     }
-    throw std::invalid_argument("Not fully implemented");
+    output = output.substr(output.find("\n") + 1);
+    size_t i = 0;
+    std::vector<Checkpoint> checks;
+    do {
+        auto end = output.find("\n");
+        checks.emplace_back(id, output.substr(i, end), checkpointdir);
+        i = end;
+    } while(i != -1);
+    return checks;
 }
 
 void Container::Start() {
