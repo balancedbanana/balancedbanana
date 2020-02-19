@@ -17,7 +17,7 @@ namespace balancedbanana {
 
             std::string serialize() const override;
 
-            const uint64_t GetJobId() const;
+            uint64_t GetJobId() const;
 
             bool GetStop() const;
 		};
