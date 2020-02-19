@@ -18,12 +18,12 @@ TEST(Container, Stop)
 TEST(Container, CreateSnapshot)
 {
     Container con("Test");
-    ASSERT_ANY_THROW(con.CreateSnapshot());
+    ASSERT_ANY_THROW(con.CreateCheckpoint());
 }
 
 TEST(Container, Resume)
 {
     Container con("Test");
-    Snapshot snap("Test");
+    Checkpoint snap("Test");
     ASSERT_ANY_THROW(con.Resume(snap));
 }

@@ -4,16 +4,16 @@
 namespace balancedbanana {
 	namespace worker {
 
-		class Snapshot {
+		class Checkpoint {
 			std::string id;
 
 		public:
 			inline const std::string& get_id() const;
 
-			Snapshot(const std::string& id);
+			Checkpoint(const std::string& id);
 
 		};
-		inline const std::string& Snapshot::get_id() const {
+		inline const std::string& Checkpoint::get_id() const {
 			return id;
 		}
 	}

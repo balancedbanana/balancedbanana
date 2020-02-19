@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "Snapshot.h"
+#include "Checkpoint.h"
 
 namespace balancedbanana {
 	namespace worker {
@@ -13,9 +13,9 @@ namespace balancedbanana {
 
 			void Stop();
 
-			Snapshot CreateSnapshot(bool stop = false);
+			Checkpoint CreateCheckpoint(bool stop = false);
 
-			void Resume(const Snapshot& snap);
+			void Resume(const Checkpoint& snap);
 		};
 	}
 }

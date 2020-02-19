@@ -35,10 +35,10 @@ void Container::Stop() {
     }
 }
 
-Snapshot Container::CreateSnapshot(bool stop) {
+Checkpoint Container::CreateCheckpoint(bool stop) {
     throw std::runtime_error("Not Implemented");
 }
 
-void Container::Resume(const Snapshot & snap) {
+void Container::Resume(const Checkpoint & snap) {
     throw std::runtime_error("Not Implemented");
 }
