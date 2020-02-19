@@ -113,4 +113,10 @@ uint32_t Container::Wait() {
         std::string err = proc.readAllStandardError().toStdString();
         throw std::runtime_error("Failed to wait for the container:\n" + output + "Error:\n" + err);
     }
+    char* end;
+    uint32_t code = std::strtoul(output.data(), &end, 10);
+    if(end + 1 != output.data() + output.length()) {
+        throw std::runtime_error("Invalid output");
+    }
+    return code;
 }
