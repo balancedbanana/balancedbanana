@@ -1,20 +1,22 @@
 #pragma once
 #include <string>
+#include <filesystem>
 
 namespace balancedbanana {
 	namespace worker {
 
 		class Checkpoint {
 			std::string id;
-
+			std::string containerid;
+			std::filesystem::path checkpointdir;
 		public:
-			inline const std::string& get_id() const;
-
-			Checkpoint(const std::string& id);
-
+			Checkpoint(const std::string& containerid, const std::string& id);
+			Checkpoint(const std::string& containerid, const std::string& id, const std::filesystem::path& checkpointdir);
+			const std::string& GetId() const;
+			const std::filesystem::path& GetCheckpointDir() const;
+			void Start();
+			void Delete();
 		};
-		inline const std::string& Checkpoint::get_id() const {
-			return id;
-		}
+
 	}
 }
