@@ -4,7 +4,7 @@
 using namespace balancedbanana::worker;
 using namespace balancedbanana::communication;
 
-Container Docker::Start(int userid, const Task & task) {
+Container Docker::Run(int userid, const Task & task) {
     QProcess proc;
     proc.setProgram("docker");
     auto config = task.getConfig();
