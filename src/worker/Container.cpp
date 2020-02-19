@@ -78,7 +78,10 @@ std::vector<Checkpoint> Container::GetCheckpoints(const std::filesystem::path& c
     std::vector<Checkpoint> checks;
     do {
         auto end = output.find("\n");
-        checks.emplace_back(id, output.substr(i, end), checkpointdir);
+        auto name = output.substr(i, end);
+        if (!name.empty()) {
+            checks.emplace_back(id, name, checkpointdir);
+        }
         i = end;
     } while(i != -1);
     return checks;
