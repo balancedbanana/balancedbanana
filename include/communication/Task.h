@@ -7,7 +7,7 @@ namespace balancedbanana
 namespace communication
 {
 
-enum class TaskType : int
+enum class TaskType : uint32_t
 {
 	ADD_IMAGE,
 	BACKUP,
