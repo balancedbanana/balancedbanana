@@ -20,9 +20,6 @@ Container Docker::Run(int userid, const Task & task) {
     if(config->min_ram()) {
         args.append({"--memory-reservation", QString::fromStdString(std::to_string(*config->min_ram())) + "MB"});
     }
-    if(!config->blocking_mode() || !*config->blocking_mode()) {
-        args.append("-d");
-    }
     // Minimum only relevant for scheduler, might to check it here too
     if(config->max_cpu_count()) {
         args.append({"--cpus", QString::fromStdString(std::to_string(*config->max_cpu_count()))});

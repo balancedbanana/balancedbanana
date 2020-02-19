@@ -20,6 +20,8 @@ namespace balancedbanana {
 			std::vector<Checkpoint> GetCheckpoints(const std::filesystem::path& checkpointdir = "");
 
 			void Start();
+
+			uint32_t Wait();
 		};
 	}
 }

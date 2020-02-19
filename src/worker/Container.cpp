@@ -98,3 +98,16 @@ void Container::Start() {
         throw std::runtime_error("Failed to start container:\n" + output + "Error:\n" + err);
     }
 }
+
+uint32_t Container::Wait() {
+    QProcess proc;
+    proc.setProgram("docker");
+    proc.setArguments({ "wait", QString::fromStdString(id)});
+    proc.start();
+    proc.waitForFinished(-1);
+    std::string output = proc.readAllStandardOutput().toStdString();
+    if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
+        std::string err = proc.readAllStandardError().toStdString();
+        throw std::runtime_error("Failed to wait for the container:\n" + output + "Error:\n" + err);
+    }
+}
