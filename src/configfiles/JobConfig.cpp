@@ -47,6 +47,17 @@ std::optional<uint32_t> convertToInt32(std::string &value) {
     }
 }
 
+std::optional<uint64_t> convertToInt64(std::string &value) {
+    try {
+        unsigned long long converted = std::stoll(value);
+        return converted <= UINT64_MAX ? converted : UINT64_MAX;
+    } catch(std::invalid_argument &) {
+        return std::nullopt;
+    } catch(std::out_of_range &) {
+        return UINT64_MAX;
+    }
+}
+
 std::optional<bool> convertToBool(std::string &value) {
     if(value == "true" || value == "True" || value == "1") {
         return std::optional<bool>(true);
@@ -59,9 +70,9 @@ std::optional<bool> convertToBool(std::string &value) {
 
 void insertValue(JobConfig *config, std::string &name, std::string &value) {
     if(name == "min_ram") {
-        config->set_min_ram(convertToInt32(value));
+        config->set_min_ram(convertToInt64(value));
     } else if(name == "max_ram") {
-        config->set_max_ram(convertToInt32(value));
+        config->set_max_ram(convertToInt64(value));
     } else if(name == "min_cpu_count") {
         config->set_min_cpu_count(convertToInt32(value));
     } else if(name == "max_cpu_count") {
@@ -212,7 +223,7 @@ void JobConfig::set_current_working_dir(const std::filesystem::path &cwd) {
     current_working_dir_ = cwd;
 }
 
-std::optional <uint32_t> &JobConfig::min_ram() {
+std::optional <uint64_t> &JobConfig::min_ram() {
     return min_ram_;
 }
 
