@@ -10,7 +10,6 @@
 #include <QSqlError>
 #include <QDebug>
 #include <QByteArray>
-#include <cassert>
 #include <QDateTime>
 #include <QDataStream>
 #include <iostream>
@@ -265,107 +264,6 @@ bool JobGateway::remove(uint64_t job_id) {
     }
 }
 
-/*
-/**
- * Returns a job_details struct after all the values from the query are set.
- *
- * A lot of the values in JobConfig are marked as std::optional, which means that they could be NULL in the database.
- * For those values, the method has to check if their values are valid before converting them to standard C++
- * types, otherwise they will be set to std::nullopt. The mandatory values are JobConfig are set normally.
- *
- * @param query The query from which the values are to be set
- * @return The struct containing the query values.
- *
-job_details getDetailsAfterSet(const QSqlQuery& query){
-    job_details details{};
-    details.user_id = query.value(0).toUInt();
-    JobConfig config;
-
-    //
-
-    if (query.value(1).isValid()){
-        config.set_min_ram(query.value(1).toUInt());
-    } else {
-        config.set_min_ram(std::nullopt);
-    }
-
-    if (query.value(2).isValid()){
-        config.set_max_ram(query.value(2).toUInt());
-    } else {
-        config.set_max_ram(std::nullopt);
-    }
-
-    if (query.value(3).isValid()){
-        config.set_min_cpu_count(query.value(3).toUInt());
-    } else {
-        config.set_min_cpu_count(std::nullopt);
-    }
-
-    if (query.value(4).isValid()){
-        config.set_max_cpu_count(query.value(4).toUInt());
-    } else {
-        config.set_max_cpu_count(std::nullopt);
-    }
-
-    if (query.value(5).isValid()){
-        config.set_blocking_mode(query.value(5).toBool());
-    } else {
-        config.set_blocking_mode(std::nullopt);
-    }
-
-    config.set_email(query.value(6).toString().toStdString());
-
-    if (query.value(7).isValid()){
-        config.set_priority(static_cast<Priority>(query.value(7).toInt()));
-    } else {
-        config.set_priority(std::nullopt);
-    }
-
-    config.set_image(query.value(8).toString().toStdString());
-
-    if (query.value(9).isValid()){
-        config.set_interruptible(query.value(9).toBool());
-    } else {
-        config.set_interruptible(std::nullopt);
-    }
-
-    if (query.value(10).isValid()){
-        config.set_environment(Utilities::deserializeVector<std::string>(query.value(10).toString().toStdString()));
-    } else {
-        config.set_environment(std::nullopt);
-    }
-
-    config.set_current_working_dir(query.value(11).toString().toStdString());
-    details.command = query.value(12).toString().toStdString();
-    details.schedule_time = QDateTime::fromString(query.value(13).toString(),
-                                                  "yyyy.MM.dd:hh.mm.ss.z");
-
-    if (query.value(14).isValid()){
-        details.start_time = QDateTime::fromString(query.value(14).toString(),"yyyy.MM.dd:hh.mm.ss.z");
-    } else {
-        details.start_time = std::nullopt;
-    }
-
-    if (query.value(15).isValid()){
-        details.finish_time = QDateTime::fromString(query.value(15).toString(), "yyyy.MM.dd:hh.mm.ss.z");
-    } else {
-        details.finish_time = std::nullopt;
-    }
-
-    details.status = query.value(16).toInt();
-    details.config = config;
-    if (query.value(17).isValid() && query.value(18).isValid() && query.value(19).isValid()){
-        Specs allocated_specs{};
-        allocated_specs.cores = query.value(17).toUInt();
-        allocated_specs.space = query.value(18).toUInt();
-        allocated_specs.ram = query.value(19).toUInt();
-        allocated_specs.empty = false;
-        details.allocated_specs = allocated_specs;
-    }
-    return details;
-}
-*/
-
 /**
  * Sets all the values from the jobs table in details
  *
@@ -597,7 +495,7 @@ std::vector<job_details> JobGateway::getJobs() {
  * @param specs The resources assigned to the job
  * @return true if the operation was successful, otherwise false.
  */
-bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
+bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs, const QDateTime& start_time) {
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
@@ -617,10 +515,12 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs) {
                 throw std::runtime_error("startJob error: allocated_resources query failed: " + queryAlloc.lastError
                 ().databaseText().toStdString());
             }
-            QSqlQuery query("UPDATE jobs SET allocated_id = ?, worker_id = ?, status_id = ? WHERE id = ?");
+            QSqlQuery query("UPDATE jobs SET allocated_id = ?, worker_id = ?, status_id = ?, start_time = ? WHERE id = "
+                            "?");
             query.addBindValue(QVariant::fromValue(allocated_specs));
             query.addBindValue(QVariant::fromValue(worker_id));
             query.addBindValue(QVariant::fromValue((int) JobStatus::processing));
+            query.addBindValue(QVariant::fromValue(start_time.toString("yyyy.MM.dd:hh.mm.ss.z")));
             query.addBindValue(QVariant::fromValue(job_id));
             if (query.exec()){
                 return true;
@@ -654,11 +554,11 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
     }
 
     if (Utilities::doesRecordExist("jobs", job_id)){
-        // TODO Check if this assertion is actually necessary
-        assert(!stdout.empty());
-
+        if (!finish_time.isValid()){
+            throw std::invalid_argument("finishJob error: finish_time is not valid");
+        }
         QSqlQuery queryResult("INSERT INTO job_results (exit_code, stdout) VALUES (?, ?)");
-        queryResult.addBindValue(QVariant::fromValue(exit_code));
+        queryResult.addBindValue(exit_code);
         queryResult.addBindValue(QVariant::fromValue(QString::fromStdString(stdout)));
         uint64_t result;
         if(queryResult.exec()){
@@ -667,8 +567,8 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
             throw std::runtime_error("finishJob error: job_results query failed: " + queryResult.lastError()
             .databaseText().toStdString());
         }
-        QSqlQuery query("UPDATE jobs SET finish_time = ?, result = ? WHERE id = ?");
-        query.addBindValue(QVariant::fromValue(finish_time));
+        QSqlQuery query("UPDATE jobs SET finish_time = ?, result_id = ? WHERE id = ?");
+        query.addBindValue(QVariant::fromValue(finish_time.toString("yyyy.MM.dd:hh.mm.ss.z")));
         query.addBindValue(QVariant::fromValue(result));
         query.addBindValue(QVariant::fromValue(job_id));
         if(query.exec()){

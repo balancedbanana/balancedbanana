@@ -64,7 +64,10 @@ namespace balancedbanana {
                        && this->config.interruptible() == rhs.config.interruptible()
                        && this->config.current_working_dir() == rhs.config.current_working_dir()
                 && ((!this->result.has_value() && !rhs.result.has_value()) ||
-                    (this->result.value() == rhs.result.value()));
+                    (this->result.value() == rhs.result.value()))
+                    && this->command == rhs.command
+                    && this->user_id == rhs.user_id
+                    && this->worker_id == rhs.worker_id;
             }
 		};
 	}
