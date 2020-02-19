@@ -7,7 +7,6 @@ Container::Container(const std::string &id) {
     this->id = id;
 }
 
-
 std::string Container::Tail(int lines) {
     QProcess proc;
     proc.setProgram("docker");
