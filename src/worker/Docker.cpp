@@ -49,6 +49,7 @@ void balancedbanana::worker::Docker::BuildImage(const std::string& name, const s
     proc.setArguments({ "build", "-t", QString::fromStdString(name), "-"});
     proc.start();
     proc.write(dockerfilecontent.data(), dockerfilecontent.length());
+    proc.closeWriteChannel();
     proc.waitForFinished(-1);
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
