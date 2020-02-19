@@ -54,7 +54,7 @@ Checkpoint Container::CreateCheckpoint(const std::string& id, const std::filesys
         std::string err = proc.readAllStandardError().toStdString();
         throw std::runtime_error("Failed to create checkpoint:\n" + output + "Error:\n" + err);
     }
-    return { id, checkpointdir };
+    return { this->id , id, checkpointdir };
 }
 
 std::vector<Checkpoint> Container::GetCheckpoints(const std::filesystem::path& checkpointdir) {
@@ -77,13 +77,13 @@ std::vector<Checkpoint> Container::GetCheckpoints(const std::filesystem::path& c
     size_t i = 0;
     std::vector<Checkpoint> checks;
     do {
-        auto end = output.find("\n");
+        auto end = output.find("\n", i);
         auto name = output.substr(i, end);
         if (!name.empty()) {
             checks.emplace_back(id, name, checkpointdir);
         }
-        i = end;
-    } while(i != -1);
+        i = end + 1;
+    } while(i != 0);
     return checks;
 }
 
