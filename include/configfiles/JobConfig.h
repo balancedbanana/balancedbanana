@@ -12,10 +12,10 @@ namespace balancedbanana {
         //This class contains all necessary information that are needed by the scheduler and the worker to successfully execute a job.
         class JobConfig {
             //This attribute specifies how much RAM jobs with this configuration need at least in order to finish successfully.
-            std::optional <uint32_t> min_ram_;
+            std::optional <uint64_t> min_ram_;
 
             //This attribute describes how much RAM jobs with this configuration need at most in order to finish successfully.
-            std::optional <uint32_t> max_ram_;
+            std::optional <uint64_t> max_ram_;
 
             //This attribute specifies how much CPU cores jobs with this configuration need at least in order to successfully finish.
             std::optional <uint32_t> min_cpu_count_;
@@ -59,10 +59,10 @@ namespace balancedbanana {
             virtual ~JobConfig();
 
             //Setter for the min_ram_ attribute.
-            void set_min_ram(const std::optional <uint32_t> &miB);
+            void set_min_ram(const std::optional <uint64_t> &miB);
 
             //Setter for the max_ram_ attribute.
-            void set_max_ram(const std::optional <uint32_t> &miB);
+            void set_max_ram(const std::optional <uint64_t> &miB);
 
             //Setter for the min_cpu_count_ attribute.
             void set_min_cpu_count(const std::optional <uint32_t> &count);
@@ -92,10 +92,10 @@ namespace balancedbanana {
             void set_current_working_dir(const std::filesystem::path &cwd);
 
             //Getter for the min_ram_ attribute.
-            std::optional <uint32_t> &min_ram();
+            std::optional <uint64_t> &min_ram();
 
             //Getter for the max_ram_ attribute.
-            std::optional <uint32_t> &max_ram();
+            std::optional <uint64_t> &max_ram();
 
             //Getter for the min_cpu_count_ attribute.
             std::optional <uint32_t> &min_cpu_count();
