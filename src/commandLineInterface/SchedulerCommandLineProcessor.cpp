@@ -2,6 +2,8 @@
 
 
 using balancedbanana::commandLineInterface::SchedulerCommandLineProcessor;
+using balancedbanana::communication::Task;
+using balancedbanana::communication::TaskType;
 
 namespace balancedbanana
 {

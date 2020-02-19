@@ -14,21 +14,6 @@
 
 namespace balancedbanana {
 	namespace commandLineInterface {
-
-		enum class TaskType : int {
-			ADD_IMAGE,
-			BACKUP,
-			CONTINUE,
-			PAUSE,
-			REMOVE_IMAGE,
-			RESTORE,
-			RUN,
-			SERVERSTART,
-			STATUS,
-			STOP,
-			TAIL,
-			WORKERSTART
-		};
 		
 		class CommandLineProcessor
 		{

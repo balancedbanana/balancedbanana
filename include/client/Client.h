@@ -53,9 +53,9 @@ private:
     */
     void handleRequest(std::shared_ptr<balancedbanana::communication::Task> task);
 
-    balancedbanana::communication::Communicator communicator;
-    balancedbanana::communication::MessageProcessor clientMP;
-    balancedbanana::communication::Task task;
+    std::shared_ptr<balancedbanana::communication::Communicator> communicator;
+    std::shared_ptr<balancedbanana::communication::MessageProcessor> clientMP;
+    std::shared_ptr<balancedbanana::communication::Task> task;
 };
 
 } // namespace client

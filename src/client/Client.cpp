@@ -3,6 +3,23 @@
 using namespace balancedbanana::client;
 using balancedbanana::communication::Task;
 
+Client::Client()
+{
+}
+
+void Client::connectWithServer(const std::string &serverIpAdress, short serverPort)
+{
+}
+
+
+void Client::authenticateWithServer()
+{
+}
+
+
+void Client::processCommandLineArguments(int argc, char **argv)
+{
+}
 
 void Client::handleAddImage(std::shared_ptr<Task> task)
 {
@@ -10,19 +27,16 @@ void Client::handleAddImage(std::shared_ptr<Task> task)
     // TODO: Is adding a docker image relevant to client or server?
 }
 
-
 void Client::handleRemoveImage(std::shared_ptr<Task> task)
 {
     //task->getRemoveImageName;
     // TODO: Is adding a docker image relevant to client or server?
 }
 
-
 void Client::handleRun(std::shared_ptr<Task> task)
 {
     // TODO: Create and send Task Message, wait for finish if blocking
 }
-
 
 void Client::handleRequest(std::shared_ptr<Task> task)
 {

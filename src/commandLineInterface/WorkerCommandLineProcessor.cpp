@@ -1,6 +1,8 @@
 #include <commandLineInterface/WorkerCommandLineProcessor.h>
 
 using balancedbanana::commandLineInterface::WorkerCommandLineProcessor;
+using balancedbanana::communication::Task;
+using balancedbanana::communication::TaskType;
 
 namespace balancedbanana
 {

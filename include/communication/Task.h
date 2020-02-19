@@ -7,6 +7,22 @@ namespace balancedbanana
 namespace communication
 {
 
+enum class TaskType : int
+{
+	ADD_IMAGE,
+	BACKUP,
+	CONTINUE,
+	PAUSE,
+	REMOVE_IMAGE,
+	RESTORE,
+	RUN,
+	SERVERSTART,
+	STATUS,
+	STOP,
+	TAIL,
+	WORKERSTART
+};
+
 class Task
 {
 	std::string taskCommand;
@@ -23,7 +39,6 @@ class Task
 	std::optional<uint64_t> backupId;
 
 public:
-
 	const static std::string configFilePath;
 
 	Task();
@@ -56,18 +71,18 @@ public:
 	const std::string &getWebAPIIP() const;
 
 	void setServerPort(uint16_t serverPort);
-    uint16_t getServerPort() const;
+	uint16_t getServerPort() const;
 
 	void setWebAPIPort(uint16_t webAPIPort);
-    uint16_t getWebAPIPort() const;
+	uint16_t getWebAPIPort() const;
 
-    void setJobId(std::optional<uint64_t> jobId);
-    std::optional<uint64_t> getJobId() const;
+	void setJobId(std::optional<uint64_t> jobId);
+	std::optional<uint64_t> getJobId() const;
 
-    void setBackupId(std::optional<uint64_t> backupId);
-    std::optional<uint64_t> getBackupId() const;
+	void setBackupId(std::optional<uint64_t> backupId);
+	std::optional<uint64_t> getBackupId() const;
 
 	std::string serialize() const;
 };
-} // namespace commandLineInterface
+} // namespace communication
 } // namespace balancedbanana
