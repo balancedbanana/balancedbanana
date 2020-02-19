@@ -8,7 +8,7 @@ before_install:
   - sudo add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
   - sudo apt-get -q update
   - "sudo apt-get remove docker docker-engine docker.io containerd runc || :"
-  - "sudo bash -c 'echo {'$'\n''    \"experimental\"': true'$'\n''}"
+  - "sudo bash -c 'printf \"{\n    \\\"experimental\\\": true\n}\n\">/etc/docker/daemon.json'"
   - DEBIAN_FRONTEND=noninteractive sudo apt-get -y install libssl-dev qtbase5-dev make g++-9 libqt5sql5-mysql mysql-server tar wget sshpass mailutils docker-ce docker-ce-cli containerd.io criu
   - sudo useradd -m steve
   - echo "steve:thePassword" | sudo chpasswd
