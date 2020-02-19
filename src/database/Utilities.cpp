@@ -108,18 +108,6 @@ std::optional<QVariant> Utilities::castToOptional(QVariant value) {
     }
 }
 
-/**
- * Casts a QDateTime to a std::optional<QDateTime>
- * @param value The QVariant
- * @return Either the value if itself if it's valid, otherwise std::nullopt
- */
-std::optional<QDateTime> Utilities::castToOptional(QDateTime value) {
-    if (value.isNull()){
-        return std::nullopt;
-    } else {
-        return std::make_optional(value);
-    }
-}
 
 template <typename T>
 bool Utilities::areDetailVectorsEqual(std::vector<T> expected, std::vector<T> actual){
