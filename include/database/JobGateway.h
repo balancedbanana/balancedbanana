@@ -4,6 +4,8 @@
 #include "job_details.h"
 #include "job_result.h"
 
+#define FOUR_MB (4194304) // If RAM is under this amount, errors might occur in docker.
+
 namespace balancedbanana::database {
     class JobGateway : virtual public IGateway {
     public:

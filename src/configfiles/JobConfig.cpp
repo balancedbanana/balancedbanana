@@ -168,11 +168,11 @@ JobConfig::~JobConfig() {
 
 }
 
-void JobConfig::set_min_ram(const std::optional <uint32_t> &miB) {
+void JobConfig::set_min_ram(const std::optional <uint64_t> &miB) {
     min_ram_ = miB;
 }
 
-void JobConfig::set_max_ram(const std::optional <uint32_t> &miB) {
+void JobConfig::set_max_ram(const std::optional <uint64_t> &miB) {
     max_ram_ = miB;
 }
 
@@ -212,11 +212,24 @@ void JobConfig::set_current_working_dir(const std::filesystem::path &cwd) {
     current_working_dir_ = cwd;
 }
 
+<<<<<<< HEAD
 std::optional <uint32_t> &JobConfig::min_ram() {
+=======
+void JobConfig::set_job_ID(std::optional<uint32_t> jobID) {
+    this->jobID = jobID;
+}
+
+void JobConfig::set_backup_ID(std::optional<uint32_t> backupID) {
+    this->backupID = backupID;
+}
+
+
+std::optional <uint64_t> &JobConfig::min_ram() {
+>>>>>>> database
     return min_ram_;
 }
 
-std::optional <uint32_t> &JobConfig::max_ram() {
+std::optional <uint64_t> &JobConfig::max_ram() {
     return max_ram_;
 }
 
