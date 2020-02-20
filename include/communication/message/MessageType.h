@@ -12,4 +12,5 @@ enum MessageType : uint32_t {
     WORKER_AUTH = 7,
     WORKERLOADREQUEST,
     WORKERLOADRESPONSE,
+    RESPOND_TO_CLIENT,
 };

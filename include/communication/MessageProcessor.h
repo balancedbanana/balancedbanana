@@ -15,6 +15,7 @@ namespace balancedbanana {
 		class WorkerAuthMessage;
 		class WorkerLoadRequestMessage;
 		class WorkerLoadResponseMessage;
+		class RespondToClientMessage;
 
         class MessageProcessor : public std::enable_shared_from_this<MessageProcessor> {
         private:
@@ -43,6 +44,7 @@ namespace balancedbanana {
             virtual void processWorkerAuthMessage(const WorkerAuthMessage &msg);
             virtual void processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg);
             virtual void processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg);
+            virtual void processRespondToClientMessage(const RespondToClientMessage &msg);
         };
 	}
 }
