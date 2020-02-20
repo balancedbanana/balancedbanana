@@ -43,8 +43,7 @@ namespace balancedbanana {
             bool empty = true;
 
             inline bool operator==(job_details& rhs){
-                return this->user_id == rhs.user_id
-                       && this->status == rhs.status
+                return this->status == rhs.status
                        && this->schedule_time == rhs.schedule_time
                        && ((!this->finish_time.has_value() && !rhs.finish_time.has_value()) ||
                        (this->finish_time.value() == rhs.finish_time.value()))

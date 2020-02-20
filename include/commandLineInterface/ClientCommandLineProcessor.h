@@ -12,7 +12,7 @@ class ClientCommandLineProcessor : public balancedbanana::commandLineInterface::
 {
     public:
 
-        int process(int argc, const char*const* argv, const std::shared_ptr<communication::Task>& task) override;
+        int process(int argc, char** argv, const std::shared_ptr<balancedbanana::communication::Task>& task) override;
 
     private:
 };
