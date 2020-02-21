@@ -123,10 +123,10 @@ TEST(PQueue, PullingTasks) {
     ASSERT_EQ(nullptr, pqueue.getJob(5000, 8));
 }
 
-/** Segfault somewhere in Update()
+// Segfault somewhere in Update()
 TEST(PQueue, Updating) {
     std::shared_ptr<Timer> tptr = std::make_shared<Timer>();
-    PriorityQueue pqueue (tptr, 60, 45);
+    PriorityQueue pqueue (tptr, 1, 1);
 
     auto config = std::make_shared<JobConfig>();
     config->set_max_cpu_count(4);
@@ -170,7 +170,7 @@ TEST(PQueue, Updating) {
     ASSERT_EQ(1, pqueue.getPos(3000));
     ASSERT_EQ(2,pqueue.getPos(4000));
 
-    std::this_thread::sleep_for(std::chrono::seconds(100));
+    std::this_thread::sleep_for(std::chrono::seconds(2));
     pqueue.addTask(jptr2);
     pqueue.addTask(jptr);
 
@@ -180,4 +180,4 @@ TEST(PQueue, Updating) {
     ASSERT_EQ(4, pqueue.getPos(4000));
     ASSERT_EQ(0,pqueue.getPos(420));
 }
- **/
+

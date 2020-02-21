@@ -92,18 +92,27 @@ namespace balancedbanana {
 
         void PriorityQueue::update() {
             uint64_t currTime = (uint64_t) time(nullptr);
+            std::vector<std::shared_ptr<Job> > removeing;
             for(std::shared_ptr<Job> job : normalList) {
                 if((currTime - (uint64_t) submissionTimes.at((*job).getId())) >= pUpgradeTime) {
-                    normalList.remove(job);
                     highList.emplace_back(job);
+                    removeing.emplace_back(job);
                 }
             }
+            for(auto&& j : removeing) {
+                normalList.remove(j);
+            }
+            removeing.clear();
             for(std::shared_ptr<Job> job : lowList) {
                 if((currTime - (uint64_t) submissionTimes.at((*job).getId())) >= pUpgradeTime) {
-                    lowList.remove(job);
                     normalList.emplace_back(job);
+                    removeing.emplace_back(job);
                 }
             }
+            for(auto&& j : removeing) {
+                lowList.remove(j);
+            }
+            removeing.clear();
             //Actually we dont check if a job has updated already, It can therefore upgrade twice, should hopefully not be a big problem
         }
 
