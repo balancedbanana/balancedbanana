@@ -6,7 +6,7 @@ using namespace balancedbanana::database;
 
 Job::Job(uint64_t id, const std::shared_ptr<JobConfig> &config) :
 id_(id), started_at_(), scheduled_at_(), finished_at_(), allocated_ram_(0), allocated_cores_(0),
-allocated_disk_space_(0), worker_id_(0), client_id_(0), config_(config), status_(nullptr), result_(nullptr) {
+allocated_disk_space_(0), worker_id_(0), user_(nullptr), config_(config), status_(nullptr), result_(nullptr) {
 }
 
 Job::Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at, const QDateTime &finished_at,
@@ -16,7 +16,7 @@ Job::Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at
         const std::shared_ptr<job_result> &result) :
         id_(id), started_at_(started_at), scheduled_at_(scheduled_at), finished_at_(finished_at),
         allocated_ram_(allocated_ram), allocated_cores_(allocated_cores), allocated_disk_space_(allocated_disk_space),
-        command_(command), worker_id_(worker_id), client_id_(client_id), config_(config), status_(status),
+        command_(command), worker_id_(worker_id), user_(nullptr), config_(config), status_(status),
         result_(result) {
 }
 
@@ -57,7 +57,7 @@ uint64_t Job::getWorker_id() const {
 }
 
 std::shared_ptr<User> Job::getUser() const {
-    return user;
+    return user_;
 }
 
 std::shared_ptr<JobConfig> Job::getConfig() const {
