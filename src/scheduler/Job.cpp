@@ -56,8 +56,8 @@ uint64_t Job::getWorker_id() const {
     return worker_id_;
 }
 
-uint64_t Job::getClient_id() const {
-    return client_id_;
+std::shared_ptr<User> Job::getUser() const {
+    return user;
 }
 
 std::shared_ptr<JobConfig> Job::getConfig() const {
@@ -100,8 +100,8 @@ void Job::setCommand(const std::string &command) {
 void Job::setWorker_id(uint64_t worker_id) {
     worker_id_ = worker_id;
 }
-void Job::setClient_id(uint64_t client_id) {
-    client_id_ = client_id;
+void Job::setUser(const std::shared_ptr<User> &user) {
+    user_ = user;
 }
 void Job::setConfig(std::shared_ptr<JobConfig> &config) {
     config_ = config;

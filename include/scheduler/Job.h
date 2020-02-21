@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <string>
 #include <chrono>
+#include "User.h"
 
 namespace balancedbanana {
     namespace scheduler {
@@ -30,7 +31,7 @@ namespace balancedbanana {
             uint32_t getAllocated_disk_space() const;
             const std::string &getCommand() const;
             uint64_t getWorker_id() const;
-            uint64_t getClient_id() const;
+            std::shared_ptr<User> getUser() const;
             std::shared_ptr<configfiles::JobConfig> getConfig() const;
             std::shared_ptr<database::JobStatus> getStatus() const;
             std::shared_ptr<database::job_result> getResult() const;
@@ -44,7 +45,7 @@ namespace balancedbanana {
             void setAllocated_disk_space(uint32_t allocated_disk_space);
             void setCommand(const std::string &command);
             void setWorker_id(uint64_t worker_id);
-            void setClient_id(uint64_t client_id);
+            void setUser(const std::shared_ptr<User> &user);
             void setConfig(std::shared_ptr<configfiles::JobConfig> &config);
             void setStatus(std::shared_ptr<database::JobStatus> &status);
             void setResult(std::shared_ptr<database::job_result> &result);
@@ -59,7 +60,7 @@ namespace balancedbanana {
             uint32_t allocated_disk_space_;
             std::string command_;
             uint64_t worker_id_;
-            uint64_t client_id_;
+            std::shared_ptr<User> user_;
             std::shared_ptr<configfiles::JobConfig> config_;
             std::shared_ptr<database::JobStatus> status_;
             std::shared_ptr<database::job_result> result_;
