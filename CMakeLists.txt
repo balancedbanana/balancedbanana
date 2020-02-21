@@ -56,8 +56,11 @@ if(TESTING)
       endif()
       set(GTEST gtest gtest_main --coverage)
 
+<<<<<<< HEAD
   endif()
 endif()
+=======
+>>>>>>> master
 
 # Download and unpack Webserver at configure time
 configure_file(contrib/Webserver/CMakeLists.txt.in Webserver-download/CMakeLists.txt)

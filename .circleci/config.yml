@@ -62,7 +62,11 @@ jobs:
             cd build
             CC=clang CXX=clang++ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../balancedbanana -DCMAKE_C_FLAGS="-fuse-ld=lld -fPIC" -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -fPIC -Wno-unused-command-line-argument" -G Ninja ..
             LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib cmake --build . -t install -j 4
+<<<<<<< HEAD
             cp $PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib/libc++.so $PWD/../balancedbanana/lib/
+=======
+            LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib ctest --verbose .
+>>>>>>> master
             cd ..
             cd balancedbanana/ && tar -zcvf ../balancedbanana.tar.gz . && cd -
       - run:
