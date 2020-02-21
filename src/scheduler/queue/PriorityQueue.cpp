@@ -139,7 +139,10 @@ namespace balancedbanana {
             pUpgradeTime = PriorityUpgradeTime;
             interval = updateInterval;
             (*timer).setInterval(interval);
-            std::function<void()> fcnptr = std::bind(&PriorityQueue::update, this);
+            std::function<void()> fcnptr = [that = shared_from_this()]() {
+                if(that)
+                    that->update();
+            };
             (*timer).addTimerFunction(fcnptr);
             (*timer).start();
         }

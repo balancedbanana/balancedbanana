@@ -18,7 +18,7 @@ using balancedbanana::configfiles::Priority;
 
 TEST(PQueue, GettingCorrectPositions) {
     std::shared_ptr<Timer> tptr = std::make_shared<Timer>();
-    PriorityQueue pqueue (tptr, 60, 90);
+    std::shared_ptr<PriorityQueue> pqueue = std::make_shared<PriorityQueue> (tptr, 1, 1);
 
     auto config = std::make_shared<JobConfig>();
     config->set_max_cpu_count(4);
@@ -57,21 +57,21 @@ TEST(PQueue, GettingCorrectPositions) {
 
     std::shared_ptr<Job> jptr4 = std::make_shared<Job>(4000,config4);
 
-    pqueue.addTask(jptr4);
-    pqueue.addTask(jptr3);
-    pqueue.addTask(jptr2);
-    pqueue.addTask(jptr);
+    pqueue->addTask(jptr4);
+    pqueue->addTask(jptr3);
+    pqueue->addTask(jptr2);
+    pqueue->addTask(jptr);
 
-    ASSERT_EQ(1, pqueue.getPos(1337));
-    ASSERT_EQ(2, pqueue.getPos(2000));
-    ASSERT_EQ(3, pqueue.getPos(3000));
-    ASSERT_EQ(4, pqueue.getPos(4000));
-    ASSERT_EQ(0,pqueue.getPos(420));
+    ASSERT_EQ(1, pqueue->getPos(1337));
+    ASSERT_EQ(2, pqueue->getPos(2000));
+    ASSERT_EQ(3, pqueue->getPos(3000));
+    ASSERT_EQ(4, pqueue->getPos(4000));
+    ASSERT_EQ(0,pqueue->getPos(420));
 }
 
 TEST(PQueue, PullingTasks) {
     std::shared_ptr<Timer> tptr = std::make_shared<Timer>();
-    PriorityQueue pqueue (tptr, 60, 90);
+    std::shared_ptr<PriorityQueue> pqueue = std::make_shared<PriorityQueue> (tptr, 1, 1);
 
     auto config = std::make_shared<JobConfig>();
     config->set_max_cpu_count(5);
@@ -110,23 +110,23 @@ TEST(PQueue, PullingTasks) {
 
     std::shared_ptr<Job> jptr4 = std::make_shared<Job>(4000,config4);
 
-    pqueue.addTask(jptr4);
-    pqueue.addTask(jptr3);
-    pqueue.addTask(jptr2);
-    pqueue.addTask(jptr);
+    pqueue->addTask(jptr4);
+    pqueue->addTask(jptr3);
+    pqueue->addTask(jptr2);
+    pqueue->addTask(jptr);
 
-    ASSERT_EQ(nullptr, pqueue.getJob(999,1));
-    ASSERT_EQ(jptr4, pqueue.getJob(1500, 1));
-    ASSERT_EQ(jptr3, pqueue.getJob(2500, 2));
-    ASSERT_EQ(jptr2, pqueue.getJob(3500, 3));
-    ASSERT_EQ(jptr, pqueue.getJob(4500, 4));
-    ASSERT_EQ(nullptr, pqueue.getJob(5000, 8));
+    ASSERT_EQ(nullptr, pqueue->getJob(999,1));
+    ASSERT_EQ(jptr4, pqueue->getJob(1500, 1));
+    ASSERT_EQ(jptr3, pqueue->getJob(2500, 2));
+    ASSERT_EQ(jptr2, pqueue->getJob(3500, 3));
+    ASSERT_EQ(jptr, pqueue->getJob(4500, 4));
+    ASSERT_EQ(nullptr, pqueue->getJob(5000, 8));
 }
 
 // Segfault somewhere in Update()
 TEST(PQueue, Updating) {
     std::shared_ptr<Timer> tptr = std::make_shared<Timer>();
-    PriorityQueue pqueue (tptr, 1, 1);
+    std::shared_ptr<PriorityQueue> pqueue = std::make_shared<PriorityQueue> (tptr, 1, 1);
 
     auto config = std::make_shared<JobConfig>();
     config->set_max_cpu_count(4);
@@ -165,19 +165,21 @@ TEST(PQueue, Updating) {
 
     std::shared_ptr<Job> jptr4 = std::make_shared<Job>(4000,config4);
 
-    pqueue.addTask(jptr4);
-    pqueue.addTask(jptr3);
-    ASSERT_EQ(1, pqueue.getPos(3000));
-    ASSERT_EQ(2,pqueue.getPos(4000));
+    pqueue->addTask(jptr4);
+    pqueue->addTask(jptr3);
+    ASSERT_EQ(1, pqueue->getPos(3000));
+    ASSERT_EQ(2,pqueue->getPos(4000));
 
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    pqueue.addTask(jptr2);
-    pqueue.addTask(jptr);
+    pqueue->addTask(jptr2);
+    pqueue->addTask(jptr);
 
-    ASSERT_EQ(1, pqueue.getPos(1337));
-    ASSERT_EQ(2, pqueue.getPos(3000));
-    ASSERT_EQ(3, pqueue.getPos(2000));
-    ASSERT_EQ(4, pqueue.getPos(4000));
-    ASSERT_EQ(0,pqueue.getPos(420));
+    ASSERT_EQ(1, pqueue->getPos(1337));
+    ASSERT_EQ(2, pqueue->getPos(3000));
+    ASSERT_EQ(3, pqueue->getPos(2000));
+    ASSERT_EQ(4, pqueue->getPos(4000));
+    ASSERT_EQ(0,pqueue->getPos(420));
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
