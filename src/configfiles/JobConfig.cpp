@@ -212,7 +212,6 @@ void JobConfig::set_current_working_dir(const std::filesystem::path &cwd) {
     current_working_dir_ = cwd;
 }
 
-
 std::optional <uint64_t> &JobConfig::min_ram() {
     return min_ram_;
 }

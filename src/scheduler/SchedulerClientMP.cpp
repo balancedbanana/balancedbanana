@@ -1,6 +1,7 @@
 #include <scheduler/SchedulerClientMP.h>
 #include <scheduler/IUser.h>
 #include <communication/message/ClientAuthMessage.h>
+#include <communication/message/TaskMessage.h>
 #include <communication/authenticator/AuthHandler.h>
 #include <scheduler/clientRequests/ClientRequest.h>
 
