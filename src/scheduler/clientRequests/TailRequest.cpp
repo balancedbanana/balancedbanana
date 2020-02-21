@@ -61,7 +61,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
     }
 
     // Step 2: Create and send ResponseMessage with status as string
-    RespondToClientMessage msg(response.str(), (TaskType)task->getType());
+    RespondToClientMessage msg(response.str(), false);
 
     communicator.send(msg);
 }

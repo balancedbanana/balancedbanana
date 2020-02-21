@@ -13,7 +13,7 @@ namespace communication
 class RespondToClientMessage : public Message
 {
 public:
-    explicit RespondToClientMessage(const std::string &data, TaskType originalTaskType);
+    explicit RespondToClientMessage(const std::string &data, bool unblock);
 
     RespondToClientMessage(const char *data, size_t &iterator, size_t size);
 
@@ -22,12 +22,12 @@ public:
     std::string serialize() const override;
 
     const std::string &GetData() const;
-    const uint32_t getOriginalTaskType() const;
+    const uint32_t getUnblock() const;
 
 private:
 
     std::string data;
-    uint32_t originalType;
+    bool unblock;
 };
 } // namespace communication
 

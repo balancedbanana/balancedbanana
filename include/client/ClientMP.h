@@ -2,7 +2,11 @@
 
 #include "communication/MessageProcessor.h"
 
+#include "communication/message/RespondToClientMessage.h"
+
 using balancedbanana::communication::MessageProcessor;
+
+using balancedbanana::communication::RespondToClientMessage;
 
 class ClientMP : public MessageProcessor
 {
@@ -18,6 +22,5 @@ public:
 	//virtual void processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg);
 	//virtual void handleInvalidMessage(const Message &msg);
 
-	// potential new message: respondToClientMessage?
-	// void processRespondToClientMessage(const RespondToClientMessage& msg) override;
+	void processRespondToClientMessage(const RespondToClientMessage& msg) override;
 };

@@ -32,7 +32,7 @@ std::shared_ptr<std::string> RunRequest::executeRequestAndFetchData(const std::s
 
     // Step 2: Create RespondToClientMessage with string containing ID of new Job or error message in case of failure
 
-    RespondToClientMessage msg(std::to_string(jobID), (TaskType)task->getType());
+    RespondToClientMessage msg(std::to_string(jobID), false);
 
     // HOW TO FIND CLIENT COMMUNICATOR AND RESPOND
 

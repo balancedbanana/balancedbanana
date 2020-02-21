@@ -1,7 +1,11 @@
 #include "client/Client.h"
 
+#include "commandLineInterface/ClientCommandLineProcessor.h"
+
 using namespace balancedbanana::client;
 using balancedbanana::communication::Task;
+using balancedbanana::communication::TaskType;
+using balancedbanana::commandLineInterface::ClientCommandLineProcessor;
 
 Client::Client()
 {
@@ -19,6 +23,15 @@ void Client::authenticateWithServer()
 
 void Client::processCommandLineArguments(int argc, char **argv)
 {
+    ClientCommandLineProcessor clp;
+    clp.process(argc, argv, task);
+}
+
+bool Client::specifiedBlock()
+{
+    // safety measure: can only block if run command was used
+    if (this->task->getType() != (uint32_t)TaskType::RUN) return false;
+    return this->task->getConfig()->blocking_mode().value_or(false);
 }
 
 void Client::handleAddImage(std::shared_ptr<Task> task)

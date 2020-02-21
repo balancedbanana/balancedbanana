@@ -21,6 +21,7 @@ public:
     void connectWithServer(const std::string& serverIpAdress, short serverPort);
     void authenticateWithServer();
     void processCommandLineArguments(int argc, char** argv);
+    bool specifiedBlock();
 
 private:
     /**
