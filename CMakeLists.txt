@@ -55,7 +55,7 @@ if(TESTING)
           include_directories("${gtest_SOURCE_DIR}/include")
       endif()
       set(GTEST gtest gtest_main --coverage)
-
+  endif()
 endif()
 
 # Download and unpack Webserver at configure time
