@@ -89,7 +89,7 @@ std::vector<T> Utilities::deserializeVector(std::string string){
  */
 std::optional<uint> Utilities::castToOptional(uint value) {
     if(value > 0) {
-        return value;
+        return std::make_optional(value);
     } else {
         return std::nullopt;
     }
@@ -102,11 +102,29 @@ std::optional<uint> Utilities::castToOptional(uint value) {
  */
 std::optional<QVariant> Utilities::castToOptional(QVariant value) {
     if (value.isNull()){
-        return std::optional<QVariant> {std::nullopt};
+        return std::nullopt;
     } else {
-        return value;
+        return std::make_optional(value);
     }
+}
+
+
+template <typename T>
+bool Utilities::areDetailVectorsEqual(std::vector<T> expected, std::vector<T> actual){
+    if (expected.size() != actual.size()){
+        return false;
+    }
+    for (int i = 0; i < expected.size(); i++){
+        if (!(expected[i] == actual[i])){
+            return false;
+        }
+    }
+    return true;
 }
 
 template std::string Utilities::serializeVector(std::vector<std::string> vector);
 template std::vector<std::string> Utilities::deserializeVector(std::string string);
+template bool Utilities::areDetailVectorsEqual(std::vector<user_details> expected, std::vector<user_details> actual);
+template bool Utilities::areDetailVectorsEqual(std::vector<job_details> expected, std::vector<job_details> actual);
+template bool Utilities::areDetailVectorsEqual(std::vector<worker_details> expected, std::vector<worker_details> actual);
+

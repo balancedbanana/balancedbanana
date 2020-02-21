@@ -2,6 +2,7 @@
 #include <database/WorkerGateway.h>
 #include <database/worker_details.h>
 #include <database/Repository.h>
+#include <database/Utilities.h>
 
 #include <QSqlQuery>
 #include <QVariant>
@@ -373,23 +374,6 @@ protected:
     worker_details third;
 };
 
-/**
- * Checks if two vectors of worker_details are equal
- * @param expected The first vector
- * @param actual The second vectors
- * @return true if the vectors are equal, otherwise false
- */
-bool areDetailVectorsEqual(std::vector<worker_details> expected, std::vector<worker_details> actual){
-    if (expected.size() != actual.size()){
-        return false;
-    }
-    for (int i = 0; i < expected.size(); i++){
-        if (!(expected[i] == actual[i])){
-            return false;
-        }
-    }
-    return true;
-}
 // Test to see if getWorkers retrieves a vector of previously added workers from the database
 TEST_F(GetWorkersTest, GetWorkersTest_SuccessfulGet_Test){
     // Add the workers. Their ids should match the order of their addition.
@@ -403,7 +387,7 @@ TEST_F(GetWorkersTest, GetWorkersTest_SuccessfulGet_Test){
     expectedVector.push_back(third);
 
     std::vector<worker_details> actualVector = WorkerGateway::getWorkers();
-    ASSERT_TRUE(areDetailVectorsEqual(expectedVector, actualVector));
+    ASSERT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
 }
 
 // Test to see if the getter method returns an empty vector if the workers table is empty

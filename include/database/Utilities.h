@@ -20,6 +20,8 @@ namespace balancedbanana::database {
         static std::vector<T> deserializeVector(std::string string);
         static std::optional<uint> castToOptional(uint value);
         static std::optional<QVariant> castToOptional(QVariant value);
+        template <typename T>
+        static bool areDetailVectorsEqual(std::vector<T> expected, std::vector<T> actual);
     };
 }
 
