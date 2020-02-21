@@ -11,12 +11,12 @@ allocated_disk_space_(0), worker_id_(0), user_(nullptr), config_(config), status
 
 Job::Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at, const QDateTime &finished_at,
         uint32_t allocated_ram, uint32_t allocated_cores, uint32_t allocated_disk_space, const std::string &command,
-        uint64_t worker_id, uint64_t client_id, const std::shared_ptr<JobConfig> &config,
+        uint64_t worker_id, std::shared_ptr<User> user, const std::shared_ptr<JobConfig> &config,
         const std::shared_ptr<JobStatus> &status,
         const std::shared_ptr<job_result> &result) :
         id_(id), started_at_(started_at), scheduled_at_(scheduled_at), finished_at_(finished_at),
         allocated_ram_(allocated_ram), allocated_cores_(allocated_cores), allocated_disk_space_(allocated_disk_space),
-        command_(command), worker_id_(worker_id), user_(nullptr), config_(config), status_(status),
+        command_(command), worker_id_(worker_id), user_(user_), config_(config), status_(status),
         result_(result) {
 }
 

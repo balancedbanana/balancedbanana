@@ -17,7 +17,7 @@ namespace balancedbanana {
             Job(uint64_t id, const std::shared_ptr<configfiles::JobConfig> &config);
             Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at, const QDateTime &finished_at,
                 uint32_t allocated_ram, uint32_t allocated_cores, uint32_t allocated_disc_space,
-                const std::string &command, uint64_t worker_id, uint64_t client_id,
+                const std::string &command, uint64_t worker_id, std::shared_ptr<User> user,
                 const std::shared_ptr<configfiles::JobConfig> &config,
                 const std::shared_ptr<database::JobStatus> &status,
                 const std::shared_ptr<database::job_result> &result);
