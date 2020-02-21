@@ -27,7 +27,7 @@ std::string SnapshotMessage::serialize() const {
     return stream.str();
 }
 
-const uint64_t SnapshotMessage::GetJobId() const {
+uint64_t SnapshotMessage::GetJobId() const {
     return jobid;
 }
 
