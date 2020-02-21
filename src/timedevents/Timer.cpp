@@ -10,6 +10,10 @@ Timer::Timer()
     this->active = false;
 }
 
+Timer::~Timer() {
+    stop();
+}
+
 
 void Timer::setInterval(unsigned int seconds)
 {
@@ -18,14 +22,12 @@ void Timer::setInterval(unsigned int seconds)
     }
 }
 
-
 void Timer::addTimerFunction(std::function<void()>& function)
 {
     if (!this->active) {
         this->timerFunctions.push_back(function);
     }
 }
-
 
 void Timer::start()
 {
@@ -43,13 +45,14 @@ void Timer::start()
                 }
             }
         });
-
-        sleeperThread.detach();
     }
 }
 
 
 void Timer::stop()
 {
-    this->active = false;
+    if(!active) {
+        this->active = false;
+        sleeperThread.join();
+    }
 }
