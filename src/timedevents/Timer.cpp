@@ -51,7 +51,7 @@ void Timer::start()
 
 void Timer::stop()
 {
-    if(!active) {
+    if(active) {
         this->active = false;
         sleeperThread.join();
     }
