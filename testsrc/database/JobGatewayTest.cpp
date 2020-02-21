@@ -695,7 +695,7 @@ protected:
 
 // Test to see if getJobs retrieves a vector of previously added jobs from the database
 TEST_F(GetJobsTest, GetJobsTest_SuccessfulGet_Test){
-    // Add the users. Their ids should match the order of their addition.
+    // Add the jobs. Their ids should match the order of their addition.
     EXPECT_EQ(JobGateway::add(first), first.id);
     EXPECT_EQ(JobGateway::add(second), second.id);
     EXPECT_EQ(JobGateway::add(third), third.id);
@@ -730,7 +730,7 @@ TEST_F(GetJobsTest, GetJobsTest_NoJobResultsTable_Test){
     createResultsTable();
 }
 
-// Test to see if the getter method returns an empty vector if the users table is empty
+// Test to see if the getter method returns an empty vector if the jobs table is empty
 TEST_F(GetJobsTest, GetJobsTest_NonExistentJobs_Test){
     EXPECT_TRUE(JobGateway::getJobs().empty());
 }
@@ -1003,6 +1003,9 @@ void resetWorker(){
     query.exec();
 }
 
+/*
+ * Fixture class that initializes Job and Worker on Setup and resets all tables besides users on TearDown
+ */
 class GetJobCompleteTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -1051,6 +1054,7 @@ protected:
     int8_t exit_code;
 };
 
+// Getter test for after startJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
     EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
     EXPECT_TRUE(JobGateway::add(job) == job.id);
@@ -1062,6 +1066,7 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
     EXPECT_TRUE(queryDetails == job);
 }
 
+// Getter test for after finishJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
     EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
     EXPECT_TRUE(JobGateway::add(job) == job.id);
@@ -1074,4 +1079,151 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
 
     job_details queryDetails = JobGateway::getJob(job.id);
     EXPECT_TRUE(queryDetails == job);
+}
+
+/**
+ * Fixture class that initializes three jobs on setup and resets the tables on teardown.
+ */
+class GetJobsWithWorkerIdTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Set up the first user
+        first.id = 1;
+        first.status = 1; //scheduled
+        first.user_id = 1;
+        first.command = "mkdir build";
+        first.schedule_time = QDateTime::currentDateTime();
+        first.empty = false;
+        first.config.set_min_ram(4194304);
+        first.config.set_max_ram(4194305);
+        first.config.set_min_cpu_count(42);
+        first.config.set_max_cpu_count(43);
+        first.config.set_blocking_mode(true);
+        first.config.set_email("mail@test.com");
+        first.config.set_priority(Priority::low);
+        first.config.set_image("testimage");
+        first.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        first.config.set_interruptible(false);
+        first.config.set_current_working_dir(".");
+
+        // Set up the second user
+        second.id = 2;
+        second.status = 1; //scheduled
+        second.user_id = 1;
+        second.worker_id = 1;
+        second.command = "mkdir build";
+        second.schedule_time = QDateTime::currentDateTime();
+        second.empty = false;
+        second.config.set_min_ram(4194304);
+        second.config.set_max_ram(4194305);
+        second.config.set_min_cpu_count(42);
+        second.config.set_max_cpu_count(43);
+        second.config.set_blocking_mode(true);
+        second.config.set_email("mail@test.com");
+        second.config.set_priority(Priority::high);
+        second.config.set_image("testimage");
+        second.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        second.config.set_interruptible(false);
+        second.config.set_current_working_dir(".");
+        second.start_time = std::make_optional<QDateTime>(QDateTime::fromString("2020.02.20:13.13.13.5", "yyyy.MM.dd:hh"
+                                                                                                         ".mm.ss.z"));
+
+
+        // Set up the third user
+        third.id = 3;
+        third.status = 1; //scheduled
+        third.user_id = 1;
+        third.worker_id = 1;
+        third.command = "mkdir build";
+        third.schedule_time = QDateTime::currentDateTime();
+        third.empty = false;
+        third.config.set_min_ram(4194304);
+        third.config.set_max_ram(4194305);
+        third.config.set_min_cpu_count(42);
+        third.config.set_max_cpu_count(43);
+        third.config.set_blocking_mode(true);
+        third.config.set_email("mail@test.com");
+        third.config.set_priority(Priority::emergency);
+        third.config.set_image("testimage");
+        third.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        third.config.set_interruptible(false);
+        third.config.set_current_working_dir(".");
+        third.start_time = std::make_optional<QDateTime>(QDateTime::fromString("2020.02.21:13.13.13.5", "yyyy.MM.dd:hh"
+                                                                                                       ".mm.ss.z"));
+
+        // SetUp Worker
+        worker.public_key = "sadfjsaljdf";
+        worker.specs.space = 10240;
+        worker.specs.ram = 2 *FOUR_MB;
+        worker.specs.cores = 4;
+        worker.address = "1.2.3.4";
+        worker.name = "Ubuntu";
+        worker.id = 1;
+        worker.empty = false;
+
+    }
+
+    void TearDown() override {
+        resetJobTable();
+        resetWorker();
+        resetAllocResTable();
+    }
+
+    job_details first;
+    job_details second;
+    job_details third;
+    worker_details worker;
+};
+
+// Test to see if getJobsWithWorkerId retrieves a vector of previously added jobs from the database.
+// second and third are started, so the method only include them in the returned vector even if other jobs exist in
+// the database
+TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_SuccessfulGet_Test){
+    // Add the jobs. Their ids should match the order of their addition.
+    EXPECT_EQ(JobGateway::add(first), first.id);
+    EXPECT_EQ(JobGateway::add(second), second.id);
+    EXPECT_EQ(JobGateway::add(third), third.id);
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id, worker.specs,
+            QDateTime::fromString("2020.02.20:13.13.13.5", "yyyy.MM.dd:hh.mm.ss.z")));
+    EXPECT_TRUE(JobGateway::startJob(third.id, worker.id, worker.specs,
+                                     QDateTime::fromString("2020.02.21:13.13.13.5", "yyyy.MM.dd:hh.mm.ss.z")));
+    second.status = (int) JobStatus::processing;
+    third.status = (int) JobStatus::processing;
+    second.allocated_specs = std::make_optional<Specs>(worker.specs);
+    third.allocated_specs = std::make_optional<Specs>(worker.specs);
+
+
+    std::vector<job_details> expectedVector;
+    expectedVector.push_back(second);
+    expectedVector.push_back(third);
+
+    std::vector<job_details> actualVector = JobGateway::getJobsWithWorkerId(third.worker_id.value());
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
+}
+
+// Test to see if an exception is thrown when the getter is called but no allocated_resources table exists
+TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NoAllocatedResourcesTable_Test){
+    // Deletes the allocated_resources table
+    deleteAllocResTable();
+    EXPECT_THROW(JobGateway::getJobsWithWorkerId(worker.id), std::logic_error);
+
+    // Restore the table
+    createAllocResTable();
+}
+
+// Test to see if an exception is thrown when the getter is called but no job_results table exists
+TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NoJobResultsTable_Test){
+    // Deletes the job_results table
+    deleteResultsTable();
+
+    EXPECT_THROW(JobGateway::getJobsWithWorkerId(worker.id), std::logic_error);
+
+    // Restore the table
+    createResultsTable();
+}
+
+// Test to see if the getter method returns an empty vector if the jobs table is empty
+TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NonExistentJobs_Test){
+    EXPECT_TRUE(JobGateway::getJobsWithWorkerId(worker.id).empty());
 }

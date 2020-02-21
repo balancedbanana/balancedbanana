@@ -156,18 +156,6 @@ bool areArgsValid(job_details& details){
     if (details.config.max_cpu_count().has_value() && details.config.max_cpu_count().value() == 0){
         return false;
     }
-    if (details.finish_time.has_value() && !details.finish_time.value().isValid()){
-        return false;
-    }
-    if (details.start_time.has_value() && !details.start_time.value().isValid()){
-        return false;
-    }
-    if (details.allocated_specs.has_value() && !details.allocated_specs->empty){
-        if (details.allocated_specs->ram == 0 || details.allocated_specs->space == 0 || details.allocated_specs->cores
-        == 0){
-            return false;
-        }
-    }
 
     // the mins cant be larger than the maxs
     if (details.config.min_ram().has_value() && details.config.max_ram().has_value()){
@@ -476,6 +464,60 @@ std::vector<job_details> JobGateway::getJobs() {
                     "    allocated_id,\n"
                     "    result_id\n"
                     "FROM jobs");
+    std::vector<job_details> jobVector;
+    if (query.exec()) {
+        while(query.next()){
+            job_details details;
+            setJobTableValues(details, query);
+            setAllocatedTableValues(details, query);
+            setResultTableValues(details, query);
+            details.empty = false;
+            details.id = query.value(0).toUInt();
+            jobVector.push_back(details);
+        }
+    } else {
+        throw std::runtime_error("getJobs error: " + query.lastError().databaseText().toStdString());
+    }
+
+    return jobVector;
+}
+
+/**
+ * Getter for all the jobs in the database with a specific worker_id.
+ * @return  Vector of all the jobs in the database.
+ */
+std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
+    }
+    if (!Utilities::doesTableExist("allocated_resources")){
+        Utilities::throwNoTableException("allocated_resources");
+    }
+    if (!Utilities::doesTableExist("job_results")){
+        Utilities::throwNoTableException("job_results");
+    }
+    QSqlQuery query("SELECT user_id, \n"
+                    "    min_ram,\n"
+                    "    max_ram,\n"
+                    "    min_cores,\n"
+                    "    max_cores,\n"
+                    "    blocking_mode,\n"
+                    "    email,\n"
+                    "    priority,\n"
+                    "    image,\n"
+                    "    interruptible,\n"
+                    "    environment,\n"
+                    "    working_dir,\n"
+                    "    command,\n"
+                    "    schedule_time,\n"
+                    "    worker_id,\n"
+                    "    status_id,\n"
+                    "    start_time,\n"
+                    "    finish_time,\n"
+                    "    allocated_id,\n"
+                    "    result_id\n"
+                    "FROM jobs WHERE worker_id = ?");
+    query.addBindValue(QVariant::fromValue(worker_id));
     std::vector<job_details> jobVector;
     if (query.exec()) {
         while(query.next()){
