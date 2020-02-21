@@ -608,7 +608,7 @@ TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
 class GetJobsTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Set up the first user
+        // Set up the first job
         first.id = 1;
         first.status = 1; //scheduled
         first.user_id = 1;
@@ -626,7 +626,7 @@ protected:
         first.config.set_interruptible(false);
         first.config.set_current_working_dir(".");
 
-        // Set up the second user
+        // Set up the second job
         second.id = 2;
         second.status = 1; //scheduled
         second.user_id = 1;
@@ -644,7 +644,7 @@ protected:
         second.config.set_interruptible(false);
         second.config.set_current_working_dir(".");
 
-        // Set up the third user
+        // Set up the third job
         third.id = 3;
         third.status = 1; //scheduled
         third.user_id = 1;
@@ -917,7 +917,7 @@ bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code){
             return false;
         }
     } else {
-        ADD_FAILURE();
+        return false;
     }
 
     if (queryJobs.exec()){
@@ -931,6 +931,7 @@ bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code){
     } else {
         return false;
     }
+    return true;
 }
 
 

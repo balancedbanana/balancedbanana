@@ -10,10 +10,8 @@ username, const std::string& password,  uint64_t port){
 }
 
 //Adds a Worker to the DB and returns its ID
-uint64_t Repository::addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const
-std::string address){
-
-}
+uint64_t addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const
+std::string address);
 
 bool removeWorker(const uint64_t id);
 
