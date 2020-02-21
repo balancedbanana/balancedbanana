@@ -6,6 +6,8 @@
 #include "job_details.h"
 #include "user_details.h"
 
+#include <QVariant>
+
 namespace balancedbanana::database {
     class Utilities {
     public:
@@ -16,6 +18,10 @@ namespace balancedbanana::database {
         static std::string serializeVector(std::vector<T> vector);
         template<typename T>
         static std::vector<T> deserializeVector(std::string string);
+        static std::optional<uint> castToOptional(uint value);
+        static std::optional<QVariant> castToOptional(QVariant value);
+        template <typename T>
+        static bool areDetailVectorsEqual(std::vector<T> expected, std::vector<T> actual);
     };
 }
 

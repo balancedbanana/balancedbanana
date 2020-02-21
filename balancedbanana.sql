@@ -32,7 +32,7 @@ DEFAULT CHARACTER SET = utf8;
 CREATE TABLE IF NOT EXISTS `balancedbanana`.`job_results`
 (
     `id`        BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `stdout`    MEDIUMTEXT          NOT NULL,
+    `stdout`    TEXT          NOT NULL,
     `exit_code` TINYINT(3)          NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `id_UNIQUE` (`id` ASC)
@@ -101,7 +101,6 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (
     `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,
     `user_id` BIGINT(10) UNSIGNED NOT NULL,
     `worker_id` BIGINT(10) DEFAULT NULL,
-    `email` VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `id_UNIQUE` (`id`),
     UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`)

@@ -13,13 +13,13 @@ namespace balancedbanana {
         class Factory {
         public:
             //Creates a Job object.
-            scheduler::Job createJob(const job_details);
+            scheduler::Job createJob(const job_details& job_info);
 
             //Creates a Worker object.
-            scheduler::Worker createWorker(const worker_details);
+            scheduler::Worker createWorker(const worker_details& worker_info);
 
             //Creates a User object.
-            scheduler::User createUser(const user_details);
+            scheduler::User createUser(const user_details& user_info);
 
         };
     }

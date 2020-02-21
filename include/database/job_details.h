@@ -2,6 +2,7 @@
 
 #include <configfiles/JobConfig.h>
 #include <database/Specs.h>
+#include <database/job_result.h>
 
 #include <cinttypes>
 #include <string>
@@ -36,12 +37,13 @@ namespace balancedbanana {
 
 			std::optional<Specs> allocated_specs;
 
+			std::optional<job_result> result;
+
             // true if empty, otherwise false;
             bool empty = true;
 
             inline bool operator==(job_details& rhs){
-                return this->user_id == rhs.user_id
-                       && this->status == rhs.status
+                return this->status == rhs.status
                        && this->schedule_time == rhs.schedule_time
                        && ((!this->finish_time.has_value() && !rhs.finish_time.has_value()) ||
                        (this->finish_time.value() == rhs.finish_time.value()))
@@ -55,12 +57,16 @@ namespace balancedbanana {
                        && this->config.min_cpu_count() == rhs.config.min_cpu_count()
                        && this->config.max_cpu_count() == rhs.config.max_cpu_count()
                        && this->config.blocking_mode() == rhs.config.blocking_mode()
-                       && this->config.email() == rhs.config.email()
                        && this->config.priority() == rhs.config.priority()
                        && this->config.image() == rhs.config.image()
                        && this->config.environment() == rhs.config.environment()
                        && this->config.interruptible() == rhs.config.interruptible()
-                       && this->config.current_working_dir() == rhs.config.current_working_dir();
+                       && this->config.current_working_dir() == rhs.config.current_working_dir()
+                && ((!this->result.has_value() && !rhs.result.has_value()) ||
+                    (this->result.value() == rhs.result.value()))
+                    && this->command == rhs.command
+                    && this->user_id == rhs.user_id
+                    && this->worker_id == rhs.worker_id;
             }
 		};
 	}

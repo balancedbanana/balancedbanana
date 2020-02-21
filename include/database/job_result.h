@@ -10,6 +10,10 @@ namespace balancedbanana {
 			std::string stdout;
 
 			int8_t exit_code;
+
+			inline bool operator==(job_result& rhs){
+			    return this->stdout == rhs.stdout && this->exit_code == rhs.exit_code;
+			}
 		};
 	}
 }
