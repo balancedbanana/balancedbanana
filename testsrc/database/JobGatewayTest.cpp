@@ -60,7 +60,6 @@ protected:
         details.config.set_min_cpu_count(42);
         details.config.set_max_cpu_count(43);
         details.config.set_blocking_mode(true);
-        details.config.set_email("mail@test.com");
         details.config.set_priority(Priority::low);
         details.config.set_image("testimage");
         details.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -96,7 +95,6 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             int min_cores_index = query.record().indexOf("min_cores");
             int max_cores_index = query.record().indexOf("max_cores");
             int blocking_mode_index = query.record().indexOf("blocking_mode");
-            int email_index = query.record().indexOf("email");
             int priority_index = query.record().indexOf("priority");
             int image_index = query.record().indexOf("image");
             int interruptible_index = query.record().indexOf("interruptible");
@@ -123,7 +121,6 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             } else {
                 queryDetails.config.set_blocking_mode(std::nullopt);
             }
-            queryDetails.config.set_email(query.value(email_index).toString().toStdString());
 
             std::optional<uint> castedPriorityId = Utilities::castToOptional(query.value(priority_index).toUInt());
             if (castedPriorityId != std::nullopt){
@@ -182,7 +179,6 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             EXPECT_TRUE(queryDetails.config.min_cpu_count() == details.config.min_cpu_count());
             EXPECT_TRUE(queryDetails.config.max_cpu_count() == details.config.max_cpu_count());
             EXPECT_TRUE(queryDetails.config.blocking_mode() == details.config.blocking_mode());
-            EXPECT_TRUE(queryDetails.config.email() == details.config.email());
             EXPECT_TRUE(queryDetails.config.priority() == details.config.priority());
             EXPECT_TRUE(queryDetails.config.image() == details.config.image());
             EXPECT_TRUE(queryDetails.config.environment() == details.config.environment());
@@ -204,7 +200,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
 
 
 // Test checks if the addJob method works properly given all the args.
-TEST_F(AddJobTest, AddAllJobTest_FirstJobSuccess_Test){
+TEST_F(AddJobTest, AddJobTest_FirstJobSuccess_Test){
 
     // The first entry's id should be 1
     EXPECT_TRUE(JobGateway::add(details) == 1);
@@ -214,7 +210,7 @@ TEST_F(AddJobTest, AddAllJobTest_FirstJobSuccess_Test){
 }
 
 // Test to see if the auto increment feature works as expected.
-TEST_F(AddJobTest, AddWorkerTest_AddSecondJobSucess_Test){
+TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
 
     // Add the user from the first test. Since it's the first user, its id should be 1.
     EXPECT_TRUE(JobGateway::add(details) == 1);
@@ -234,7 +230,6 @@ TEST_F(AddJobTest, AddWorkerTest_AddSecondJobSucess_Test){
     seconddetails.config.set_min_cpu_count(42);
     seconddetails.config.set_max_cpu_count(43);
     seconddetails.config.set_blocking_mode(true);
-    seconddetails.config.set_email("mail@test.com");
     seconddetails.config.set_priority(Priority::low);
     seconddetails.config.set_image("testimage");
     seconddetails.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -257,12 +252,6 @@ TEST_F(AddJobTest, AddJobTest_Invalid_Job_id_Test){
 // Test to see if the addJob method throws an exception when the command arg is invalid.
 TEST_F(AddJobTest, AddJobTest_Invalid_Command_Test){
     details.command = "";
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the email arg is invalid.
-TEST_F(AddJobTest, AddJobTest_Invalid_EMAIL_Test){
-    details.config.set_email("");
     EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
 }
 
@@ -333,7 +322,6 @@ void createJobsTable(){
                     "  `max_ram` bigint(10) unsigned DEFAULT NULL,\n"
                     "  `user_id` bigint(10) unsigned NOT NULL,\n"
                     "  `worker_id` bigint(10) DEFAULT NULL,\n"
-                    "  `email` varchar(255) NOT NULL,\n"
                     "  `result_id` bigint(10) unsigned DEFAULT NULL,\n"
                     "  PRIMARY KEY (`id`),\n"
                     "  UNIQUE KEY `id_UNIQUE` (`id`),\n"
@@ -369,7 +357,6 @@ protected:
         details.config.set_min_cpu_count(42);
         details.config.set_max_cpu_count(43);
         details.config.set_blocking_mode(true);
-        details.config.set_email("mail@test.com");
         details.config.set_priority(Priority::low);
         details.config.set_image("testimage");
         details.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -420,7 +407,6 @@ protected:
         details.command = "mkdir build";
         details.schedule_time = QDateTime::currentDateTime();
         details.empty = false;
-        details.config.set_email("mail@test.com");
         details.config.set_image("testimage");
         details.config.set_current_working_dir(".");
     }
@@ -475,7 +461,6 @@ TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
     details.command = "mkdir build";
     details.schedule_time = QDateTime::currentDateTime();
     details.empty = false;
-    details.config.set_email("mail@test.com");
     details.config.set_image("testimage");
     details.config.set_current_working_dir(".");
 
@@ -511,7 +496,6 @@ protected:
         details.config.set_min_cpu_count(42);
         details.config.set_max_cpu_count(43);
         details.config.set_blocking_mode(true);
-        details.config.set_email("mail@test.com");
         details.config.set_priority(Priority::low);
         details.config.set_image("testimage");
         details.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -610,7 +594,6 @@ TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
     details.command = "mkdir build";
     details.schedule_time = QDateTime::currentDateTime();
     details.empty = false;
-    details.config.set_email("mail@test.com");
     details.config.set_image("testimage");
     details.config.set_current_working_dir(".");
 
@@ -637,7 +620,6 @@ protected:
         first.config.set_min_cpu_count(42);
         first.config.set_max_cpu_count(43);
         first.config.set_blocking_mode(true);
-        first.config.set_email("mail@test.com");
         first.config.set_priority(Priority::low);
         first.config.set_image("testimage");
         first.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -656,7 +638,6 @@ protected:
         second.config.set_min_cpu_count(42);
         second.config.set_max_cpu_count(43);
         second.config.set_blocking_mode(true);
-        second.config.set_email("mail@test.com");
         second.config.set_priority(Priority::high);
         second.config.set_image("testimage");
         second.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -675,7 +656,6 @@ protected:
         third.config.set_min_cpu_count(42);
         third.config.set_max_cpu_count(43);
         third.config.set_blocking_mode(true);
-        third.config.set_email("mail@test.com");
         third.config.set_priority(Priority::emergency);
         third.config.set_image("testimage");
         third.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -762,7 +742,6 @@ protected:
         job.command = "mkdir build";
         job.schedule_time = QDateTime::currentDateTime();
         job.empty = false;
-        job.config.set_email("mail@test.com");
         job.config.set_image("testimage");
         job.config.set_current_working_dir(".");
         job.start_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
@@ -902,7 +881,6 @@ protected:
         job.command = "mkdir build";
         job.schedule_time = QDateTime::currentDateTime();
         job.empty = false;
-        job.config.set_email("mail@test.com");
         job.config.set_image("testimage");
         job.config.set_current_working_dir(".");
         job.finish_time = std::make_optional(QDateTime::currentDateTime());
@@ -1016,7 +994,6 @@ protected:
         job.command = "mkdir build";
         job.schedule_time = QDateTime::currentDateTime();
         job.empty = false;
-        job.config.set_email("mail@test.com");
         job.config.set_image("testimage");
         job.config.set_current_working_dir(".");
         job.start_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
@@ -1099,7 +1076,6 @@ protected:
         first.config.set_min_cpu_count(42);
         first.config.set_max_cpu_count(43);
         first.config.set_blocking_mode(true);
-        first.config.set_email("mail@test.com");
         first.config.set_priority(Priority::low);
         first.config.set_image("testimage");
         first.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -1119,7 +1095,6 @@ protected:
         second.config.set_min_cpu_count(42);
         second.config.set_max_cpu_count(43);
         second.config.set_blocking_mode(true);
-        second.config.set_email("mail@test.com");
         second.config.set_priority(Priority::high);
         second.config.set_image("testimage");
         second.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
@@ -1142,7 +1117,6 @@ protected:
         third.config.set_min_cpu_count(42);
         third.config.set_max_cpu_count(43);
         third.config.set_blocking_mode(true);
-        third.config.set_email("mail@test.com");
         third.config.set_priority(Priority::emergency);
         third.config.set_image("testimage");
         third.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});

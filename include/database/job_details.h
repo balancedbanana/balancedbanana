@@ -57,7 +57,6 @@ namespace balancedbanana {
                        && this->config.min_cpu_count() == rhs.config.min_cpu_count()
                        && this->config.max_cpu_count() == rhs.config.max_cpu_count()
                        && this->config.blocking_mode() == rhs.config.blocking_mode()
-                       && this->config.email() == rhs.config.email()
                        && this->config.priority() == rhs.config.priority()
                        && this->config.image() == rhs.config.image()
                        && this->config.environment() == rhs.config.environment()

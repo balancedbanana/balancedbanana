@@ -27,7 +27,6 @@ struct QVariant_JobConfig{
     QVariant q_min_cpu_count;
     QVariant q_max_cpu_count;
     QVariant q_blocking_mode;
-    QVariant q_email;
     QVariant q_priority;
     QVariant q_image;
     QVariant q_interruptible;
@@ -100,7 +99,6 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
 
     // Convert the mandatory args
     QVariant q_user_id = QVariant::fromValue(user_id);
-    QVariant q_email = QVariant::fromValue(QString::fromStdString(config.email()));
     QVariant q_image = QVariant::fromValue(QString::fromStdString(config.image()));
     // current_working_dir => std::filesystem::path => std::string => QString => QVariant
     QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().u8string()));
@@ -117,7 +115,6 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
     qstruct.q_min_cpu_count = q_min_cpu_count;
     qstruct.q_max_cpu_count = q_max_cpu_count;
     qstruct.q_blocking_mode = q_blocking_mode;
-    qstruct.q_email = q_email;
     qstruct.q_priority = q_priority;
     qstruct.q_image= q_image;
     qstruct.q_interruptible = q_interruptible;
@@ -173,7 +170,6 @@ bool areArgsValid(job_details& details){
     // Check the required arguments
     return !(details.command.empty()
              || !details.schedule_time.isValid()
-             || details.config.email().empty()
              || details.user_id == 0);
 }
 
@@ -185,15 +181,14 @@ bool areArgsValid(job_details& details){
 uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
     // Create the query
     QSqlQuery query("INSERT INTO jobs (user_id, min_ram, max_ram, min_cores, max_cores, "
-                    "blocking_mode, email, priority, image, interruptible, environment, working_dir, command, "
-                    "schedule_time, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "blocking_mode, priority, image, interruptible, environment, working_dir, command, "
+                    "schedule_time, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     query.addBindValue(qstruct.q_user_id);
     query.addBindValue(qstruct.q_min_ram);
     query.addBindValue(qstruct.q_max_ram);
     query.addBindValue(qstruct.q_min_cpu_count);
     query.addBindValue(qstruct.q_max_cpu_count);
     query.addBindValue(qstruct.q_blocking_mode);
-    query.addBindValue(qstruct.q_email);
     query.addBindValue(qstruct.q_priority);
     query.addBindValue(qstruct.q_image);
     query.addBindValue(qstruct.q_interruptible);
@@ -274,49 +269,48 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     } else {
         details.config.set_blocking_mode(std::nullopt);
     }
-    details.config.set_email(query.value(6).toString().toStdString());
 
-    std::optional<uint> castedPriorityId = Utilities::castToOptional(query.value(7).toUInt());
+    std::optional<uint> castedPriorityId = Utilities::castToOptional(query.value(6).toUInt());
     if (castedPriorityId != std::nullopt){
-        details.config.set_priority(static_cast<Priority> (query.value(7).toUInt()));
+        details.config.set_priority(static_cast<Priority> (query.value(6).toUInt()));
     } else {
         details.config.set_priority(std::nullopt);
     }
-    details.config.set_image(query.value(8).toString().toStdString());
+    details.config.set_image(query.value(7).toString().toStdString());
 
-    std::optional<QVariant> castedInterruptible = Utilities::castToOptional(query.value(9));
+    std::optional<QVariant> castedInterruptible = Utilities::castToOptional(query.value(8));
     if (castedInterruptible != std::optional<QVariant>{std::nullopt}){
         details.config.set_interruptible(castedInterruptible->toBool());
     } else {
         details.config.set_interruptible(std::nullopt);
     }
 
-    if(query.value(10).isNull()){
+    if(query.value(9).isNull()){
         details.config.set_environment(std::nullopt);
     } else {
-        details.config.set_environment(Utilities::deserializeVector<std::string>(query.value(10)
+        details.config.set_environment(Utilities::deserializeVector<std::string>(query.value(9)
         .toString()
         .toStdString()));
     }
 
-    details.config.set_current_working_dir(query.value(11).toString().toStdString());
-    details.command = query.value(12).toString().toStdString();
-    details.schedule_time = QDateTime::fromString(query.value(13).toString(),
+    details.config.set_current_working_dir(query.value(10).toString().toStdString());
+    details.command = query.value(11).toString().toStdString();
+    details.schedule_time = QDateTime::fromString(query.value(12).toString(),
                                                        "yyyy.MM.dd:hh.mm.ss.z");
-    details.worker_id = Utilities::castToOptional(query.value(14).toUInt());
-    details.status = query.value(15).toInt();
+    details.worker_id = Utilities::castToOptional(query.value(13).toUInt());
+    details.status = query.value(14).toInt();
 
-    if (query.value(16).isNull()){
+    if (query.value(15).isNull()){
         details.start_time = std::nullopt;
     } else {
-        details.start_time = std::make_optional<QDateTime>(QDateTime::fromString(query.value(16).toString(),
+        details.start_time = std::make_optional<QDateTime>(QDateTime::fromString(query.value(15).toString(),
                                                       "yyyy.MM.dd:hh.mm.ss.z"));
     }
 
-    if (query.value(17).isNull()){
+    if (query.value(16).isNull()){
         details.finish_time = std::nullopt;
     } else {
-        details.finish_time = QDateTime::fromString(query.value(17).toString(),
+        details.finish_time = QDateTime::fromString(query.value(16).toString(),
                                                    "yyyy.MM.dd:hh.mm.ss.z");
     }
 }
@@ -327,11 +321,11 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
  * @param query The query
  */
 void setAllocatedTableValues(job_details& details, QSqlQuery& query){
-    if (Utilities::castToOptional(query.value(18).toUInt()) == std::nullopt){
+    if (Utilities::castToOptional(query.value(17).toUInt()) == std::nullopt){
         details.allocated_specs = std::nullopt;
     } else {
         QSqlQuery allocateQuery("SELECT space, ram, cores FROM allocated_resources WHERE id = ?");
-        allocateQuery.addBindValue(query.value(18).toUInt());
+        allocateQuery.addBindValue(query.value(17).toUInt());
         if (allocateQuery.exec()){
             if (allocateQuery.next()) {
                 Specs specs;
@@ -353,11 +347,11 @@ void setAllocatedTableValues(job_details& details, QSqlQuery& query){
 * @param query The query
 */
 void setResultTableValues(job_details&  details, QSqlQuery& query){
-    if (Utilities::castToOptional(query.value(19).toUInt()) == std::nullopt){
+    if (Utilities::castToOptional(query.value(18).toUInt()) == std::nullopt){
         details.result = std::nullopt;
     } else {
         QSqlQuery resultQuery("SELECT stdout, exit_code FROM job_results WHERE id = ?");
-        resultQuery.addBindValue(query.value(19).toUInt());
+        resultQuery.addBindValue(query.value(18).toUInt());
         if (resultQuery.exec()){
             if (resultQuery.next()){
                 details.result->stdout = resultQuery.value(0).toString().toStdString();
@@ -393,7 +387,6 @@ job_details JobGateway::getJob(uint64_t job_id) {
                         "    min_cores,\n"
                         "    max_cores,\n"
                         "    blocking_mode,\n"
-                        "    email,\n"
                         "    priority,\n"
                         "    image,\n"
                         "    interruptible,\n"
@@ -449,7 +442,6 @@ std::vector<job_details> JobGateway::getJobs() {
                     "    min_cores,\n"
                     "    max_cores,\n"
                     "    blocking_mode,\n"
-                    "    email,\n"
                     "    priority,\n"
                     "    image,\n"
                     "    interruptible,\n"
@@ -502,7 +494,6 @@ std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
                     "    min_cores,\n"
                     "    max_cores,\n"
                     "    blocking_mode,\n"
-                    "    email,\n"
                     "    priority,\n"
                     "    image,\n"
                     "    interruptible,\n"
