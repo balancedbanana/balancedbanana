@@ -321,8 +321,8 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     if (query.value(16).isNull()){
         details.start_time = std::nullopt;
     } else {
-        details.start_time = QDateTime::fromString(query.value(16).toString(),
-                                                      "yyyy.MM.dd:hh.mm.ss.z");
+        details.start_time = std::make_optional<QDateTime>(QDateTime::fromString(query.value(16).toString(),
+                                                      "yyyy.MM.dd:hh.mm.ss.z"));
     }
 
     if (query.value(17).isNull()){
@@ -345,9 +345,13 @@ void setAllocatedTableValues(job_details& details, QSqlQuery& query){
         QSqlQuery allocateQuery("SELECT space, ram, cores FROM allocated_resources WHERE id = ?");
         allocateQuery.addBindValue(query.value(18).toUInt());
         if (allocateQuery.exec()){
-            details.allocated_specs->space = allocateQuery.value(0).toUInt();
-            details.allocated_specs->ram = allocateQuery.value(1).toUInt();
-            details.allocated_specs->cores = allocateQuery.value(2).toUInt();
+            if (allocateQuery.next()) {
+                Specs specs;
+                specs.space =  allocateQuery.value(0).toUInt();
+                specs.ram = allocateQuery.value(1).toUInt();
+                specs.cores = allocateQuery.value(2).toInt();
+                details.allocated_specs = std::make_optional<Specs>(specs);
+            }
         } else {
             throw std::runtime_error("getJob error: setting of allocated_resources failed: " + allocateQuery
             .lastError().databaseText().toStdString());
@@ -367,8 +371,10 @@ void setResultTableValues(job_details&  details, QSqlQuery& query){
         QSqlQuery resultQuery("SELECT stdout, exit_code FROM job_results WHERE id = ?");
         resultQuery.addBindValue(query.value(19).toUInt());
         if (resultQuery.exec()){
-            details.result->stdout = resultQuery.value(0).toString().toStdString();
-            details.result->exit_code = resultQuery.value(1).toInt();
+            if (resultQuery.next()){
+                details.result->stdout = resultQuery.value(0).toString().toStdString();
+                details.result->exit_code = resultQuery.value(1).toInt();
+            }
         } else {
             throw std::runtime_error("getJob error: setting of allocated_resources failed: " + resultQuery
                     .lastError().databaseText().toStdString());
