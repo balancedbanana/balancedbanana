@@ -53,7 +53,7 @@ TEST_F(ClientAuthMessageTest, Deserialize) {
     EXPECT_TRUE(ptr);
     EXPECT_EQ(CLIENT_AUTH, ptr->GetType());
     std::shared_ptr<ClientAuthMessage> cam = std::dynamic_pointer_cast<ClientAuthMessage>(ptr);
-    EXPECT_EQ("username", cam->GetUsername());
-    EXPECT_EQ("password", cam->GetPassword());
-    EXPECT_EQ("publickey", cam->GetPublickey());
+    EXPECT_EQ(msg->GetUsername(), cam->GetUsername());
+    EXPECT_EQ(msg->GetPassword(), cam->GetPassword());
+    EXPECT_EQ(msg->GetPublickey(), cam->GetPublickey());
 }

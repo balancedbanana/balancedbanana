@@ -10,7 +10,7 @@ namespace balancedbanana
 namespace commandLineInterface
 {
 
-void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, char *argv[]);
+void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char* const * argv);
 void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandsImage(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandStatus(const std::shared_ptr<Task> &task, CLI::App &app);

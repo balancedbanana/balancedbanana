@@ -57,14 +57,16 @@ namespace balancedbanana {
                        && this->config.min_cpu_count() == rhs.config.min_cpu_count()
                        && this->config.max_cpu_count() == rhs.config.max_cpu_count()
                        && this->config.blocking_mode() == rhs.config.blocking_mode()
-                       && this->config.email() == rhs.config.email()
                        && this->config.priority() == rhs.config.priority()
                        && this->config.image() == rhs.config.image()
                        && this->config.environment() == rhs.config.environment()
                        && this->config.interruptible() == rhs.config.interruptible()
                        && this->config.current_working_dir() == rhs.config.current_working_dir()
                 && ((!this->result.has_value() && !rhs.result.has_value()) ||
-                    (this->result.value() == rhs.result.value()));
+                    (this->result.value() == rhs.result.value()))
+                    && this->command == rhs.command
+                    && this->user_id == rhs.user_id
+                    && this->worker_id == rhs.worker_id;
             }
 		};
 	}

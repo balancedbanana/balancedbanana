@@ -210,15 +210,15 @@ TEST_F(JobConfigSerializationTest, Load) {
 }
 
 TEST_F(JobConfigSerializationTest, LoadCriticalValues) {
-    std::stringstream s("min_ram:123456\n"
-                        "max_ram:invalid\n"
-                        "min_cpu_count:5000000000\n"
+    std::stringstream s("min_ram:\n"
+                        "max_ram:1000000000000000000000000000000000000000000000000000000000000000000000000000000000\n"
+                        "min_cpu_count:invalid\n"
                         "max_cpu_count:1000000000000000000000000000000000000000000000000\n"
                         "blocking_mode:maybe\n");
     JobConfig critical(s);
-    EXPECT_EQ(123456, critical.min_ram().value());
-    EXPECT_EQ(std::nullopt, critical.max_ram());
-    EXPECT_EQ(UINT32_MAX, critical.min_cpu_count().value());
+    EXPECT_EQ(std::nullopt, critical.min_ram());
+    EXPECT_EQ(UINT64_MAX, critical.max_ram().value());
+    EXPECT_EQ(std::nullopt, critical.min_cpu_count());
     EXPECT_EQ(UINT32_MAX, critical.max_cpu_count().value());
     EXPECT_EQ(std::nullopt, critical.blocking_mode());
 }
