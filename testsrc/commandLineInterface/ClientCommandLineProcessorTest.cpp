@@ -182,7 +182,7 @@ TEST(ClientCommandLineProcessor, run2)
     ClientCommandLineProcessor clp;
 
     const char* const argv[] = {"./bbc", "run", "-i", "docker Image", "--job", "echo run this command!"};
-    int argc = sizeof(argv);
+    int argc = sizeof(argv) / sizeof(const char*);
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
 
