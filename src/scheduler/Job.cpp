@@ -6,17 +6,17 @@ using namespace balancedbanana::database;
 
 Job::Job(uint64_t id, const std::shared_ptr<JobConfig> &config) :
 id_(id), started_at_(), scheduled_at_(), finished_at_(), allocated_ram_(0), allocated_cores_(0),
-allocated_disk_space_(0), worker_id_(0), client_id_(0), config_(config), status_(nullptr), result_(nullptr) {
+allocated_disk_space_(0), worker_id_(0), user_(nullptr), config_(config), status_(nullptr), result_(nullptr) {
 }
 
 Job::Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at, const QDateTime &finished_at,
         uint32_t allocated_ram, uint32_t allocated_cores, uint32_t allocated_disk_space, const std::string &command,
-        uint64_t worker_id, uint64_t client_id, const std::shared_ptr<JobConfig> &config,
+        uint64_t worker_id, std::shared_ptr<User> user, const std::shared_ptr<JobConfig> &config,
         const std::shared_ptr<JobStatus> &status,
         const std::shared_ptr<job_result> &result) :
         id_(id), started_at_(started_at), scheduled_at_(scheduled_at), finished_at_(finished_at),
         allocated_ram_(allocated_ram), allocated_cores_(allocated_cores), allocated_disk_space_(allocated_disk_space),
-        command_(command), worker_id_(worker_id), client_id_(client_id), config_(config), status_(status),
+        command_(command), worker_id_(worker_id), user_(user_), config_(config), status_(status),
         result_(result) {
 }
 
@@ -56,8 +56,8 @@ uint64_t Job::getWorker_id() const {
     return worker_id_;
 }
 
-uint64_t Job::getClient_id() const {
-    return client_id_;
+std::shared_ptr<User> Job::getUser() const {
+    return user_;
 }
 
 std::shared_ptr<JobConfig> Job::getConfig() const {
@@ -100,8 +100,8 @@ void Job::setCommand(const std::string &command) {
 void Job::setWorker_id(uint64_t worker_id) {
     worker_id_ = worker_id;
 }
-void Job::setClient_id(uint64_t client_id) {
-    client_id_ = client_id;
+void Job::setUser(const std::shared_ptr<User> &user) {
+    user_ = user;
 }
 void Job::setConfig(std::shared_ptr<JobConfig> &config) {
     config_ = config;
