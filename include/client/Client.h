@@ -20,7 +20,7 @@ public:
 
     void connectWithServer(const std::string& serverIpAdress, short serverPort);
     void authenticateWithServer();
-    void processCommandLineArguments(int argc, char** argv);
+    void processCommandLineArguments(int argc, const char* const * argv);
     bool specifiedBlock();
 
 private:

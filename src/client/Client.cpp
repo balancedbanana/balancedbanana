@@ -21,7 +21,7 @@ void Client::authenticateWithServer()
 }
 
 
-void Client::processCommandLineArguments(int argc, char **argv)
+void Client::processCommandLineArguments(int argc, const char* const * argv)
 {
     ClientCommandLineProcessor clp;
     clp.process(argc, argv, task);

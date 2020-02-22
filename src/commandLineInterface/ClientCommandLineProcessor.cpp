@@ -53,7 +53,7 @@ int ClientCommandLineProcessor::process(int argc, const char* const *argv, const
  * Cuts off everything after the --job or -j command line option.
  * Adds the cut off part to the task instance as task command string.
  */
-void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, char *argv[])
+void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char* const * argv)
 {
     for (int arg = 0; arg < argc; ++arg)
     {
