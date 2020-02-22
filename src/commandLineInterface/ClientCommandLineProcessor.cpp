@@ -21,7 +21,7 @@ void addSubCommandContinue(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandBackup(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app);
 
-int ClientCommandLineProcessor::process(int argc, char **argv, const std::shared_ptr<Task> &task)
+int ClientCommandLineProcessor::process(int argc, const char* const *argv, const std::shared_ptr<Task> &task)
 {
     // extract potential job command from arguments
     extractJobCommand(task, argc, argv);

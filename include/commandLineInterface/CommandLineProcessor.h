@@ -18,8 +18,6 @@ namespace balancedbanana {
 		class CommandLineProcessor
 		{
 		public:
-			std::shared_ptr<communication::Task> process(int* argc, char** argv);
-
 			/**
 			 * Process an array of command line arguments (argv : &char[argc])
 			 * Write processed arguments into the provided Task instance
@@ -28,7 +26,7 @@ namespace balancedbanana {
 			 * 
 			 * Returns 0 on success and an error code on failure.
 			 */
-			virtual int process(int argc, char** argv, const std::shared_ptr<balancedbanana::communication::Task>& task) { return 0; }
+			virtual int process(int argc, const char* const * argv, const std::shared_ptr<balancedbanana::communication::Task>& task) { return 0; }
 
 		};
 
