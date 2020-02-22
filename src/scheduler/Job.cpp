@@ -16,7 +16,7 @@ Job::Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at
         const std::shared_ptr<job_result> &result) :
         id_(id), started_at_(started_at), scheduled_at_(scheduled_at), finished_at_(finished_at),
         allocated_ram_(allocated_ram), allocated_cores_(allocated_cores), allocated_disk_space_(allocated_disk_space),
-        command_(command), worker_id_(worker_id), user_(user_), config_(config), status_(status),
+        command_(command), worker_id_(worker_id), user_(user), config_(config), status_(status),
         result_(result) {
 }
 
