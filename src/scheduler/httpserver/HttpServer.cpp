@@ -121,8 +121,8 @@ void HttpServer::listen(const std::string & ip, short port) {
 							response.status = 200;
 							balancedbanana::scheduler::Job job = getJobByID(jobid);
 							std::stringstream resp;
-							resp << "user_name: " << "Missing" << "\n";
-							resp << "user_id: " << "0" << "\n";
+							resp << "user_name: " << job.getUser()->name() << "\n";
+							resp << "user_id: " << job.getUser()->id() << "\n";
 							resp << "status: " << (int)*job.getStatus() << "\n";
 							resp << "scheduled_at: " << job.getScheduled_at().toString().toStdString() << "\n";
 							resp << "finished_at: " << job.getFinished_at().toString().toStdString() << "\n";
