@@ -20,7 +20,7 @@ void callbackWorkerStart(const std::shared_ptr<Task>& task, std::string& ipAddre
     task->setServerPort(serverPort);
 }
 
-int WorkerCommandLineProcessor::process(int argc, char **argv, const std::shared_ptr<Task> &task)
+int WorkerCommandLineProcessor::process(int argc, const char* const * argv, const std::shared_ptr<Task> &task)
 {
     CLI::App app;
 

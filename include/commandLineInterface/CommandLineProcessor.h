@@ -9,13 +9,8 @@
 #include <communication/Task.h>
 #include "CLI11/CLI11.hpp"
 
-#define CLIENT_PROGRAM_NAME "bbc"
-#define SERVER_PROGRAM_NAME "bbs"
-#define WORKER_PROGRAM_NAME "bbd"
+using balancedbanana::communication::Task;
 
-
-
-#define ERROR_UNCLEAR_TASK_TYPE -1
 
 namespace balancedbanana {
 	namespace commandLineInterface {
@@ -38,8 +33,6 @@ namespace balancedbanana {
 		class CommandLineProcessor
 		{
 		public:
-			std::shared_ptr<communication::Task> process(int* argc, char** argv);
-
 			/**
 			 * Process an array of command line arguments (argv : &char[argc])
 			 * Write processed arguments into the provided Task instance
@@ -48,7 +41,7 @@ namespace balancedbanana {
 			 * 
 			 * Returns 0 on success and an error code on failure.
 			 */
-			virtual int process(int argc, char** argv, const std::shared_ptr<Task>& task) { return 0; }
+			virtual int process(int argc, const char* const * argv, const std::shared_ptr<Task>& task) { return 0; }
 
 		};
 

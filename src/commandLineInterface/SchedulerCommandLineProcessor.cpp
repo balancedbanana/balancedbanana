@@ -23,7 +23,7 @@ void callbackSchedulerStart(const std::shared_ptr<Task>& task, std::string& serv
     task->setWebAPIPort(webAPIPort);
 }
 
-int SchedulerCommandLineProcessor::process(int argc, char** argv, const std::shared_ptr<Task>& task)
+int SchedulerCommandLineProcessor::process(int argc, const char* const * argv, const std::shared_ptr<Task>& task)
 {
     CLI::App app{"Scheduler App"};
 
