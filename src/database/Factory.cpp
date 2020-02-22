@@ -15,7 +15,8 @@ using namespace balancedbanana::database;
  */
 Job Factory::createJob(const job_details& job_info) {
     Job job(job_info.id, std::make_shared<JobConfig>(job_info.config));
-    job.setClient_id(job_info.user_id);
+    // TODO get User Object from DB!!
+    // job.setUser(job_info.user_id);
     std::shared_ptr<JobStatus> statusPtr = std::make_shared<JobStatus>(static_cast<JobStatus>(job_info.status));
     job.setStatus(statusPtr);
     job.setCommand(job_info.command);
