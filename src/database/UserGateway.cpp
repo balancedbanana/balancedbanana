@@ -1,6 +1,6 @@
 #include <database/UserGateway.h>
 #include <database/user_details.h>
-#include <database/database_utilities.h>
+#include <database/Utilities.h>
 
 #include <QVariant>
 #include <QSqlError>
@@ -23,7 +23,7 @@ bool areArgsValid(const user_details& user){
 }
 
 /**
- * Adds a user to the database, Throws exceptions when errors occur.
+ * Adds a user to the database, Utilities::throws exceptions when errors occur.
  * @param user  The user to be added
  * @return The id of the user.
  */
@@ -35,8 +35,8 @@ uint64_t UserGateway::add(const user_details& user) {
     }
 
     // DB must contain table
-    if (!doesTableExist("users")){
-        throwNoTableException("users");
+    if (!Utilities::doesTableExist("users")){
+        Utilities::throwNoTableException("users");
     }
 
     // Converting the various args into QVariant Objects
@@ -64,10 +64,10 @@ uint64_t UserGateway::add(const user_details& user) {
  * @return True if the operation was successful, otherwise false
  */
 bool UserGateway::remove(uint64_t user_id) {
-    if (!doesTableExist("users")){
-        throwNoTableException("users");
+    if (!Utilities::doesTableExist("users")){
+        Utilities::throwNoTableException("users");
     }
-    if (doesRecordExist("users", user_id)){
+    if (Utilities::doesRecordExist("users", user_id)){
         QSqlQuery query("DELETE FROM users WHERE id = ?");
         query.addBindValue(QVariant::fromValue(user_id));
         if (query.exec()){
@@ -87,11 +87,11 @@ bool UserGateway::remove(uint64_t user_id) {
  * @return The details of the user.
  */
 user_details UserGateway::getUser(uint64_t id) {
-    if (!doesTableExist("users")){
-        throwNoTableException("users");
+    if (!Utilities::doesTableExist("users")){
+        Utilities::throwNoTableException("users");
     }
     user_details details{};
-    if (doesRecordExist("users", id)){
+    if (Utilities::doesRecordExist("users", id)){
         QSqlQuery query("SELECT public_key, name, email FROM users WHERE id = ?");
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
@@ -100,6 +100,7 @@ user_details UserGateway::getUser(uint64_t id) {
                 details.public_key = query.value(0).toString().toStdString();
                 details.name = query.value(1).toString().toStdString();
                 details.email = query.value(2).toString().toStdString();
+                details.empty = false;
             } else {
                 // This would be a very weird error, as I've already checked if the user exists.
                 throw std::runtime_error("getUser error: record doesn't exist");
@@ -119,8 +120,8 @@ user_details UserGateway::getUser(uint64_t id) {
  * @return  Vector of all the users in the database.
  */
 std::vector<user_details> UserGateway::getUsers() {
-    if (!doesTableExist("users")){
-        throwNoTableException("users");
+    if (!Utilities::doesTableExist("users")){
+        Utilities::throwNoTableException("users");
     }
     QSqlQuery query("SELECT id, public_key, name, email FROM users");
     std::vector<user_details> userVector;
@@ -131,6 +132,7 @@ std::vector<user_details> UserGateway::getUsers() {
             details.public_key = query.value(1).toString().toStdString();
             details.name = query.value(2).toString().toStdString();
             details.email = query.value(3).toString().toStdString();
+            details.empty = false;
 
             userVector.push_back(details);
         }

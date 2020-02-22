@@ -8,7 +8,7 @@ using namespace balancedbanana::communication;
 using balancedbanana::communication::TaskMessage;
 
 TaskMessage::TaskMessage(const Task &task) :
-Message(TASK), task(){
+Message(TASK), task(task){
 
 }
 

@@ -3,7 +3,7 @@
 namespace balancedbanana {
     namespace database {
 
-		enum class JobStatus {
+		enum JobStatus {
 			scheduled = 1,
 			processing = 2,
 			paused = 3,

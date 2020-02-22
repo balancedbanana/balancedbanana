@@ -7,11 +7,9 @@
 
 namespace balancedbanana {
     namespace database {
-
-        //Encapsulates all details required to create Worker object.
         struct worker_details {
             //The id of the Worker.
-            uint8_t id;
+            uint64_t id;
 
             std::string name;
 
@@ -22,6 +20,17 @@ namespace balancedbanana {
 
             std::string public_key;
 
+            // true if empty, otherwise false;
+            bool empty = true;
+
+            inline bool operator==(const worker_details& rhs){
+                return this->address == rhs.address
+                       && this->specs == rhs.specs
+                       && this->public_key == rhs.public_key
+                       && this->name == rhs.name
+                       && this->id == rhs.id
+                       && this->empty == rhs.empty;
+            }
         };
     }
 }
