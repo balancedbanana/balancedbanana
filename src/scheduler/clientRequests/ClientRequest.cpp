@@ -14,6 +14,15 @@ namespace balancedbanana
 namespace scheduler
 {
 
+ClientRequest::ClientRequest(std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                             std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                             uint64_t userID)
+{
+    this->dbGetJob = dbGetJob;
+    this->dbUpdateJobStatus = dbUpdateJobStatus;
+    this->userID = userID;
+}
+
 std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(TaskType requestType)
 {
     switch (requestType)
@@ -42,7 +51,7 @@ std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(TaskType request
     case TaskType::RESTORE:
         return std::make_shared<RestoreRequest>();
         break;
-    
+
     default:
         break;
     }

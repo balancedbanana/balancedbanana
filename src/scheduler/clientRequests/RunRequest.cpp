@@ -1,12 +1,10 @@
 #include "scheduler/clientRequests/RunRequest.h"
 
-#include "database/Repository.h"
-#include "communication/message/RespondToClientMessage.h"
 #include "communication/Communicator.h"
+#include "QDateTime"
+#include <sstream>
 
-using balancedbanana::database::Repository;
 using balancedbanana::communication::Communicator;
-using balancedbanana::communication::RespondToClientMessage;
 
 namespace balancedbanana
 {
@@ -16,27 +14,18 @@ namespace scheduler
 std::shared_ptr<std::string> RunRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task)
 {
     // Step 1: enter Job into Database
-
-    // ASSUMING THE PRESENCE OR AVAILABILITY OF A REPOSITORY NAMED repository
+    std::stringstream response;
 
     // Getting the user id
-    uint64_t userID = task->getConfig()->userID();
-    if (userID == 0) {
-        // User doesnt have an ID yet; Is using program for the first time
-        // GENERATE NEW, UNIQUE USERID
-        userID = "unique";
-    }
+    uint64_t userID = getUserID();
 
     auto config = task->getConfig();
-    uint64_t jobID = repository.addJob(userID, *config, QDateTime::currentDateTime(), task->getTaskCommand());
+    uint64_t jobID = dbAddJob(userID, *config, QDateTime::currentDateTime(), task->getTaskCommand());
+
+    response << "New Job received. ID is: " << jobID << std::endl;
 
     // Step 2: Create RespondToClientMessage with string containing ID of new Job or error message in case of failure
-
-    RespondToClientMessage msg(std::to_string(jobID), false);
-
-    // HOW TO FIND CLIENT COMMUNICATOR AND RESPOND
-
-    communicator.send(msg);
+    return std::make_shared<std::string>(response.str());
 }
 
 } // namespace scheduler

@@ -1,14 +1,12 @@
 #include "scheduler/clientRequests/PauseRequest.h"
 
-#include "database/Repository.h"
-#include "communication/message/RespondToClientMessage.h"
 #include "scheduler/Job.h"
+#include "scheduler/Worker.h"
 #include <sstream>
 
-using balancedbanana::database::Repository;
 using balancedbanana::scheduler::Job;
 using balancedbanana::database::JobStatus;
-using balancedbanana::communication::RespondToClientMessage;
+using balancedbanana::scheduler::Worker;
 
 namespace balancedbanana
 {
@@ -18,18 +16,31 @@ namespace scheduler
 std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task)
 {
     // Step 1: Go to DB and get job status
-
     std::stringstream response;
 
-    //auto job = repository.getJob(task->getJobId().value());
-    Job job;
-    switch ((int)*job.getStatus())
+    if (task->getJobId().has_value() == false)
+    {
+        // Note that job id is required for the pause command
+        // exit with the reponse set to the error message of not having a jobid
+        response << "The pause command requires a jobID. How did you start a pause task without giving a jobID?" << std::endl;
+        return std::make_shared<std::string>(response.str());
+    }
+    std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
+
+    if (job == nullptr)
+    {
+        // Job not found
+        response << "No Job with this jobID could be found." << std::endl;
+        return std::make_shared<std::string>(response.str());
+    }
+
+    switch (*(job->getStatus()))
     {
     case (int)JobStatus::scheduled:
         // pause job and respond success or failure
-        bool success = queue.remove(job.getId());
+        bool success = Queue::remove(job->getId());
         if (success) {
-            repository.pauseJob(job.getId());
+            dbUpdateJobStatus(job->getId(), JobStatus::paused);
             response << "Successfully paused this Job." << std::endl;
         } else {
             response << "Failed to pause this Job." << std::endl;
@@ -37,10 +48,21 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
         break;
     case (int)JobStatus::processing:
         // stop job and respond success or failure
-        uint64_t workerID = job.getWorker_id();
-        bool success = workers.getWorker(workerID).pause(job.getId());
+        {
+            Worker worker = Workers::getWorker(job->getWorker_id());
+        }
+
+
+
+        // Use some message to tell worker to pause job
+
+
+
+        // How to know if it was sucessfull?
+        bool success = what;
+
         if (success) {
-            repository.pauseJob(job.getId());
+            dbUpdateJobStatus(job->getId(), JobStatus::paused);
             response << "Successfully paused this Job." << std::endl;
         } else {
             response << "Failed to pause this Job." << std::endl;
@@ -51,10 +73,21 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
         break;
     case (int)JobStatus::interrupted:
         // stop job and respond success or failure
-        uint64_t workerID = job.getWorker_id();
-        bool success = workers.getWorker(workerID).pause(job.getId());
+        {
+            Worker worker = Workers::getWorker(job->getWorker_id());
+        }
+
+
+
+        // Use some message to tell worker to pause job
+
+
+
+        // How to know if it was sucessfull?
+        bool success = what;
+
         if (success) {
-            repository.pauseJob(job.getId());
+            dbUpdateJobStatus(job->getId(), JobStatus::paused);
             response << "Successfully paused this Job." << std::endl;
         } else {
             response << "Failed to pause this Job." << std::endl;
@@ -75,9 +108,7 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
     }
 
     // Step 2: Create and send ResponseMessage with status as string
-    RespondToClientMessage msg(response.str(), false);
-
-    communicator.send(msg);
+    return std::make_shared<std::string>(response.str());
 }
 
 } // namespace scheduler
