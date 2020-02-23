@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
-#include "Snapshot.h"
+#include <vector>
+#include <filesystem>
+#include "Checkpoint.h"
 
 namespace balancedbanana {
 	namespace worker {
@@ -12,10 +14,14 @@ namespace balancedbanana {
 			std::string Tail(int lines);
 
 			void Stop();
+			
+			Checkpoint CreateCheckpoint(const std::string& id, const std::filesystem::path& checkpointdir = "", bool stop = false);
 
-			Snapshot CreateSnapshot(bool stop = false);
+			std::vector<Checkpoint> GetCheckpoints(const std::filesystem::path& checkpointdir = "");
 
-			void Resume(const Snapshot& snap);
+			void Start();
+
+			uint32_t Wait();
 		};
 	}
 }

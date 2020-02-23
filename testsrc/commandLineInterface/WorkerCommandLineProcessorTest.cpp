@@ -3,7 +3,7 @@
 
 using balancedbanana::commandLineInterface::WorkerCommandLineProcessor;
 using balancedbanana::communication::Task;
-using balancedbanana::commandLineInterface::TaskType;
+using balancedbanana::communication::TaskType;
 
 TEST(WorkerCommandLineProcessor, noArguments)
 {

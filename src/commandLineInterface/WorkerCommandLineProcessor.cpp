@@ -1,6 +1,8 @@
 #include <commandLineInterface/WorkerCommandLineProcessor.h>
 
 using balancedbanana::commandLineInterface::WorkerCommandLineProcessor;
+using balancedbanana::communication::Task;
+using balancedbanana::communication::TaskType;
 
 namespace balancedbanana
 {
@@ -20,7 +22,7 @@ void callbackWorkerStart(const std::shared_ptr<Task>& task, std::string& ipAddre
     task->setServerPort(serverPort);
 }
 
-int WorkerCommandLineProcessor::process(int argc, const char* const * argv, const std::shared_ptr<Task> &task)
+int WorkerCommandLineProcessor::process(int argc, const char* const *argv, const std::shared_ptr<Task> &task)
 {
     CLI::App app;
 

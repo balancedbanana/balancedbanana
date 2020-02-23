@@ -2,6 +2,8 @@
 
 using balancedbanana::commandLineInterface::ClientCommandLineProcessor;
 using balancedbanana::configfiles::Priority;
+using balancedbanana::communication::Task;
+using balancedbanana::communication::TaskType;
 
 namespace balancedbanana
 {

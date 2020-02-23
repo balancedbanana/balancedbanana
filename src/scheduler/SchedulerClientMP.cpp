@@ -1,9 +1,12 @@
 #include <scheduler/SchedulerClientMP.h>
 #include <scheduler/IUser.h>
 #include <communication/message/ClientAuthMessage.h>
+#include <communication/message/TaskMessage.h>
 #include <communication/authenticator/AuthHandler.h>
+#include <scheduler/clientRequests/ClientRequest.h>
 
 using namespace balancedbanana::communication;
+using balancedbanana::scheduler::ClientRequest;
 
 #if 0
 SchedulerClientMP::SchedulerClientMP(balancedbanana::communication::Communicator *communicator) :
@@ -29,5 +32,9 @@ void SchedulerClientMP::processSnapshotMessage(const SnapshotMessage &msg) {
 }
 
 void SchedulerClientMP::processTaskMessage(const TaskMessage &msg) {
-    //TODO implement
+    const std::shared_ptr<Task> task = std::make_shared<Task>(msg.GetTask());
+    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType((TaskType)task->getType());
+    std::shared_ptr<std::string> responseData = request->executeRequestAndFetchData(task);
+
+    // TODO: Respond to Client
 }

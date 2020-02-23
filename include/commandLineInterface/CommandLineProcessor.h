@@ -9,26 +9,11 @@
 #include <communication/Task.h>
 #include "CLI11/CLI11.hpp"
 
-using balancedbanana::communication::Task;
 
+#define ERROR_UNCLEAR_TASK_TYPE -1
 
 namespace balancedbanana {
 	namespace commandLineInterface {
-
-		enum class TaskType : int {
-			ADD_IMAGE,
-			BACKUP,
-			CONTINUE,
-			PAUSE,
-			REMOVE_IMAGE,
-			RESTORE,
-			RUN,
-			SERVERSTART,
-			STATUS,
-			STOP,
-			TAIL,
-			WORKERSTART
-		};
 		
 		class CommandLineProcessor
 		{
@@ -41,7 +26,7 @@ namespace balancedbanana {
 			 * 
 			 * Returns 0 on success and an error code on failure.
 			 */
-			virtual int process(int argc, const char* const * argv, const std::shared_ptr<Task>& task) { return 0; }
+			virtual int process(int argc, const char* const * argv, const std::shared_ptr<balancedbanana::communication::Task>& task) { return 0; }
 
 		};
 

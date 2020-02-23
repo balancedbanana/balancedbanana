@@ -39,7 +39,7 @@ int main() {
     }, [](int hours) -> std::vector<int> {
         return { 0, 2 }; 
     }, [](int jobid) -> Job {
-        return Job(jobid, QDateTime(QDate(2020, 1, 30), QTime(20, 10, 23, 0)), QDateTime(QDate(2020, 1, 30), QTime(22, 10, 23, 0)), QDateTime(QDate(2020, 1, 30), QTime(23, 10, 23, 0)), 100, 10, 0, "Steve", 2, 5, std::make_shared<balancedbanana::configfiles::JobConfig>(), std::make_shared<balancedbanana::database::JobStatus>(), std::make_shared<balancedbanana::database::job_result>()); 
+        return Job(jobid, QDateTime(QDate(2020, 1, 30), QTime(20, 10, 23, 0)), QDateTime(QDate(2020, 1, 30), QTime(22, 10, 23, 0)), QDateTime(QDate(2020, 1, 30), QTime(23, 10, 23, 0)), 100, 10, 0, "Steve", 2, std::make_shared<User>(100, "Steve", ""), std::make_shared<balancedbanana::configfiles::JobConfig>(), std::make_shared<balancedbanana::database::JobStatus>(), std::make_shared<balancedbanana::database::job_result>()); 
     });
     auto com = std::make_shared<Communicator>("localhost", 2435, testmp);
     server.listen("localhost", 8234);

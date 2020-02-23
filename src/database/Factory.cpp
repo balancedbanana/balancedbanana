@@ -2,24 +2,64 @@
 #include <scheduler/User.h>
 #include <scheduler/Worker.h>
 #include <scheduler/Job.h>
-#include <stdexcept>
+#include <database/JobStatus.h>
+#include <database/job_result.h>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::database;
 
-//Creates a Job object.
-Job Factory::createJob(const job_details det) {
-    // return { };
+/**
+ * Creates a Job object from the given job_details struct
+ * @param job_info The struct
+ * @return The Job object
+ */
+Job Factory::createJob(const job_details& job_info) {
+    Job job(job_info.id, std::make_shared<JobConfig>(job_info.config));
+    // TODO get User Object from DB!!
+    // job.setUser(job_info.user_id);
+    std::shared_ptr<JobStatus> statusPtr = std::make_shared<JobStatus>(static_cast<JobStatus>(job_info.status));
+    job.setStatus(statusPtr);
+    job.setCommand(job_info.command);
+    job.setScheduled_at(job_info.schedule_time);
+
+    if (job_info.worker_id.has_value()){
+        job.setWorker_id(job_info.worker_id.value());
+    }
+
+    if (job_info.start_time.has_value()){
+        job.setStarted_at(job_info.start_time.value());
+    }
+
+    if (job_info.finish_time.has_value()){
+        job.setFinished_at(job_info.finish_time.value());
+    }
+
+    if (job_info.allocated_specs.has_value()){
+        job.setAllocated_ram(job_info.allocated_specs->ram);
+        job.setAllocated_disk_space(job_info.allocated_specs->space);
+        job.setAllocated_cores(job_info.allocated_specs->cores);
+    }
+
+    if (job_info.result.has_value()){
+        std::shared_ptr<job_result> resultPtr = std::make_shared<job_result>(job_info.result.value());
+        job.setResult(resultPtr);
+    }
+}
+
+/**
+ * Creates a Worker object from the given worker_details struct
+ * @param worker_info The struct
+ * @return The Worker object
+ */
+Worker Factory::createWorker(const worker_details& worker_info) {
     throw std::runtime_error("NOT IMPLEMENTED");
 }
 
-//Creates a Worker object.
-Worker Factory::createWorker(const worker_details) {
-    // return {};
+/**
+ * Creates a User object from the given user_details struct
+ * @param user_info The struct
+ * @return The User object
+ */
+User Factory::createUser(const user_details& user_info) {
     throw std::runtime_error("NOT IMPLEMENTED");
-}
-
-//Creates a User object.
-User Factory::createUser(const user_details) {
-    return {};
 }
