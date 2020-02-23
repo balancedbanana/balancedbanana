@@ -1,6 +1,5 @@
 #include <commandLineInterface/SchedulerCommandLineProcessor.h>
 
-
 using balancedbanana::commandLineInterface::SchedulerCommandLineProcessor;
 
 namespace balancedbanana
@@ -13,7 +12,7 @@ namespace commandLineInterface
  * Gets called after the parsing step is complete.
  * Sets task type and attributes of task instance.
  */
-void callbackSchedulerStart(const std::shared_ptr<Task>& task, std::string& serverIpAddress, short serverPort, std::string& webAPIIpAddress, short webAPIPort)
+void callbackSchedulerStart(const std::shared_ptr<Task> &task, std::string &serverIpAddress, short serverPort, std::string &webAPIIpAddress, short webAPIPort)
 {
     task->setType((int)TaskType::SERVERSTART);
 
@@ -23,7 +22,7 @@ void callbackSchedulerStart(const std::shared_ptr<Task>& task, std::string& serv
     task->setWebAPIPort(webAPIPort);
 }
 
-int SchedulerCommandLineProcessor::process(int argc, const char* const * argv, const std::shared_ptr<Task>& task)
+int SchedulerCommandLineProcessor::process(int argc, const char *const *argv, const std::shared_ptr<Task> &task)
 {
     CLI::App app{"Scheduler App"};
 
@@ -37,7 +36,9 @@ int SchedulerCommandLineProcessor::process(int argc, const char* const * argv, c
     app.add_option("--serverport,-S", serverPort, "Server Port");
     app.add_option("--webapi-port,-W", webAPIPort, "web API Port");
 
-    app.callback([&]() { callbackSchedulerStart(task, ipAddress, serverPort, webAPIAddress, webAPIPort); });
+    app.callback([&]() {
+        callbackSchedulerStart(task, ipAddress, serverPort, webAPIAddress, webAPIPort);
+    });
 
     CLI11_PARSE(app, argc, argv);
 
