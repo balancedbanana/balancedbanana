@@ -19,7 +19,10 @@ public:
                   std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                   uint64_t userID);
 
-    static std::shared_ptr<ClientRequest> selectRequestType(TaskType requestType);
+    static std::shared_ptr<ClientRequest> selectRequestType(TaskType requestType,
+                                                            std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                                                            std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                                                            uint64_t userID);
 
     virtual std::shared_ptr<std::string> executeRequestAndFetchData(const std::shared_ptr<Task> &task);
 
@@ -27,7 +30,6 @@ private:
     ClientRequest();
 
 protected:
-
     std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> dbGetJob;
     std::function<void(uint64_t, balancedbanana::database::JobStatus)> dbUpdateJobStatus;
     uint64_t userID;
