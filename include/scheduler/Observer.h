@@ -66,8 +66,10 @@ namespace balancedbanana::scheduler {
     template<typename Event>
     Observable<Event>::~Observable() {
         std::lock_guard guard(mtx);
-        for(size_t i = observers.size() - 1; i >= 0; --i) {
-            UnregisterObserver(observers[i]);
+        for (size_t i = observers.size(); i > 0; i--) {
+            std::lock_guard obs_guard(observers[i - 1]->mtx);
+            observers.pop_back();
+            observers[i - 1]->observable = nullptr;
         }
     }
 
