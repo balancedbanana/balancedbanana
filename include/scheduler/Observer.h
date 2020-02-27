@@ -17,6 +17,8 @@ namespace balancedbanana::scheduler {
 
         std::vector<Observer<Event> *> observers;
 
+        bool allowRegistration;
+
     protected:
         std::recursive_timed_mutex mtx;
 
@@ -29,16 +31,19 @@ namespace balancedbanana::scheduler {
 
         void UnregisterObserver(Observer<Event> *observer);
 
+        const std::vector<Observer<Event> *> &GetObservers();
+
     protected:
         void Update(Event event);
-
     };
 
     template<typename Event>
     class Observer {
         friend Observable<Event>;
 
-        Observable <Event> *observable;
+        std::vector<Observable<Event> *> observables;
+
+        bool allowRegistration;
 
     protected:
         std::recursive_timed_mutex mtx;
@@ -50,8 +55,10 @@ namespace balancedbanana::scheduler {
 
         void Unregister();
 
+        const std::vector<Observable<Event> *> &GetObservables() const;
+
     protected:
-        virtual void OnUpdate(Event event) = 0;
+        virtual void OnUpdate(Observable<Event> *obsable, Event event) = 0;
 
     };
 
@@ -60,16 +67,20 @@ namespace balancedbanana::scheduler {
     //Observable
 
     template<typename Event>
-    Observable<Event>::Observable() : observers(), mtx() {
+    Observable<Event>::Observable() : observers(), allowRegistration(true), mtx() {
     }
 
     template<typename Event>
     Observable<Event>::~Observable() {
         std::lock_guard guard(mtx);
-        for (size_t i = observers.size(); i > 0; i--) {
-            std::lock_guard obs_guard(observers[i - 1]->mtx);
+        allowRegistration = false;
+        while(!observers.empty()) {
+            Observer<Event> *obs = observers.back();
+            std::lock_guard obs_guard(obs->mtx);
+            std::vector<Observable<Event> *> &observables = obs->observables;
+            auto iterator = std::find(observables.begin(), observables.end(), this);
+            obs->observables.erase(iterator);
             observers.pop_back();
-            observers[i - 1]->observable = nullptr;
         }
     }
 
@@ -77,13 +88,13 @@ namespace balancedbanana::scheduler {
     void Observable<Event>::RegisterObserver(Observer<Event> *observer) {
         if(observer != nullptr) {
             std::lock_guard guard(mtx);
-            if(observer->observable != nullptr) {
-                observer->Unregister();
+            if(!allowRegistration || !observer->allowRegistration) {
+                return;
             }
             if(std::find(observers.begin(), observers.end(), observer) == observers.end()) {
                 std::lock_guard obs_guard(observer->mtx);
                 observers.push_back(observer);
-                observer->observable = this;
+                observer->observables.push_back(this);
             }
         }
     }
@@ -92,54 +103,71 @@ namespace balancedbanana::scheduler {
     void Observable<Event>::UnregisterObserver(Observer<Event> *observer) {
         if(observer != nullptr) {
             std::lock_guard guard(mtx);
-            auto position = std::find(observers.begin(), observers.end(), observer);
-            if(position != observers.end()) {
+            auto obs_iterator = std::find(observers.begin(), observers.end(), observer);
+            if(obs_iterator != observers.end()) {
                 std::lock_guard obs_guard(observer->mtx);
-                observers.erase(position);
-                observer->observable = nullptr;
+                auto obsable_iterator = std::find(observer->observables.begin(), observer->observables.end(), this);
+                if(obsable_iterator != observer->observables.end()) {
+                    observer->observables.erase(obsable_iterator);
+                }
+                observers.erase(obs_iterator);
             }
         }
+    }
+
+    template<typename Event>
+    const std::vector<Observer<Event> *> &Observable<Event>::GetObservers() {
+        return observers;
     }
 
     template<typename Event>
     void Observable<Event>::Update(Event event) {
         std::lock_guard guard(mtx);
         for(auto obs : observers) {
-            obs->OnUpdate(event);
+            obs->OnUpdate(this, event);
         }
     }
 
     //Observer
 
     template<typename Event>
-    Observer<Event>::Observer() : observable(nullptr), mtx() {
+    Observer<Event>::Observer() : observables(), allowRegistration(true), mtx() {
     }
 
     template<typename Event>
     Observer<Event>::~Observer() {
+        allowRegistration = false;
         Unregister();
     }
 
+    /**
+     * Unregisters the Observer from all associated Observables
+     * @tparam Event The Event type that can be triggered by the observables
+     */
     template<typename Event>
     void Observer<Event>::Unregister() {
         std::unique_lock lock(mtx);
-        if(observable != nullptr) {
-            std::unique_lock obsable_lock(observable->mtx, std::defer_lock_t());
+        while(observables.size() > 0) {
+            Observable<Event> *obsable = observables.back();
+            std::unique_lock obsable_lock(obsable->mtx, std::defer_lock_t());
             bool failed = true;
-            while(failed) {
-                if(observable != nullptr) {
-                    failed = !obsable_lock.try_lock_for(std::chrono::microseconds(10));
-                    if(failed) {
-                        lock.unlock();
-                        std::this_thread::sleep_for(std::chrono::microseconds(10));
-                        lock.lock();
-                    }
-                } else {
-                    return;
+            do {
+                obsable = observables.back();
+                obsable_lock = std::unique_lock(obsable->mtx, std::defer_lock_t());
+                failed = !obsable_lock.try_lock_for(std::chrono::microseconds(10));
+                if(failed) {
+                    lock.unlock();
+                    std::this_thread::sleep_for(std::chrono::microseconds(10));
+                    lock.lock();
                 }
-            }
-            observable->UnregisterObserver(this);
+            }while(failed);
+            obsable->UnregisterObserver(this);
         }
+    }
+
+    template<typename Event>
+    const std::vector<Observable<Event> *> &Observer<Event>::GetObservables() const {
+        return observables;
     }
 
 }
