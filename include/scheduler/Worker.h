@@ -4,12 +4,19 @@
 #include <communication/Communicator.h>
 #include <database/Specs.h>
 #include "IUser.h"
+#include "Observer.h"
 #include <condition_variable>
 
 namespace balancedbanana {
     namespace scheduler {
         class SchedulerWorkerMP;
-        class Worker : public IUser {
+
+        enum WorkerObservableEvent {
+            DATA_CHANGE,
+            HARDWARE_DETAIL_UPDATE
+        };
+
+        class Worker : public IUser, public Observable<WorkerObservableEvent> {
         public:
             void send(const communication::Message & msg);
 

@@ -1,10 +1,15 @@
 #pragma once
 #include "IUser.h"
+#include "Observer.h"
 
 namespace balancedbanana {
     namespace scheduler {
 
-        class User : public IUser {
+        enum UserObservableEvent {
+            DATA_CHANGE
+        };
+
+        class User : public IUser, public Observable<UserObservableEvent> {
         private:
             //This attribute stores the user ID that is used to identify a user
             uint64_t id_;
