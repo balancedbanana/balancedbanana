@@ -12,6 +12,8 @@ SchedulerConfig -> ApplicationConfig, erbt von std::map anstatt sie als attribut
 
 AuthHandler::authenticate => AuthHandler::publickeyauthenticate zu ähnliche signatur mit der Passwort Autorization
 
+Database: Added Caches, made jobs, workers and users to observables
+
 Container:
 Snapshot => CreateSnapshot // Typname darf kein Methodenname sein
 
