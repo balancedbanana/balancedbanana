@@ -7,11 +7,16 @@
 #include <cstdint>
 #include <string>
 #include <chrono>
+#include "Observer.h"
 
 namespace balancedbanana {
     namespace scheduler {
 
-        class Job {
+        enum JobObservableEvent {
+
+        };
+
+        class Job : public Observable<JobObservableEvent> {
         public:
             Job(uint64_t id, const std::shared_ptr<configfiles::JobConfig> &config);
             Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at, const QDateTime &finished_at,
