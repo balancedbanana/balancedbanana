@@ -4,6 +4,9 @@
 #include "job_result.h"
 #include "Factory.h"
 #include <configfiles/JobConfig.h>
+#include <scheduler/Job.h>
+#include <scheduler/Worker.h>
+#include <scheduler/User.h>
 
 #include <cinttypes>
 #include <QDateTime>
@@ -13,11 +16,7 @@ using namespace balancedbanana::configfiles;
 
 namespace balancedbanana::database {
 
-    class Worker;
-
-    class Job;
-
-    class User;
+    using namespace balancedbanana::scheduler;
 
         //This is the interface that the rest of the program uses to query the database.
         class Repository {
