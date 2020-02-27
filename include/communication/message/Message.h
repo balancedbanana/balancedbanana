@@ -1,14 +1,12 @@
 #pragma once
 
-#include <string>
-#include <sstream>
-#include <communication/MessageProcessor.h>
 #include <communication/message/MessageType.h>
-#include <communication/message/Serialization.h>
+#include <string>
+#include <memory>
 
 namespace balancedbanana {
     namespace communication {
-
+        class MessageProcessor;
         class Message : public std::enable_shared_from_this<Message> {
         protected:
             const MessageType type;

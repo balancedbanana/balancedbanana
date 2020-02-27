@@ -14,8 +14,16 @@ namespace balancedbanana {
 			uint64_t ram;
 
 			//CPU cores
-			uint64_t cores;
+			uint32_t cores;
 
+            // true if empty, otherwise false;
+            bool empty = true;
+
+            inline bool operator==(const Specs& rhs){
+                return this->cores == rhs.cores
+                       && this->ram == rhs.ram
+                       && this->space == rhs.space;
+            }
 		};
 	}
 }

@@ -4,6 +4,8 @@
 #include <cstring>
 #define CRLF "\r\n"                 // carriage-return/line feed pair
 
+using namespace balancedbanana::scheduler;
+
 SmtpServer::SmtpServer(const std::string &mailserver, short port, bool smtps, const std::string &frommail) : mailserver(mailserver), port(port), smtps(smtps), frommail(frommail) {
 
 }
@@ -40,8 +42,8 @@ void SmtpServer::sendMail(const std::string & mail, const std::string & subject,
   out.Send((uint8_t*)szMsgLine, strlen(szMsgLine));
   in.Receive((uint8_t*)szBuffer, sizeof(szBuffer));
 
-  auto subject = "Subject: " + subject + CRLF;
-  out.Send((uint8_t*)subject.data(), subject.length());
+  auto _subject = "Subject: " + subject + CRLF;
+  out.Send((uint8_t*)_subject.data(), _subject.length());
 
   out.Send((uint8_t*)content.data(), content.length());
 

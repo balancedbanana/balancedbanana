@@ -2,10 +2,14 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/ClientAuthMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
+#include <communication/message/TaskResponseMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
 #include <communication/message/SnapshotMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
+#include <communication/message/WorkerLoadRequestMessage.h>
+#include <communication/message/WorkerLoadResponseMessage.h>
+#include <communication/message/RespondToClientMessage.h>
 #include <stdexcept>
 #include <utility>
 
@@ -41,6 +45,10 @@ void MessageProcessor::processHardwareDetailMessage(const HardwareDetailMessage 
     handleInvalidMessage(msg);
 }
 
+void MessageProcessor::processTaskResponseMessage(const TaskResponseMessage &msg) {
+    handleInvalidMessage(msg);
+}
+
 void MessageProcessor::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
     handleInvalidMessage(msg);
 }
@@ -54,5 +62,17 @@ void MessageProcessor::processTaskMessage(const TaskMessage &msg) {
 }
 
 void MessageProcessor::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
+    handleInvalidMessage(msg);
+}
+
+void balancedbanana::communication::MessageProcessor::processWorkerLoadRequestMessage(const balancedbanana::communication::WorkerLoadRequestMessage &msg) {
+    handleInvalidMessage(msg);
+}
+
+void balancedbanana::communication::MessageProcessor::processWorkerLoadResponseMessage(const balancedbanana::communication::WorkerLoadResponseMessage &msg) {
+    handleInvalidMessage(msg);
+}
+
+void MessageProcessor::processRespondToClientMessage(const RespondToClientMessage &msg) {
     handleInvalidMessage(msg);
 }

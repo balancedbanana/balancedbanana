@@ -17,15 +17,12 @@ void balancedbanana::communication::authenticator::SSHAuthHandler::authenticate(
     proc.write(password.data(), password.length());
     proc.write("\n", 1);
     proc.waitForFinished(-1);
-    if(proc.exitStatus() != QProcess::NormalExit) {
-        throw std::runtime_error("Invalid Argument for ssh");
-    }
     std::string output = proc.readAllStandardOutput().toStdString();
     auto npos = output.find('\n');
     auto userid = output.substr(0, npos);
     auto username = output.substr(0, npos);
-    if(proc.exitCode() != 0) {
+    if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
-        throw std::runtime_error("Invalid Argument for ssh");
+        throw std::runtime_error("Invalid username or password");
     }
 }

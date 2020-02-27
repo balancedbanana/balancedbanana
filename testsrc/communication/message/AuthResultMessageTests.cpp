@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <bitset>
 #include <communication/message/AuthResultMessage.h>
+#include <communication/message/Serialization.h>
 
 using namespace balancedbanana::communication;
 

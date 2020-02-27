@@ -2,7 +2,6 @@
 
 #include "job_details.h"
 #include "job_result.h"
-#include "Gateway.h"
 #include "Factory.h"
 #include <configfiles/JobConfig.h>
 
