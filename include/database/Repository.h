@@ -14,23 +14,37 @@ using namespace balancedbanana::configfiles;
 
 namespace balancedbanana::database {
 
-    class Worker{
-        // PLACEHOLDER
-    };
+    class Worker;
 
-    class Job{
-        // PLACEHOLDER
-    };
+    class Job;
 
-    class User{
-        // PLACEHOLDER
-    };
+    class User;
 
         //This is the interface that the rest of the program uses to query the database.
         class Repository {
         public:
             Repository(const std::string& host_name, const std::string& databasename, const std::string& username,
                     const std::string& password,  uint64_t port);
+
+
+            std::shared_ptr<Worker> GetWorker(const std::string &name);
+            bool AddWorker(std::shared_ptr<Worker> worker);
+
+            std::shared_ptr<Job> GetJob(uint64_t id);
+            bool AddJob(std::shared_ptr<uint64_t> job);
+
+            std::shared_ptr<User> GetUser(const std::string &name);
+            bool AddUser(const std::shared_ptr<uint64_t> user);
+
+            void ClearCache();
+            void ClearWorkerCache();
+            void ClearJobCache();
+            void ClearUserCache();
+
+            std::vector<std::shared_ptr<Worker>> GetWorkers();
+            std::vector<std::shared_ptr<Job>> GetUnfinishedJobs();
+
+
 
             //Adds a Worker to the DB and returns its ID
             uint64_t addWorker(const std::string name, const std::string auth_key, int space, int ram, int cores, const std::string address);
