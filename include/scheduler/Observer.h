@@ -18,7 +18,7 @@ namespace balancedbanana::scheduler {
         std::vector<Observer<Event> *> observers;
 
     protected:
-        std::recursive_mutex mtx;
+        std::recursive_timed_mutex mtx;
 
     public:
         Observable();
@@ -41,7 +41,7 @@ namespace balancedbanana::scheduler {
         Observable <Event> *observable;
 
     protected:
-        std::recursive_mutex mtx;
+        std::recursive_timed_mutex mtx;
 
     public:
         Observer();
@@ -66,7 +66,7 @@ namespace balancedbanana::scheduler {
     template<typename Event>
     Observable<Event>::~Observable() {
         std::lock_guard guard(mtx);
-        for(size_t i = observers.size - 1; i >= 0; --i) {
+        for(size_t i = observers.size() - 1; i >= 0; --i) {
             UnregisterObserver(observers[i]);
         }
     }
