@@ -4,8 +4,8 @@
 #include "scheduler/Worker.h"
 #include <sstream>
 
-using balancedbanana::scheduler::Job;
 using balancedbanana::database::JobStatus;
+using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
 
 namespace balancedbanana
@@ -13,7 +13,11 @@ namespace balancedbanana
 namespace scheduler
 {
 
-std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task)
+std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
+                                                                        const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                                                                        const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                                                                        const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob,
+                                                                        uint64_t userID)
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
@@ -43,65 +47,32 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
     case (int)JobStatus::processing:
         // restore and respond success / failure
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to restore job
 
-
-
-        // How to know if it was sucessfull?
-        bool success = what;
-
-        if (success) {
-            response << "Successfully restored this Job using the given backup." << std::endl;
-        } else {
-            response << "Failed to restore this Job." << std::endl;
-        }
+        response << "Restoring the Job, please wait." << std::endl;
         break;
     case (int)JobStatus::paused:
         // restore and respond success / failure
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to restore job
 
-
-
-        // How to know if it was sucessfull?
-        bool success = what;
-
-        if (success) {
-            response << "Successfully restored this Job using the given backup." << std::endl;
-        } else {
-            response << "Failed to restore this Job." << std::endl;
-        }
+        response << "Restoring the Job, please wait." << std::endl;
         break;
     case (int)JobStatus::interrupted:
         // restore and respond success / failure
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to restore job
 
-
-
-        // How to know if it was sucessfull?
-        bool success = what;
-
-        if (success) {
-            response << "Successfully restored this Job using the given backup." << std::endl;
-        } else {
-            response << "Failed to restore this Job." << std::endl;
-        }
+        response << "Restoring the Job, please wait." << std::endl;
         break;
     case (int)JobStatus::canceled:
         // cannot restore. job is killed

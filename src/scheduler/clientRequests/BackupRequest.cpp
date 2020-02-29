@@ -16,7 +16,11 @@ namespace scheduler
 
 constexpr bool STOP_ON_BACKUP = false;
 
-std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task)
+std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
+                                                                       const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                                                                       const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                                                                       const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob,
+                                                                       uint64_t userID)
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
@@ -46,62 +50,32 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
     case JobStatus::processing:
         // backup and respond success / failure
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
             // send backup request to worker
             SnapshotMessage snapshotMsg(job->getId(), STOP_ON_BACKUP);
             worker.send(snapshotMsg);
         }
-        // now get the backupid to the client ...
-        uint64_t backupID = what;
-        if (backupID != 0)
-        {
-            response << "Made a Backup of this Job." << std::endl
-                     << "Backup ID is: " << backupID << std::endl;
-        }
-        else
-        {
-            response << "Failed to make a backup of this Job." << std::endl;
-        }
+        response << "Making Backup, please wait." << std::endl;
         break;
     case JobStatus::paused:
         // backup and respond success / failure
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
             // send backup request to worker
             SnapshotMessage snapshotMsg(job->getId(), STOP_ON_BACKUP);
             worker.send(snapshotMsg);
         }
-        // now get the backupid to the client ...
-        uint64_t backupID = what;
-        if (backupID != 0)
-        {
-            response << "Made a Backup of this Job." << std::endl
-                     << "Backup ID is: " << backupID << std::endl;
-        }
-        else
-        {
-            response << "Failed to make a backup of this Job." << std::endl;
-        }
+        response << "Making Backup, please wait." << std::endl;
         break;
     case JobStatus::interrupted:
         // backup and respond success / failure
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
             // send backup request to worker
             SnapshotMessage snapshotMsg(job->getId(), STOP_ON_BACKUP);
             worker.send(snapshotMsg);
         }
-        // now get the backupid to the client ...
-        uint64_t backupID = what;
-        if (backupID != 0)
-        {
-            response << "Made a Backup of this Job." << std::endl
-                     << "Backup ID is: " << backupID << std::endl;
-        }
-        else
-        {
-            response << "Failed to make a backup of this Job." << std::endl;
-        }
+        response << "Making Backup, please wait." << std::endl;
         break;
     case JobStatus::canceled:
         // cannot make backup. job is killed

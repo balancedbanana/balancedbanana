@@ -14,48 +14,37 @@ namespace balancedbanana
 namespace scheduler
 {
 
-ClientRequest::ClientRequest(std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
-                             std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                             uint64_t userID)
-{
-    this->dbGetJob = dbGetJob;
-    this->dbUpdateJobStatus = dbUpdateJobStatus;
-    this->userID = userID;
-}
-
-std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(TaskType requestType,
-                                                                std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
-                                                                std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                                                uint64_t userID)
+std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(TaskType requestType)
 {
     switch (requestType)
     {
     case TaskType::RUN:
-        return std::make_shared<RunRequest>(dbGetJob, dbUpdateJobStatus, userID);
+        return std::make_shared<RunRequest>();
         break;
     case TaskType::STATUS:
-        return std::make_shared<StatusRequest>(dbGetJob, dbUpdateJobStatus, userID);
+        return std::make_shared<StatusRequest>();
         break;
     case TaskType::TAIL:
-        return std::make_shared<TailRequest>(dbGetJob, dbUpdateJobStatus, userID);
+        return std::make_shared<TailRequest>();
         break;
     case TaskType::STOP:
-        return std::make_shared<StopRequest>(dbGetJob, dbUpdateJobStatus, userID);
+        return std::make_shared<StopRequest>();
         break;
     case TaskType::PAUSE:
-        return std::make_shared<PauseRequest>(dbGetJob, dbUpdateJobStatus, userID);
+        return std::make_shared<PauseRequest>();
         break;
     case TaskType::CONTINUE:
-        return std::make_shared<ContinueRequest>(dbGetJob, dbUpdateJobStatus, userID);
+        return std::make_shared<ContinueRequest>();
         break;
     case TaskType::BACKUP:
-        return std::make_shared<BackupRequest>(dbGetJob, dbUpdateJobStatus, userID);
+        return std::make_shared<BackupRequest>();
         break;
     case TaskType::RESTORE:
-        return std::make_shared<RestoreRequest>(dbGetJob, dbUpdateJobStatus, userID);
+        return std::make_shared<RestoreRequest>();
         break;
 
     default:
+        return nullptr;
         break;
     }
 }

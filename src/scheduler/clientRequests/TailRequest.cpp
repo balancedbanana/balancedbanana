@@ -4,8 +4,8 @@
 #include "scheduler/Worker.h"
 #include <sstream>
 
-using balancedbanana::scheduler::Job;
 using balancedbanana::database::JobStatus;
+using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
 
 namespace balancedbanana
@@ -13,7 +13,11 @@ namespace balancedbanana
 namespace scheduler
 {
 
-std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task)
+std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
+                                                                     const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                                                                     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                                                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob,
+                                                                     uint64_t userID)
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
@@ -43,77 +47,47 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
     case (int)JobStatus::processing:
         // get tail by asking the worker
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to tail job
 
-
-
-        // How to know if it was sucessfull?
-        std::string tail = what;
-
-        response << tail << std::endl;
+        response << "Getting tail, please wait." << std::endl;
         break;
     case (int)JobStatus::paused:
         // get tail by asking the worker
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to tail job
 
-
-
-        // How to know if it was sucessfull?
-        std::string tail = what;
-
-        response << tail << std::endl;
+        response << "Getting tail, please wait." << std::endl;
         break;
     case (int)JobStatus::interrupted:
         // get tail by asking the worker
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to tail job
 
-
-
-        // How to know if it was sucessfull?
-        {
-            std::string tail = what;
-        }
-
-        response << tail << std::endl;
+        response << "Getting tail, please wait." << std::endl;
         break;
     case (int)JobStatus::canceled:
         // get tail by asking the worker
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to tail job
 
-
-
-        // How to know if it was sucessfull?
-        std::string tail = what;
-
-        response << tail << std::endl;
+        response << "Getting tail, please wait." << std::endl;
         break;
     case (int)JobStatus::finished:
         // get result
         response << job->getResult()->stdout << std::endl
-            << "Processing of Job has finished with exit code " << job->getResult()->exit_code << std::endl;
+                 << "Processing of Job has finished with exit code " << job->getResult()->exit_code << std::endl;
         break;
     default:
         // add info job has corrupted status to response

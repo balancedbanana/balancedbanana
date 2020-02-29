@@ -4,8 +4,8 @@
 #include "scheduler/Worker.h"
 #include <sstream>
 
-using balancedbanana::scheduler::Job;
 using balancedbanana::database::JobStatus;
+using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
 
 namespace balancedbanana
@@ -13,7 +13,11 @@ namespace balancedbanana
 namespace scheduler
 {
 
-std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task)
+std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
+                                                                      const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                                                                      const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                                                                      const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob,
+                                                                      uint64_t userID)
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
@@ -39,34 +43,25 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
     case (int)JobStatus::scheduled:
         // pause job and respond success or failure
         bool success = Queue::remove(job->getId());
-        if (success) {
+        if (success)
+        {
             dbUpdateJobStatus(job->getId(), JobStatus::paused);
             response << "Successfully paused this Job." << std::endl;
-        } else {
+        }
+        else
+        {
             response << "Failed to pause this Job." << std::endl;
         }
         break;
     case (int)JobStatus::processing:
         // stop job and respond success or failure
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to pause job
 
-
-
-        // How to know if it was sucessfull?
-        bool success = what;
-
-        if (success) {
-            dbUpdateJobStatus(job->getId(), JobStatus::paused);
-            response << "Successfully paused this Job." << std::endl;
-        } else {
-            response << "Failed to pause this Job." << std::endl;
-        }
+        response << "Pausing the Job, please wait." << std::endl;
     case (int)JobStatus::paused:
         // Job has already been paused
         response << "This Job has already been paused." << std::endl;
@@ -74,24 +69,12 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
     case (int)JobStatus::interrupted:
         // stop job and respond success or failure
         {
-            Worker worker = Workers::getWorker(job->getWorker_id());
+            Worker worker = Worker::getWorker(job->getWorker_id());
         }
-
-
 
         // Use some message to tell worker to pause job
 
-
-
-        // How to know if it was sucessfull?
-        bool success = what;
-
-        if (success) {
-            dbUpdateJobStatus(job->getId(), JobStatus::paused);
-            response << "Successfully paused this Job." << std::endl;
-        } else {
-            response << "Failed to pause this Job." << std::endl;
-        }
+        response << "Pausing the Job, please wait." << std::endl;
         break;
     case (int)JobStatus::canceled:
         // Job has already been stopped

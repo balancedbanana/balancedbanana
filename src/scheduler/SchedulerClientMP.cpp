@@ -20,13 +20,11 @@ MessageProcessor(communicator){
 }
 #endif
 
-SchedulerClientMP::SchedulerClientMP(std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
-                                     std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                     uint64_t userID)
+SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                                     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob) :
+                                     dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob)
 {
-    this->dbGetJob = dbGetJob;
-    this->dbUpdateJobStatus = dbUpdateJobStatus;
-    this->userID = userID;
 }
 
 void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
@@ -129,11 +127,11 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
 
     // run the request
 
-    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType((TaskType)task->getType(), dbGetJob, dbUpdateJobStatus, userID);
-    std::shared_ptr<std::string> responseData = request->executeRequestAndFetchData(task);
+    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType((TaskType)task->getType());
+    std::shared_ptr<std::string> responseData = request->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, 0);
 
-    // TODO: Respond to Client
+    // Respond to Client
 
     RespondToClientMessage msg(*responseData, false);
-    this->getClient()->send(msg);
+    getClient().send(msg);
 }
