@@ -4,6 +4,7 @@
 #include "communication/Task.h"
 #include "scheduler/Job.h"
 #include "configfiles/JobConfig.h"
+#include "scheduler/clientRequests/Responses.h"
 
 using balancedbanana::communication::Task;
 using balancedbanana::communication::TaskType;

@@ -26,7 +26,7 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
     {
         // Note that job id is required for the stop command
         // exit with the reponse set to the error message of not having a jobid
-        response << "The stop command requires a jobID. How did you start a stop task without giving a jobID?" << std::endl;
+        response << NO_JOB_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
@@ -34,7 +34,7 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
     if (job == nullptr)
     {
         // Job not found
-        response << "No Job with this jobID could be found." << std::endl;
+        response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
 
@@ -46,11 +46,11 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
         if (success)
         {
             dbUpdateJobStatus(job->getId(), JobStatus::canceled);
-            response << "Successfully stopped this Job." << std::endl;
+            response << OPERATION_SUCCESS << std::endl;
         }
         else
         {
-            response << "Failed to stop this Job." << std::endl;
+            response << OPERATION_FAILURE << std::endl;
         }
         break;
     case (int)JobStatus::processing:
@@ -61,7 +61,7 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
 
         // Use some message to tell worker to stop job
 
-        response << "Stopping the Job, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_STOP << std::endl;
         break;
     case (int)JobStatus::paused:
         // stop job and respond success or failure
@@ -71,7 +71,7 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
 
         // Use some message to tell worker to stop job
 
-        response << "Stopping the Job, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_STOP << std::endl;
         break;
     case (int)JobStatus::interrupted:
         // stop job and respond success or failure
@@ -81,19 +81,19 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
 
         // Use some message to tell worker to stop job
 
-        response << "Stopping the Job, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_STOP << std::endl;
         break;
     case (int)JobStatus::canceled:
         // Job has already been stopped
-        response << "This Job has already been stopped." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_ABORTED << std::endl;
         break;
     case (int)JobStatus::finished:
         // Job is done and cannot be stopped
-        response << "This Job has finished processing and can therefore not be stopped." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_FINISHED << std::endl;
         break;
     default:
         // add info job has corrupted status to response
-        response << "ERROR: Query of this Job has resulted in a corrupted job status." << std::endl;
+        response << JOB_STATUS_UNKNOWN << std::endl;
         break;
     }
 

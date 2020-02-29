@@ -26,7 +26,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
     {
         // Note that job id is required for the restore command
         // exit with the reponse set to the error message of not having a jobid
-        response << "The restore command requires a jobID. How did you start a restore task without giving a jobID?" << std::endl;
+        response << NO_JOB_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
@@ -34,7 +34,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
     if (job == nullptr)
     {
         // Job not found
-        response << "No Job with this jobID could be found." << std::endl;
+        response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
 
@@ -42,7 +42,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
     {
     case (int)JobStatus::scheduled:
         // nothing to restore
-        response << "This Job has never run. No Backup available." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_NOT_RUN << std::endl;
         break;
     case (int)JobStatus::processing:
         // restore and respond success / failure
@@ -52,7 +52,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
 
         // Use some message to tell worker to restore job
 
-        response << "Restoring the Job, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_RESTORE << std::endl;
         break;
     case (int)JobStatus::paused:
         // restore and respond success / failure
@@ -62,7 +62,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
 
         // Use some message to tell worker to restore job
 
-        response << "Restoring the Job, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_RESTORE << std::endl;
         break;
     case (int)JobStatus::interrupted:
         // restore and respond success / failure
@@ -72,19 +72,19 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
 
         // Use some message to tell worker to restore job
 
-        response << "Restoring the Job, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_RESTORE << std::endl;
         break;
     case (int)JobStatus::canceled:
         // cannot restore. job is killed
-        response << "Cannot restore this Job, as this Job has been stopped." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_ABORTED << std::endl;
         break;
     case (int)JobStatus::finished:
         // Job is done
-        response << "This Job has finished processing. Cannot restore this Job." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_FINISHED << std::endl;
         break;
     default:
         // add info job has corrupted status to response
-        response << "ERROR: Query of this Job has resulted in a corrupted job status." << std::endl;
+        response << JOB_STATUS_UNKNOWN << std::endl;
         break;
     }
 

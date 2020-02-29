@@ -22,7 +22,7 @@ std::shared_ptr<std::string> RunRequest::executeRequestAndFetchData(const std::s
     auto config = task->getConfig();
     uint64_t jobID = dbAddJob(userID, config);
 
-    response << "New Job received. ID is: " << jobID << std::endl;
+    response << PREFIX_JOB_ID << jobID << std::endl;
 
     // Step 2: Create RespondToClientMessage with string containing ID of new Job or error message in case of failure
     return std::make_shared<std::string>(response.str());

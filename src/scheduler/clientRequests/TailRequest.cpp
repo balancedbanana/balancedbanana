@@ -26,7 +26,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
     {
         // Note that job id is required for the stop command
         // exit with the reponse set to the error message of not having a jobid
-        response << "The stop command requires a jobID. How did you start a stop task without giving a jobID?" << std::endl;
+        response << NO_JOB_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
@@ -34,7 +34,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
     if (job == nullptr)
     {
         // Job not found
-        response << "No Job with this jobID could be found." << std::endl;
+        response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
 
@@ -42,7 +42,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
     {
     case (int)JobStatus::scheduled:
         // add info job hasnt started yet to response
-        response << "Processing of this Job has not started yet. Therefore no tail is available." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_NOT_RUN << std::endl;
         break;
     case (int)JobStatus::processing:
         // get tail by asking the worker
@@ -52,7 +52,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
 
         // Use some message to tell worker to tail job
 
-        response << "Getting tail, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::paused:
         // get tail by asking the worker
@@ -62,7 +62,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
 
         // Use some message to tell worker to tail job
 
-        response << "Getting tail, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::interrupted:
         // get tail by asking the worker
@@ -72,7 +72,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
 
         // Use some message to tell worker to tail job
 
-        response << "Getting tail, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::canceled:
         // get tail by asking the worker
@@ -82,16 +82,16 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
 
         // Use some message to tell worker to tail job
 
-        response << "Getting tail, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::finished:
         // get result
         response << job->getResult()->stdout << std::endl
-                 << "Processing of Job has finished with exit code " << job->getResult()->exit_code << std::endl;
+                 << PREFIX_JOB_EXIT_CODE << job->getResult()->exit_code << std::endl;
         break;
     default:
         // add info job has corrupted status to response
-        response << "ERROR: Query of this Job has resulted in a corrupted job status." << std::endl;
+        response << JOB_STATUS_UNKNOWN << std::endl;
         break;
     }
 

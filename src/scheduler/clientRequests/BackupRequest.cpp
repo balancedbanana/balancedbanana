@@ -29,7 +29,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
     {
         // Note that job id is required for the backup command
         // exit with the reponse set to the error message of not having a jobid
-        response << "The backup command requires a jobID. How did you start a backup task without giving a jobID?" << std::endl;
+        response << NO_JOB_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
@@ -37,7 +37,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
     if (job == nullptr)
     {
         // Job not found
-        response << "No Job with this jobID could be found." << std::endl;
+        response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
 
@@ -45,7 +45,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
     {
     case JobStatus::scheduled:
         // nothing to backup
-        response << "This Job has never run. Nothing to backup." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_NOT_RUN << std::endl;
         break;
     case JobStatus::processing:
         // backup and respond success / failure
@@ -55,7 +55,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
             SnapshotMessage snapshotMsg(job->getId(), STOP_ON_BACKUP);
             worker.send(snapshotMsg);
         }
-        response << "Making Backup, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
     case JobStatus::paused:
         // backup and respond success / failure
@@ -65,7 +65,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
             SnapshotMessage snapshotMsg(job->getId(), STOP_ON_BACKUP);
             worker.send(snapshotMsg);
         }
-        response << "Making Backup, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
     case JobStatus::interrupted:
         // backup and respond success / failure
@@ -75,19 +75,19 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
             SnapshotMessage snapshotMsg(job->getId(), STOP_ON_BACKUP);
             worker.send(snapshotMsg);
         }
-        response << "Making Backup, please wait." << std::endl;
+        response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
     case JobStatus::canceled:
         // cannot make backup. job is killed
-        response << "Cannot make a Backup of this Job, as this Job has been stopped." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_ABORTED << std::endl;
         break;
     case JobStatus::finished:
         // Job is done
-        response << "This Job has finished processing. Cannot make Backup of this Job." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_FINISHED << std::endl;
         break;
     default:
         // add info job has corrupted status to response
-        response << "ERROR: Query of this Job has resulted in a corrupted job status." << std::endl;
+        response << JOB_STATUS_UNKNOWN << std::endl;
         break;
     }
 
