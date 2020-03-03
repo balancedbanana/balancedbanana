@@ -123,11 +123,39 @@ void HttpServer::listen(const std::string & ip, short port) {
 							std::stringstream resp;
 							resp << "user_name: " << job.getUser()->name() << "\n";
 							resp << "user_id: " << job.getUser()->id() << "\n";
-							resp << "status: " << (int)*job.getStatus() << "\n";
+							auto status = job.getStatus() ? *job.getStatus() : balancedbanana::database::JobStatus::canceled;
+							resp << "status: " << (int)status << "\n";
 							resp << "scheduled_at: " << job.getScheduled_at().toString().toStdString() << "\n";
 							resp << "finished_at: " << job.getFinished_at().toString().toStdString() << "\n";
-							resp << "spent_in_queue: " << "0" << "\n";
-							resp << "time_spend_running: " << "0" << "\n";
+							resp << "spent_in_queue: ";
+							switch (status)
+							{
+							case balancedbanana::database::JobStatus::scheduled:
+								resp << job.getScheduled_at().msecsTo(QDateTime::currentDateTime());
+								break;
+							case balancedbanana::database::JobStatus::finished:
+							case balancedbanana::database::JobStatus::processing:
+								resp << job.getScheduled_at().msecsTo(job.getStarted_at());
+								break;
+							default:
+								resp << "0";
+								break;
+							}
+							resp << "\n";
+							resp << "time_spend_running: ";
+							switch (status)
+							{
+							case balancedbanana::database::JobStatus::finished:
+								resp << job.getStarted_at().msecsTo(job.getFinished_at());
+								break;
+							case balancedbanana::database::JobStatus::processing:
+								resp << job.getStarted_at().msecsTo(QDateTime::currentDateTime());
+								break;
+							default:
+								resp << "0";
+								break;
+							}
+							resp << "\n";
 							resp << "allocated_threads: " << job.getAllocated_cores() << "\n";
 							resp << "utilization_of_threads: " << job.getAllocated_cores() << "\n";
 							resp << "allocated_ram: " << job.getAllocated_ram() << "\n";
