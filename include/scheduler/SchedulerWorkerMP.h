@@ -15,7 +15,6 @@ namespace balancedbanana {
 
             void processHardwareDetailMessage(const communication::HardwareDetailMessage &msg) override;
             void processPublicKeyAuthMessage(const communication::PublicKeyAuthMessage &msg) override;
-            void processTaskMessage(const communication::TaskMessage &msg) override;
             void processWorkerAuthMessage(const communication::WorkerAuthMessage &msg) override;
             void processWorkerLoadResponseMessage(const communication::WorkerLoadResponseMessage &msg) override;
             void OnWorkerLoadResponse(std::function<void(const communication::WorkerLoadResponseMessage &msg)>&& func);

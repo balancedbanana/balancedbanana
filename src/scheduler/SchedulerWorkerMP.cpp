@@ -1,4 +1,8 @@
 #include <scheduler/SchedulerWorkerMP.h>
+#include <communication/message/AuthResultMessage.h>
+#include <communication/message/PublicKeyAuthMessage.h>
+#include <communication/message/WorkerAuthMessage.h>
+#include <communication/authenticator/AuthHandler.h>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
@@ -10,19 +14,18 @@ MessageProcessor(communicator){
 #endif
 
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
-    //TODO implement
+    //TODO populate the db with the details
 }
 
 void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
-    //TODO implement
-}
-
-void SchedulerWorkerMP::processTaskMessage(const TaskMessage &msg) {
-    //TODO implement
+    //TODO get Worker object with name msg.GetUserName()
+    
 }
 
 void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
-    //TODO implement
+    // TODO Register Worker in the database
+    authenticated = true;
+    // TODO Send Authresult success if successfully populated the db otherwise nonzero
 }
 
 void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg) {
