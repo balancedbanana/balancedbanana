@@ -4,11 +4,14 @@
 using namespace balancedbanana::worker;
 using namespace balancedbanana::communication;
 
-Container Docker::Run(int userid, const Task & task) {
+Container Docker::Run(const Task & task) {
     QProcess proc;
     proc.setProgram("docker");
     auto config = task.getConfig();
-    QStringList args = { "run", "-d", "--user", QString::fromStdString(std::to_string(userid)), "--network", "host"};
+    if(!task.getUserId()) {
+        throw std::runtime_error("Invalid Argument userid needs a value");
+    }
+    QStringList args = { "run", "-d", "--user", QString::fromStdString(std::to_string(*task.getUserId())), "--network", "host"};
     if(config->environment()) {
         for(auto && env : *config->environment()) {
             args.append({"-e", QString::fromStdString(env)});

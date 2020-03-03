@@ -119,6 +119,13 @@ std::optional<uint64_t> Task::getBackupId() const {
     return backupId;
 }
 
+void Task::setUserId(std::optional<uint64_t> userId) {
+    this->userId = userId;
+}
+std::optional<uint64_t> Task::getUserId() const {
+    return userId;
+}
+
 std::string Task::serialize() const {
     using namespace serialization;
     std::stringstream stream;
