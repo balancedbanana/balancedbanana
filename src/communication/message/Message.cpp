@@ -3,7 +3,6 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
-#include <communication/message/SnapshotMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/WorkerLoadRequestMessage.h>
@@ -39,8 +38,6 @@ std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
             return std::make_shared<HardwareDetailMessage>(msg, iterator, size);
         case MessageType::PUBLIC_KEY_AUTH:
             return std::make_shared<PublicKeyAuthMessage>(msg, iterator, size);
-        case MessageType::SNAPSHOT:
-            return std::make_shared<SnapshotMessage>(msg, iterator, size);
         case MessageType::TASK:
             return std::make_shared<TaskMessage>(msg, iterator, size);
         case MessageType::WORKER_AUTH:

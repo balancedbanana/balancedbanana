@@ -11,7 +11,6 @@ add_executable(MessageTests
         message/HardwareDetailMessageTests.cpp
         message/MessageTests.cpp
         message/PublicKeyAuthMessageTests.cpp
-        message/SnapshotMessageTests.cpp
         message/TaskMessageTests.cpp
         message/WorkerAuthMessageTests.cpp
         message/MessagesProcessTests.cpp)

@@ -15,7 +15,6 @@ public:
 	//virtual void processClientAuthMessage(const ClientAuthMessage &msg);
 	//virtual void processHardwareDetailMessage(const HardwareDetailMessage &msg);
 	//virtual void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg);
-	//virtual void processSnapshotMessage(const SnapshotMessage &msg);
 	//virtual void processTaskMessage(const TaskMessage &msg);
 	//virtual void processWorkerAuthMessage(const WorkerAuthMessage &msg);
 	//virtual void processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg);

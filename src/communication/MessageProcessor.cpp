@@ -4,7 +4,6 @@
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/TaskResponseMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
-#include <communication/message/SnapshotMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/WorkerLoadRequestMessage.h>
@@ -50,10 +49,6 @@ void MessageProcessor::processTaskResponseMessage(const TaskResponseMessage &msg
 }
 
 void MessageProcessor::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
-    handleInvalidMessage(msg);
-}
-
-void MessageProcessor::processSnapshotMessage(const SnapshotMessage &msg) {
     handleInvalidMessage(msg);
 }
 

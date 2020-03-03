@@ -27,10 +27,6 @@ void SchedulerClientMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
     //TODO implement
 }
 
-void SchedulerClientMP::processSnapshotMessage(const SnapshotMessage &msg) {
-    //TODO implement
-}
-
 void SchedulerClientMP::processTaskMessage(const TaskMessage &msg) {
     const std::shared_ptr<Task> task = std::make_shared<Task>(msg.GetTask());
     std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType((TaskType)task->getType());

@@ -14,7 +14,6 @@ namespace balancedbanana {
             void processClientAuthMessage(const ClientAuthMessage &msg) override;
             void processHardwareDetailMessage(const HardwareDetailMessage &msg) override;
             void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) override;
-            void processSnapshotMessage(const SnapshotMessage &msg) override;
             void processTaskMessage(const TaskMessage &msg) override;
         };
     }

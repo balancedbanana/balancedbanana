@@ -17,10 +17,6 @@ void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
     //TODO implement
 }
 
-void SchedulerWorkerMP::processSnapshotMessage(const SnapshotMessage &msg) {
-    //TODO implement
-}
-
 void SchedulerWorkerMP::processTaskMessage(const TaskMessage &msg) {
     //TODO implement
 }
