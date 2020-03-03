@@ -53,7 +53,7 @@ Job Factory::createJob(const job_details& job_info, const user_details& user_inf
  * @return The Worker object
  */
 Worker Factory::createWorker(const worker_details& worker_info) {
-    // TODO
+    throw std::runtime_error("NOT IMPLEMENTED");
 }
 
 /**
