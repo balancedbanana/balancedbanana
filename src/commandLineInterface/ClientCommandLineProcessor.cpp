@@ -10,7 +10,7 @@ namespace balancedbanana
 namespace commandLineInterface
 {
 
-void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char* const * argv);
+void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char *const *argv);
 void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandsImage(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandStatus(const std::shared_ptr<Task> &task, CLI::App &app);
@@ -21,7 +21,7 @@ void addSubCommandContinue(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandBackup(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app);
 
-int ClientCommandLineProcessor::process(int argc, const char* const *argv, const std::shared_ptr<Task> &task)
+int ClientCommandLineProcessor::process(int argc, const char *const *argv, const std::shared_ptr<Task> &task)
 {
     // extract potential job command from arguments
     extractJobCommand(task, argc, argv);
@@ -53,7 +53,7 @@ int ClientCommandLineProcessor::process(int argc, const char* const *argv, const
  * Cuts off everything after the --job or -j command line option.
  * Adds the cut off part to the task instance as task command string.
  */
-void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char* const * argv)
+void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char *const *argv)
 {
     for (int arg = 0; arg < argc; ++arg)
     {
@@ -80,7 +80,8 @@ void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char*
 }
 
 void callbackSubCommandRun(const std::shared_ptr<Task> &task, bool block, std::string &email,
-                           std::string &image, std::string &priority, int max_cpu_count, int min_cpu_count, int max_ram, int min_ram)
+                           std::string &image, std::string &priority, std::optional<uint32_t> &max_cpu_count,
+                           std::optional<uint32_t> &min_cpu_count, std::optional<uint64_t> &max_ram, std::optional<uint64_t> &min_ram)
 {
     auto config = task->getConfig();
     task->setType((int)TaskType::RUN);
@@ -95,7 +96,14 @@ void callbackSubCommandRun(const std::shared_ptr<Task> &task, bool block, std::s
 
     bool couldConvert;
     configfiles::Priority prio = configfiles::stopriority(priority, couldConvert);
-    config->set_priority(prio);
+    if (couldConvert)
+    {
+        config->set_priority(prio);
+    }
+    else
+    {
+        config->set_priority(std::nullopt);
+    }
 }
 
 void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app)
@@ -106,19 +114,19 @@ void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app)
     static std::string email;
     static std::string image;
     static std::string priority;
-    static uint32_t max_cpu_count;
-    static uint32_t min_cpu_count;
-    static uint32_t max_ram;
-    static uint32_t min_ram;
+    static std::optional<uint32_t> max_cpu_count;
+    static std::optional<uint32_t> min_cpu_count;
+    static std::optional<uint64_t> max_ram;
+    static std::optional<uint64_t> min_ram;
 
     block = false;
     email = "";
     image = "";
     priority = "";
-    max_cpu_count = 0;
-    min_cpu_count = 0;
-    max_ram = 0;
-    min_ram = 0;
+    max_cpu_count = std::nullopt;
+    min_cpu_count = std::nullopt;
+    max_ram = std::nullopt;
+    min_ram = std::nullopt;
 
     runSubCommand->add_flag("--block,-b", block, "Block during execution of Job");
     runSubCommand->add_option("--email,-e", email, "User EMail");
@@ -139,7 +147,7 @@ void callbackSubCommandAddImage(const std::shared_ptr<Task> &task, std::vector<s
     task->setAddImageFilePath(imageNameAndPath[1]);
 }
 
-void callbackSubCommandRemoveImage(const std::shared_ptr<Task> &task, std::string& removeImageName)
+void callbackSubCommandRemoveImage(const std::shared_ptr<Task> &task, std::string &removeImageName)
 {
     task->setType((int)TaskType::REMOVE_IMAGE);
     task->setRemoveImageName(removeImageName);

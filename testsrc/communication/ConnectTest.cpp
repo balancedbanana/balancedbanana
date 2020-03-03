@@ -6,7 +6,6 @@
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
-#include <communication/message/SnapshotMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/authenticator/Authenticator.h>
 #include <atomic>
@@ -23,7 +22,6 @@ struct TestMP : MessageProcessor {
     std::atomic_bool wmsg = false;
     std::atomic_bool pubmsg = false;
     std::atomic_bool hwmsg = false;
-    std::atomic_bool snapmsg = false;
     std::atomic_bool taskmsg = false;
 
 #if 0
@@ -65,12 +63,6 @@ struct TestMP : MessageProcessor {
         hwmsg = true;
         cnd.notify_all();
     }
-
-    void processSnapshotMessage(const SnapshotMessage &msg) override {
-        ASSERT_EQ(msg.GetType(), MessageType::SNAPSHOT);
-        snapmsg = true;
-        cnd.notify_all();
-    }
     
     void processTaskMessage(const TaskMessage &msg) override {
         ASSERT_EQ(msg.GetType(), MessageType::TASK);
@@ -105,8 +97,6 @@ TEST(communication, Connect)
     auto privkey = auth.authenticate("2Te53st8", "6Hidfsg#öl4su93");
     auth.publickeyauthenticate("2Te53st8", privkey);
     auth.authenticate();
-    SnapshotMessage snmsg(-1, false);
-    com->send(snmsg);
     HardwareDetailMessage hwdet(1, 4096, "GNU/Linux");
     com->send(hwdet);
     Task task;
@@ -118,7 +108,7 @@ TEST(communication, Connect)
     std::mutex mtx;
     std::unique_lock<std::mutex> lock(mtx);
     ASSERT_TRUE(testmp->cnd.wait_for(lock, std::chrono::seconds(10), [testmp]() {
-        return testmp->clmsg.load() && testmp->wmsg.load() && testmp->pubmsg.load() && testmp->hwmsg.load() && testmp->snapmsg.load() && testmp->taskmsg.load();
+        return testmp->clmsg.load() && testmp->wmsg.load() && testmp->pubmsg.load() && testmp->hwmsg.load() && testmp->taskmsg.load();
     }));
     com->detach();
 }
@@ -143,8 +133,9 @@ TEST(communication, MessageProcessor)
     ASSERT_ANY_THROW(proc.processPublicKeyAuthMessage(*((PublicKeyAuthMessage*)nullptr)));
     ASSERT_ANY_THROW(proc.processWorkerAuthMessage(*((WorkerAuthMessage*)nullptr)));
     ASSERT_ANY_THROW(proc.processHardwareDetailMessage(*((HardwareDetailMessage*)nullptr)));
-    ASSERT_ANY_THROW(proc.processSnapshotMessage(*((SnapshotMessage*)nullptr)));
     ASSERT_ANY_THROW(proc.processTaskMessage(*((TaskMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processTaskResponseMessage(*((TaskResponseMessage*)nullptr)));
     ASSERT_ANY_THROW(proc.processWorkerLoadRequestMessage(*((WorkerLoadRequestMessage*)nullptr)));
     ASSERT_ANY_THROW(proc.processWorkerLoadResponseMessage(*((WorkerLoadResponseMessage*)nullptr)));
+    ASSERT_ANY_THROW(proc.processRespondToClientMessage(*((RespondToClientMessage*)nullptr)));
 }

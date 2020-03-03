@@ -123,11 +123,39 @@ void HttpServer::listen(const std::string & ip, short port) {
 							std::stringstream resp;
 							resp << "user_name: " << job.getUser()->name() << "\n";
 							resp << "user_id: " << job.getUser()->id() << "\n";
-							resp << "status: " << (int)*job.getStatus() << "\n";
+							auto status = job.getStatus() ? *job.getStatus() : balancedbanana::database::JobStatus::canceled;
+							resp << "status: " << (int)status << "\n";
 							resp << "scheduled_at: " << job.getScheduled_at().toString().toStdString() << "\n";
 							resp << "finished_at: " << job.getFinished_at().toString().toStdString() << "\n";
-							resp << "spent_in_queue: " << "0" << "\n";
-							resp << "time_spend_running: " << "0" << "\n";
+							resp << "spent_in_queue: ";
+							switch (status)
+							{
+							case balancedbanana::database::JobStatus::scheduled:
+								resp << job.getScheduled_at().msecsTo(QDateTime::currentDateTime());
+								break;
+							case balancedbanana::database::JobStatus::finished:
+							case balancedbanana::database::JobStatus::processing:
+								resp << job.getScheduled_at().msecsTo(job.getStarted_at());
+								break;
+							default:
+								resp << "0";
+								break;
+							}
+							resp << "\n";
+							resp << "time_spend_running: ";
+							switch (status)
+							{
+							case balancedbanana::database::JobStatus::finished:
+								resp << job.getStarted_at().msecsTo(job.getFinished_at());
+								break;
+							case balancedbanana::database::JobStatus::processing:
+								resp << job.getStarted_at().msecsTo(QDateTime::currentDateTime());
+								break;
+							default:
+								resp << "0";
+								break;
+							}
+							resp << "\n";
 							resp << "allocated_threads: " << job.getAllocated_cores() << "\n";
 							resp << "utilization_of_threads: " << job.getAllocated_cores() << "\n";
 							resp << "allocated_ram: " << job.getAllocated_ram() << "\n";
@@ -205,6 +233,24 @@ void HttpServer::listen(const std::string & ip, short port) {
 		}
 #endif
 	});
+	struct addrinfo hints, *result, *ptr;
+	memset(&hints, 0, sizeof(addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+	if(getaddrinfo(ip.data(), std::to_string(port).data(), &hints, &result) == 0) {
+		for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
+			auto socketaddress = std::shared_ptr<sockaddr>((sockaddr*)new char[ptr->ai_addrlen]);
+			memcpy(socketaddress.get(), ptr->ai_addr, ptr->ai_addrlen);
+			if(listentask = listener->Listen(socketaddress, sizeof(sockaddr_in6))) {
+				freeaddrinfo(result);
+				return;
+			}
+		}
+		freeaddrinfo(result);
+	}
+	// Fallback accept all networkcards for incoming connections tcp/ipv4 and tcp/ipv6
 	auto address = std::make_shared<sockaddr_in6>();
 	memset(address.get(), 0, sizeof(sockaddr_in6));
 	address->sin6_family = AF_INET6;
