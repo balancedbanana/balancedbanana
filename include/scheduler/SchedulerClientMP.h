@@ -1,8 +1,12 @@
 #pragma once
 #include <communication/MessageProcessor.h>
+#include <communication/Communicator.h>
 
 #include <functional>
 #include "scheduler/Job.h"
+#include "configfiles/JobConfig.h"
+
+using balancedbanana::configfiles::JobConfig;
 
 namespace balancedbanana
 {

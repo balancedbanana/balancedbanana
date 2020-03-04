@@ -2,6 +2,7 @@
 
 #include "scheduler/Job.h"
 #include "scheduler/Worker.h"
+#include "scheduler/queue/Queue.h"
 #include <sstream>
 
 using balancedbanana::database::JobStatus;
