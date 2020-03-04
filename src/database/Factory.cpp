@@ -16,8 +16,7 @@ using namespace balancedbanana::database;
 std::shared_ptr<Job> Factory::createJob(const job_details& job_info, const std::shared_ptr<User> &user) {
     std::shared_ptr<Job> job = std::make_shared<Job>(job_info.id, std::make_shared<JobConfig>(job_info.config));
     job->setUser(user);
-    std::shared_ptr<JobStatus> statusPtr = std::make_shared<JobStatus>(static_cast<JobStatus>(job_info.status));
-    job->setStatus(statusPtr);
+    job->setStatus(static_cast<JobStatus>(job_info.status));
     job->setCommand(job_info.command);
     job->setScheduled_at(job_info.schedule_time);
 
@@ -53,7 +52,7 @@ std::shared_ptr<Job> Factory::createJob(const job_details& job_info, const std::
  * @return The Worker object
  */
 std::shared_ptr<Worker> Factory::createWorker(const worker_details& worker_info) {
-    std::shared_ptr<Worker> worker = std::make_shared<Worker>(worker_info.id, worker_info.specs, worker_info.name, worker_info.public_key);
+    std::shared_ptr<Worker> worker = std::make_shared<Worker>(worker_info.id, worker_info.name, worker_info.public_key, worker_info.specs);
 }
 
 /**
