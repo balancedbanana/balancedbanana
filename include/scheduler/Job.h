@@ -19,13 +19,13 @@ namespace balancedbanana {
 
         class Job : public Observable<JobObservableEvent> {
         public:
-            Job(uint64_t id, const std::shared_ptr<configfiles::JobConfig> &config);
-            Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at, const QDateTime &finished_at,
+            Job(uint64_t id, std::shared_ptr<configfiles::JobConfig> config);
+            Job(uint32_t id, QDateTime started_at, QDateTime scheduled_at, QDateTime finished_at,
                 uint32_t allocated_ram, uint32_t allocated_cores, uint32_t allocated_disc_space,
-                const std::string &command, uint64_t worker_id, std::shared_ptr<User> user,
-                const std::shared_ptr<configfiles::JobConfig> &config,
-                const std::shared_ptr<database::JobStatus> &status,
-                const std::shared_ptr<database::job_result> &result);
+                std::string command, uint64_t worker_id, std::shared_ptr<User> user,
+                std::shared_ptr<configfiles::JobConfig> config,
+                database::JobStatus status,
+                std::shared_ptr<database::job_result> result);
 
             uint64_t getId() const;
             const QDateTime &getStarted_at() const;
@@ -38,7 +38,7 @@ namespace balancedbanana {
             uint64_t getWorker_id() const;
             std::shared_ptr<User> getUser() const;
             std::shared_ptr<configfiles::JobConfig> getConfig() const;
-            std::shared_ptr<database::JobStatus> getStatus() const;
+            database::JobStatus getStatus() const;
             std::shared_ptr<database::job_result> getResult() const;
 
             void setId(uint32_t id);
@@ -52,7 +52,7 @@ namespace balancedbanana {
             void setWorker_id(uint64_t worker_id);
             void setUser(const std::shared_ptr<User> &user);
             void setConfig(std::shared_ptr<configfiles::JobConfig> &config);
-            void setStatus(std::shared_ptr<database::JobStatus> &status);
+            void setStatus(database::JobStatus status);
             void setResult(std::shared_ptr<database::job_result> &result);
 
         private:
@@ -67,7 +67,7 @@ namespace balancedbanana {
             uint64_t worker_id_;
             std::shared_ptr<User> user_;
             std::shared_ptr<configfiles::JobConfig> config_;
-            std::shared_ptr<database::JobStatus> status_;
+            database::JobStatus status_;
             std::shared_ptr<database::job_result> result_;
         };
     }

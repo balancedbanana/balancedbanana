@@ -1,23 +1,25 @@
 #include <scheduler/Job.h>
 
+#include <utility>
+
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
 
-Job::Job(uint64_t id, const std::shared_ptr<JobConfig> &config) :
+Job::Job(uint64_t id, std::shared_ptr<JobConfig> config) :
 id_(id), started_at_(), scheduled_at_(), finished_at_(), allocated_ram_(0), allocated_cores_(0),
-allocated_disk_space_(0), worker_id_(0), user_(nullptr), config_(config), status_(nullptr), result_(nullptr) {
+allocated_disk_space_(0), worker_id_(0), user_(nullptr), config_(std::move(config)), status_(scheduled), result_(nullptr) {
 }
 
-Job::Job(uint32_t id, const QDateTime &started_at, const QDateTime &scheduled_at, const QDateTime &finished_at,
-        uint32_t allocated_ram, uint32_t allocated_cores, uint32_t allocated_disk_space, const std::string &command,
-        uint64_t worker_id, std::shared_ptr<User> user, const std::shared_ptr<JobConfig> &config,
-        const std::shared_ptr<JobStatus> &status,
-        const std::shared_ptr<job_result> &result) :
-        id_(id), started_at_(started_at), scheduled_at_(scheduled_at), finished_at_(finished_at),
+Job::Job(uint32_t id, QDateTime started_at, QDateTime scheduled_at, QDateTime finished_at,
+        uint32_t allocated_ram, uint32_t allocated_cores, uint32_t allocated_disk_space, std::string command,
+        uint64_t worker_id, std::shared_ptr<User> user, std::shared_ptr<JobConfig> config,
+        JobStatus status,
+        std::shared_ptr<job_result> result) :
+        id_(id), started_at_(std::move(started_at)), scheduled_at_(std::move(scheduled_at)), finished_at_(std::move(finished_at)),
         allocated_ram_(allocated_ram), allocated_cores_(allocated_cores), allocated_disk_space_(allocated_disk_space),
-        command_(command), worker_id_(worker_id), user_(user), config_(config), status_(status),
-        result_(result) {
+        command_(std::move(command)), worker_id_(worker_id), user_(std::move(user)), config_(std::move(config)), status_(status),
+        result_(std::move(result)) {
 }
 
 uint64_t Job::getId() const {
@@ -64,7 +66,7 @@ std::shared_ptr<JobConfig> Job::getConfig() const {
     return config_;
 }
 
-std::shared_ptr<JobStatus> Job::getStatus() const {
+JobStatus Job::getStatus() const {
     return status_;
 }
 
@@ -106,7 +108,7 @@ void Job::setUser(const std::shared_ptr<User> &user) {
 void Job::setConfig(std::shared_ptr<JobConfig> &config) {
     config_ = config;
 }
-void Job::setStatus(std::shared_ptr<JobStatus> &status) {
+void Job::setStatus(JobStatus status) {
     status_ = status;
 }
 void Job::setResult(std::shared_ptr<job_result> &result) {
