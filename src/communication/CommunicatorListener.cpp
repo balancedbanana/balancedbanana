@@ -49,7 +49,7 @@ void CommunicatorListener::listen(short port, const std::function<void(std::shar
 	}
 }
 
-void mkcert(X509 **x509p, EVP_PKEY *pkeyp, int bits, int serial, int days);
+void mkcert(X509 *&x509p, EVP_PKEY *pkeyp, int bits, int serial, int days);
 int add_ext(X509 *cert, int nid, const char *value);
 
 std::pair<std::string, std::string> GenerateCert() {
@@ -97,7 +97,11 @@ std::pair<std::string, std::string> GenerateCert() {
         throw std::runtime_error("Failed to generate private / public KeyPair (EVP_PKEY_keygen failed)");
     }
 
-	mkcert(&g.x509,g.key,512,0,365);
+	mkcert(g.x509,g.key,512,0,365);
+
+	if(!g.x509) {
+        throw std::runtime_error("Failed to generate certificate (mkcert failed)");
+	}
 
 	g.mem = BIO_new(BIO_s_mem());
     if(!g.mem) {
@@ -118,35 +122,19 @@ std::pair<std::string, std::string> GenerateCert() {
     return { std::move(privkey), std::move(cert) };
 }
 
-void mkcert(X509 **x509p, EVP_PKEY *pk, int bits, int serial, int days)
-	{
-	// Free structs automatically
-    struct _guard
-    {
-		X509 *x = NULL;
-        ~_guard() {
-            if(x) {
-                X509_free(x);
-            }
-        }
-    } g;
+void mkcert(X509 *&x509p, EVP_PKEY *pk, int bits, int serial, int days) {
 	X509_NAME *name=NULL;
 
-	if ((x509p == NULL) || (*x509p == NULL))
-		{
-		if ((g.x=X509_new()) == NULL)
-			throw std::runtime_error("Failed to create cert object");
-		}
-	else
-		g.x= *x509p;
+	if(!(x509p = X509_new())) {
+		throw std::runtime_error("Failed to create x509 cert object");
+	}
+	X509_set_version(x509p,2);
+	ASN1_INTEGER_set(X509_get_serialNumber(x509p),serial);
+	X509_gmtime_adj(X509_get_notBefore(x509p),0);
+	X509_gmtime_adj(X509_get_notAfter(x509p),(long)60*60*24*days);
+	X509_set_pubkey(x509p,pk);
 
-	X509_set_version(g.x,2);
-	ASN1_INTEGER_set(X509_get_serialNumber(g.x),serial);
-	X509_gmtime_adj(X509_get_notBefore(g.x),0);
-	X509_gmtime_adj(X509_get_notAfter(g.x),(long)60*60*24*days);
-	X509_set_pubkey(g.x,pk);
-
-	name=X509_get_subject_name(g.x);
+	name=X509_get_subject_name(x509p);
 
 	/* This function creates and adds the entry, working out the
 	 * correct string type and performing checks on its length.
@@ -160,25 +148,22 @@ void mkcert(X509 **x509p, EVP_PKEY *pk, int bits, int serial, int days)
 	/* Its self signed so set the issuer name to be the same as the
  	 * subject.
 	 */
-	X509_set_issuer_name(g.x,name);
+	X509_set_issuer_name(x509p,name);
 
 	/* Add various extensions: standard extensions */
-	add_ext(g.x, NID_basic_constraints, "critical,CA:TRUE");
-	add_ext(g.x, NID_key_usage, "critical,keyCertSign,cRLSign,nonRepudiation,digitalSignature,keyEncipherment");
+	add_ext(x509p, NID_basic_constraints, "critical,CA:TRUE");
+	add_ext(x509p, NID_key_usage, "critical,keyCertSign,cRLSign,nonRepudiation,digitalSignature,keyEncipherment");
 
-	add_ext(g.x, NID_subject_key_identifier, "hash");
+	add_ext(x509p, NID_subject_key_identifier, "hash");
 
 	/* Some Netscape specific extensions */
-	add_ext(g.x, NID_netscape_cert_type, "sslCA");
+	add_ext(x509p, NID_netscape_cert_type, "sslCA");
 
-	add_ext(g.x, NID_netscape_comment, "balancedbanana");
+	add_ext(x509p, NID_netscape_comment, "balancedbanana");
 	
-	if (!X509_sign(g.x,pk,EVP_md5())) {
+	if (!X509_sign(x509p,pk,EVP_md5())) {
 		throw std::runtime_error("Failed to generate private / public KeyPair (PEM_write_bio_PrivateKey failed)");
 	}
-
-	*x509p=g.x;
-	g.x = NULL;
 }
 
 /* Add extension using V3 code: we can set the config file as NULL

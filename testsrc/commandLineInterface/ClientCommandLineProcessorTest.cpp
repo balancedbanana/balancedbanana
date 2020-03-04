@@ -11,11 +11,11 @@ TEST(ClientCommandLineProcessor, addImage)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "image", "-i", "imageName", "imagePath"};
-    int argc = 5;
+    const char* const argv[] = {"./bbc", "addImage", "imageName", "imagePath"};
+    int argc = 4;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
-
+    
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::ADD_IMAGE);
@@ -28,8 +28,8 @@ TEST(ClientCommandLineProcessor, removeImage)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "image", "-I", "imageName"};
-    int argc = 4;
+    const char* const argv[] = {"./bbc", "removeImage", "imageName"};
+    int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
 
@@ -44,7 +44,7 @@ TEST(ClientCommandLineProcessor, backup)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "backup", "1337"};
+    const char* const argv[] = {"./bbc", "backup", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -52,7 +52,7 @@ TEST(ClientCommandLineProcessor, backup)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::BACKUP);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -60,7 +60,7 @@ TEST(ClientCommandLineProcessor, resume)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "continue", "1337"};
+    const char* const argv[] = {"./bbc", "continue", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -68,7 +68,7 @@ TEST(ClientCommandLineProcessor, resume)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::CONTINUE);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -76,7 +76,7 @@ TEST(ClientCommandLineProcessor, pause)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "pause", "1337"};
+    const char* const argv[] = {"./bbc", "pause", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -84,7 +84,7 @@ TEST(ClientCommandLineProcessor, pause)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::PAUSE);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -92,7 +92,7 @@ TEST(ClientCommandLineProcessor, restore)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "restore", "1337", "42"};
+    const char* const argv[] = {"./bbc", "restore", "1337", "42"};
     int argc = 4;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -100,8 +100,8 @@ TEST(ClientCommandLineProcessor, restore)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::RESTORE);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
-    ASSERT_EQ(task->getConfig()->get_backup_ID(), 42);
+    ASSERT_EQ(task->getJobId(), 1337);
+    ASSERT_EQ(task->getBackupId(), 42);
 }
 
 
@@ -109,7 +109,7 @@ TEST(ClientCommandLineProcessor, status)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "status", "1337"};
+    const char* const argv[] = {"./bbc", "status", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -117,7 +117,7 @@ TEST(ClientCommandLineProcessor, status)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::STATUS);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -125,7 +125,7 @@ TEST(ClientCommandLineProcessor, stop)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "stop", "1337"};
+    const char* const argv[] = {"./bbc", "stop", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -133,7 +133,7 @@ TEST(ClientCommandLineProcessor, stop)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::STOP);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -141,7 +141,7 @@ TEST(ClientCommandLineProcessor, tail)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "tail", "1337"};
+    const char* const argv[] = {"./bbc", "tail", "1337"};
     int argc = 3;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
@@ -149,7 +149,7 @@ TEST(ClientCommandLineProcessor, tail)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::TAIL);
-    ASSERT_EQ(task->getConfig()->get_job_ID(), 1337);
+    ASSERT_EQ(task->getJobId(), 1337);
 }
 
 
@@ -157,11 +157,11 @@ TEST(ClientCommandLineProcessor, run)
 {
     ClientCommandLineProcessor clp;
 
-    const char* argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--command", "run this command!"};
+    const char* const argv[] = {"./bbc", "run", "-b", "-e", "example@example.email", "-i", "docker Image", "-p", "normal", "-C", "4", "-c", "1", "-R", "4096", "-r", "256", "--job", "echo run this command!"};
     int argc = 19;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
-
+    
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::RUN);
@@ -173,5 +173,29 @@ TEST(ClientCommandLineProcessor, run)
     ASSERT_EQ(task->getConfig()->min_cpu_count().value(), 1);
     ASSERT_EQ(task->getConfig()->max_ram().value(), 4096);
     ASSERT_EQ(task->getConfig()->min_ram().value(), 256);
-    ASSERT_STREQ(task->getTaskCommand().c_str(), "run this command!");
+    ASSERT_STREQ(task->getTaskCommand().c_str(), "echo run this command!");
+}
+
+
+TEST(ClientCommandLineProcessor, run2)
+{
+    ClientCommandLineProcessor clp;
+
+    const char* const argv[] = {"./bbc", "run", "-i", "docker Image", "--job", "echo run this command!"};
+    int argc = sizeof(argv) / sizeof(const char*);
+
+    std::shared_ptr<Task> task = std::make_shared<Task>();
+
+    clp.process(argc, argv, task);
+
+    ASSERT_EQ(task->getType(), (int)TaskType::RUN);
+    ASSERT_FALSE(task->getConfig()->blocking_mode().value());
+    ASSERT_EQ(task->getConfig()->email(), "");
+    ASSERT_STREQ(task->getConfig()->image().c_str(), "docker Image");
+    ASSERT_EQ(task->getConfig()->priority(), std::nullopt);
+    ASSERT_EQ(task->getConfig()->max_cpu_count(), std::nullopt);
+    ASSERT_EQ(task->getConfig()->min_cpu_count(), std::nullopt);
+    ASSERT_EQ(task->getConfig()->max_ram(), std::nullopt);
+    ASSERT_EQ(task->getConfig()->min_ram(), std::nullopt);
+    ASSERT_STREQ(task->getTaskCommand().c_str(), "echo run this command!");
 }

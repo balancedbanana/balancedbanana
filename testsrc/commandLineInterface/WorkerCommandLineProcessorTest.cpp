@@ -3,7 +3,7 @@
 
 using balancedbanana::commandLineInterface::WorkerCommandLineProcessor;
 using balancedbanana::communication::Task;
-using balancedbanana::commandLineInterface::TaskType;
+using balancedbanana::communication::TaskType;
 
 TEST(WorkerCommandLineProcessor, noArguments)
 {
@@ -17,6 +17,8 @@ TEST(WorkerCommandLineProcessor, noArguments)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::WORKERSTART);
+    ASSERT_STREQ(task->getServerIP().c_str(), "");
+    ASSERT_EQ(task->getServerPort(), 0);
 }
 
 

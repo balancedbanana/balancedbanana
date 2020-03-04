@@ -39,3 +39,17 @@ TEST(Timer, StartStop)
     EXPECT_TRUE(someBool);
     timer.stop();
 }
+
+// This Test should not crash
+TEST(Timer, StopOutOfScope) {
+    {
+        auto timer = std::make_shared<Timer>();
+        std::function<void()> func([]() {
+        });
+        timer->setInterval(1);
+        timer->addTimerFunction(func);
+        timer->start();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+}

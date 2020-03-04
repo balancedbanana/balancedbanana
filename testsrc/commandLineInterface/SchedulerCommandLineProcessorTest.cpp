@@ -3,7 +3,7 @@
 
 using balancedbanana::commandLineInterface::SchedulerCommandLineProcessor;
 using balancedbanana::communication::Task;
-using balancedbanana::commandLineInterface::TaskType;
+using balancedbanana::communication::TaskType;
 
 TEST(SchedulerCommandLineProcessor, noArguments)
 {
@@ -17,6 +17,10 @@ TEST(SchedulerCommandLineProcessor, noArguments)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::SERVERSTART);
+    ASSERT_STREQ(task->getServerIP().c_str(), "");
+    ASSERT_STREQ(task->getWebAPIIP().c_str(), "");
+    ASSERT_EQ(task->getServerPort(), 0);
+    ASSERT_EQ(task->getWebAPIPort(), 0);
 }
 
 

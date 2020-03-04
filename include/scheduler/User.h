@@ -14,15 +14,16 @@ namespace balancedbanana {
 
 
         public:
-            User() : IUser("", "") {
+            User(uint64_t id, const std::string &username, const std::string &pubkey);
 
-            }
             //Getter for the id_ attribute
-            uint64_t id();
+            uint64_t id() const;
 
             //getter for the email_ attribute
-            std::string email();
+            const std::string& email() const;
 
+            //setter for the email_ attribute, might be added later
+            void Setemail(const std::string& mail);
         };
     }
 }

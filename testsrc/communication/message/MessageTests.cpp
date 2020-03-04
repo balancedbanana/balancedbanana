@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <communication/message/Message.h>
+#include <communication/message/Serialization.h>
 
 using namespace balancedbanana::communication;
 
@@ -105,4 +106,9 @@ TEST(Message, Serialize) {
     std::string str = msg.serialize();
     EXPECT_EQ(str.size(), sizeof(MessageType));
     EXPECT_EQ(INVALID, *reinterpret_cast<const uint32_t *>(str.data()));
+}
+
+TEST(Message, Deserialize) {
+    uint32_t serialized = INVALID;
+    EXPECT_EQ(nullptr, Message::deserialize(reinterpret_cast<char *>(&serialized), sizeof(uint32_t)));
 }

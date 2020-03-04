@@ -3,9 +3,11 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
-#include <communication/message/SnapshotMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
+#include <communication/message/WorkerLoadRequestMessage.h>
+#include <communication/message/WorkerLoadResponseMessage.h>
+#include <communication/message/Serialization.h>
 #include <Net/Http/V2/Stream.h>
 
 using namespace balancedbanana::communication;
@@ -25,23 +27,6 @@ std::string Message::serialize() const {
 }
 
 std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
-    /*uint32_t type;
-    auto next = Net::Http::V2::GetUInt32(msg, type);
-    switch (type)
-    {
-        case MessageType::AUTH_RESULT:
-
-
-    case MessageType::CLIENT_AUTH: {
-        std::string username(next);
-        next += username.length() + 1;
-        std::string password(next);
-        next += password.length() + 1;
-        return std::make_shared<ClientAuthMessage>(username, password, next);
-    }
-    default:
-        break;
-    }*/
     size_t iterator = 0;
     uint32_t type = serialization::extract<uint32_t>(msg, iterator, size);
     switch(type) {
@@ -53,12 +38,14 @@ std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
             return std::make_shared<HardwareDetailMessage>(msg, iterator, size);
         case MessageType::PUBLIC_KEY_AUTH:
             return std::make_shared<PublicKeyAuthMessage>(msg, iterator, size);
-        case MessageType::SNAPSHOT:
-            return std::make_shared<SnapshotMessage>(msg, iterator, size);
         case MessageType::TASK:
             return std::make_shared<TaskMessage>(msg, iterator, size);
         case MessageType::WORKER_AUTH:
             return std::make_shared<WorkerAuthMessage>(msg, iterator, size);
+        case MessageType::WORKERLOADREQUEST:
+            return std::make_shared<WorkerLoadRequestMessage>(msg, iterator, size);
+        case MessageType::WORKERLOADRESPONSE:
+            return std::make_shared<WorkerLoadResponseMessage>(msg, iterator, size);
         default:
             return nullptr;
     }
