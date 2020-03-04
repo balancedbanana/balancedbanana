@@ -11,7 +11,7 @@ namespace balancedbanana {
     namespace scheduler {
         class SchedulerWorkerMP;
 
-        enum WorkerObservableEvent {
+        enum class WorkerObservableEvent {
             DATA_CHANGE,
             HARDWARE_DETAIL_UPDATE
         };

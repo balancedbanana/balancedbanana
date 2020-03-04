@@ -5,7 +5,7 @@
 namespace balancedbanana {
     namespace scheduler {
 
-        enum UserObservableEvent {
+        enum class UserObservableEvent {
             DATA_CHANGE
         };
 

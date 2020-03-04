@@ -13,7 +13,7 @@
 namespace balancedbanana {
     namespace scheduler {
 
-        enum JobObservableEvent {
+        enum class JobObservableEvent {
             DATA_CHANGE
         };
 
