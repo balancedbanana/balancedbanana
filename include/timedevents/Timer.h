@@ -40,7 +40,7 @@ public:
 	 * Note: Try using lambda expressions or create a std::function<void()> to pass to this function
 	 * as raw function pointers tend to not work here.
 	 */
-	void addTimerFunction(std::function<void()>& function);
+	void addTimerFunction(const std::function<void()>& function);
 
 	/**
 	 * Start the timer.

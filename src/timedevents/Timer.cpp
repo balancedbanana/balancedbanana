@@ -22,7 +22,7 @@ void Timer::setInterval(unsigned int seconds)
     }
 }
 
-void Timer::addTimerFunction(std::function<void()>& function)
+void Timer::addTimerFunction(const std::function<void()>& function)
 {
     if (!this->active) {
         this->timerFunctions.push_back(function);
