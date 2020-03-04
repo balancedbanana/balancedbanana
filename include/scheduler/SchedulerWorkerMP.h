@@ -1,5 +1,6 @@
 #pragma once
 #include <communication/MessageProcessor.h>
+#include <scheduler/Worker.h>
 #include <functional>
 
 namespace balancedbanana {
@@ -8,6 +9,7 @@ namespace balancedbanana {
         class SchedulerWorkerMP : public communication::MessageProcessor {
             bool authenticated = false;
             std::function<void(const communication::WorkerLoadResponseMessage &msg)> onWorkerLoadResponseMessage;
+            std::function<void(const std::shared_ptr<Worker> &worker)> addWorker;
         public:
 #if 0
             SchedulerWorkerMP(Communicator *);

@@ -16,6 +16,9 @@ namespace balancedbanana {
 
             virtual void update();
 
+            static bool remove(uint64_t jobID) { return true; }
+            static uint64_t getPosition(uint64_t jobID) { return 0; }
+
         private:
             std::unordered_map<uint64_t,std::shared_ptr<Job>> list;
         };
