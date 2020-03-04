@@ -53,13 +53,12 @@ namespace balancedbanana::scheduler {
 
         virtual ~Observer();
 
-        void Unregister();
-
         const std::vector<Observable<Event> *> &GetObservables() const;
 
     protected:
         virtual void OnUpdate(Observable<Event> *obsable, Event event) = 0;
 
+        void Unregister(bool allowFutureRegistration);
     };
 
     //Implementation
@@ -136,32 +135,27 @@ namespace balancedbanana::scheduler {
 
     template<typename Event>
     Observer<Event>::~Observer() {
-        allowRegistration = false;
-        Unregister();
+        Unregister(false);
     }
 
     /**
-     * Unregisters the Observer from all associated Observables
+     * Unregisters the Observer from all associated Observables. Do only use when really neccessary.
      * @tparam Event The Event type that can be triggered by the observables
      */
     template<typename Event>
-    void Observer<Event>::Unregister() {
+    void Observer<Event>::Unregister(bool allowFutureRegistration) {
         std::unique_lock lock(mtx);
-        while(observables.size() > 0) {
-            Observable<Event> *obsable = observables.back();
-            std::unique_lock obsable_lock(obsable->mtx, std::defer_lock_t());
-            bool failed = true;
-            do {
-                obsable = observables.back();
-                obsable_lock = std::unique_lock(obsable->mtx, std::defer_lock_t());
-                failed = !obsable_lock.try_lock_for(std::chrono::microseconds(10));
-                if(failed) {
-                    lock.unlock();
-                    std::this_thread::sleep_for(std::chrono::microseconds(10));
-                    lock.lock();
-                }
-            }while(failed);
+        allowRegistration = false;
+        std::vector<Observable<Event> *> obsables = observables;
+        lock.unlock();
+        while(obsables.size() > 0) {
+            Observable<Event> *obsable = obsables.back();
             obsable->UnregisterObserver(this);
+        }
+        if(allowFutureRegistration) {
+            lock.lock();
+            allowRegistration = true;
+            lock.unlock();
         }
     }
 
