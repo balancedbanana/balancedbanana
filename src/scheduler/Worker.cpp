@@ -20,11 +20,20 @@ void Worker::send(const Message & msg) {
     comm->send(msg);
 }
 
-void Worker::getStatus() {
+void Worker::requestStatus(Observer<WorkerObservableEvent> &obs) {
+    RegisterObserver(&obs);
+    comm->send(WorkerLoadRequestMessage());
 }
 
 Specs Worker::getSpec() {
-    return {};
+    return specs;
+}
+void Worker::setSpecs(const database::Specs &specifications) {
+    specs = specifications;
+}
+
+uint64_t Worker::getId() {
+    return id;
 }
 
 const WorkerLoadResponseMessage& Worker::GetWorkerLoad() {

@@ -13,6 +13,7 @@ namespace balancedbanana {
 
         enum class WorkerObservableEvent {
             DATA_CHANGE,
+            STATUS_UPDATE,
             HARDWARE_DETAIL_UPDATE
         };
 
@@ -20,12 +21,21 @@ namespace balancedbanana {
         public:
             void send(const communication::Message & msg);
 
-            void getStatus();
+            void requestStatus(Observer<WorkerObservableEvent> &obs);
 
             database::Specs getSpec();
+            void setSpecs(const database::Specs &specs);
+
+            uint64_t getId();
+
             const communication::WorkerLoadResponseMessage& GetWorkerLoad();
             Worker(const std::shared_ptr<communication::Communicator>& comm);
         private:
+            uint64_t id;
+            database::Specs specs;
+
+
+
             std::shared_ptr<communication::Communicator> comm;
             communication::WorkerLoadResponseMessage resp;
             std::condition_variable cnd;
