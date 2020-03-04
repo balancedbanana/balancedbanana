@@ -339,15 +339,17 @@ void setAllocatedTableValues(job_details& details, QSqlQuery& query){
 * @param query The query
 */
 void setResultTableValues(job_details&  details, QSqlQuery& query){
-    if (Utilities::castToOptional(query.value(18).toUInt()) == std::nullopt){
+    if (query.value(18).isNull()){
         details.result = std::nullopt;
     } else {
         QSqlQuery resultQuery("SELECT stdout, exit_code FROM job_results WHERE id = ?");
         resultQuery.addBindValue(query.value(18).toUInt());
         if (resultQuery.exec()){
             if (resultQuery.next()){
-                details.result->stdout = resultQuery.value(0).toString().toStdString();
-                details.result->exit_code = resultQuery.value(1).toInt();
+                job_result result;
+                result.stdout = resultQuery.value(0).toString().toStdString();
+                result.exit_code = resultQuery.value(1).toInt();
+                details.result = result;
             }
         } else {
             throw std::runtime_error("getJob error: setting of allocated_resources failed: " + resultQuery
@@ -396,10 +398,10 @@ job_details JobGateway::getJob(uint64_t job_id) {
         query.addBindValue(QVariant::fromValue(job_id));
         if (query.exec()){
             if (query.next()) {
+                details.id = job_id;
                 setJobTableValues(details, query);
                 setAllocatedTableValues(details, query);
                 setResultTableValues(details, query);
-                details.id = job_id;
                 details.empty = false;
             } else {
                 // This would be a very weird error, as I've already checked if the job exists.
@@ -452,11 +454,11 @@ std::vector<job_details> JobGateway::getJobs() {
     if (query.exec()) {
         while(query.next()){
             job_details details;
+            details.id = query.value(19).toUInt();
             setJobTableValues(details, query);
             setAllocatedTableValues(details, query);
             setResultTableValues(details, query);
             details.empty = false;
-            details.id = query.value(19).toUInt();
             jobVector.push_back(details);
         }
     } else {
@@ -624,8 +626,10 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
 void sortByFinishInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
 std::vector<job_details>& jobs){
     for (job_details job : jobs){
-        if (from.date() <= job.finish_time->date() && job.finish_time->date() <= to.date()){
-            jobsInterval.push_back(job);
+        if (job.finish_time.has_value()){
+            if (from.date() <= job.finish_time->date() && job.finish_time->date() <= to.date()){
+                jobsInterval.push_back(job);
+            }
         }
     }
 }
@@ -639,8 +643,10 @@ std::vector<job_details>& jobs){
  */
 void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
     for (job_details job : jobs){
-        if (from.date() <= job.start_time->date() && job.start_time->date() <= to.date()){
-            jobsInterval.push_back(job);
+        if (job.start_time.has_value()){
+            if (from.date() <= job.start_time->date() && job.start_time->date() <= to.date()){
+                jobsInterval.push_back(job);
+            }
         }
     }
 }
@@ -662,7 +668,7 @@ void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::ve
 }
 
 /**
- * Getter for Jobs with a certain status (either started, finished or processing) in a certain time interval.
+ * Getter for Jobs that were either started, finished or scheduled within a certain time interval.
  *
  * Note: The method doesn't give jobs within the exact time interval. That wouldn't be possible to due to the seconds
  * between methods calls. The method will return the jobs, whose dates (so no time in secs, mins, etc.) are within
@@ -674,6 +680,9 @@ void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::ve
  * @return Vector of the wanted Jobs
  */
 std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
+    if (from.date() > to.date()){
+        throw std::invalid_argument("getJobsInInterval error: lower bound of interval can't be greater than the upper bound.");
+    }
     std::vector<job_details> jobs = getJobs();
     std::vector<job_details> jobsInterval;
     switch(status){

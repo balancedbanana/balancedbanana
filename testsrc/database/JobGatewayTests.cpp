@@ -1031,8 +1031,9 @@ protected:
         job.config.set_priority(Priority::high);
 
         // Finish information
-        stdout = "Some detailed info...";
-        exit_code = 0;
+        job_result result;
+        result.stdout = "Some detailed info...";
+        result.exit_code = 0;
 
 
         // SetUp Worker
@@ -1055,6 +1056,7 @@ protected:
 
     job_details job;
     worker_details worker;
+    job_result result;
     std::string stdout;
     int8_t exit_code;
 };
@@ -1087,9 +1089,10 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
     EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
     EXPECT_TRUE(wasStartSuccessful(job, worker));
     job.finish_time = QDateTime::currentDateTime().addDays(2);
-    EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
-    EXPECT_TRUE(wasFinishSuccessful(stdout, job, exit_code));
+    job.result = result;
     job.status = (int) JobStatus::finished;
+    EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
+    EXPECT_TRUE(wasFinishSuccessful(result.stdout, job, result.exit_code));
 
     job_details queryDetails = JobGateway::getJob(job.id);
     EXPECT_TRUE(queryDetails == job);
@@ -1313,6 +1316,7 @@ protected:
         resetJobTable();
         resetWorker();
         resetAllocResTable();
+        resetResultsTable();
     }
 
     job_details first;
@@ -1337,7 +1341,7 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Scheduled_Test){
 }
 
 /**
- * Test to see if getJobsInInterval gets the correct scheduled jobs.
+ * Test to see if getJobsInInterval gets the correct started jobs.
  *
  * In this case, the test attempts to retrieve the jobs that were started within the last 2 days. In this case the
  * first and second job will be started. Only the first job is within the time frame.
@@ -1372,3 +1376,62 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     expectedIntervalJobs.push_back(first);
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
 }
+
+/**
+ * Test to see if getJobsInInterval gets the correct finished jobs.
+ *
+ * In this case, the test attempts to retrieve the jobs that were started within the last day. In this case only the
+ * third job is finished within the time frame.
+ */
+TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
+    // Add a worker.
+    worker_details worker;
+    worker.public_key = "sadfjsaljdf";
+    worker.specs.space = 10240;
+    worker.specs.ram = 2 *FOUR_MB;
+    worker.specs.cores = 4;
+    worker.address = "1.2.3.4";
+    worker.name = "Ubuntu";
+    worker.id = 1;
+    worker.empty = false;
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    worker.public_key = "asdfsadcsadcsa";
+    worker.address = "6.4.23.2";
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    // The job then have to be started.
+    first.start_time = QDateTime::currentDateTime().addDays(-1);
+    first.status = (int) JobStatus::processing;
+    first.allocated_specs = worker.specs;
+    first.worker_id = worker.id;
+    EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs, first.start_time.value()));
+    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs, QDateTime::currentDateTime().addDays(-3)));
+
+    // Finish the third job
+    third.finish_time = QDateTime::currentDateTime().addDays(-1);
+    third.status = (int)JobStatus::finished;
+    job_result result;
+    result.stdout = "error";
+    result.exit_code = 0;
+    third.result = result;
+    EXPECT_TRUE(JobGateway::finishJob(third.id, third.finish_time.value(), third.result->stdout, third
+    .result->exit_code));
+     std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
+             (-1), QDateTime::currentDateTime(), JobStatus::finished);
+    std::vector<job_details> expectedIntervalJobs;
+    expectedIntervalJobs.push_back(third);
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
+}
+
+// Test to see if method returns empty vector when status is not either processing, finished or scheduled.
+TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_InvalidStatus_Test){
+    EXPECT_TRUE(JobGateway::getJobsInInterval(QDateTime::currentDateTime(), QDateTime::currentDateTime(),
+            JobStatus::interrupted).empty());
+}
+
+// Test to see if exception is thrown when lower bound of interval is greater than upper bound.
+TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_InvalidInterval_Test){
+    EXPECT_THROW(JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays(1), QDateTime::currentDateTime(),
+            JobStatus::processing), std::invalid_argument);
+}
+
+class
