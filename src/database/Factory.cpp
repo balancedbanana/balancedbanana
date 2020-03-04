@@ -13,10 +13,9 @@ using namespace balancedbanana::database;
  * @param job_info The struct
  * @return The Job object
  */
-Job Factory::createJob(const job_details& job_info) {
+Job Factory::createJob(const job_details& job_info, const user_details& user_info) {
     Job job(job_info.id, std::make_shared<JobConfig>(job_info.config));
-    // TODO get User Object from DB!!
-    // job.setUser(job_info.user_id);
+    job.setUser(std::make_shared<User>(createUser(user_info)));
     std::shared_ptr<JobStatus> statusPtr = std::make_shared<JobStatus>(static_cast<JobStatus>(job_info.status));
     job.setStatus(statusPtr);
     job.setCommand(job_info.command);
@@ -44,6 +43,8 @@ Job Factory::createJob(const job_details& job_info) {
         std::shared_ptr<job_result> resultPtr = std::make_shared<job_result>(job_info.result.value());
         job.setResult(resultPtr);
     }
+
+    return job;
 }
 
 /**
@@ -61,5 +62,7 @@ Worker Factory::createWorker(const worker_details& worker_info) {
  * @return The User object
  */
 User Factory::createUser(const user_details& user_info) {
-    throw std::runtime_error("NOT IMPLEMENTED");
+    User user(user_info.id, user_info.name, user_info.public_key);
+    user.Setemail(user_info.email);
+    return user;
 }

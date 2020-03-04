@@ -66,7 +66,8 @@ namespace balancedbanana {
                     (this->result.value() == rhs.result.value()))
                     && this->command == rhs.command
                     && this->user_id == rhs.user_id
-                    && this->worker_id == rhs.worker_id;
+                    && ((!this->worker_id.has_value() && !rhs.worker_id.has_value()) ||
+                        (this->worker_id.value() == rhs.worker_id.value()));
             }
 		};
 	}
