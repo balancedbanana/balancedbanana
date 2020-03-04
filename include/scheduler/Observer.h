@@ -151,6 +151,7 @@ namespace balancedbanana::scheduler {
         while(obsables.size() > 0) {
             Observable<Event> *obsable = obsables.back();
             obsable->UnregisterObserver(this);
+            obsables.pop_back();
         }
         if(allowFutureRegistration) {
             lock.lock();
