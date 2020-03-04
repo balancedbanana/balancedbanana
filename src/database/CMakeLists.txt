@@ -17,4 +17,4 @@ set(HEADERS
         ../../include/database/Utilities.h)
 
 add_library(database ${SOURCES} ${HEADERS})
-target_link_libraries(database PUBLIC Qt5::Core Qt5::Network Qt5::Sql configfiles scheduler)
+target_link_libraries(database PUBLIC Qt5::Core Qt5::Network Qt5::Sql configfiles scheduler timedEvents)

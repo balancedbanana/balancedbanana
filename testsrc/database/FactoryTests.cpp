@@ -35,7 +35,7 @@ protected:
     user_details user_info;
 };
 
-bool compareUsers(User expected, User actual){
+bool compareUsers(User &expected, User &actual){
     return expected.pubkey() == actual.pubkey()
     && expected.id() == actual.id()
     && expected.name() == actual.name()
@@ -56,20 +56,18 @@ bool compareJobs(const Job& expected, const Job& actual){
     && expected.getWorker_id() == actual.getWorker_id()
     && expected.getConfig()->image() == actual.getConfig()->image()
     && expected.getConfig()->current_working_dir() == actual.getConfig()->current_working_dir()
-    && static_cast<int>(*expected.getStatus()) == static_cast<int>(*actual.getStatus())
+    && static_cast<int>(expected.getStatus()) == static_cast<int>(actual.getStatus())
     && expected.getResult() == actual.getResult();
 }
 
 
 TEST_F(CreateJobTest, CreateJobTest_Success_Test){
-    User user(user_info.id, user_info.name, user_info.public_key);
-    user.setEmail(user_info.email);
+    std::shared_ptr<User> user = std::make_shared<User>(user_info.id, user_info.name, user_info.public_key);
+    user->setEmail(user_info.email);
 
     Job job_expected(job_info.id, std::make_shared<JobConfig>(job_info.config));
-    job_expected.setUser(std::make_shared<User>(user));
-    std::shared_ptr<JobStatus> statusPtr = std::make_shared<JobStatus>
-            (static_cast<JobStatus>(job_info.status));
-    job_expected.setStatus(statusPtr);
+    job_expected.setUser(user);
+    job_expected.setStatus(static_cast<JobStatus>(job_info.status));
     job_expected.setCommand(job_info.command);
     job_expected.setScheduled_at(job_info.schedule_time);
 
@@ -95,6 +93,6 @@ TEST_F(CreateJobTest, CreateJobTest_Success_Test){
         std::shared_ptr<job_result> resultPtr = std::make_shared<job_result>(job_info.result.value());
         job_expected.setResult(resultPtr);
     }
-    Job job_actual = Factory::createJob(job_info, user_info);
-    ASSERT_TRUE(compareJobs(job_expected, job_actual));
+    std::shared_ptr<Job> job_actual = Factory::createJob(job_info, user);
+    ASSERT_TRUE(compareJobs(job_expected, *job_actual));
 }
