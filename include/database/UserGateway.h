@@ -16,5 +16,7 @@ namespace balancedbanana::database {
         static std::vector<user_details> getUsers();
 
         static user_details getUserByName(const std::string& name);
+
+        static void updateUser(const user_details& user);
     };
 }

@@ -169,3 +169,34 @@ user_details UserGateway::getUserByName(const std::string &name) {
     }
     return details;
 }
+
+/**
+ * Updates the given user's fields in the database.
+ * @param user The user
+ */
+void UserGateway::updateUser(const user_details &user) {
+    if (!Utilities::doesTableExist("users")){
+        Utilities::throwNoTableException("users");
+    }
+
+    if (user.id == 0){
+        throw std::invalid_argument("updateUser error: invalid arguments");
+    }
+
+    if (Utilities::doesRecordExist("users", user.id)){
+        if (!areArgsValid(user)){
+            throw std::invalid_argument("updateUser error: invalid arguments");
+        }
+        QSqlQuery query("UPDATE users SET name = ?, email = ?, public_key = ? WHERE id = ?");
+        query.addBindValue(QString::fromStdString(user.name));
+        query.addBindValue(QString::fromStdString(user.email));
+        query.addBindValue(QString::fromStdString(user.public_key));
+        query.addBindValue(QVariant::fromValue(user.id));
+        if (!query.exec()){
+            throw std::runtime_error("updateUser error: " + query.lastError().databaseText().toStdString());
+        }
+    } else {
+        throw std::runtime_error("updateUser error: no user with id = " + std::to_string(user.id) + " exists");
+    }
+}
+
