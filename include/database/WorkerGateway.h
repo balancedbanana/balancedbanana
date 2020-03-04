@@ -12,7 +12,7 @@ namespace balancedbanana::database {
             static bool remove(uint64_t id);
             static worker_details getWorker(uint64_t id);
             static std::vector<worker_details> getWorkers();
-            static uint64_t FindWorker(const std::string &name);
+            static uint64_t getWorkerByName(const std::string &name);
             static void updateWorker(const worker_details &wd);
 
         private:

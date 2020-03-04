@@ -202,7 +202,7 @@ std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
 }
 
 std::shared_ptr<Worker> Repository::FindWorker(const std::string &name) {
-    uint64_t id = WorkerGateway::FindWorker(name);
+    uint64_t id = WorkerGateway::getWorkerByName(name);
     if(id == 0) {
         return nullptr;
     }
@@ -210,7 +210,7 @@ std::shared_ptr<Worker> Repository::FindWorker(const std::string &name) {
 }
 
 std::shared_ptr<User> Repository::FindUser(const std::string &name) {
-    uint64_t id = UserGateway::FindUser(name);
+    uint64_t id = UserGateway::getUserByName(name);
     if(id == 0) {
         return nullptr;
     }

@@ -13,7 +13,7 @@ namespace balancedbanana::database {
 
         static user_details getUser(uint64_t id);
 
-        static uint64_t FindUser(const std::string &name);
+        static uint64_t getUserByName(const std::string &name);
 
         static std::vector<user_details> getUsers();
 
