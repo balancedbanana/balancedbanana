@@ -288,7 +288,7 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     details.config.set_current_working_dir(query.value(10).toString().toStdString());
     details.command = query.value(11).toString().toStdString();
     details.schedule_time = QDateTime::fromString(query.value(12).toString(),
-                                                       "yyyy.MM.dd:hh.mm.ss.z");
+                                                       TIME_FORMAT);
     details.worker_id = Utilities::castToOptional(query.value(13).toUInt());
     details.status = query.value(14).toInt();
 
@@ -296,14 +296,14 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
         details.start_time = std::nullopt;
     } else {
         details.start_time = std::make_optional<QDateTime>(QDateTime::fromString(query.value(15).toString(),
-                                                      "yyyy.MM.dd:hh.mm.ss.z"));
+                                                      TIME_FORMAT));
     }
 
     if (query.value(16).isNull()){
         details.finish_time = std::nullopt;
     } else {
         details.finish_time = QDateTime::fromString(query.value(16).toString(),
-                                                   "yyyy.MM.dd:hh.mm.ss.z");
+                                                   TIME_FORMAT);
     }
 }
 
@@ -446,8 +446,8 @@ std::vector<job_details> JobGateway::getJobs() {
                     "    start_time,\n"
                     "    finish_time,\n"
                     "    allocated_id,\n"
-                    "    result_id\n"
-                    "FROM jobs");
+                    "    result_id,\n"
+                    "id FROM jobs");
     std::vector<job_details> jobVector;
     if (query.exec()) {
         while(query.next()){
@@ -456,7 +456,7 @@ std::vector<job_details> JobGateway::getJobs() {
             setAllocatedTableValues(details, query);
             setResultTableValues(details, query);
             details.empty = false;
-            details.id = query.value(0).toUInt();
+            details.id = query.value(19).toUInt();
             jobVector.push_back(details);
         }
     } else {
@@ -551,7 +551,7 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs, cons
             query.addBindValue(QVariant::fromValue(allocated_specs));
             query.addBindValue(QVariant::fromValue(worker_id));
             query.addBindValue(QVariant::fromValue((int) JobStatus::processing));
-            query.addBindValue(QVariant::fromValue(start_time.toString("yyyy.MM.dd:hh.mm.ss.z")));
+            query.addBindValue(QVariant::fromValue(start_time.toString(TIME_FORMAT)));
             query.addBindValue(QVariant::fromValue(job_id));
             if (query.exec()){
                 return true;
@@ -624,7 +624,7 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
 void sortByFinishInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
 std::vector<job_details>& jobs){
     for (job_details job : jobs){
-        if (!job.empty && from <= job.finish_time && job.finish_time <= to){
+        if (from.date() <= job.finish_time->date() && job.finish_time->date() <= to.date()){
             jobsInterval.push_back(job);
         }
     }
@@ -639,7 +639,7 @@ std::vector<job_details>& jobs){
  */
 void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
     for (job_details job : jobs){
-        if (!job.empty && from <= job.start_time && job.start_time <= to){
+        if (from.date() <= job.start_time->date() && job.start_time->date() <= to.date()){
             jobsInterval.push_back(job);
         }
     }
@@ -655,14 +655,19 @@ void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector
 void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval,
         const std::vector<job_details>& jobs){
     for (job_details job : jobs){
-        if (!job.empty && from <= job.schedule_time && job.schedule_time <= to){
+        if (from.date() <= job.schedule_time.date() && job.schedule_time.date() <= to.date()){
             jobsInterval.push_back(job);
         }
     }
 }
 
 /**
- * Getter for Jobs with a certain status (either started, finished or processing) in a certain time interval
+ * Getter for Jobs with a certain status (either started, finished or processing) in a certain time interval.
+ *
+ * Note: The method doesn't give jobs within the exact time interval. That wouldn't be possible to due to the seconds
+ * between methods calls. The method will return the jobs, whose dates (so no time in secs, mins, etc.) are within
+ * the time interval's dates.
+ *
  * @param from The lower bound of the interval (inclusive)
  * @param to  The upper bound of the interval (inclusive)
  * @param status The status of the Jobs

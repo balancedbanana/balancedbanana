@@ -1101,7 +1101,7 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
 class GetJobsWithWorkerIdTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Set up the first user
+        // Set up the first job
         first.id = 1;
         first.status = 1; //scheduled
         first.user_id = 1;
@@ -1119,7 +1119,7 @@ protected:
         first.config.set_interruptible(false);
         first.config.set_current_working_dir(".");
 
-        // Set up the second user
+        // Set up the second job
         second.id = 2;
         second.status = 1; //scheduled
         second.user_id = 1;
@@ -1140,7 +1140,7 @@ protected:
         second.start_time = std::make_optional<QDateTime>(QDateTime::fromString("2020.02.20:13.13.13.5", TIME_FORMAT));
 
 
-        // Set up the third user
+        // Set up the third job
         third.id = 3;
         third.status = 1; //scheduled
         third.user_id = 1;
@@ -1158,8 +1158,7 @@ protected:
         third.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
         third.config.set_interruptible(false);
         third.config.set_current_working_dir(".");
-        third.start_time = std::make_optional<QDateTime>(QDateTime::fromString("2020.02.21:13.13.13.5", "yyyy.MM.dd:hh"
-                                                                                                       ".mm.ss.z"));
+        third.start_time = std::make_optional<QDateTime>(QDateTime::fromString("2020.02.21:13.13.13.5", TIME_FORMAT));
 
         // SetUp Worker
         worker.public_key = "sadfjsaljdf";
@@ -1195,9 +1194,9 @@ TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_SuccessfulGet_Test){
     EXPECT_EQ(JobGateway::add(third), third.id);
     EXPECT_EQ(WorkerGateway::add(worker), worker.id);
     EXPECT_TRUE(JobGateway::startJob(second.id, worker.id, worker.specs,
-            QDateTime::fromString("2020.02.20:13.13.13.5", "yyyy.MM.dd:hh.mm.ss.z")));
+            QDateTime::fromString("2020.02.20:13.13.13.5", TIME_FORMAT)));
     EXPECT_TRUE(JobGateway::startJob(third.id, worker.id, worker.specs,
-                                     QDateTime::fromString("2020.02.21:13.13.13.5", "yyyy.MM.dd:hh.mm.ss.z")));
+                                     QDateTime::fromString("2020.02.21:13.13.13.5", TIME_FORMAT)));
     second.status = (int) JobStatus::processing;
     third.status = (int) JobStatus::processing;
     second.allocated_specs = std::make_optional<Specs>(worker.specs);
@@ -1236,4 +1235,140 @@ TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NoJobResultsTable_Test){
 // Test to see if the getter method returns an empty vector if the jobs table is empty
 TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NonExistentJobs_Test){
     EXPECT_TRUE(JobGateway::getJobsWithWorkerId(worker.id).empty());
+}
+
+class GetJobsInIntervalTest : public ::testing::Test {
+protected:
+    void SetUp() override{
+        // Set up the first job
+        first.id = 1;
+        first.user_id = 3;
+        first.command = "mkdir build";
+        first.status = (int) JobStatus::scheduled;
+        first.schedule_time = QDateTime::currentDateTime().addDays(-7);
+        first.empty = false;
+        first.config.set_min_ram(4194304);
+        first.config.set_max_ram(4194305);
+        first.config.set_min_cpu_count(42);
+        first.config.set_max_cpu_count(43);
+        first.config.set_blocking_mode(true);
+        first.config.set_priority(Priority::low);
+        first.config.set_image("testimage");
+        first.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        first.config.set_interruptible(false);
+        first.config.set_current_working_dir(".");
+
+        // Set up the second job
+        second.id = 2;
+        second.user_id = 1;
+        second.command = "mkdir build";
+        second.status = (int) JobStatus::scheduled;
+        second.schedule_time = QDateTime::currentDateTime().addDays(-8);
+        second.empty = false;
+        second.config.set_min_ram(4194304);
+        second.config.set_max_ram(4194305);
+        second.config.set_min_cpu_count(42);
+        second.config.set_max_cpu_count(43);
+        second.config.set_blocking_mode(true);
+        second.config.set_priority(Priority::high);
+        second.config.set_image("testimage");
+        second.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        second.config.set_interruptible(false);
+        second.config.set_current_working_dir(".");
+
+
+        // Set up the third job
+        third.id = 3;
+        third.user_id = 1;
+        third.command = "mkdir build";
+        third.status = (int) JobStatus::scheduled;
+        third.schedule_time = QDateTime::currentDateTime().addDays(-2);
+        third.empty = false;
+        third.config.set_min_ram(4194304);
+        third.config.set_max_ram(4194305);
+        third.config.set_min_cpu_count(42);
+        third.config.set_max_cpu_count(43);
+        third.config.set_blocking_mode(true);
+        third.config.set_priority(Priority::emergency);
+        third.config.set_image("testimage");
+        third.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        third.config.set_interruptible(false);
+        third.config.set_current_working_dir(".");
+
+        // Standard procedure to add jobs and to get them. This should work flawlessly
+        EXPECT_EQ(JobGateway::add(first), first.id);
+        EXPECT_EQ(JobGateway::add(second), second.id);
+        EXPECT_EQ(JobGateway::add(third), third.id);
+
+        std::vector<job_details> expectedVector;
+        expectedVector.push_back(first);
+        expectedVector.push_back(second);
+        expectedVector.push_back(third);
+
+        std::vector<job_details> actualVector = JobGateway::getJobs();
+        EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
+    }
+
+    void TearDown() override {
+        resetJobTable();
+        resetWorker();
+        resetAllocResTable();
+    }
+
+    job_details first;
+    job_details second;
+    job_details third;
+};
+
+/**
+ * Test to see if getJobsInInterval gets the correct scheduled jobs.
+ *
+ * In this case, the test attempts to retrieve the jobs that were scheduled in the last week. The first job was
+ * scheduled one week prior, the second job 8 days prior and the third job 2 days prior.
+ */
+TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Scheduled_Test){
+    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
+            (-7),QDateTime::currentDateTime(), JobStatus::scheduled);
+
+    std::vector<job_details> expectedIntervalJobs;
+    expectedIntervalJobs.push_back(first);
+    expectedIntervalJobs.push_back(third);
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
+}
+
+/**
+ * Test to see if getJobsInInterval gets the correct scheduled jobs.
+ *
+ * In this case, the test attempts to retrieve the jobs that were started within the last 2 days. In this case the
+ * first and second job will be started. Only the first job is within the time frame.
+ */
+TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
+    // Add a worker.
+    worker_details worker;
+    worker.public_key = "sadfjsaljdf";
+    worker.specs.space = 10240;
+    worker.specs.ram = 2 *FOUR_MB;
+    worker.specs.cores = 4;
+    worker.address = "1.2.3.4";
+    worker.name = "Ubuntu";
+    worker.id = 1;
+    worker.empty = false;
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    worker.public_key = "asdfsadcsadcsa";
+    worker.address = "6.4.23.2";
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    // The job then have to be started.
+    first.start_time = QDateTime::currentDateTime().addDays(-1);
+    first.status = (int) JobStatus::processing;
+    first.allocated_specs = worker.specs;
+    first.worker_id = worker.id;
+    EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs, first.start_time.value()));
+    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs, QDateTime::currentDateTime().addDays(-3)));
+
+    // This is where the test begins.
+    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
+            (-2), QDateTime::currentDateTime(), JobStatus::processing);
+    std::vector<job_details> expectedIntervalJobs;
+    expectedIntervalJobs.push_back(first);
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
 }

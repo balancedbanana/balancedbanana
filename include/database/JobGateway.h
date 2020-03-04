@@ -7,7 +7,7 @@
 #include <configfiles/Priority.h>
 
 #define FOUR_MB (4194304) // If RAM is under this amount, errors might occur in docker.
-#define TIME_FORMAT "yyyy.MM.dd:hh.mm.ss.z"
+#define TIME_FORMAT "yyyy.MM.dd:hh.mm.ss.z" // The format of QDateTime objects in the database
 
 namespace balancedbanana::database {
     class JobGateway : virtual public IGateway {
