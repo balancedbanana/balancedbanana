@@ -9,38 +9,55 @@ using namespace balancedbanana::communication;
 using namespace balancedbanana::database;
 using namespace balancedbanana::scheduler;
 
-Worker::Worker(const std::shared_ptr<Communicator>& comm) : comm(comm), resp(0, 0, 0, 0, 0, 0, 0) {
-    std::static_pointer_cast<SchedulerWorkerMP>(comm->GetMP())->OnWorkerLoadResponse([this](const WorkerLoadResponseMessage& resp) {
-        this->resp = resp;
-        cnd.notify_all();
-    });
+Worker::Worker(uint64_t id, const std::string &name, const std::string &publickey, const Specs &specs) : IUser(name, publickey),
+               id(id), specs(specs), connected(false), address(""), comm(nullptr), resp(0, 0, 0, 0, 0, 0, 0), mtx(), cnd(){
 }
 
 void Worker::send(const Message & msg) {
+    std::lock_guard guard(mtx);
     comm->send(msg);
 }
 
-void Worker::requestStatus(Observer<WorkerObservableEvent> &obs) {
-    RegisterObserver(&obs);
-    comm->send(WorkerLoadRequestMessage());
+bool Worker::isConnected() {
+    std::lock_guard guard(mtx);
+    return connected;
 }
 
 Specs Worker::getSpec() {
+    std::lock_guard guard(mtx);
     return specs;
-}
-void Worker::setSpecs(const database::Specs &specifications) {
-    specs = specifications;
 }
 
 uint64_t Worker::getId() {
+    std::lock_guard guard(mtx);
     return id;
 }
 
+const std::string &Worker::getAddress() {
+    std::lock_guard lock(mtx);
+    return address;
+}
+void Worker::setAddress(const std::string &adr) {
+    std::lock_guard lock(mtx);
+    address = adr;
+}
+
+void Worker::setCommunicator(const std::shared_ptr<communication::Communicator>& com) {
+    auto mp = std::static_pointer_cast<SchedulerWorkerMP>(com->GetMP());
+    comm = com;
+    connected = com != nullptr;
+    if(connected) {
+        mp->OnWorkerLoadResponse([this](const WorkerLoadResponseMessage& res) {
+            resp = res;
+            cnd.notify_all();
+        });
+    }
+}
+
 const WorkerLoadResponseMessage& Worker::GetWorkerLoad() {
+    std::unique_lock<std::mutex> lock(mtx);
     WorkerLoadRequestMessage request;
     comm->send(request);
-    std::mutex mtx;
-    std::unique_lock<std::mutex> lock(mtx);
     cnd.wait_for(lock, std::chrono::minutes(1));
     return resp;
 }

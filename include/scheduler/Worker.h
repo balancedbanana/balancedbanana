@@ -21,23 +21,28 @@ namespace balancedbanana {
         public:
             void send(const communication::Message & msg);
 
-            void requestStatus(Observer<WorkerObservableEvent> &obs);
+            bool isConnected();
 
             database::Specs getSpec();
-            void setSpecs(const database::Specs &specs);
 
             uint64_t getId();
 
             const communication::WorkerLoadResponseMessage& GetWorkerLoad();
-            Worker(const std::shared_ptr<communication::Communicator>& comm);
+
+            const std::string &getAddress();
+            void setAddress(const std::string &adr);
+
+            void setCommunicator(const std::shared_ptr<communication::Communicator>& com);
+
+            Worker(uint64_t id, const std::string &name, const std::string &publickey, const database::Specs &specs);
         private:
             uint64_t id;
             database::Specs specs;
-
-
-
+            bool connected;
+            std::string address;
             std::shared_ptr<communication::Communicator> comm;
             communication::WorkerLoadResponseMessage resp;
+            std::mutex mtx;
             std::condition_variable cnd;
         };
     }
