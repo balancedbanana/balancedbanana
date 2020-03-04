@@ -11,6 +11,7 @@
 #include <cinttypes>
 #include <QDateTime>
 #include <string>
+#include <map>
 
 using namespace balancedbanana::configfiles;
 
@@ -20,6 +21,12 @@ namespace balancedbanana::database {
 
         //This is the interface that the rest of the program uses to query the database.
         class Repository {
+        private:
+            //TODO Write_back or Write_through Cache? If last, then the dirty flags (bools) are not needed
+            //TODO Maybe Write_back cache with timed update?
+            std::map<uint64_t, std::pair<std::shared_ptr<Job>, bool>> jobCache;
+            std::map<std::string, std::pair<std::shared_ptr<Worker>, bool>> workerCache;
+            std::map<std::string, std::pair<std::shared_ptr<User>, bool>> userCache;
         public:
             Repository(const std::string& host_name, const std::string& databasename, const std::string& username,
                     const std::string& password,  uint64_t port);
@@ -29,17 +36,14 @@ namespace balancedbanana::database {
             bool AddWorker(std::shared_ptr<Worker> worker);
 
             std::shared_ptr<Job> GetJob(uint64_t id);
-            bool AddJob(std::shared_ptr<uint64_t> job);
+            bool AddJob(std::shared_ptr<Job> job);
 
             std::shared_ptr<User> GetUser(const std::string &name);
-            bool AddUser(const std::shared_ptr<uint64_t> user);
+            bool AddUser(const std::shared_ptr<User> user);
 
-            void ClearCache();
-            void ClearWorkerCache();
-            void ClearJobCache();
-            void ClearUserCache();
+            void CleanUpCache();
 
-            std::vector<std::shared_ptr<Worker>> GetWorkers();
+            std::vector<std::shared_ptr<Worker>> GetActiveWorkers();
             std::vector<std::shared_ptr<Job>> GetUnfinishedJobs();
 
 
