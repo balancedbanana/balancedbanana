@@ -102,8 +102,8 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             int dir_index = query.record().indexOf("working_dir");
             int command_index = query.record().indexOf("command");
             int schedule_time_index = query.record().indexOf("schedule_time");
-            //int finish_time_index = query.record().indexOf("finish_time");
-            //int start_time_index = query.record().indexOf("start_time");
+            int finish_time_index = query.record().indexOf("finish_time");
+            int start_time_index = query.record().indexOf("start_time");
             int worker_id_index = query.record().indexOf("worker_id");
             int status_id_index = query.record().indexOf("status_id");
             int allocated_id_index = query.record().indexOf("allocated_id");
@@ -122,12 +122,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
                 queryDetails.config.set_blocking_mode(std::nullopt);
             }
 
-            std::optional<uint> castedPriorityId = Utilities::castToOptional(query.value(priority_index).toUInt());
-            if (castedPriorityId != std::nullopt){
-                queryDetails.config.set_priority(static_cast<Priority> (query.value(priority_index).toUInt()));
-            } else {
-                queryDetails.config.set_priority(std::nullopt);
-            }
+            queryDetails.config.set_priority(static_cast<Priority> (query.value(priority_index).toUInt()));
             queryDetails.config.set_image(query.value(image_index).toString().toStdString());
 
             std::optional<QVariant> castedInterruptible = Utilities::castToOptional(query.value(interruptible_index));
@@ -146,8 +141,12 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             queryDetails.config.set_current_working_dir(query.value(dir_index).toString().toStdString());
             queryDetails.command = query.value(command_index).toString().toStdString();
             queryDetails.schedule_time = QDateTime::fromString(query.value(schedule_time_index).toString(),
-                    "yyyy.MM.dd:hh.mm.ss.z");
-            queryDetails.worker_id = Utilities::castToOptional(query.value(worker_id_index).toUInt());
+                    TIME_FORMAT);
+            if (query.value(worker_id_index).isNull()){
+                queryDetails.worker_id = std::nullopt;
+            } else {
+                queryDetails.worker_id = query.value(worker_id_index).toUInt();
+            }
             queryDetails.status = query.value(status_id_index).toInt();
             queryDetails.empty = false;
 
@@ -163,6 +162,21 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
                         queryDetails.allocated_specs->ram = query.value(3).toUInt();
                     }
                 }
+            } else {
+                queryDetails.allocated_specs = std::nullopt;
+            }
+            if (query.value(start_time_index).isNull()){
+                queryDetails.start_time = std::nullopt;
+            } else {
+                queryDetails.start_time = QDateTime::fromString(query.value(start_time_index).toString(),
+                        TIME_FORMAT);
+            }
+
+            if (query.value(finish_time_index).isNull()){
+                queryDetails.finish_time = std::nullopt;
+            } else {
+                queryDetails.finish_time = QDateTime::fromString(query.value(finish_time_index).toString(),
+                                                                TIME_FORMAT);
             }
             /*
             // Keeping this for debugging
@@ -184,8 +198,9 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             EXPECT_TRUE(queryDetails.config.environment() == details.config.environment());
             EXPECT_TRUE(queryDetails.config.interruptible() == details.config.interruptible());
             EXPECT_TRUE(queryDetails.config.current_working_dir() == details.config.current_working_dir());
+            EXPECT_TRUE(queryDetails.worker_id = details.worker_id);
              */
-            //EXPECT_TRUE(queryDetails == details);
+            EXPECT_TRUE(queryDetails == details);
             return true;
         } else {
             qDebug() << "record not found";
@@ -317,7 +332,7 @@ void createJobsTable(){
                     "  `environment` text,\n"
                     "  `min_cores` int(10) unsigned DEFAULT NULL,\n"
                     "  `max_cores` int(10) unsigned DEFAULT NULL,\n"
-                    "  `priority` int(10) unsigned DEFAULT NULL,\n"
+                    "  `priority` int(10) unsigned NOT NULL DEFAULT '2',\n"
                     "  `status_id` int(10) unsigned NOT NULL DEFAULT '1',\n"
                     "  `max_ram` bigint(10) unsigned DEFAULT NULL,\n"
                     "  `user_id` bigint(10) unsigned NOT NULL,\n"
@@ -409,6 +424,7 @@ protected:
         details.empty = false;
         details.config.set_image("testimage");
         details.config.set_current_working_dir(".");
+        details.config.set_priority(Priority::high);
     }
 
     void TearDown() override {
@@ -463,6 +479,7 @@ TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
     details.empty = false;
     details.config.set_image("testimage");
     details.config.set_current_working_dir(".");
+    details.config.set_priority(Priority::low);
 
     // Since this is the first job, this has to be true.
     EXPECT_TRUE(JobGateway::add(details) == 1);
@@ -596,6 +613,7 @@ TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
     details.empty = false;
     details.config.set_image("testimage");
     details.config.set_current_working_dir(".");
+    details.config.set_priority(Priority::low);
 
     EXPECT_TRUE(JobGateway::add(details) == details.id);
     EXPECT_TRUE(wasJobAddSuccessful(details, details.id));
@@ -744,7 +762,7 @@ protected:
         job.empty = false;
         job.config.set_image("testimage");
         job.config.set_current_working_dir(".");
-        job.start_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
+        job.config.set_priority(Priority::emergency);
 
         // SetUp Worker
         worker.public_key = "sadfjsaljdf";
@@ -795,7 +813,7 @@ bool wasStartSuccessful(job_details job, worker_details worker){
         if (queryJobs.next()){
             EXPECT_EQ(queryJobs.value(0).toUInt(), allocated_id);
             EXPECT_EQ(queryJobs.value(1).toInt(), (int) JobStatus::processing);
-            EXPECT_TRUE(QDateTime::fromString(queryJobs.value(2).toString(), "yyyy.MM.dd:hh.mm.ss.z")
+            EXPECT_TRUE(QDateTime::fromString(queryJobs.value(2).toString(), TIME_FORMAT)
                         == job.start_time.value());
         } else {
             return false;
@@ -814,7 +832,9 @@ TEST_F(StartJobTest, StartJobTest_SuccessfulStart_Test){
     EXPECT_TRUE(JobGateway::add(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
 
+    job.start_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
     EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
+
 
     // Check if the values were set properly
     EXPECT_TRUE(wasStartSuccessful(job, worker));
@@ -826,6 +846,7 @@ TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
     QSqlQuery query("DROP TABLE workers");
     query.exec();
 
+    job.start_time = QDateTime::currentDateTime();
     EXPECT_THROW(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()), std::logic_error);
 
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
@@ -840,7 +861,7 @@ TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
 // Test to see if exception is thrown when no jobs table exists
 TEST_F(StartJobTest, StartJobTest_NoJobsTable_Test){
     deleteJobsTable();
-
+    job.start_time = QDateTime::currentDateTime();
     EXPECT_THROW(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()), std::logic_error);
 
     createJobsTable();
@@ -848,6 +869,7 @@ TEST_F(StartJobTest, StartJobTest_NoJobsTable_Test){
 
 // Test to see if exception is thrown when no job with the id arg exists in the database
 TEST_F(StartJobTest, StartJobTest_NonExistentJob_Test){
+    job.start_time = QDateTime::currentDateTime();
     EXPECT_FALSE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
 }
 
@@ -855,6 +877,7 @@ TEST_F(StartJobTest, StartJobTest_NonExistentJob_Test){
 TEST_F(StartJobTest, StartJobTest_NonExistentWorker_Test){
     EXPECT_TRUE(JobGateway::add(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.start_time = QDateTime::currentDateTime();
     EXPECT_FALSE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
 }
 
@@ -865,7 +888,7 @@ void resetResultsTable() {
         query.exec();
         query.prepare("ALTER TABLE job_results CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT");
         query.exec();
-};
+}
 
 /**
  * Fixture class that initializes sample finish data for a Job on SetUp and resets the jobs and job_results tables on
@@ -883,7 +906,7 @@ protected:
         job.empty = false;
         job.config.set_image("testimage");
         job.config.set_current_working_dir(".");
-        job.finish_time = std::make_optional(QDateTime::currentDateTime());
+        job.config.set_priority(Priority::emergency);
 
         // Finish information
         stdout = "Some detailed info...";
@@ -922,7 +945,7 @@ bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code){
 
     if (queryJobs.exec()){
         if (queryJobs.next()){
-            EXPECT_TRUE(QDateTime::fromString(queryJobs.value(0).toString(), "yyyy.MM.dd:hh.mm.ss.z") == job
+            EXPECT_TRUE(QDateTime::fromString(queryJobs.value(0).toString(), TIME_FORMAT) == job
                     .finish_time.value());
             EXPECT_EQ(queryJobs.value(1).toUInt(), result_id);
         } else {
@@ -940,6 +963,7 @@ TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
     // Add the job to the DB. This operation should be successful
     EXPECT_TRUE(JobGateway::add(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.finish_time = std::make_optional(QDateTime::currentDateTime());
     EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
 
     // Check if the values were set properly
@@ -949,6 +973,7 @@ TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
 // Test to see if exception is thrown when finishJob is called, but no job_results table exists
 TEST_F(FinishJobTest, FinishJobTest_NoJobResultsTable_Test){
     deleteResultsTable();
+    job.finish_time = std::make_optional(QDateTime::currentDateTime());
     EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
     createResultsTable();
 }
@@ -956,12 +981,14 @@ TEST_F(FinishJobTest, FinishJobTest_NoJobResultsTable_Test){
 // Test to see if exception is thrown when finishJob is called, but no jobs table exists
 TEST_F(FinishJobTest, FinishJobTest_NoJobsTable_Test){
     deleteJobsTable();
+    job.finish_time = std::make_optional(QDateTime::currentDateTime());
     EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
     createJobsTable();
 }
 
 // Test to see if finishJob returns false, when no job exists with the id arg
 TEST_F(FinishJobTest, FinishJobTest_NonExistentJob_Test){
+    job.finish_time = QDateTime::currentDateTime();
     EXPECT_FALSE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
 }
 
@@ -990,16 +1017,18 @@ protected:
     void SetUp() override {
         // Setup Job
         job.id = 1;
-        job.status = 1; //scheduled
         job.user_id = 1;
         job.command = "mkdir build";
         job.schedule_time = QDateTime::currentDateTime();
         job.empty = false;
         job.config.set_image("testimage");
         job.config.set_current_working_dir(".");
-        job.start_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
-        job.status = (int) JobStatus::processing;
-        job.worker_id = 1;
+        job.status = (int)JobStatus::scheduled;
+        job.start_time = std::nullopt;
+        job.allocated_specs = std::nullopt;
+        job.finish_time = std::nullopt;
+        job.worker_id = std::nullopt;
+        job.config.set_priority(Priority::high);
 
         // Finish information
         stdout = "Some detailed info...";
@@ -1015,8 +1044,6 @@ protected:
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
-
-        job.allocated_specs = std::make_optional<Specs>(worker.specs);
     }
 
     void TearDown() override {
@@ -1037,6 +1064,10 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
     EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
     EXPECT_TRUE(JobGateway::add(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.start_time = QDateTime::currentDateTime();
+    job.worker_id = 1;
+    job.allocated_specs = worker.specs;
+    job.status = (int) JobStatus::processing;
     EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
     EXPECT_TRUE(wasStartSuccessful(job, worker));
 
@@ -1049,11 +1080,16 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
     EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
     EXPECT_TRUE(JobGateway::add(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.start_time = QDateTime::currentDateTime();
+    job.worker_id = 1;
+    job.allocated_specs = worker.specs;
+    job.status = (int) JobStatus::processing;
     EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
     EXPECT_TRUE(wasStartSuccessful(job, worker));
-    job.finish_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
+    job.finish_time = QDateTime::currentDateTime().addDays(2);
     EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
     EXPECT_TRUE(wasFinishSuccessful(stdout, job, exit_code));
+    job.status = (int) JobStatus::finished;
 
     job_details queryDetails = JobGateway::getJob(job.id);
     EXPECT_TRUE(queryDetails == job);
@@ -1101,8 +1137,7 @@ protected:
         second.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
         second.config.set_interruptible(false);
         second.config.set_current_working_dir(".");
-        second.start_time = std::make_optional<QDateTime>(QDateTime::fromString("2020.02.20:13.13.13.5", "yyyy.MM.dd:hh"
-                                                                                                         ".mm.ss.z"));
+        second.start_time = std::make_optional<QDateTime>(QDateTime::fromString("2020.02.20:13.13.13.5", TIME_FORMAT));
 
 
         // Set up the third user

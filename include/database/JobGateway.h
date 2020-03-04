@@ -4,8 +4,10 @@
 #include "job_details.h"
 #include "job_result.h"
 #include "JobStatus.h"
+#include <configfiles/Priority.h>
 
 #define FOUR_MB (4194304) // If RAM is under this amount, errors might occur in docker.
+#define TIME_FORMAT "yyyy.MM.dd:hh.mm.ss.z"
 
 namespace balancedbanana::database {
     class JobGateway : virtual public IGateway {
@@ -18,8 +20,11 @@ namespace balancedbanana::database {
         static bool startJob(uint64_t job_id, uint64_t worker_id, Specs specs, const QDateTime& start_time);
         static bool finishJob(uint64_t job_id, const QDateTime& finish_time, const std::string& stdout, int8_t
         exit_code);
-        static job_result getJobResult(uint64_t job_id);
         static std::vector<job_details> getJobsInInterval(const QDateTime &from, const QDateTime &to,
                 JobStatus status);
+        static bool updateJobPriority(Priority priority, uint64_t id);
+        static bool pauseJob(uint64_t id);
+        static bool interruptJob(uint64_t id);
+        static bool cancelJob(uint64_t id);
     };
 }
