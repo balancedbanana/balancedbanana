@@ -14,6 +14,6 @@ const std::string& User::email() const {
     return email_;
 }
 
-void User::Setemail(const std::string& mail) {
+void User::setEmail(const std::string& mail) {
     email_ = mail;
 }

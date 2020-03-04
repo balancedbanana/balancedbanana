@@ -28,7 +28,7 @@ namespace balancedbanana {
             const std::string& email() const;
 
             //setter for the email_ attribute, might be added later
-            void Setemail(const std::string& mail);
+            void setEmail(const std::string& mail);
         };
     }
 }
