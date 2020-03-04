@@ -621,6 +621,83 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
     }
 }
 
+/**
+ * Helper method to get finished jobs within a certain finish_time interval
+ * @param from The lower bound of the interval (inclusive)
+ * @param to The upper bound of the interval (inclusive)
+ * @param jobsInterval The vector to fill with the wanted jobs
+ * @param jobs The vector of all jobs.
+ */
+void sortByFinishInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
+std::vector<job_details>& jobs){
+    for (job_details job : jobs){
+        if (!job.empty && from <= job.finish_time && job.finish_time <= to){
+            jobsInterval.push_back(job);
+        }
+    }
+}
+
+/**
+ * Helper method to get started jobs within a certain start_time interval
+ * @param from The lower bound of the interval (inclusive)
+ * @param to The upper bound of the interval (inclusive)
+ * @param jobsInterval The vector to fill with the wanted jobs
+ * @param jobs The vector of all jobs.
+ */
+void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
+    for (job_details job : jobs){
+        if (!job.empty && from <= job.start_time && job.start_time <= to){
+            jobsInterval.push_back(job);
+        }
+    }
+}
+
+/**
+ * Helper method to get scheduled jobs within a certain schedule_time interval
+ * @param from The lower bound of the interval (inclusive)
+ * @param to The upper bound of the interval (inclusive)
+ * @param jobsInterval The vector to fill with the wanted jobs
+ * @param jobs The vector of all jobs.
+ */
+void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval,
+        const std::vector<job_details>& jobs){
+    for (job_details job : jobs){
+        if (!job.empty && from <= job.schedule_time && job.schedule_time <= to){
+            jobsInterval.push_back(job);
+        }
+    }
+}
+
+/**
+ * Getter for Jobs with a certain status (either started, finished or processing) in a certain time interval
+ * @param from The lower bound of the interval (inclusive)
+ * @param to  The upper bound of the interval (inclusive)
+ * @param status The status of the Jobs
+ * @return Vector of the wanted Jobs
+ */
+std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
+    std::vector<job_details> jobs = getJobs();
+    std::vector<job_details> jobsInterval;
+    switch(status){
+        case JobStatus::processing:
+            sortByStartInterval(from, to, jobsInterval, jobs);
+            break;
+
+        case JobStatus::scheduled:
+            sortByScheduledInterval(from, to, jobsInterval, jobs);
+            break;
+
+        case JobStatus::finished:
+            sortByFinishInterval(from, to, jobsInterval, jobs);
+            break;
+
+        default:
+            break;
+    }
+
+    return jobsInterval;
+}
+
 /*
 /**
  * Getter for the job result of a job with a given id

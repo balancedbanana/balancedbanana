@@ -3,6 +3,7 @@
 #include "IGateway.h"
 #include "job_details.h"
 #include "job_result.h"
+#include "JobStatus.h"
 
 #define FOUR_MB (4194304) // If RAM is under this amount, errors might occur in docker.
 
@@ -18,5 +19,7 @@ namespace balancedbanana::database {
         static bool finishJob(uint64_t job_id, const QDateTime& finish_time, const std::string& stdout, int8_t
         exit_code);
         static job_result getJobResult(uint64_t job_id);
+        static std::vector<job_details> getJobsInInterval(const QDateTime &from, const QDateTime &to,
+                JobStatus status);
     };
 }
