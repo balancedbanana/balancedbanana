@@ -37,6 +37,7 @@ class Task
 	uint16_t webAPIPort;
 	std::optional<uint64_t> jobId;
 	std::optional<uint64_t> backupId;
+	std::optional<uint64_t> userId;
 
 public:
 	const static std::string configFilePath;
@@ -81,6 +82,9 @@ public:
 
 	void setBackupId(std::optional<uint64_t> backupId);
 	std::optional<uint64_t> getBackupId() const;
+
+	void setUserId(std::optional<uint64_t> userId);
+	std::optional<uint64_t> getUserId() const;
 
 	std::string serialize() const;
 };

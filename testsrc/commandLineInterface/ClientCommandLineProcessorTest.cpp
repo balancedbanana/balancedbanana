@@ -161,7 +161,7 @@ TEST(ClientCommandLineProcessor, run)
     int argc = 19;
 
     std::shared_ptr<Task> task = std::make_shared<Task>();
-
+    
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::RUN);
@@ -189,7 +189,7 @@ TEST(ClientCommandLineProcessor, run2)
     clp.process(argc, argv, task);
 
     ASSERT_EQ(task->getType(), (int)TaskType::RUN);
-    ASSERT_FALSE(task->getConfig()->blocking_mode());
+    ASSERT_FALSE(task->getConfig()->blocking_mode().value());
     ASSERT_EQ(task->getConfig()->email(), "");
     ASSERT_STREQ(task->getConfig()->image().c_str(), "docker Image");
     ASSERT_EQ(task->getConfig()->priority(), std::nullopt);

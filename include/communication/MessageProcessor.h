@@ -11,7 +11,6 @@ namespace balancedbanana {
 		class TaskResponseMessage;
 		class Message;
 		class PublicKeyAuthMessage;
-		class SnapshotMessage;
 		class TaskMessage;
 		class WorkerAuthMessage;
 		class WorkerLoadRequestMessage;
@@ -41,7 +40,6 @@ namespace balancedbanana {
             virtual void processHardwareDetailMessage(const HardwareDetailMessage &msg);
             virtual void processTaskResponseMessage(const TaskResponseMessage &msg);
             virtual void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg);
-            virtual void processSnapshotMessage(const SnapshotMessage &msg);
             virtual void processTaskMessage(const TaskMessage &msg);
             virtual void processWorkerAuthMessage(const WorkerAuthMessage &msg);
             virtual void processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg);
