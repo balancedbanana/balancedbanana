@@ -21,5 +21,6 @@ namespace balancedbanana::database {
         static job_result getJobResult(uint64_t job_id);
         static std::vector<job_details> getJobsInInterval(const QDateTime &from, const QDateTime &to,
                 JobStatus status);
+        static void updateJob(const job_details &job_details);
     };
 }
