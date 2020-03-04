@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 add_subdirectory(queue)
 
+#Lots of errors here, will not compile right now
+add_subdirectory(clientRequests)
+
 add_library(scheduler Worker.cpp Job.cpp User.cpp IUser.cpp httpserver/HttpServer.cpp smtpserver/SmtpServer.cpp SchedulerClientMP.cpp SchedulerWorkerMP.cpp)
 target_link_libraries(scheduler Qt5::Core Qt5::Network Qt5::Sql communication Authenticator Message configfiles commandLineInterface)
 add_executable(bbs Scheduler.cpp)

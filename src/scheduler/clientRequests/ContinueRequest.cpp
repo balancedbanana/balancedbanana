@@ -1,70 +1,87 @@
 #include "scheduler/clientRequests/ContinueRequest.h"
 
-#include "database/Repository.h"
-#include "communication/message/RespondToClientMessage.h"
 #include "scheduler/Job.h"
+#include "scheduler/Worker.h"
+#include <communication/message/TaskMessage.h>
 #include <sstream>
 
-using balancedbanana::database::Repository;
-using balancedbanana::scheduler::Job;
 using balancedbanana::database::JobStatus;
-using balancedbanana::communication::RespondToClientMessage;
+using balancedbanana::scheduler::Job;
+using balancedbanana::scheduler::Worker;
+using balancedbanana::communication::TaskMessage;
 
 namespace balancedbanana
 {
 namespace scheduler
 {
 
-std::shared_ptr<std::string> ContinueRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task)
+std::shared_ptr<std::string> ContinueRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
+                                                                         const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                                                                         const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                                                                         const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob,
+                                                                         uint64_t userID)
 {
     // Step 1: Go to DB and get job status
-
     std::stringstream response;
 
-    //auto job = repository.getJob(task->getJobId().value());
-    Job job;
-    switch ((int)*job.getStatus())
+    if (task->getJobId().has_value() == false)
     {
-    case (int)JobStatus::scheduled:
+        // Note that job id is required for the continue command
+        // exit with the reponse set to the error message of not having a jobid
+        response << NO_JOB_ID << std::endl;
+        return std::make_shared<std::string>(response.str());
+    }
+    std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
+
+    if (job == nullptr)
+    {
+        // Job not found
+        response << NO_JOB_WITH_ID << std::endl;
+        return std::make_shared<std::string>(response.str());
+    }
+
+    switch (*(job->getStatus()))
+    {
+    case JobStatus::scheduled:
         // Job is not paused
-        response << "This Job has not been paused." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_NOT_PAUSED << std::endl;
         break;
-    case (int)JobStatus::processing:
+    case JobStatus::processing:
         // Job is not paused
-        response << "This Job has not been paused." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_NOT_PAUSED << std::endl;
         break;
-    case (int)JobStatus::paused:
+    case JobStatus::paused:
         // resume job and respond success or failure
-        repository.unpauseJob(job.getId());
-        bool success = workers.getWorker(job.getWorker_id()).resume(job.getId());
-        if (success) {
-            response << "Successfully resumed this Job." << std::endl;
-        } else {
-            response << "Failed to pause this Job." << std::endl;
+        {
+            Worker worker = Worker::getWorker(job->getWorker_id());
+            // Set userId for Worker
+            task->setUserId(userID);
+            // Just Send to Worker
+            worker.send(TaskMessage(*task));
         }
+
+        response << OPERATION_PROGRESSING_RESUME << std::endl;
         break;
-    case (int)JobStatus::interrupted:
+    case JobStatus::interrupted:
         // Job is not paused
-        response << "This Job has not been paused." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_NOT_PAUSED << std::endl;
         break;
-    case (int)JobStatus::canceled:
+    case JobStatus::canceled:
         // Job is not paused
-        response << "This Job has not been paused." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_ABORTED << std::endl;
         break;
-    case (int)JobStatus::finished:
+    case JobStatus::finished:
         // Job is done
-        response << "This Job has finished processing." << std::endl;
+        response << OPERATION_UNAVAILABLE_JOB_FINISHED << std::endl;
         break;
     default:
         // add info job has corrupted status to response
-        response << "ERROR: Query of this Job has resulted in a corrupted job status." << std::endl;
+        response << JOB_STATUS_UNKNOWN << std::endl;
         break;
     }
 
     // Step 2: Create and send ResponseMessage with status as string
-    RespondToClientMessage msg(response.str(), false);
-
-    communicator.send(msg);
+    return std::make_shared<std::string>(response.str());
 }
 
 } // namespace scheduler

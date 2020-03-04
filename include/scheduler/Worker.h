@@ -18,6 +18,9 @@ namespace balancedbanana {
             database::Specs getSpec();
             const communication::WorkerLoadResponseMessage& GetWorkerLoad();
             Worker(const std::shared_ptr<communication::Communicator>& comm);
+
+            static Worker getWorker(uint64_t workerID) { return Worker(nullptr); }
+
         private:
             std::shared_ptr<communication::Communicator> comm;
             communication::WorkerLoadResponseMessage resp;
