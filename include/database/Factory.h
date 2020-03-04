@@ -13,13 +13,13 @@ namespace balancedbanana {
         class Factory {
         public:
             //Creates a Job object.
-            static scheduler::Job createJob(const job_details& job_info, const user_details& user_info);
+            static std::shared_ptr<scheduler::Job> createJob(const job_details &job_info, const std::shared_ptr<scheduler::User> &user_info);
 
             //Creates a Worker object.
-            static scheduler::Worker createWorker(const worker_details& worker_info);
+            static std::shared_ptr<scheduler::Worker> createWorker(const worker_details &worker_info);
 
             //Creates a User object.
-            static scheduler::User createUser(const user_details& user_info);
+            static std::shared_ptr<scheduler::User> createUser(const user_details &user_info);
 
         };
     }
