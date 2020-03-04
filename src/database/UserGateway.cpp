@@ -141,3 +141,31 @@ std::vector<user_details> UserGateway::getUsers() {
         throw std::runtime_error("getUsers error: " + query.lastError().databaseText().toStdString());
     }
 }
+
+/**
+ * Getter for a user with a specific name
+ * @param name The name of the user
+ * @return Returns the correct details of the user if found, otherwise return empty details struct with invalid id
+ */
+user_details UserGateway::getUserByName(const std::string &name) {
+    if (!Utilities::doesTableExist("users")){
+        Utilities::throwNoTableException("users");
+    }
+    user_details details{};
+    QSqlQuery query("SELECT public_key, id, email FROM users WHERE name = ?");
+    query.addBindValue(QString::fromStdString(name));
+    if (query.exec()){
+        if (query.next()){
+            details.name = name;
+            details.public_key = query.value(0).toString().toStdString();
+            details.id = query.value(1).toUInt();
+            details.email = query.value(2).toString().toStdString();
+            details.empty = false;
+        } else {
+            details.id = 0;
+        }
+    } else {
+        throw std::runtime_error("getUser error: " + query.lastError().databaseText().toStdString());
+    }
+    return details;
+}

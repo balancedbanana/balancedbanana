@@ -344,5 +344,48 @@ TEST_F(GetUsersTest, GetUsersTest_NonExistentUsers_Test){
     EXPECT_TRUE(UserGateway::getUsers().empty());
 }
 
+class GetUserByNameTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Set up the first user
+        user.public_key = "34nrhk3hkr";
+        user.email = "someemail@kit.edu";
+        user.name = "Rakan";
+        user.id = 1;
+        user.empty = false;
+    }
+
+    void TearDown() override {
+        resetUserTable();
+    }
+
+    user_details user;
+};
+
+TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
+    QSqlQuery query("DROP TABLE users");
+    query.exec();
+    EXPECT_THROW(UserGateway::getUserByName(user.name), std::logic_error);
+    query.prepare("CREATE TABLE `users` (\n"
+                    "  `name` varchar(45) NOT NULL,\n"
+                    "  `email` varchar(255) NOT NULL,\n"
+                    "  `public_key` varchar(255) NOT NULL,\n"
+                    "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
+                    "  PRIMARY KEY (`id`),\n"
+                    "  UNIQUE KEY `public_key_UNIQUE` (`public_key`),\n"
+                    "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.exec();
+}
+
+TEST_F(GetUserByNameTest, GetUserByNameTest_UserFound_Test){
+    EXPECT_EQ(UserGateway::add(user), user.id);
+    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
+    EXPECT_TRUE(UserGateway::getUserByName(user.name) == user);
+}
+
+TEST_F(GetUserByNameTest, GetUserByNameTest_UserNotFound_Test){
+    EXPECT_EQ(UserGateway::getUserByName(user.name).id, 0);
+}
 
 

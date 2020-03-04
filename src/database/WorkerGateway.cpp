@@ -157,3 +157,38 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
         throw std::runtime_error("getWorkers error: " + query.lastError().databaseText().toStdString());
     }
 }
+
+/**
+ * Getter for a worker with a specific name
+ * @param name The name of the worker
+ * @return Returns the correct details of the worker if found, otherwise return empty details struct with invalid id
+ */
+worker_details WorkerGateway::getWorkerByName(const std::string &name) {
+    if (!Utilities::doesTableExist("workers")){
+        Utilities::throwNoTableException("workers");
+    }
+    worker_details details{};
+    QSqlQuery query;
+    query.prepare("SELECT public_key, space, ram, cores, address, id FROM workers WHERE name = ?");
+    query.addBindValue(QString::fromStdString(name));
+    if (query.exec()){
+        if (query.next()){
+            details.name = name;
+            details.public_key = query.value(0).toString().toStdString();
+            Specs specs{};
+            specs.space = query.value(1).toInt();
+            specs.ram = query.value(2).toInt();
+            specs.cores = query.value(3).toInt();
+            specs.empty = false;
+            details.specs = specs;
+            details.address = query.value(4).toString().toStdString();
+            details.id = query.value(5).toUInt();
+            details.empty = false;
+        } else {
+            details.id = 0;
+        }
+    } else {
+        throw std::runtime_error("getWorkerByName error: " + query.lastError().databaseText().toStdString());
+    }
+    return details;
+}

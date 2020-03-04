@@ -395,5 +395,48 @@ TEST_F(GetWorkersTest, GetWorkersTest_NonExistentWorkers_Test){
     ASSERT_TRUE(WorkerGateway::getWorkers().empty());
 }
 
+class GetWorkerByNameTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        worker.public_key = "34nrhk3hkr";
+        worker.specs.space = 10240;
+        worker.specs.ram = 16384;
+        worker.specs.cores = 4;
+        worker.address = "0.0.0.0";
+        worker.name = "CentOS";
+        worker.id = 1;
+        worker.empty = false;
+    }
+
+    void TearDown() override {
+        resetWorkerTable();
+    }
+
+    worker_details worker;
+};
+
+TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
+    QSqlQuery query("DROP TABLE workers");
+    query.exec();
+    EXPECT_THROW(WorkerGateway::getWorkerByName(worker.name), std::logic_error);
+    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
+                    "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
+                    "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
+                    "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
+                    "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
+                    "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.exec();
+}
+
+TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_WorkerFound_Test){
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+    EXPECT_TRUE(WorkerGateway::getWorkerByName(worker.name) == worker);
+}
+
+TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_GetWorkerByNameTest_WorkerNotFound_Test_TestFound_Test){
+    EXPECT_EQ(WorkerGateway::getWorkerByName(worker.name).id, 0);
+}
+
 
 
