@@ -63,7 +63,7 @@ bool compareJobs(const Job& expected, const Job& actual){
 
 TEST_F(CreateJobTest, CreateJobTest_Success_Test){
     User user(user_info.id, user_info.name, user_info.public_key);
-    user.Setemail(user_info.email);
+    user.setEmail(user_info.email);
 
     Job job_expected(job_info.id, std::make_shared<JobConfig>(job_info.config));
     job_expected.setUser(std::make_shared<User>(user));
