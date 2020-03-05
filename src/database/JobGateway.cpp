@@ -712,22 +712,13 @@ std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, co
  * @return True if the operation was successful, otherwise false
  */
 bool updateJobPriority(Priority priority, uint64_t id){
-    if (!Utilities::doesTableExist("jobs")){
-        Utilities::throwNoTableException("jobs");
-    }
-
-    if (Utilities::doesRecordExist("jobs", id)){
-        QSqlQuery query("UPDATE jobs SET priority = ? WHERE id = ?");
-        query.addBindValue(QVariant::fromValue((int) priority));
-        query.addBindValue(QVariant::fromValue(id));
-        if (query.exec()){
-            return true;
-        } else {
-            throw std::runtime_error(query.lastError().databaseText().toStdString());
-        }
+    QSqlQuery query("UPDATE jobs SET priority = ? WHERE id = ?");
+    query.addBindValue(QVariant::fromValue((int) priority));
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        return true;
     } else {
-        std::cerr << "updateJobPriority error: no job with id = " << id << " exists" << std::endl;
-        return false;
+        throw std::runtime_error(query.lastError().databaseText().toStdString());
     }
 }
 
@@ -737,22 +728,13 @@ bool updateJobPriority(Priority priority, uint64_t id){
  * @return True if the operation was successful, otherwise false
  */
 bool cancelJob(uint64_t id) {
-    if (!Utilities::doesTableExist("jobs")){
-        Utilities::throwNoTableException("jobs");
-    }
-
-    if (Utilities::doesRecordExist("jobs", id)){
-        QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
-        query.addBindValue(QVariant::fromValue((int) JobStatus::canceled));
-        query.addBindValue(QVariant::fromValue(id));
-        if (query.exec()){
-            return true;
-        } else {
-            throw std::runtime_error(query.lastError().databaseText().toStdString());
-        }
+    QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
+    query.addBindValue(QVariant::fromValue((int) JobStatus::canceled));
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        return true;
     } else {
-        std::cerr << "cancelJob error: no job with id = " << id << " exists" << std::endl;
-        return false;
+        throw std::runtime_error(query.lastError().databaseText().toStdString());
     }
 }
 
@@ -762,22 +744,13 @@ bool cancelJob(uint64_t id) {
  * @return True if the operation was successful, otherwise false
  */
 bool interruptJob(uint64_t id) {
-    if (!Utilities::doesTableExist("jobs")){
-        Utilities::throwNoTableException("jobs");
-    }
-
-    if (Utilities::doesRecordExist("jobs", id)){
-        QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
-        query.addBindValue(QVariant::fromValue((int) JobStatus::interrupted));
-        query.addBindValue(QVariant::fromValue(id));
-        if (query.exec()){
-            return true;
-        } else {
-            throw std::runtime_error(query.lastError().databaseText().toStdString());
-        }
+    QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
+    query.addBindValue(QVariant::fromValue((int) JobStatus::interrupted));
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        return true;
     } else {
-        std::cerr << "interruptJob error: no job with id = " << id << " exists" << std::endl;
-        return false;
+        throw std::runtime_error(query.lastError().databaseText().toStdString());
     }
 }
 
@@ -787,22 +760,13 @@ bool interruptJob(uint64_t id) {
  * @return True if the operation was successful, otherwise false
  */
 bool pauseJob(uint64_t id) {
-    if (!Utilities::doesTableExist("jobs")){
-        Utilities::throwNoTableException("jobs");
-    }
-
-    if (Utilities::doesRecordExist("jobs", id)){
-        QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
-        query.addBindValue(QVariant::fromValue((int) JobStatus::paused));
-        query.addBindValue(QVariant::fromValue(id));
-        if (query.exec()){
-            return true;
-        } else {
-            throw std::runtime_error(query.lastError().databaseText().toStdString());
-        }
+    QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
+    query.addBindValue(QVariant::fromValue((int) JobStatus::paused));
+    query.addBindValue(QVariant::fromValue(id));
+    if (query.exec()){
+        return true;
     } else {
-        std::cerr << "pauseJob error: no job with id = " << id << " exists" << std::endl;
-        return false;
+        throw std::runtime_error(query.lastError().databaseText().toStdString());
     }
 }
 
@@ -813,15 +777,14 @@ void updateAllocatedSpecs(const job_details& job){
     QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?");
     query.addBindValue(QVariant::fromValue(job.id));
     if (query.exec()){
-        query.next();
-        if (!query.value(0).isNull()){
+        if (query.next() && !query.value(0).isNull()){
             uint64_t allocated_id = query.value(0).toUInt();
             QSqlQuery queryAlloc("UPDATE allocated_resources SET ram = ?, space = ?, cores = ? WHERE id = ?");
             queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->ram));
             queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->space));
             queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->cores));
             queryAlloc.addBindValue(QVariant::fromValue(allocated_id));
-            if (!query.exec()){
+            if (!queryAlloc.exec()){
                 throw std::runtime_error("updateJob error : updateAllocatedSpecs error " + query.lastError().databaseText()
                         .toStdString());
             }
@@ -832,7 +795,7 @@ void updateAllocatedSpecs(const job_details& job){
     }
 }
 
-void updateWorker(const job_details& job){
+void updateWorkerId(const job_details& job){
     if (!job.worker_id.has_value()){
         return;
     }
@@ -868,7 +831,7 @@ void JobGateway::updateJob(job_details job){
 
     if (Utilities::doesRecordExist("jobs", job.id)){
         updateAllocatedSpecs(job);
-        updateWorker(job);
+        updateWorkerId(job);
         switch(job.status){
             case (int)JobStatus::interrupted:
                 interruptJob(job.id);
@@ -889,6 +852,6 @@ void JobGateway::updateJob(job_details job){
             updateJobPriority(job.config.priority().value(), job.id);
         }
     } else {
-        throw std::runtime_error("updateJob error: no user with id = " + std::to_string(job.id) + " exists");
+        throw std::runtime_error("updateJob error: no job with id = " + std::to_string(job.id) + " exists");
     }
 }
