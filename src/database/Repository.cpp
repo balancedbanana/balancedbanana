@@ -8,6 +8,8 @@
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
 
+Repository Repository::repo("", "", "", "", 0);
+
 Repository::Repository(const std::string& host_name, const std::string& databasename, const std::string&
 username, const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) :
 jobCache(), workerCache(), userCache(), lastJobId(0, 0), lastWorkerId(0, 0), lastUserId(0, 0), mtx(), timer() {
@@ -202,7 +204,7 @@ std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
 }
 
 std::shared_ptr<Worker> Repository::FindWorker(const std::string &name) {
-    uint64_t id = WorkerGateway::getWorkerByName(name);
+    uint64_t id = WorkerGateway::getWorkerByName(name).id;
     if(id == 0) {
         return nullptr;
     }
@@ -210,7 +212,7 @@ std::shared_ptr<Worker> Repository::FindWorker(const std::string &name) {
 }
 
 std::shared_ptr<User> Repository::FindUser(const std::string &name) {
-    uint64_t id = UserGateway::getUserByName(name);
+    uint64_t id = UserGateway::getUserByName(name).id;
     if(id == 0) {
         return nullptr;
     }
@@ -234,4 +236,8 @@ void Repository::OnUpdate(Observable<JobObservableEvent> *observable, JobObserva
     if(e == JobObservableEvent::DATA_CHANGE) {
         jobCache.find(job->getId())->second.second = true;
     }
+}
+
+Repository &Repository::getDefault() {
+    return repo;
 }

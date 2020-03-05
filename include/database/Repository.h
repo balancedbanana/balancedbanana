@@ -23,6 +23,8 @@ namespace balancedbanana::database {
         //This is the interface that the rest of the program uses to query the database.
         class Repository : protected Observer<JobObservableEvent>, protected Observer<WorkerObservableEvent>, protected Observer<UserObservableEvent> {
         private:
+            static Repository repo;
+
             //structure: <id, <ptr, dirty>>
             std::map<uint64_t, std::pair<std::shared_ptr<Job>, bool>> jobCache;
             std::map<uint64_t, std::pair<std::shared_ptr<Worker>, bool>> workerCache;
@@ -56,6 +58,8 @@ namespace balancedbanana::database {
             std::vector<std::shared_ptr<Worker>> GetWorkers();
             std::shared_ptr<Worker> FindWorker(const std::string &name);
             std::shared_ptr<User> FindUser(const std::string &name);
+
+            static Repository &getDefault();
 
         protected:
             void OnUpdate(Observable<WorkerObservableEvent> *observable, WorkerObservableEvent e) override;
