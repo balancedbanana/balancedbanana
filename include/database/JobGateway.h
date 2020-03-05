@@ -22,9 +22,6 @@ namespace balancedbanana::database {
         exit_code);
         static std::vector<job_details> getJobsInInterval(const QDateTime &from, const QDateTime &to,
                 JobStatus status);
-        static bool updateJobPriority(Priority priority, uint64_t id);
-        static bool pauseJob(uint64_t id);
-        static bool interruptJob(uint64_t id);
-        static bool cancelJob(uint64_t id);
+        static void updateJob(job_details job);
     };
 }
