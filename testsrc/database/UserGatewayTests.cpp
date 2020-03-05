@@ -388,4 +388,85 @@ TEST_F(GetUserByNameTest, GetUserByNameTest_UserNotFound_Test){
     EXPECT_EQ(UserGateway::getUserByName(user.name).id, 0);
 }
 
+class UpdateUserTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        user.public_key = "34nrhk3hkr";
+        user.email = "someemail@kit.edu";
+        user.name = "Rakan";
+        user.id = 1;
+        user.empty = false;
+    }
+
+    void TearDown() override {
+        resetUserTable();
+    }
+
+    user_details user;
+};
+
+TEST_F(UpdateUserTest, UpdateUserTest_NoUsersTable_Test){
+    QSqlQuery query("DROP TABLE users");
+    query.exec();
+    EXPECT_THROW(UserGateway::updateUser(user), std::logic_error);
+    query.prepare("CREATE TABLE `users` (\n"
+                  "  `name` varchar(45) NOT NULL,\n"
+                  "  `email` varchar(255) NOT NULL,\n"
+                  "  `public_key` varchar(255) NOT NULL,\n"
+                  "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
+                  "  PRIMARY KEY (`id`),\n"
+                  "  UNIQUE KEY `public_key_UNIQUE` (`public_key`),\n"
+                  "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
+                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.exec();
+}
+
+TEST_F(UpdateUserTest, UpdateUserTest_InvalidId_Test){
+    user.id = 0;
+    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
+}
+
+TEST_F(UpdateUserTest, UpdateUserTest_NoUser_Test){
+    EXPECT_THROW(UserGateway::updateUser(user), std::runtime_error);
+}
+
+TEST_F(UpdateUserTest, UpdateUserTest_Success_Test){
+    EXPECT_EQ(UserGateway::add(user), user.id);
+    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
+    // Add new details
+    user_details new_user;
+    new_user.public_key = "asdjcdasdlkcsadl";
+    new_user.empty = false;
+    new_user.email = "someemail@kit.edu";
+    new_user.name = "John";
+    new_user.id = 1;
+    UserGateway::updateUser(new_user);
+    user_details actualUser = UserGateway::getUser(new_user.id);
+    EXPECT_TRUE(actualUser == new_user);
+}
+
+// Test to see if the updateUser method throws an exception when the key arg is invalid.
+TEST_F(UpdateUserTest, UpdateUserTest_InvalidKeyArg_Test){
+    EXPECT_EQ(UserGateway::add(user), user.id);
+    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
+    user.public_key = "";
+    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
+}
+
+// Test to see if the updateUser method throws an exception when the email arg is invalid.
+TEST_F(UpdateUserTest, UpdateUserTest_InvalidAddressArg_Test){
+    EXPECT_EQ(UserGateway::add(user), user.id);
+    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
+    user.email = "";
+    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
+}
+
+// Test to see if the updateUser method throws an exception when the name arg is invalid.
+TEST_F(UpdateUserTest, UpdateUserTest_InvalidNameArg_Test){
+    EXPECT_EQ(UserGateway::add(user), user.id);
+    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
+    user.name = "";
+    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
+}
+
 

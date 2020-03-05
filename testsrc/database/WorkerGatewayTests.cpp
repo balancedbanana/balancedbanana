@@ -438,5 +438,105 @@ TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_GetWorkerByNameTest_WorkerNotFou
     EXPECT_EQ(WorkerGateway::getWorkerByName(worker.name).id, 0);
 }
 
+class UpdateWorkerTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        worker.public_key = "34nrhk3hkr";
+        worker.specs.space = 10240;
+        worker.specs.ram = 16384;
+        worker.specs.cores = 4;
+        worker.address = "0.0.0.0";
+        worker.name = "CentOS";
+        worker.id = 1;
+        worker.empty = false;
+    }
+
+    void TearDown() override {
+        resetWorkerTable();
+    }
+
+    worker_details worker;
+};
+
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
+    QSqlQuery query("DROP TABLE workers");
+    query.exec();
+    EXPECT_THROW(WorkerGateway::updateWorker(worker), std::logic_error);
+    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
+                  "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
+                  "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
+                  "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
+                  "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
+                  "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.exec();
+}
+
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidId_Test){
+    worker.id = 0;
+    EXPECT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
+}
+
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorker_Test){
+    EXPECT_THROW(WorkerGateway::updateWorker(worker), std::runtime_error);
+}
+
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_Success_Test){
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+
+    worker_details new_worker = worker;
+    new_worker.name = "Windows 10";
+    WorkerGateway::updateWorker(new_worker);
+    worker_details actualWorker = WorkerGateway::getWorker(worker.id);
+    EXPECT_TRUE(actualWorker == new_worker);
+}
+
+// Test to see if the updateWorker method throws an exception when the key arg is invalid.
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidKeyArg_Test){
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+    worker.public_key = "";
+    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
+}
+
+// Test to see if the updateWorker method throws an exception when the space arg is invalid.
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidSpaceArg_Test){
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+    worker.specs.space = 0;
+    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
+}
+
+// Test to see if the updateWorker method throws an exception when the ram arg is invalid.
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidRAMArg_Test){
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+    worker.specs.ram = 0;
+    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
+}
+
+// Test to see if the updateWorker method throws an exception when the cores arg is invalid.
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidCoresArg_Test){
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+    worker.specs.cores = 0;
+    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
+}
+
+// Test to see if the updateWorker method throws an exception when the address arg is invalid.
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidAddressArg_Test){
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+    worker.address = "";
+    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
+}
+
+// Test to see if the updateWorker method throws an exception when the name arg is invalid.
+TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidNameArg_Test){
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+    worker.name = "";
+    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
+}
 
 
