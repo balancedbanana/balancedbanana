@@ -36,7 +36,9 @@ Task::Task(const std::string &string) {
     }
 }
 
-Task::Task(const Task &task) = default;
+Task::Task(const Task &task) {
+
+}
 
 void Task::setType(uint32_t type) {
     this->type = type;
