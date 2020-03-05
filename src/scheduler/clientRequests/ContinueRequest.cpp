@@ -4,11 +4,13 @@
 #include "scheduler/Worker.h"
 #include <communication/message/TaskMessage.h>
 #include <sstream>
+#include <database/Repository.h>
 
 using balancedbanana::database::JobStatus;
 using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
 using balancedbanana::communication::TaskMessage;
+using balancedbanana::database::Repository;
 
 namespace balancedbanana
 {
@@ -40,7 +42,8 @@ std::shared_ptr<std::string> ContinueRequest::executeRequestAndFetchData(const s
         return std::make_shared<std::string>(response.str());
     }
 
-    switch (*(job->getStatus()))
+    std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
+    switch ((job->getStatus()))
     {
     case JobStatus::scheduled:
         // Job is not paused
@@ -53,11 +56,10 @@ std::shared_ptr<std::string> ContinueRequest::executeRequestAndFetchData(const s
     case JobStatus::paused:
         // resume job and respond success or failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
-            worker.send(TaskMessage(*task));
+            worker->send(TaskMessage(*task));
         }
 
         response << OPERATION_PROGRESSING_RESUME << std::endl;

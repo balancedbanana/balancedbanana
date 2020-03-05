@@ -4,11 +4,13 @@
 #include "scheduler/Worker.h"
 #include <sstream>
 #include <communication/message/TaskMessage.h>
+#include <database/Repository.h>
 
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::database::JobStatus;
 using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
+using balancedbanana::database::Repository;
 
 namespace balancedbanana
 {
@@ -40,7 +42,8 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
         return std::make_shared<std::string>(response.str());
     }
 
-    switch (*(job->getStatus()))
+    std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
+    switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:
         // nothing to restore
@@ -49,7 +52,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
     case (int)JobStatus::processing:
         // restore and respond success / failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
+            //TODO implement
         }
 
         // Use some message to tell worker to restore job
@@ -59,7 +62,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
     case (int)JobStatus::paused:
         // restore and respond success / failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
+            //TODO implement
         }
 
         // Use some message to tell worker to restore job
@@ -69,11 +72,10 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
     case (int)JobStatus::interrupted:
         // restore and respond success / failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
-            worker.send(TaskMessage(*task));
+            worker->send(TaskMessage(*task));
         }
 
         // Use some message to tell worker to restore job

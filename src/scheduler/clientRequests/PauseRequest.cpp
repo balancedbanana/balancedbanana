@@ -5,11 +5,13 @@
 #include "scheduler/queue/Queue.h"
 #include <sstream>
 #include <communication/message/TaskMessage.h>
+#include <database/Repository.h>
 
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::database::JobStatus;
 using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
+using balancedbanana::database::Repository;
 
 namespace balancedbanana
 {
@@ -24,7 +26,6 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
-
     if (task->getJobId().has_value() == false)
     {
         // Note that job id is required for the pause command
@@ -41,7 +42,8 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
         return std::make_shared<std::string>(response.str());
     }
 
-    switch (*(job->getStatus()))
+    std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
+    switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled: {
         // pause job and respond success or failure
@@ -60,11 +62,10 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
     case (int)JobStatus::processing:
         // stop job and respond success or failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
-            worker.send(TaskMessage(*task));
+            worker->send(TaskMessage(*task));
         }
 
         // Use some message to tell worker to pause job
@@ -77,7 +78,7 @@ std::shared_ptr<std::string> PauseRequest::executeRequestAndFetchData(const std:
     case (int)JobStatus::interrupted:
         // stop job and respond success or failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
+            //TODO implement
         }
 
         // Use some message to tell worker to pause job

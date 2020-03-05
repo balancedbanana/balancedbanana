@@ -4,10 +4,12 @@
 #include "scheduler/Worker.h"
 #include <sstream>
 #include <communication/message/TaskMessage.h>
+#include <database/Repository.h>
 
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::database::JobStatus;
 using balancedbanana::scheduler::Job;
+using balancedbanana::database::Repository;
 
 namespace balancedbanana
 {
@@ -41,7 +43,8 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
         return std::make_shared<std::string>(response.str());
     }
 
-    switch (*(job->getStatus()))
+    std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
+    switch ((job->getStatus()))
     {
     case JobStatus::scheduled:
         // nothing to backup
@@ -50,36 +53,33 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData(const std
     case JobStatus::processing:
         // backup and respond success / failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
             // send backup request to worker
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
-            worker.send(TaskMessage(*task));
+            worker->send(TaskMessage(*task));
         }
         response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
     case JobStatus::paused:
         // backup and respond success / failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
             // send backup request to worker
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
-            worker.send(TaskMessage(*task));
+            worker->send(TaskMessage(*task));
         }
         response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
     case JobStatus::interrupted:
         // backup and respond success / failure
         {
-            Worker worker = Worker::getWorker(job->getWorker_id());
             // send backup request to worker
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
-            worker.send(TaskMessage(*task));
+            worker->send(TaskMessage(*task));
         }
         response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
