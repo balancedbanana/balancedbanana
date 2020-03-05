@@ -130,3 +130,8 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
     RespondToClientMessage resp(*responseData, false);
     getClient().send(resp);
 }
+
+Communicator SchedulerClientMP::getClient() {
+    //TODO implement
+    throw std::runtime_error("unimplemented");
+}

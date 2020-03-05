@@ -6,6 +6,7 @@ add_library(Message STATIC
         HardwareDetailMessage.cpp
         Message.cpp
         PublicKeyAuthMessage.cpp
+        RespondToClientMessage.cpp
         WorkerAuthMessage.cpp
         TaskMessage.cpp
         WorkerLoadRequestMessage.cpp

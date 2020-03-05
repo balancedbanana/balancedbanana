@@ -1,6 +1,7 @@
 #include <communication/message/RespondToClientMessage.h>
 #include <communication/message/Serialization.h>
 #include <sstream>
+#include <communication/MessageProcessor.h>
 
 namespace balancedbanana
 {
