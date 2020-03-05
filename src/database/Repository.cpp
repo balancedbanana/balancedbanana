@@ -8,7 +8,7 @@
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
 
-Repository Repository::repo("", "", "", "", 0);
+Repository Repository::repo("localhost", "balancedbanana", "root", "1234", 0);
 
 Repository::Repository(const std::string& host_name, const std::string& databasename, const std::string&
 username, const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) :
