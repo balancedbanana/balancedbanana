@@ -30,6 +30,7 @@ namespace balancedbanana {
             const communication::WorkerLoadResponseMessage& GetWorkerLoad();
 
             const std::string &getAddress();
+
             void setAddress(const std::string &adr);
 
             void setCommunicator(const std::shared_ptr<communication::Communicator>& com);

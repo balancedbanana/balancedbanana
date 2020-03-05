@@ -23,7 +23,7 @@ void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
 }
 
 void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
-    // TODO Register Worker in the database
+    // addWorker(std::make_shared<Worker>(msg.GetWorkerName(), ))
     authenticated = true;
     // TODO Send Authresult success if successfully populated the db otherwise nonzero
 }

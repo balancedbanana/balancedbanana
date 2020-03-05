@@ -14,6 +14,10 @@ namespace balancedbanana
 namespace scheduler
 {
 
+ClientRequest::ClientRequest() {
+    // This is needed for the vtable
+}
+
 std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(TaskType requestType)
 {
     switch (requestType)
@@ -42,8 +46,9 @@ std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(TaskType request
     case TaskType::RESTORE:
         return std::make_shared<RestoreRequest>();
         break;
-    
+
     default:
+        return nullptr;
         break;
     }
 }

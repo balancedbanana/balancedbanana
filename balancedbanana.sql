@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (
     `environment` TEXT,
     `min_cores` INT(10) UNSIGNED DEFAULT NULL,
     `max_cores` INT(10) UNSIGNED DEFAULT NULL,
-    `priority` INT(10) UNSIGNED DEFAULT NULL,
+    `priority` INT(10) UNSIGNED NOT NULL DEFAULT '2',
     `status_id` INT(10) UNSIGNED NOT NULL DEFAULT '1',
     `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,
     `user_id` BIGINT(10) UNSIGNED NOT NULL,

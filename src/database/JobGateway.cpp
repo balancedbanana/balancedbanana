@@ -34,7 +34,6 @@ struct QVariant_JobConfig{
     QVariant q_current_working_dir;
     QVariant q_command;
     QVariant q_schedule_time;
-    QVariant q_status_id;
 };
 
 // Get the integer value of an enumeration
@@ -104,8 +103,7 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
     QVariant q_current_working_dir = QVariant::fromValue(QString::fromStdString(config.current_working_dir().u8string()));
 
     QVariant q_command = QVariant::fromValue(QString::fromStdString(command));
-    QVariant q_schedule_time = QVariant::fromValue(schedule_time.toString("yyyy.MM.dd:hh.mm.ss.z"));
-    QVariant q_status_id = QVariant::fromValue((int)JobStatus::scheduled);
+    QVariant q_schedule_time = QVariant::fromValue(schedule_time.toString(TIME_FORMAT));
 
     // Save all of them in a struct
     QVariant_JobConfig qstruct;
@@ -122,7 +120,6 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
     qstruct.q_current_working_dir = q_current_working_dir;
     qstruct.q_command = q_command;
     qstruct.q_schedule_time = q_schedule_time;
-    qstruct.q_status_id = q_status_id;
 
     return qstruct;
 }
@@ -133,10 +130,6 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
  * @return true if the args are valid, otherwise false
  */
 bool areArgsValid(job_details& details){
-
-    if (details.empty){
-        return false;
-    }
 
     // Check the optional arguments
     if (details.config.min_ram().has_value() && (details.config.min_ram().value() == 0 || details.config.min_ram() <
@@ -182,7 +175,7 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
     // Create the query
     QSqlQuery query("INSERT INTO jobs (user_id, min_ram, max_ram, min_cores, max_cores, "
                     "blocking_mode, priority, image, interruptible, environment, working_dir, command, "
-                    "schedule_time, status_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "schedule_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     query.addBindValue(qstruct.q_user_id);
     query.addBindValue(qstruct.q_min_ram);
     query.addBindValue(qstruct.q_max_ram);
@@ -196,7 +189,6 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
     query.addBindValue(qstruct.q_current_working_dir);
     query.addBindValue(qstruct.q_command);
     query.addBindValue(qstruct.q_schedule_time);
-    query.addBindValue(qstruct.q_status_id);
 
     // Executing the query.
     if(!query.exec()){
@@ -296,7 +288,7 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     details.config.set_current_working_dir(query.value(10).toString().toStdString());
     details.command = query.value(11).toString().toStdString();
     details.schedule_time = QDateTime::fromString(query.value(12).toString(),
-                                                       "yyyy.MM.dd:hh.mm.ss.z");
+                                                       TIME_FORMAT);
     details.worker_id = Utilities::castToOptional(query.value(13).toUInt());
     details.status = query.value(14).toInt();
 
@@ -304,14 +296,14 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
         details.start_time = std::nullopt;
     } else {
         details.start_time = std::make_optional<QDateTime>(QDateTime::fromString(query.value(15).toString(),
-                                                      "yyyy.MM.dd:hh.mm.ss.z"));
+                                                      TIME_FORMAT));
     }
 
     if (query.value(16).isNull()){
         details.finish_time = std::nullopt;
     } else {
         details.finish_time = QDateTime::fromString(query.value(16).toString(),
-                                                   "yyyy.MM.dd:hh.mm.ss.z");
+                                                   TIME_FORMAT);
     }
 }
 
@@ -347,15 +339,17 @@ void setAllocatedTableValues(job_details& details, QSqlQuery& query){
 * @param query The query
 */
 void setResultTableValues(job_details&  details, QSqlQuery& query){
-    if (Utilities::castToOptional(query.value(18).toUInt()) == std::nullopt){
+    if (query.value(18).isNull()){
         details.result = std::nullopt;
     } else {
         QSqlQuery resultQuery("SELECT stdout, exit_code FROM job_results WHERE id = ?");
         resultQuery.addBindValue(query.value(18).toUInt());
         if (resultQuery.exec()){
             if (resultQuery.next()){
-                details.result->stdout = resultQuery.value(0).toString().toStdString();
-                details.result->exit_code = resultQuery.value(1).toInt();
+                job_result result;
+                result.stdout = resultQuery.value(0).toString().toStdString();
+                result.exit_code = resultQuery.value(1).toInt();
+                details.result = result;
             }
         } else {
             throw std::runtime_error("getJob error: setting of allocated_resources failed: " + resultQuery
@@ -404,10 +398,10 @@ job_details JobGateway::getJob(uint64_t job_id) {
         query.addBindValue(QVariant::fromValue(job_id));
         if (query.exec()){
             if (query.next()) {
+                details.id = job_id;
                 setJobTableValues(details, query);
                 setAllocatedTableValues(details, query);
                 setResultTableValues(details, query);
-                details.id = job_id;
                 details.empty = false;
             } else {
                 // This would be a very weird error, as I've already checked if the job exists.
@@ -454,17 +448,17 @@ std::vector<job_details> JobGateway::getJobs() {
                     "    start_time,\n"
                     "    finish_time,\n"
                     "    allocated_id,\n"
-                    "    result_id\n"
-                    "FROM jobs");
+                    "    result_id,\n"
+                    "id FROM jobs");
     std::vector<job_details> jobVector;
     if (query.exec()) {
         while(query.next()){
             job_details details;
+            details.id = query.value(19).toUInt();
             setJobTableValues(details, query);
             setAllocatedTableValues(details, query);
             setResultTableValues(details, query);
             details.empty = false;
-            details.id = query.value(0).toUInt();
             jobVector.push_back(details);
         }
     } else {
@@ -559,7 +553,7 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs, cons
             query.addBindValue(QVariant::fromValue(allocated_specs));
             query.addBindValue(QVariant::fromValue(worker_id));
             query.addBindValue(QVariant::fromValue((int) JobStatus::processing));
-            query.addBindValue(QVariant::fromValue(start_time.toString("yyyy.MM.dd:hh.mm.ss.z")));
+            query.addBindValue(QVariant::fromValue(start_time.toString(TIME_FORMAT)));
             query.addBindValue(QVariant::fromValue(job_id));
             if (query.exec()){
                 return true;
@@ -606,9 +600,10 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
             throw std::runtime_error("finishJob error: job_results query failed: " + queryResult.lastError()
             .databaseText().toStdString());
         }
-        QSqlQuery query("UPDATE jobs SET finish_time = ?, result_id = ? WHERE id = ?");
-        query.addBindValue(QVariant::fromValue(finish_time.toString("yyyy.MM.dd:hh.mm.ss.z")));
+        QSqlQuery query("UPDATE jobs SET finish_time = ?, result_id = ?, status_id = ? WHERE id = ?");
+        query.addBindValue(QVariant::fromValue(finish_time.toString(TIME_FORMAT)));
         query.addBindValue(QVariant::fromValue(result));
+        query.addBindValue((int) JobStatus::finished);
         query.addBindValue(QVariant::fromValue(job_id));
         if(query.exec()){
             return true;
@@ -631,8 +626,10 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
 void sortByFinishInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
 std::vector<job_details>& jobs){
     for (job_details job : jobs){
-        if (!job.empty && from <= job.finish_time && job.finish_time <= to){
-            jobsInterval.push_back(job);
+        if (job.finish_time.has_value()){
+            if (from.date() <= job.finish_time->date() && job.finish_time->date() <= to.date()){
+                jobsInterval.push_back(job);
+            }
         }
     }
 }
@@ -646,8 +643,10 @@ std::vector<job_details>& jobs){
  */
 void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
     for (job_details job : jobs){
-        if (!job.empty && from <= job.start_time && job.start_time <= to){
-            jobsInterval.push_back(job);
+        if (job.start_time.has_value()){
+            if (from.date() <= job.start_time->date() && job.start_time->date() <= to.date()){
+                jobsInterval.push_back(job);
+            }
         }
     }
 }
@@ -662,20 +661,28 @@ void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector
 void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval,
         const std::vector<job_details>& jobs){
     for (job_details job : jobs){
-        if (!job.empty && from <= job.schedule_time && job.schedule_time <= to){
+        if (from.date() <= job.schedule_time.date() && job.schedule_time.date() <= to.date()){
             jobsInterval.push_back(job);
         }
     }
 }
 
 /**
- * Getter for Jobs with a certain status (either started, finished or processing) in a certain time interval
+ * Getter for Jobs that were either started, finished or scheduled within a certain time interval.
+ *
+ * Note: The method doesn't give jobs within the exact time interval. That wouldn't be possible to due to the seconds
+ * between methods calls. The method will return the jobs, whose dates (so no time in secs, mins, etc.) are within
+ * the time interval's dates.
+ *
  * @param from The lower bound of the interval (inclusive)
  * @param to  The upper bound of the interval (inclusive)
  * @param status The status of the Jobs
  * @return Vector of the wanted Jobs
  */
 std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
+    if (from.date() > to.date()){
+        throw std::invalid_argument("getJobsInInterval error: lower bound of interval can't be greater than the upper bound.");
+    }
     std::vector<job_details> jobs = getJobs();
     std::vector<job_details> jobsInterval;
     switch(status){
@@ -698,38 +705,108 @@ std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, co
     return jobsInterval;
 }
 
-/*
+void JobGateway::updateJob(const job_details &job_details) {
+    //TODO implement
+    throw std::runtime_error("not implemented");
+}
+
 /**
- * Getter for the job result of a job with a given id
- * @param job_id The id of the job
- * @return The results of the job
- *
-job_result JobGateway::getJobResult(uint64_t job_id) {
-    if (!Utilities::doesTableExist("job_results")){
-        Utilities::throwNoTableException("job_results");
-    }
+ * Updates the Job with the given id's priority
+ * @param priority The new priority
+ * @param id The id of the Job
+ * @return True if the operation was successful, otherwise false
+ */
+bool JobGateway::updateJobPriority(Priority priority, uint64_t id){
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
     }
 
-    if (Utilities::doesRecordExist("jobs", job_id)){
-        QSqlQuery query("SELECT job_results.exit_code, job_results.stdout FROM jobs JOIN ON job_results WHERE "
-                        "job_results.id = jobs.result");
+    if (Utilities::doesRecordExist("jobs", id)){
+        QSqlQuery query("UPDATE jobs SET priority = ? WHERE id = ?");
+        query.addBindValue(QVariant::fromValue((int) priority));
+        query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
-            job_result result;
-            if (query.next()){
-                result.exit_code = query.value(0).toInt();
-                result.stdout = query.value(1).toString().toStdString();
-                return result;
-            } else {
-                // This would be a very weird error, as I've already checked if the job exists.
-                throw std::runtime_error("getJobResult error: job record doesn't exist");
-            }
+            return true;
         } else {
-            throw std::runtime_error("getJobResult error: " + query.lastError().databaseText().toStdString());
+            throw std::runtime_error(query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("getJobResult error: no job with id = " + std::to_string(job_id));
+        std::cerr << "updateJobPriority error: no job with id = " << id << " exists" << std::endl;
+        return false;
     }
 }
-*/
+
+/**
+ * Updates job's status to canceled
+ * @param id The id of the job
+ * @return True if the operation was successful, otherwise false
+ */
+bool JobGateway::cancelJob(uint64_t id) {
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
+    }
+
+    if (Utilities::doesRecordExist("jobs", id)){
+        QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
+        query.addBindValue(QVariant::fromValue((int) JobStatus::canceled));
+        query.addBindValue(QVariant::fromValue(id));
+        if (query.exec()){
+            return true;
+        } else {
+            throw std::runtime_error(query.lastError().databaseText().toStdString());
+        }
+    } else {
+        std::cerr << "cancelJob error: no job with id = " << id << " exists" << std::endl;
+        return false;
+    }
+}
+
+/**
+ * Updates job's status to interrupted
+ * @param id The id of the job
+ * @return True if the operation was successful, otherwise false
+ */
+bool JobGateway::interruptJob(uint64_t id) {
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
+    }
+
+    if (Utilities::doesRecordExist("jobs", id)){
+        QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
+        query.addBindValue(QVariant::fromValue((int) JobStatus::interrupted));
+        query.addBindValue(QVariant::fromValue(id));
+        if (query.exec()){
+            return true;
+        } else {
+            throw std::runtime_error(query.lastError().databaseText().toStdString());
+        }
+    } else {
+        std::cerr << "interruptJob error: no job with id = " << id << " exists" << std::endl;
+        return false;
+    }
+}
+
+/**
+ * Updates job's status to paused
+ * @param id The id of the job
+ * @return True if the operation was successful, otherwise false
+ */
+bool JobGateway::pauseJob(uint64_t id) {
+    if (!Utilities::doesTableExist("jobs")){
+        Utilities::throwNoTableException("jobs");
+    }
+
+    if (Utilities::doesRecordExist("jobs", id)){
+        QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?");
+        query.addBindValue(QVariant::fromValue((int) JobStatus::paused));
+        query.addBindValue(QVariant::fromValue(id));
+        if (query.exec()){
+            return true;
+        } else {
+            throw std::runtime_error(query.lastError().databaseText().toStdString());
+        }
+    } else {
+        std::cerr << "pauseJob error: no job with id = " << id << " exists" << std::endl;
+        return false;
+    }
+}

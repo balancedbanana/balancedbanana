@@ -1,42 +1,33 @@
 #include "scheduler/clientRequests/RunRequest.h"
 
-#include "database/Repository.h"
-#include "communication/message/RespondToClientMessage.h"
 #include "communication/Communicator.h"
+#include <sstream>
+#include <communication/message/TaskMessage.h>
 
-using balancedbanana::database::Repository;
+using balancedbanana::communication::TaskMessage;
 using balancedbanana::communication::Communicator;
-using balancedbanana::communication::RespondToClientMessage;
 
 namespace balancedbanana
 {
 namespace scheduler
 {
 
-std::shared_ptr<std::string> RunRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task)
+std::shared_ptr<std::string> RunRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
+                                                                    const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
+                                                                    const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
+                                                                    const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob,
+                                                                    uint64_t userID)
 {
     // Step 1: enter Job into Database
-
-    // ASSUMING THE PRESENCE OR AVAILABILITY OF A REPOSITORY NAMED repository
-
-    // Getting the user id
-    uint64_t userID = task->getConfig()->userID();
-    if (userID == 0) {
-        // User doesnt have an ID yet; Is using program for the first time
-        // GENERATE NEW, UNIQUE USERID
-        userID = "unique";
-    }
+    std::stringstream response;
 
     auto config = task->getConfig();
-    uint64_t jobID = repository.addJob(userID, *config, QDateTime::currentDateTime(), task->getTaskCommand());
+    uint64_t jobID = dbAddJob(userID, config);
+
+    response << PREFIX_JOB_ID << jobID << std::endl;
 
     // Step 2: Create RespondToClientMessage with string containing ID of new Job or error message in case of failure
-
-    RespondToClientMessage msg(std::to_string(jobID), false);
-
-    // HOW TO FIND CLIENT COMMUNICATOR AND RESPOND
-
-    communicator.send(msg);
+    return std::make_shared<std::string>(response.str());
 }
 
 } // namespace scheduler
