@@ -123,8 +123,8 @@ void HttpServer::listen(const std::string & ip, short port) {
 							std::stringstream resp;
 							resp << "user_name: " << job.getUser()->name() << "\n";
 							resp << "user_id: " << job.getUser()->id() << "\n";
-							auto status = balancedbanana::database::JobStatus::canceled;
-							resp << "status: " << (int)status << "\n";
+							auto status = job.getStatus();
+							resp << "status: " << status << "\n";
 							resp << "scheduled_at: " << job.getScheduled_at().toString().toStdString() << "\n";
 							resp << "finished_at: " << job.getFinished_at().toString().toStdString() << "\n";
 							resp << "spent_in_queue: ";
