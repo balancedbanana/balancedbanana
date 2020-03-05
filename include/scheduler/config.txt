@@ -1,0 +1,13 @@
+global.minRAM=4
+global.maxRAM=0
+global.minCPUCores=1
+global.maxCPUCores=0
+global.blocking_mode=false
+global.email=
+global.priority=normal
+global.image=
+global.interruptible=false
+global.serverIP=
+global.webAPIIP=
+global.serverPort=
+global.webAPIPort=
