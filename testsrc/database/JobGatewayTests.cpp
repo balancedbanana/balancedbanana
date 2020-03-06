@@ -1031,8 +1031,9 @@ protected:
         job.config.set_priority(Priority::high);
 
         // Finish information
-        stdout = "Some detailed info...";
-        exit_code = 0;
+        job_result result;
+        result.stdout = "Some detailed info...";
+        result.exit_code = 0;
 
 
         // SetUp Worker
@@ -1055,6 +1056,7 @@ protected:
 
     job_details job;
     worker_details worker;
+    job_result result;
     std::string stdout;
     int8_t exit_code;
 };
@@ -1087,9 +1089,10 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
     EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
     EXPECT_TRUE(wasStartSuccessful(job, worker));
     job.finish_time = QDateTime::currentDateTime().addDays(2);
-    EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
-    EXPECT_TRUE(wasFinishSuccessful(stdout, job, exit_code));
+    job.result = result;
     job.status = (int) JobStatus::finished;
+    EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
+    EXPECT_TRUE(wasFinishSuccessful(result.stdout, job, result.exit_code));
 
     job_details queryDetails = JobGateway::getJob(job.id);
     EXPECT_TRUE(queryDetails == job);
@@ -1313,6 +1316,7 @@ protected:
         resetJobTable();
         resetWorker();
         resetAllocResTable();
+        resetResultsTable();
     }
 
     job_details first;
@@ -1337,7 +1341,7 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Scheduled_Test){
 }
 
 /**
- * Test to see if getJobsInInterval gets the correct scheduled jobs.
+ * Test to see if getJobsInInterval gets the correct started jobs.
  *
  * In this case, the test attempts to retrieve the jobs that were started within the last 2 days. In this case the
  * first and second job will be started. Only the first job is within the time frame.
@@ -1371,4 +1375,248 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(first);
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
+}
+
+/**
+ * Test to see if getJobsInInterval gets the correct finished jobs.
+ *
+ * In this case, the test attempts to retrieve the jobs that were started within the last day. In this case only the
+ * third job is finished within the time frame.
+ */
+TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
+    // Add a worker.
+    worker_details worker;
+    worker.public_key = "sadfjsaljdf";
+    worker.specs.space = 10240;
+    worker.specs.ram = 2 *FOUR_MB;
+    worker.specs.cores = 4;
+    worker.address = "1.2.3.4";
+    worker.name = "Ubuntu";
+    worker.id = 1;
+    worker.empty = false;
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    worker.public_key = "asdfsadcsadcsa";
+    worker.address = "6.4.23.2";
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    // The job then have to be started.
+    first.start_time = QDateTime::currentDateTime().addDays(-1);
+    first.status = (int) JobStatus::processing;
+    first.allocated_specs = worker.specs;
+    first.worker_id = worker.id;
+    EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs, first.start_time.value()));
+    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs, QDateTime::currentDateTime().addDays(-3)));
+
+    // Finish the third job
+    third.finish_time = QDateTime::currentDateTime().addDays(-1);
+    third.status = (int)JobStatus::finished;
+    job_result result;
+    result.stdout = "error";
+    result.exit_code = 0;
+    third.result = result;
+    EXPECT_TRUE(JobGateway::finishJob(third.id, third.finish_time.value(), third.result->stdout, third
+    .result->exit_code));
+     std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
+             (-1), QDateTime::currentDateTime(), JobStatus::finished);
+    std::vector<job_details> expectedIntervalJobs;
+    expectedIntervalJobs.push_back(third);
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
+}
+
+// Test to see if method returns empty vector when status is not either processing, finished or scheduled.
+TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_InvalidStatus_Test){
+    EXPECT_TRUE(JobGateway::getJobsInInterval(QDateTime::currentDateTime(), QDateTime::currentDateTime(),
+            JobStatus::interrupted).empty());
+}
+
+// Test to see if exception is thrown when lower bound of interval is greater than upper bound.
+TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_InvalidInterval_Test){
+    EXPECT_THROW(JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays(1), QDateTime::currentDateTime(),
+            JobStatus::processing), std::invalid_argument);
+}
+
+class UpdateJobTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        job.id = 1;
+        job.status = (int) JobStatus::scheduled;
+        job.user_id = 1;
+        job.command = "mkdir build";
+        job.schedule_time = QDateTime::currentDateTime();
+        job.empty = false;
+        job.config.set_min_ram(4194304);
+        job.config.set_max_ram(4194305);
+        job.config.set_min_cpu_count(42);
+        job.config.set_max_cpu_count(43);
+        job.config.set_blocking_mode(true);
+        job.config.set_priority(Priority::low);
+        job.config.set_image("testimage");
+        job.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        job.config.set_interruptible(false);
+        job.config.set_current_working_dir(".");
+
+        worker.public_key = "sadfjsaljdf";
+        worker.specs.space = 10240;
+        worker.specs.ram = 2 *FOUR_MB;
+        worker.specs.cores = 4;
+        worker.address = "1.2.3.4";
+        worker.name = "Ubuntu";
+        worker.id = 1;
+        worker.empty = false;
+    }
+
+    void TearDown() override {
+        resetJobTable();
+        resetAllocResTable();
+        resetWorker();
+    }
+
+    job_details job;
+    worker_details worker;
+};
+
+TEST_F(UpdateJobTest, UpdateJobTest_NoJobsTable_Test){
+    deleteJobsTable();
+    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
+    createJobsTable();
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_NoAllocResourcesTable_Test){
+    deleteAllocResTable();
+    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
+    createAllocResTable();
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_NoResultsTable_Test){
+    deleteResultsTable();
+    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
+    createResultsTable();
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_NoWorkersTable_Test){
+    QSqlQuery query("DROP TABLE workers");
+    query.exec();
+    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
+    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
+                  "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
+                  "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
+                  "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
+                  "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
+                  "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.exec();
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_InvalidId_Test){
+    job.id = 0;
+    EXPECT_THROW(JobGateway::updateJob(job), std::invalid_argument);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_NonExistentJob_Test){
+    EXPECT_THROW(JobGateway::updateJob(job), std::runtime_error);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
+    // Add the job and worker and then start the job.
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    job.status = (int) JobStatus::processing;
+    job.start_time = QDateTime::currentDateTime();
+    job.allocated_specs = worker.specs;
+    job.worker_id = 1;
+    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
+    EXPECT_TRUE(wasStartSuccessful(job, worker));
+
+    // Change the allocated resources
+    Specs new_specs = worker.specs;
+    new_specs.cores = worker.specs.cores + 2;
+    job.allocated_specs = new_specs;
+    JobGateway::updateJob(job);
+
+    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(job.id));
+    query.exec();
+    query.next();
+    QSqlQuery allocQuery("SELECT cores, ram, space FROM allocated_resources WHERE id = ?");
+    EXPECT_EQ(query.value(0).toUInt(), 1);
+    allocQuery.addBindValue(query.value(0));
+    allocQuery.exec();
+    allocQuery.next();
+    EXPECT_EQ(allocQuery.value(0).toUInt(), worker.specs.cores + 2);
+    EXPECT_EQ(allocQuery.value(1).toUInt(), worker.specs.ram);
+    EXPECT_EQ(allocQuery.value(2).toUInt(), worker.specs.space);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    JobGateway::updateJob(job);
+
+    // Nothing changed
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
+    // Add the job and  two workers and then start the job.
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    worker.public_key = "sadfsdcasd";
+    worker.address = "1.2.4.5.6";
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    job.status = (int) JobStatus::processing;
+    job.start_time = QDateTime::currentDateTime();
+    job.allocated_specs = worker.specs;
+    job.worker_id = 1;
+    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
+    EXPECT_TRUE(wasStartSuccessful(job, worker));
+
+    // Update the worker_id
+    job.worker_id = worker.id + 1;
+    JobGateway::updateJob(job);
+    QSqlQuery query("SELECT worker_id FROM jobs WHERE id = ?");
+    query.addBindValue(QVariant::fromValue(job.id));
+    query.exec();
+    query.next();
+    EXPECT_EQ(query.value(0).toUInt(), job.worker_id);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.status = (int) JobStatus::interrupted;
+    JobGateway::updateJob(job);
+
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.status = (int) JobStatus::paused;
+    JobGateway::updateJob(job);
+
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.status = (int) JobStatus::canceled;
+    JobGateway::updateJob(job);
+
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdatePriority_Test){
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.config.set_priority(Priority::emergency);
+    JobGateway::updateJob(job);
+
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
 }
