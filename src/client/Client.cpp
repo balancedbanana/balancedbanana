@@ -30,7 +30,7 @@ void Client::processCommandLineArguments(int argc, const char* const * argv)
 bool Client::specifiedBlock()
 {
     // safety measure: can only block if run command was used
-    if (this->task->getType() != (uint32_t)TaskType::RUN) return false;
+    if (!this->task || this->task->getType() != (uint32_t)TaskType::RUN) return false;
     return this->task->getConfig()->blocking_mode().value_or(false);
 }
 
