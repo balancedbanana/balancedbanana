@@ -39,6 +39,10 @@ ApplicationConfig::ApplicationConfig(std::istream &data) : unordered_map(){
 
 ApplicationConfig::ApplicationConfig(const balancedbanana::configfiles::ApplicationConfig &original) = default;
 
+bool ApplicationConfig::Contains(const std::string& key) {
+    return find(key) != end();
+}
+
 void ApplicationConfig::Serialize(std::ostream &data) const{
     for(const auto &policy : *this) {
         data << policy.first << ":" << policy.second << '\n';

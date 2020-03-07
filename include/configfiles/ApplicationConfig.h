@@ -18,6 +18,8 @@ namespace balancedbanana::configfiles {
 
         ApplicationConfig(const ApplicationConfig &);
 
+        bool Contains(const std::string& key);
+
         void Serialize(std::ostream &data) const;
 
         //This method serializes the ApplicationConfig and saves it to the specified file.
