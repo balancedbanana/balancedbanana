@@ -43,10 +43,10 @@ void Worker::setAddress(const std::string &adr) {
 }
 
 void Worker::setCommunicator(const std::shared_ptr<communication::Communicator>& com) {
-    auto mp = std::static_pointer_cast<SchedulerWorkerMP>(com->GetMP());
     comm = com;
     connected = com != nullptr;
     if(connected) {
+        auto mp = std::static_pointer_cast<SchedulerWorkerMP>(com->GetMP());
         mp->OnWorkerLoadResponse([this](const WorkerLoadResponseMessage& res) {
             resp = res;
             cnd.notify_all();
@@ -58,6 +58,8 @@ const WorkerLoadResponseMessage& Worker::GetWorkerLoad() {
     std::unique_lock<std::mutex> lock(mtx);
     WorkerLoadRequestMessage request;
     comm->send(request);
-    cnd.wait_for(lock, std::chrono::minutes(1));
+    if(cnd.wait_for(lock, std::chrono::seconds(5)) == std::cv_status::timeout) {
+        throw std::runtime_error("Timeout");
+    }
     return resp;
 }
