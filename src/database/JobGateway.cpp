@@ -705,11 +705,6 @@ std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, co
     return jobsInterval;
 }
 
-void JobGateway::updateJob(const job_details &job_details) {
-    //TODO implement
-    throw std::runtime_error("not implemented");
-}
-
 /**
  * Updates the Job with the given id's priority
  * @param priority The new priority
@@ -817,7 +812,7 @@ void updateWorkerId(const job_details& job){
     }
 }
 
-void JobGateway::updateJob(job_details job){
+void JobGateway::updateJob(const job_details& job){
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
     }
@@ -859,4 +854,20 @@ void JobGateway::updateJob(job_details job){
     } else {
         throw std::runtime_error("updateJob error: no job with id = " + std::to_string(job.id) + " exists");
     }
+}
+
+bool balancedbanana::database::JobGateway::updateJobPriority(balancedbanana::configfiles::Priority priority, uint64_t id) {
+    throw std::runtime_error("TODO!!!!!");
+}
+
+bool balancedbanana::database::JobGateway::pauseJob(uint64_t id) {
+    throw std::runtime_error("TODO!!!!!");
+}
+
+bool balancedbanana::database::JobGateway::interruptJob(uint64_t id) {
+    throw std::runtime_error("TODO!!!!!");
+}
+
+bool balancedbanana::database::JobGateway::cancelJob(uint64_t id) {
+    throw std::runtime_error("TODO!!!!!");
 }
