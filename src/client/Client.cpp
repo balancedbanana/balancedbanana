@@ -1,12 +1,22 @@
 #include "client/Client.h"
 
 #include "commandLineInterface/ClientCommandLineProcessor.h"
+#include <configfiles/ApplicationConfig.h>
+#include <communication/message/TaskMessage.h>
 
 using namespace balancedbanana::client;
 using balancedbanana::communication::Task;
+using balancedbanana::communication::TaskMessage;
 using balancedbanana::communication::Communicator;
 using balancedbanana::communication::TaskType;
 using balancedbanana::commandLineInterface::ClientCommandLineProcessor;
+using balancedbanana::configfiles::ApplicationConfig;
+
+#ifdef _WIN32
+#define HOME_ENV "USERPROFILE"
+#else
+#define HOME_ENV "HOME"
+#endif
 
 Client::Client()
 {
@@ -29,6 +39,37 @@ void Client::processCommandLineArguments(int argc, const char* const * argv)
 {
     ClientCommandLineProcessor clp;
     clp.process(argc, argv, task);
+    if(task->getType()) {
+        auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbc";
+        std::filesystem::create_directories(configdir);
+        ApplicationConfig config(configdir / "appconfig.ini");
+        std::string server = "localhost";
+        short port = 8443;
+        if(!task->getServerIP().empty()) {
+            server = task->getServerIP();
+        } else if(config.Contains("server")) {
+            server = config["server"];
+        }
+        if(task->getServerPort()) {
+            port = task->getServerPort();
+        } else if(config.Contains("port")) {
+            port = std::stoi(config["port"]);
+        }
+        connectWithServer(server, port);
+        authenticateWithServer();
+        switch ((TaskType)task->getType())
+        {
+        case TaskType::ADD_IMAGE:
+            handleAddImage(task);
+            break;
+        case TaskType::REMOVE_IMAGE :
+            handleRemoveImage(task);
+            break;
+        default:
+            throw std::runtime_error("Sadly not implemented yet :(");
+            break;
+        }
+    }
 }
 
 bool Client::specifiedBlock()
@@ -40,12 +81,24 @@ bool Client::specifiedBlock()
 
 void Client::handleAddImage(std::shared_ptr<Task> task)
 {
+    std::filesystem::path path = task->getAddImageFilePath();
+    std::ifstream file(path);
+    if(!file.is_open()) {
+        throw std::runtime_error("Cannot read Dockerfile");
+    }
+    // Read whole file
+    task->setAddImageFileContent(std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>()));
     //task->getAddImageName; task->getAddImageFilePath;
+    TaskMessage message(*task);
+    communicator->send(message);
     // TODO: Is adding a docker image relevant to client or server?
+    // Only for the Server and Worker
 }
 
 void Client::handleRemoveImage(std::shared_ptr<Task> task)
 {
+    TaskMessage message(*task);
+    communicator->send(message);
     //task->getRemoveImageName;
     // TODO: Is adding a docker image relevant to client or server?
 }

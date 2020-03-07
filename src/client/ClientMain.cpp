@@ -17,24 +17,23 @@ int main(int argc, char** argv) {
     Client client;
 
     client.processCommandLineArguments(argc, argv);
-    client.connectWithServer("localhost", 8443);
-    client.authenticateWithServer();
+    return 0;
+    // Please never busy waiting, polling is a bad idea use condition variables!!! and move to Client class
+    // // alternatively: use syncSetBlock un processCommandLineArguments
+    // block = client.specifiedBlock();
 
-    // alternatively: use syncSetBlock un processCommandLineArguments
-    block = client.specifiedBlock();
+    // uint32_t maxWait = 12 * 60 * 24 * 30; // one month excessive? maybe
+    // uint32_t hasWaited = 0;
 
-    uint32_t maxWait = 12 * 60 * 24 * 30; // one month excessive? maybe
-    uint32_t hasWaited = 0;
-
-    while (block) {
-        if (hasWaited >= maxWait) {
-            // safety: dont wait more than 30 days ...
-            break;
-        }
-        // waiting, wakes up every 5 seconds to check if program can exit
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        ++hasWaited;
-    }
+    // while (block) {
+    //     if (hasWaited >= maxWait) {
+    //         // safety: dont wait more than 30 days ...
+    //         break;
+    //     }
+    //     // waiting, wakes up every 5 seconds to check if program can exit
+    //     std::this_thread::sleep_for(std::chrono::seconds(5));
+    //     ++hasWaited;
+    // }
 
     // authentication step
     /*
