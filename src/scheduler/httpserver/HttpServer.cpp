@@ -57,7 +57,7 @@ void HttpServer::listen(const std::string & ip, short port) {
 						std::stringstream resp;
 						resp << "machines:\n";
 						for(auto && worker : getAllWorker()) {
-							resp << "- id:" << worker->name() << "\n";
+							resp << "- id: " << worker->name() << "\n";
 							auto& load = worker->GetWorkerLoad();
 							resp << "  cpu_load: " << load.GetCpuLoad() << "\n";
 							resp << "  cpu_threads:\n";
