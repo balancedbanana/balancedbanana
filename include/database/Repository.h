@@ -23,7 +23,7 @@ namespace balancedbanana::database {
         //This is the interface that the rest of the program uses to query the database.
         class Repository : protected Observer<JobObservableEvent>, protected Observer<WorkerObservableEvent>, protected Observer<UserObservableEvent> {
         private:
-            static Repository repo;
+            static std::shared_ptr<Repository> repo;
 
             //structure: <id, <ptr, dirty>>
             std::map<uint64_t, std::pair<std::shared_ptr<Job>, bool>> jobCache;

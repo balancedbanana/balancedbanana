@@ -16,7 +16,7 @@ before_install:
   - tar -xf cmake-3.16.2-Linux-x86_64.tar.gz
   - sudo systemctl start mysql
   - cat balancedbanana.sql | sudo mysql
-  - echo "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"$'\n'"ALTER USER 'root'@'localhost' IDENTIFIED BY 'banana';"$'\n'"FLUSH PRIVILEGES;" | sudo mysql
+  - echo "CREATE USER 'balancedbanana'@'localhost' IDENTIFIED BY 'qwer1234';"$'\n'"GRANT ALL PRIVILEGES ON balancedbanana.* TO 'balancedbanana'@'localhost';"$'\n'"FLUSH PRIVILEGES;" | sudo mysql
   - sudo docker pull centos
 
 script:
