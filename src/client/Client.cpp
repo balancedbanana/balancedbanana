@@ -4,15 +4,19 @@
 
 using namespace balancedbanana::client;
 using balancedbanana::communication::Task;
+using balancedbanana::communication::Communicator;
 using balancedbanana::communication::TaskType;
 using balancedbanana::commandLineInterface::ClientCommandLineProcessor;
 
 Client::Client()
 {
+    task = std::make_shared<Task>();
 }
 
 void Client::connectWithServer(const std::string &serverIpAdress, short serverPort)
 {
+    clientMP = std::make_shared<ClientMP>();
+    communicator = std::make_shared<Communicator>(serverIpAdress, serverPort, clientMP);
 }
 
 

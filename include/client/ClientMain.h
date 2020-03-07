@@ -1,9 +1,6 @@
 #pragma once
 
 
-bool block = false;
+extern bool block;
 
-void syncSetBlock(bool newValue)
-{
-    block = newValue;
-}
+void syncSetBlock(bool newValue);

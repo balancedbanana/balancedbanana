@@ -5,6 +5,7 @@
 #include "communication/Task.h"
 #include "communication/Communicator.h"
 #include "communication/CommunicatorListener.h"
+#include "ClientMP.h"
 
 
 namespace balancedbanana
@@ -55,7 +56,7 @@ private:
     void handleRequest(std::shared_ptr<balancedbanana::communication::Task> task);
 
     std::shared_ptr<balancedbanana::communication::Communicator> communicator;
-    std::shared_ptr<balancedbanana::communication::MessageProcessor> clientMP;
+    std::shared_ptr<ClientMP> clientMP;
     std::shared_ptr<balancedbanana::communication::Task> task;
 };
 

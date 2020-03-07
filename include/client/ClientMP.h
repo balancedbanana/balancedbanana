@@ -8,6 +8,8 @@ using balancedbanana::communication::MessageProcessor;
 
 using balancedbanana::communication::RespondToClientMessage;
 
+namespace balancedbanana::client {
+
 class ClientMP : public MessageProcessor
 {
 public:
@@ -23,3 +25,5 @@ public:
 
 	void processRespondToClientMessage(const RespondToClientMessage& msg) override;
 };
+
+}

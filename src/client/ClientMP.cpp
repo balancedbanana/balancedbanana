@@ -3,6 +3,7 @@
 #include <iostream>
 #include "client/ClientMain.h"
 
+using namespace balancedbanana::client;
 
 void ClientMP::processRespondToClientMessage(const RespondToClientMessage& msg)
 {

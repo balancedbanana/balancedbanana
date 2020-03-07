@@ -5,14 +5,20 @@ using balancedbanana::client::Client;
 
 #include "client/ClientMain.h"
 
+bool block = false;
+
+void syncSetBlock(bool newValue)
+{
+    block = newValue;
+}
 
 int main(int argc, char** argv) {
 
     Client client;
 
-    client.connectWithServer("::1", 8443);
-    client.authenticateWithServer();
     client.processCommandLineArguments(argc, argv);
+    client.connectWithServer("localhost", 8443);
+    client.authenticateWithServer();
 
     // alternatively: use syncSetBlock un processCommandLineArguments
     block = client.specifiedBlock();
