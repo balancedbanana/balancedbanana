@@ -1434,65 +1434,7 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_InvalidInterval_Test){
             JobStatus::processing), std::invalid_argument);
 }
 
-/**
- * Fixture class that initializes a job on SetUp and resets the jobs table on teardown
- */
-class UpdatePriorityTest : public ::testing::Test {
-protected:
-    void SetUp() override {
-        // Set up the first job
-        job.id = 1;
-        job.status = (int) JobStatus::scheduled;
-        job.user_id = 1;
-        job.command = "mkdir build";
-        job.schedule_time = QDateTime::currentDateTime();
-        job.empty = false;
-        job.config.set_min_ram(4194304);
-        job.config.set_max_ram(4194305);
-        job.config.set_min_cpu_count(42);
-        job.config.set_max_cpu_count(43);
-        job.config.set_blocking_mode(true);
-        job.config.set_priority(Priority::low);
-        job.config.set_image("testimage");
-        job.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
-        job.config.set_interruptible(false);
-        job.config.set_current_working_dir(".");
-    }
-
-    void TearDown() override {
-        resetJobTable();
-    }
-
-    job_details job;
-};
-
-TEST_F(UpdatePriorityTest, UpdatePriorityTest_NoJobsTable_Test){
-    deleteJobsTable();
-    EXPECT_THROW(JobGateway::updateJobPriority(Priority::emergency, job.id), std::logic_error);
-    createJobsTable();
-}
-
-TEST_F(UpdatePriorityTest, UpdatePriorityTest_NonExistentJob_Test){
-    EXPECT_FALSE(JobGateway::updateJobPriority(Priority::emergency, job.id));
-}
-
-TEST_F(UpdatePriorityTest, UpdatePriorityTest_Success_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    EXPECT_TRUE(JobGateway::updateJobPriority(Priority::emergency, job.id));
-
-    // Check if priority was actually changed
-    QSqlQuery query("SELECT priority FROM jobs WHERE id = ?");
-    query.addBindValue(QVariant::fromValue(job.id));
-    query.exec();
-    query.next();
-    EXPECT_EQ(query.value(0).toInt(), (int) Priority::emergency);
-}
-
-/**
- * Fixture class that initializes a job on SetUp and resets the jobs table on teardown
- */
-class JobStatusChangeTest : public ::testing::Test {
+class UpdateJobTest : public ::testing::Test {
 protected:
     void SetUp() override {
         job.id = 1;
@@ -1511,80 +1453,170 @@ protected:
         job.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
         job.config.set_interruptible(false);
         job.config.set_current_working_dir(".");
+
+        worker.public_key = "sadfjsaljdf";
+        worker.specs.space = 10240;
+        worker.specs.ram = 2 *FOUR_MB;
+        worker.specs.cores = 4;
+        worker.address = "1.2.3.4";
+        worker.name = "Ubuntu";
+        worker.id = 1;
+        worker.empty = false;
     }
 
     void TearDown() override {
         resetJobTable();
+        resetAllocResTable();
+        resetWorker();
     }
 
     job_details job;
+    worker_details worker;
 };
 
-TEST_F(JobStatusChangeTest, JobStatusChangeTest_NoJobsTable_Canceled_Test){
+TEST_F(UpdateJobTest, UpdateJobTest_NoJobsTable_Test){
     deleteJobsTable();
-    EXPECT_THROW(JobGateway::cancelJob(job.id), std::logic_error);
+    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
     createJobsTable();
 }
 
-TEST_F(JobStatusChangeTest, JobStatusChangeTest_NoJobsTable_Paused_Test){
-    deleteJobsTable();
-    EXPECT_THROW(JobGateway::pauseJob(job.id), std::logic_error);
-    createJobsTable();
+TEST_F(UpdateJobTest, UpdateJobTest_NoAllocResourcesTable_Test){
+    deleteAllocResTable();
+    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
+    createAllocResTable();
 }
 
-TEST_F(JobStatusChangeTest, JobStatusChangeTest_NoJobsTable_Interrupted_Test){
-    deleteJobsTable();
-    EXPECT_THROW(JobGateway::interruptJob(job.id), std::logic_error);
-    createJobsTable();
+TEST_F(UpdateJobTest, UpdateJobTest_NoResultsTable_Test){
+    deleteResultsTable();
+    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
+    createResultsTable();
 }
 
-TEST_F(JobStatusChangeTest, CancelJob_NonExistentJob_Test){
-    EXPECT_FALSE(JobGateway::cancelJob(job.id));
+TEST_F(UpdateJobTest, UpdateJobTest_NoWorkersTable_Test){
+    QSqlQuery query("DROP TABLE workers");
+    query.exec();
+    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
+    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
+                  "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
+                  "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
+                  "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
+                  "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
+                  "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.exec();
 }
 
-TEST_F(JobStatusChangeTest, PauseJob_NonExistentJob_Test){
-    EXPECT_FALSE(JobGateway::pauseJob(job.id));
+TEST_F(UpdateJobTest, UpdateJobTest_InvalidId_Test){
+    job.id = 0;
+    EXPECT_THROW(JobGateway::updateJob(job), std::invalid_argument);
 }
 
-TEST_F(JobStatusChangeTest, InterruptJob_NonExistentJob_Test){
-    EXPECT_FALSE(JobGateway::interruptJob(job.id));
+TEST_F(UpdateJobTest, UpdateJobTest_NonExistentJob_Test){
+    EXPECT_THROW(JobGateway::updateJob(job), std::runtime_error);
 }
 
-TEST_F(JobStatusChangeTest, CancelJob_Success_Test){
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
+    // Add the job and worker and then start the job.
     EXPECT_EQ(JobGateway::add(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    EXPECT_TRUE(JobGateway::cancelJob(job.id));
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    job.status = (int) JobStatus::processing;
+    job.start_time = QDateTime::currentDateTime();
+    job.allocated_specs = worker.specs;
+    job.worker_id = 1;
+    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
+    EXPECT_TRUE(wasStartSuccessful(job, worker));
 
-    // Check if status was actually changed
-    QSqlQuery query("SELECT status_id FROM jobs WHERE id = ?");
+    // Change the allocated resources
+    Specs new_specs = worker.specs;
+    new_specs.cores = worker.specs.cores + 2;
+    job.allocated_specs = new_specs;
+    JobGateway::updateJob(job);
+
+    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?");
     query.addBindValue(QVariant::fromValue(job.id));
     query.exec();
     query.next();
-    EXPECT_EQ(query.value(0).toInt(), (int) JobStatus::canceled);
+    QSqlQuery allocQuery("SELECT cores, ram, space FROM allocated_resources WHERE id = ?");
+    EXPECT_EQ(query.value(0).toUInt(), 1);
+    allocQuery.addBindValue(query.value(0));
+    allocQuery.exec();
+    allocQuery.next();
+    EXPECT_EQ(allocQuery.value(0).toUInt(), worker.specs.cores + 2);
+    EXPECT_EQ(allocQuery.value(1).toUInt(), worker.specs.ram);
+    EXPECT_EQ(allocQuery.value(2).toUInt(), worker.specs.space);
 }
 
-TEST_F(JobStatusChangeTest, PauseJob_Success_Test){
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
     EXPECT_EQ(JobGateway::add(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    EXPECT_TRUE(JobGateway::pauseJob(job.id));
+    JobGateway::updateJob(job);
 
-    // Check if status was actually changed
-    QSqlQuery query("SELECT status_id FROM jobs WHERE id = ?");
+    // Nothing changed
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
+    // Add the job and  two workers and then start the job.
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    worker.public_key = "sadfsdcasd";
+    worker.address = "1.2.4.5.6";
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    job.status = (int) JobStatus::processing;
+    job.start_time = QDateTime::currentDateTime();
+    job.allocated_specs = worker.specs;
+    job.worker_id = 1;
+    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs, job.start_time.value()));
+    EXPECT_TRUE(wasStartSuccessful(job, worker));
+
+    // Update the worker_id
+    job.worker_id = worker.id + 1;
+    JobGateway::updateJob(job);
+    QSqlQuery query("SELECT worker_id FROM jobs WHERE id = ?");
     query.addBindValue(QVariant::fromValue(job.id));
     query.exec();
     query.next();
-    EXPECT_EQ(query.value(0).toInt(), (int) JobStatus::paused);
+    EXPECT_EQ(query.value(0).toUInt(), job.worker_id);
 }
 
-TEST_F(JobStatusChangeTest, InterruptJob_Success_Test){
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
     EXPECT_EQ(JobGateway::add(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    EXPECT_TRUE(JobGateway::interruptJob(job.id));
+    job.status = (int) JobStatus::interrupted;
+    JobGateway::updateJob(job);
 
-    // Check if status was actually changed
-    QSqlQuery query("SELECT status_id FROM jobs WHERE id = ?");
-    query.addBindValue(QVariant::fromValue(job.id));
-    query.exec();
-    query.next();
-    EXPECT_EQ(query.value(0).toInt(), (int) JobStatus::interrupted);
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.status = (int) JobStatus::paused;
+    JobGateway::updateJob(job);
+
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.status = (int) JobStatus::canceled;
+    JobGateway::updateJob(job);
+
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
+}
+
+TEST_F(UpdateJobTest, UpdateJobTest_UpdatePriority_Test){
+    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    job.config.set_priority(Priority::emergency);
+    JobGateway::updateJob(job);
+
+    job_details actualJob = JobGateway::getJob(job.id);
+    EXPECT_TRUE(job == actualJob);
 }
