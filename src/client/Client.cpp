@@ -1,8 +1,8 @@
 #include "client/Client.h"
 
 #include "commandLineInterface/ClientCommandLineProcessor.h"
-#include <configfiles/ApplicationConfig.h>
 #include <communication/message/TaskMessage.h>
+#include <communication/authenticator/Authenticator.h>
 
 using namespace balancedbanana::client;
 using balancedbanana::communication::Task;
@@ -21,6 +21,9 @@ using balancedbanana::configfiles::ApplicationConfig;
 Client::Client()
 {
     task = std::make_shared<Task>();
+    auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbc";
+    std::filesystem::create_directories(configdir);
+    config = ApplicationConfig(configdir / "appconfig.ini");
 }
 
 void Client::connectWithServer(const std::string &serverIpAdress, short serverPort)
@@ -32,6 +35,13 @@ void Client::connectWithServer(const std::string &serverIpAdress, short serverPo
 
 void Client::authenticateWithServer()
 {
+    balancedbanana::communication::authenticator::Authenticator auth(communicator);
+    if(config.Contains("publickey")) {
+        auth.publickeyauthenticate(getenv("USER"), config["publickey"]);
+    } else {
+        // TODO Read password without echo
+        auth.authenticate(getenv("USER"), "");
+    }
 }
 
 
@@ -40,9 +50,6 @@ void Client::processCommandLineArguments(int argc, const char* const * argv)
     ClientCommandLineProcessor clp;
     clp.process(argc, argv, task);
     if(task->getType()) {
-        auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbc";
-        std::filesystem::create_directories(configdir);
-        ApplicationConfig config(configdir / "appconfig.ini");
         std::string server = "localhost";
         short port = 8443;
         if(!task->getServerIP().empty()) {

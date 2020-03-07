@@ -5,6 +5,7 @@
 #include "communication/Task.h"
 #include "communication/Communicator.h"
 #include "communication/CommunicatorListener.h"
+#include <configfiles/ApplicationConfig.h>
 #include "ClientMP.h"
 
 
@@ -25,6 +26,8 @@ public:
     bool specifiedBlock();
 
 private:
+    balancedbanana::configfiles::ApplicationConfig config;
+
     /**
     * Handles necessary actions for adding a new docker image.
     * Read in docker file and register in image list (somewhere).
