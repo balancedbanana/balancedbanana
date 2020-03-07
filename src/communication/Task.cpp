@@ -7,10 +7,13 @@ namespace balancedbanana
 namespace communication
 {
 
+// Please NOT - Christopher
+// Config files should be stored in a user folder, not where the cwd is
 const std::string Task::configFilePath = "./config.txt";
 
+// Should never fail
 Task::Task() :
-config(std::make_shared<configfiles::JobConfig>(configFilePath))
+config(std::make_shared<configfiles::JobConfig>())
 {
 }
 
@@ -31,13 +34,10 @@ Task::Task(const std::string &string) {
     webAPIPort = extract<uint16_t>(data, iterator, size);
     jobId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     backupId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
+    userId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint16_t>(data, iterator, size)) : std::nullopt;
     if(iterator != size) {
         throw std::invalid_argument("string is too long");
     }
-}
-
-Task::Task(const Task &task) {
-
 }
 
 void Task::setType(uint32_t type) {
@@ -153,6 +153,10 @@ std::string Task::serialize() const {
     insert<bool>(stream, (bool) backupId);
     if(backupId) {
         insert<uint64_t>(stream, backupId.value());
+    }
+    insert<bool>(stream, userId.has_value());
+    if(userId) {
+        insert<uint64_t>(stream, userId.value());
     }
     return stream.str();
 }

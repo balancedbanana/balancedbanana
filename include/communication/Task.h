@@ -46,8 +46,6 @@ public:
 
 	explicit Task(const std::string &string);
 
-	Task(const Task &task);
-
 	void setType(uint32_t type);
 	uint32_t getType() const;
 
