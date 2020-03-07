@@ -9,6 +9,7 @@ namespace communication
 
 enum class TaskType : uint32_t
 {
+	HELP = 0,
 	ADD_IMAGE,
 	BACKUP,
 	CONTINUE,
@@ -30,6 +31,7 @@ class Task
 	uint32_t type;
 	std::string addImageName;
 	std::string addImageFilePath;
+	std::string addImageFileContent;
 	std::string removeImageName;
 	std::string serverIP;
 	std::string webAPIIP;
@@ -59,6 +61,9 @@ public:
 
 	void setAddImageFilePath(const std::string &addImageFilePath);
 	const std::string &getAddImageFilePath() const;
+
+	void setAddImageFileContent(const std::string &addImageFileContent);
+	const std::string &getAddImageFileContent() const;
 
 	void setRemoveImageName(const std::string &removeImageName);
 	const std::string &getRemoveImageName() const;

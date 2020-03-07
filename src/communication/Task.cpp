@@ -27,6 +27,7 @@ Task::Task(const std::string &string) {
     type = extract<uint32_t>(data, iterator, size);
     addImageName = extractString(data, iterator, size);
     addImageFilePath = extractString(data, iterator, size);
+    addImageFileContent = extractString(data, iterator, size);
     removeImageName = extractString(data, iterator, size);
     serverIP = extractString(data, iterator, size);
     webAPIIP = extractString(data, iterator, size);
@@ -70,6 +71,13 @@ void Task::setAddImageFilePath(const std::string &addImageFilePath) {
 }
 const std::string & Task::getAddImageFilePath() const {
     return this->addImageFilePath;
+}
+
+void Task::setAddImageFileContent(const std::string &addImageFileContent) {
+    this->addImageFileContent = addImageFileContent;
+}
+const std::string & Task::getAddImageFileContent() const {
+    return this->addImageFileContent;
 }
 
 void Task::setRemoveImageName(const std::string &removeImageName) {
@@ -141,6 +149,7 @@ std::string Task::serialize() const {
     insert<uint32_t>(stream, type);
     insertString(stream, addImageName);
     insertString(stream, addImageFilePath);
+    insertString(stream, addImageFileContent);
     insertString(stream, removeImageName);
     insertString(stream, serverIP);
     insertString(stream, webAPIIP);
