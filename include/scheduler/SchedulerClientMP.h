@@ -10,10 +10,10 @@ using balancedbanana::configfiles::JobConfig;
 
 namespace balancedbanana
 {
-namespace communication
+namespace scheduler
 {
 
-class SchedulerClientMP : public MessageProcessor
+class SchedulerClientMP : public communication::MessageProcessor
 {
     bool authenticated = false;
 
@@ -30,12 +30,11 @@ public:
                       const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                       const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob);
 
-    void processClientAuthMessage(const ClientAuthMessage &msg) override;
-    void processHardwareDetailMessage(const HardwareDetailMessage &msg) override;
-    void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) override;
-    void processTaskMessage(const TaskMessage &msg) override;
+    void processClientAuthMessage(const communication::ClientAuthMessage &msg) override;
+    void processPublicKeyAuthMessage(const communication::PublicKeyAuthMessage &msg) override;
+    void processTaskMessage(const communication::TaskMessage &msg) override;
 
-    Communicator getClient();
+    communication::Communicator getClient();
 };
 } // namespace communication
 } // namespace balancedbanana
