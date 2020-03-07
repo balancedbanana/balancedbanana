@@ -29,7 +29,7 @@ int ClientCommandLineProcessor::process(int argc, const char *const *argv, const
     // Create unnamed app. Will take name from command line arguments (for --help)
     CLI::App app;
 
-    // The client application must always recaive one of the following subcommands
+    // The client application must always receive one of the following subcommands
     app.require_subcommand(1, 1);
 
     addSubCommandRun(task, app);
