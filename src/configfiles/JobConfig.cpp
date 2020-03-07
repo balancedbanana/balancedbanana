@@ -10,9 +10,9 @@
 using namespace balancedbanana::configfiles;
 
 //Helper methods
-std::ostream &operator <<(std::ostream &stream, std::vector<std::string> &value) {
+std::ostream &operator <<(std::ostream &stream, const std::vector<std::string> &value) {
     stream << "[\n";
-    for(std::string &string : value) {
+    for(const std::string &string : value) {
         stream << string << "\n";
     }
     stream << "]";
@@ -20,7 +20,7 @@ std::ostream &operator <<(std::ostream &stream, std::vector<std::string> &value)
 }
 
 template<typename T>
-void SerializeOptional(std::ostream &stream, const std::string &name, std::optional<T> &value) {
+void SerializeOptional(std::ostream &stream, const std::string &name, const std::optional<T> &value) {
     stream << name << ":";
     if(value) {
         // if constexpr (std::is_same_v<T, bool>) {
@@ -36,7 +36,7 @@ void SerializeString(std::ostream &stream, const std::string &name, const std::s
     stream << name << ":" << value << "\n";
 }
 
-std::optional<uint32_t> convertToInt32(std::string &value) {
+std::optional<uint32_t> convertToInt32(const std::string &value) {
     try {
         unsigned long long converted = std::stoull(value);
         return  converted <= UINT32_MAX ? converted : UINT32_MAX;
@@ -47,7 +47,7 @@ std::optional<uint32_t> convertToInt32(std::string &value) {
     }
 }
 
-std::optional<uint64_t> convertToInt64(std::string &value) {
+std::optional<uint64_t> convertToInt64(const std::string &value) {
     try {
         unsigned long long converted = std::stoll(value);
         return converted <= UINT64_MAX ? converted : UINT64_MAX;
@@ -58,7 +58,7 @@ std::optional<uint64_t> convertToInt64(std::string &value) {
     }
 }
 
-std::optional<bool> convertToBool(std::string &value) {
+std::optional<bool> convertToBool(const std::string &value) {
     if(value == "true" || value == "True" || value == "1") {
         return std::optional<bool>(true);
     } else if(value == "false" || value == "False" || value == "0") {
@@ -223,58 +223,58 @@ void JobConfig::set_current_working_dir(const std::filesystem::path &cwd) {
     current_working_dir_ = cwd;
 }
 
-std::optional <uint64_t> &JobConfig::min_ram() {
+const std::optional <uint64_t> &JobConfig::min_ram() const {
     return min_ram_;
 }
 
-std::optional <uint64_t> &JobConfig::max_ram() {
+const std::optional <uint64_t> &JobConfig::max_ram() const {
     return max_ram_;
 }
 
-std::optional <uint32_t> &JobConfig::min_cpu_count() {
+const std::optional <uint32_t> &JobConfig::min_cpu_count() const {
     return min_cpu_count_;
 }
 
-std::optional <uint32_t> &JobConfig::max_cpu_count() {
+const std::optional <uint32_t> &JobConfig::max_cpu_count() const {
     return max_cpu_count_;
 }
 
-std::optional<bool> &JobConfig::blocking_mode() {
+const std::optional<bool> &JobConfig::blocking_mode() const {
     return blocking_mode_;
 }
 
-std::string &JobConfig::email() {
+const std::string &JobConfig::email() const {
     return email_;
 }
 
-std::optional <Priority> &JobConfig::priority() {
+const std::optional <Priority> &JobConfig::priority() const {
     return priority_;
 }
 
-std::string &JobConfig::image() {
+const std::string &JobConfig::image() const {
     return image_;
 }
 
-std::optional <std::vector<std::string>> &JobConfig::environment() {
+const std::optional <std::vector<std::string>> &JobConfig::environment() const {
     return environment_;
 }
 
-std::optional<bool> &JobConfig::interruptible() {
+const std::optional<bool> &JobConfig::interruptible() const {
     return interruptible_;
 }
 
-const std::filesystem::path &JobConfig::current_working_dir() {
+const std::filesystem::path &JobConfig::current_working_dir() const {
     return current_working_dir_;
 }
 
-bool JobConfig::Save(const std::filesystem::path &path) {
+bool JobConfig::Save(const std::filesystem::path &path) const {
     std::ofstream stream(path);
     Serialize(stream);
     stream.close();
     return !stream.bad() && !stream.fail();
 }
 
-void JobConfig::Serialize(std::ostream &stream) {
+void JobConfig::Serialize(std::ostream &stream) const {
     SerializeOptional(stream, "min_ram", min_ram_);
     SerializeOptional(stream, "max_ram", max_ram_);
     SerializeOptional(stream, "min_cpu_count", min_cpu_count_);

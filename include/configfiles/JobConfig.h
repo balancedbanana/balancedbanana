@@ -92,43 +92,43 @@ namespace balancedbanana {
             void set_current_working_dir(const std::filesystem::path &cwd);
 
             //Getter for the min_ram_ attribute.
-            std::optional <uint64_t> &min_ram();
+            const std::optional <uint64_t> &min_ram() const;
 
             //Getter for the max_ram_ attribute.
-            std::optional <uint64_t> &max_ram();
+            const std::optional <uint64_t> &max_ram() const;
 
             //Getter for the min_cpu_count_ attribute.
-            std::optional <uint32_t> &min_cpu_count();
+            const std::optional <uint32_t> &min_cpu_count() const;
 
             //Getter for the max_cpu_count_ attribute.
-            std::optional <uint32_t> &max_cpu_count();
+            const std::optional <uint32_t> &max_cpu_count() const;
 
             //Getter for the blocking_mode_ attribute.
-            std::optional<bool> &blocking_mode();
+            const std::optional<bool> &blocking_mode() const;
 
             //Getter for the email_ attribute.
-            std::string &email();
+            const std::string &email() const;
 
             //Getter for the priority_ attribute.
-            std::optional <Priority> &priority();
+            const std::optional <Priority> &priority() const;
 
             //Getter for the image_ attribute.
-            std::string &image();
+            const std::string &image() const;
 
             //Getter for the environment_ attribute.
-            std::optional <std::vector<std::string>> &environment();
+            const std::optional <std::vector<std::string>> &environment() const;
 
             //Getter for the interruptible_ attribute.
-            std::optional<bool> &interruptible();
+            const std::optional<bool> &interruptible() const;
 
             //Getter for the current_working_dir_ attribute.
-            const std::filesystem::path &current_working_dir();
+            const std::filesystem::path &current_working_dir() const;
 
             //This method serializes the JobConfig and saves it in a file with the specified path.
-            bool Save(const std::filesystem::path &path);
+            bool Save(const std::filesystem::path &path) const;
 
             //This method serializes the JobConfig into a string and pushes it into the passed stream.
-            virtual void Serialize(std::ostream &destination);
+            virtual void Serialize(std::ostream &destination) const;
 
             //This method merges the content of the passed JobConfig into this JobConfig. Attributes that are contained in both files are not overwritten.
             void Merge(const JobConfig &config);
