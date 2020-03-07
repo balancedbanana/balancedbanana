@@ -87,7 +87,9 @@ void Client::handleAddImage(std::shared_ptr<Task> task)
         throw std::runtime_error("Cannot read Dockerfile");
     }
     // Read whole file
-    task->setAddImageFileContent(std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>()));
+    std::ostringstream content;
+    content << file.rdbuf();
+    task->setAddImageFileContent(content.str());
     //task->getAddImageName; task->getAddImageFilePath;
     TaskMessage message(*task);
     communicator->send(message);
