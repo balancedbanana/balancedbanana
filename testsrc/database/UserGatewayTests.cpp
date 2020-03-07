@@ -22,7 +22,7 @@ using namespace balancedbanana::database;
 class UserGatewayEnvironment : public ::testing::Environment{
 public:
     void SetUp() override {
-        Repository("127.0.0.1", "balancedbanana", "root", "banana", 3306);
+        Repository("localhost", "balancedbanana", "balancedbanana", "qwer1234", 3306);
     }
 };
 
