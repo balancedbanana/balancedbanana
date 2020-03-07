@@ -20,6 +20,7 @@ void addSubCommandPause(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandContinue(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandBackup(const std::shared_ptr<Task> &task, CLI::App &app);
 void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app);
+void addCommonOptions(const std::shared_ptr<Task> &task, CLI::App &subcommand);
 
 int ClientCommandLineProcessor::process(int argc, const char *const *argv, const std::shared_ptr<Task> &task)
 {
@@ -110,6 +111,8 @@ void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app)
 {
     auto runSubCommand = app.add_subcommand("run", "schedule a new job");
 
+    addCommonOptions(task, *runSubCommand);
+    
     static bool block;
     static std::string email;
     static std::string image;
@@ -158,6 +161,9 @@ void addSubCommandsImage(const std::shared_ptr<Task> &task, CLI::App &app)
     auto subCommandAddImage = app.add_subcommand("addImage", "Register a new Docker image on this machine");
     auto subCommandRemoveImage = app.add_subcommand("removeImage", "Forget an existing Docker image on this machine");
 
+    addCommonOptions(task, *subCommandAddImage);
+    addCommonOptions(task, *subCommandRemoveImage);
+    
     static std::string removeImage;
     static std::vector<std::string> addImage;
 
@@ -182,6 +188,8 @@ void addSubCommandStatus(const std::shared_ptr<Task> &task, CLI::App &app)
 {
     auto statusSubCommand = app.add_subcommand("status", "Show Status of a Job");
 
+    addCommonOptions(task, *statusSubCommand);
+    
     static uint64_t jobID;
     jobID = 0;
 
@@ -201,6 +209,8 @@ void addSubCommandTail(const std::shared_ptr<Task> &task, CLI::App &app)
 {
     auto tailSubCommand = app.add_subcommand("tail", "Show Tail of a Job");
 
+    addCommonOptions(task, *tailSubCommand);
+    
     static uint64_t jobID;
     jobID = 0;
 
@@ -220,6 +230,8 @@ void addSubCommandStop(const std::shared_ptr<Task> &task, CLI::App &app)
 {
     auto stopSubCommand = app.add_subcommand("stop", "Stop a Job");
 
+    addCommonOptions(task, *stopSubCommand);
+    
     static uint64_t jobID;
     jobID = 0;
 
@@ -239,6 +251,8 @@ void addSubCommandPause(const std::shared_ptr<Task> &task, CLI::App &app)
 {
     auto pauseSubCommand = app.add_subcommand("pause", "Pause a Job");
 
+    addCommonOptions(task, *pauseSubCommand);
+    
     static uint64_t jobID;
     jobID = 0;
 
@@ -258,6 +272,8 @@ void addSubCommandContinue(const std::shared_ptr<Task> &task, CLI::App &app)
 {
     auto continueSubCommand = app.add_subcommand("continue", "Continue a Job");
 
+    addCommonOptions(task, *continueSubCommand);
+    
     static uint64_t jobID;
     jobID = 0;
 
@@ -277,6 +293,8 @@ void addSubCommandBackup(const std::shared_ptr<Task> &task, CLI::App &app)
 {
     auto backupSubCommand = app.add_subcommand("backup", "Backup a Job");
 
+    addCommonOptions(task, *backupSubCommand);
+    
     static uint64_t jobID;
     jobID = 0;
 
@@ -299,6 +317,8 @@ void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app)
 {
     auto restoreSubCommand = app.add_subcommand("restore", "Restore a Job");
 
+    addCommonOptions(task, *restoreSubCommand);
+
     static std::vector<uint64_t> jobAndBackupID;
     jobAndBackupID.clear();
 
@@ -306,6 +326,17 @@ void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app)
 
     restoreSubCommand->callback([&]() { callbackSubCommandRestore(task, jobAndBackupID); });
 }
+
+void addCommonOptions(const std::shared_ptr<Task> &task, CLI::App &subcommand)
+{
+    subcommand.add_option_function<std::string>("--server", [task](std::string res) {
+        task->setServerIP(res);
+    }, "Name or IP Adresss of the Scheduler");
+    subcommand.add_option_function<short>("--port", [task](short port) {
+        task->setServerPort(port);
+    }, "Port of the Scheduler");
+}
+
 
 } // namespace commandLineInterface
 } // namespace balancedbanana
