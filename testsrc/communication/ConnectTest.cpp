@@ -93,6 +93,7 @@ TEST(communication, Connect)
     EXPECT_ANY_THROW(listener2->listen(2434, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
     }));
     auto com = std::make_shared<Communicator>("localhost", 2434, testmp);
+    com->detach();
     balancedbanana::communication::authenticator::Authenticator auth(com);
     auto privkey = auth.authenticate("2Te53st8", "6Hidfsg#öl4su93");
     auth.publickeyauthenticate("2Te53st8", privkey);
@@ -110,7 +111,6 @@ TEST(communication, Connect)
     ASSERT_TRUE(testmp->cnd.wait_for(lock, std::chrono::seconds(10), [testmp]() {
         return testmp->clmsg.load() && testmp->wmsg.load() && testmp->pubmsg.load() && testmp->hwmsg.load() && testmp->taskmsg.load();
     }));
-    com->detach();
 }
 
 TEST(communication, Connect2)
