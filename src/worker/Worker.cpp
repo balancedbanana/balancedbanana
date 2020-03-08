@@ -65,7 +65,7 @@ void Worker::processCommandLineArguments(int argc, const char* const * argv)
     clp.process(argc, argv, task);
     if(task->getType()) {
         std::string server = "localhost";
-        short port = 8443;
+        short port = 8444;
         if(!task->getServerIP().empty()) {
             server = task->getServerIP();
         } else if(config.Contains("server")) {
