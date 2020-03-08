@@ -49,13 +49,13 @@ std::pair<std::string, std::string> Authenticator::GeneratePrivatePublicKeyPair(
     if(!PEM_write_bio_PUBKEY(g.mem, g.key)) {
         throw std::runtime_error("Failed to generate private / public KeyPair (PEM_write_bio_PUBKEY failed)");
     }
-    char buffer[1000];
-    int length = BIO_read(g.mem, buffer, 1000);
+    char buffer[1000000];
+    int length = BIO_read(g.mem, buffer, 1000000);
     std::string pubkey(buffer, length);
     if(!PEM_write_bio_PrivateKey(g.mem, g.key, NULL, NULL, 0, NULL, NULL)) {
         throw std::runtime_error("Failed to generate private / public KeyPair (PEM_write_bio_PrivateKey failed)");
     }
-    length = BIO_read(g.mem, buffer, 1000);
+    length = BIO_read(g.mem, buffer, 1000000);
     std::string privkey(buffer, length);
     return { std::move(privkey), std::move(pubkey) };
 }
@@ -84,9 +84,13 @@ std::string Authenticator::GenerateSignature(std::string name, std::string privk
         }
     } g;
 
-    g.mem = BIO_new_mem_buf(privkey.data(), privkey.length());
+    if(!(g.mem = BIO_new_mem_buf(privkey.data(), (int)privkey.length()))){
+        throw std::runtime_error("Failed to generate signature (BIO_new_mem_buf failed)");
+    }
 
-    g.key = PEM_read_bio_PrivateKey(g.mem, NULL, NULL, NULL);
+    if(!(g.key = PEM_read_bio_PrivateKey(g.mem, NULL, NULL, NULL))) {
+        throw std::invalid_argument("Not a private key");
+    }
     
     /* Create the Message Digest Context */
     if(!(g.mdctx = EVP_MD_CTX_create())) {
@@ -122,28 +126,35 @@ std::string Authenticator::GenerateSignature(std::string name, std::string privk
 }
 
 balancedbanana::communication::authenticator::Authenticator::Authenticator(const std::shared_ptr<balancedbanana::communication::Communicator> &comm) : comm(comm) {
+    if(!this->comm) {
+        throw std::invalid_argument("Communicator must not null");
+    }
 }
 
-void balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username, const std::string &password) {
+std::string balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username, const std::string &password) {
     auto res = GeneratePrivatePublicKeyPair();
-    auto message = std::make_shared<ClientAuthMessage>(username, password, res.second);
-    comm->send(*message);
+    ClientAuthMessage message(username, password, res.second);
+    comm->send(message);
+    return res.first;
 }
 
-void balancedbanana::communication::authenticator::Authenticator::authenticate(const std::string &username) {
-    // auto message = std::make_shared<PublicKeyAuthMessage>(username, signature);
-    // comm->send(*message);
+void balancedbanana::communication::authenticator::Authenticator::publickeyauthenticate(const std::string& username, const std::string& privkey) {
+    auto signature = GenerateSignature(username, privkey);
+    PublicKeyAuthMessage message(username, signature);
+    comm->send(message);
 }
 
-void balancedbanana::communication::authenticator::Authenticator::authenticate() {
+std::pair<std::string, std::string> balancedbanana::communication::authenticator::Authenticator::authenticate() {
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
     std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
-    std::vector<uint32_t> name(25);
+    std::vector<uint32_t> name(4);
     for (auto &&i : name) {
         i = dis(gen);
     }
     auto res = GeneratePrivatePublicKeyPair();
-    auto message = std::make_shared<PublicKeyAuthMessage>(std::string((char*)name.data(), name.size() * sizeof(uint32_t)), res.second);
-    comm->send(*message);
+    std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
+    WorkerAuthMessage message(sname, res.second);
+    comm->send(message);
+    return { sname, res.first };
 }

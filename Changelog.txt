@@ -8,12 +8,20 @@ Authenticator::GenerateSignature()
 
 Veränderungen zum Entwurf
 
+SchedulerConfig -> ApplicationConfig, erbt von std::map anstatt sie als attribut zu haben
+
 AuthHandler::authenticate => AuthHandler::publickeyauthenticate zu ähnliche signatur mit der Passwort Autorization
+
+Database: Added Caches, made jobs, workers and users to observables
 
 Container:
 Snapshot => CreateSnapshot // Typname darf kein Methodenname sein
 
 18.01.2020 Docker, Container class Basic Implementation, Snapshot stub
+
+CommandLineInterface: Command structure changed; now uses subcommands to differentiate between different requests
+changed arguments: -minc -> -c, -maxc -> C, minr -> -r, -maxr -> -R, -ri -> I, -ai -> i
+reason: CLI11 does not support short arguments with names longer than one character (apparently)
 
 Windows
 
@@ -25,3 +33,8 @@ cmake --build . -t install
 QT5
 in workspace/build
 cmake .. -DQt5_DIR="C:\Qt\Qt5.14.0\5.14.0\msvc2017_64\lib\cmake\Qt5"
+
+
+openssl-devel qt5-qtbase-devel
+
+1.2.2010 Christopher - Certless TLSListener for CommunicatorListener

@@ -1,0 +1,2 @@
+add_library(clientRequests RunRequest.cpp StatusRequest.cpp TailRequest.cpp StopRequest.cpp PauseRequest.cpp ContinueRequest.cpp BackupRequest.cpp RestoreRequest.cpp ClientRequest.cpp)
+target_link_libraries(clientRequests communication)

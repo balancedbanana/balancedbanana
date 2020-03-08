@@ -23,7 +23,7 @@ jobs:
           command: |
             git clone https://github.com/openssl/openssl.git -b OpenSSL_1_1_1-stable
             cd openssl
-            ./config --prefix=$PWD/../balancedbanana --openssldir=$PWD/../balancedbanana/ssl
+            ./config --prefix=$PWD/../copenssl --openssldir=$PWD/../copenssl/ssl
             make install
       - run:
           name: Build
@@ -31,13 +31,14 @@ jobs:
             export PATH=$PWD:$PWD/llvm/bin:$PWD/cmake-3.16.2-Linux-x86_64/bin:$PATH
             mkdir build
             cd build
-            CC=clang CXX=clang++ cmake -DCMAKE_MAKE_PROGRAM=$PWD/../ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../balancedbanana -DCMAKE_C_FLAGS="-fuse-ld=lld -fPIC" -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -fPIC -Wno-unused-command-line-argument" -G Ninja -DOPENSSL_INCLUDE_DIR=$PWD/../balancedbanana/include -DOPENSSL_CRYPTO_LIBRARY=$PWD/../balancedbanana/lib/libcrypto.so -DOPENSSL_SSL_LIBRARY=$PWD/../balancedbanana/lib/libssl.so ..
-            LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../llvm/lib cmake --build . -t install -j 4
+            CC=clang CXX=clang++ cmake -DCMAKE_MAKE_PROGRAM=$PWD/../ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../balancedbanana -DCMAKE_C_FLAGS="-fuse-ld=lld -fPIC" -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -fPIC -Wno-unused-command-line-argument" -G Ninja -DOPENSSL_INCLUDE_DIR=$PWD/../copenssl/include -DOPENSSL_CRYPTO_LIBRARY=$PWD/../copenssl/lib/libcrypto.so -DOPENSSL_SSL_LIBRARY=$PWD/../copenssl/lib/libssl.so ..
+            LD_LIBRARY_PATH=$PWD/../copenssl/lib:$PWD/../llvm/lib cmake --build . -t install -j 4
+            cp $PWD/../llvm/lib/libc++.so.1 $PWD/../llvm/lib/libc++abi.so.1 $PWD/../llvm/lib/libunwind.so.1 $PWD/../copenssl/lib/libssl.so $PWD/../copenssl/lib/libcrypto.so $PWD/../balancedbanana/lib/
             cd ..
             cd balancedbanana/ && tar -zcvf ../balancedbanana.tar.gz . && cd -
       - run:
           name: Upload files to Github
-          command: curl -L https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz --output ghr.tar.gz && tar -xf ghr.tar.gz && ./ghr*/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace centos7/llvm balancedbanana.tar.gz
+          command: curl -L https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz --output ghr.tar.gz && tar -xf ghr.tar.gz && ./ghr*/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_BRANCH}/centos7 balancedbanana.tar.gz
   build-ubuntu-18.04:
     docker:
       - image: buildpack-deps:18.04
@@ -61,11 +62,12 @@ jobs:
             cd build
             CC=clang CXX=clang++ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PWD/../balancedbanana -DCMAKE_C_FLAGS="-fuse-ld=lld -fPIC" -DCMAKE_CXX_FLAGS="-fuse-ld=lld -stdlib=libc++ -fPIC -Wno-unused-command-line-argument" -G Ninja ..
             LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib cmake --build . -t install -j 4
+            cp $PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib/libc++.so.1 $PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib/libc++abi.so.1 $PWD/../balancedbanana/lib/
             cd ..
             cd balancedbanana/ && tar -zcvf ../balancedbanana.tar.gz . && cd -
       - run:
           name: Upload files to Github
-          command: curl -L https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz --output ghr.tar.gz && tar -xf ghr.tar.gz && ./ghr*/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ubuntu18.04/llvm balancedbanana.tar.gz
+          command: curl -L https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz --output ghr.tar.gz && tar -xf ghr.tar.gz && ./ghr*/ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -replace ${CIRCLE_BRANCH}/ubuntu18.04 balancedbanana.tar.gz
 workflows:
   version: 2
   build:

@@ -1,21 +1,24 @@
 ﻿#pragma once
 
-#include "Message.h"
+#include <communication/message/Message.h>
+#include <communication/Task.h>
 
 namespace balancedbanana {
     namespace communication {
-		//Nachticht mit allen Hardware Angaben (CPU RAM OS)
+		
 		class TaskMessage : public Message {
+            Task task;
+
 		public:
-			void process(const MessageProcessor* & msgProcessor);
+            explicit TaskMessage(const Task &task);
 
-			TaskMessage(const Task& task);
+            TaskMessage(const char *data, size_t &iterator, size_t size);
 
+            void process(MessageProcessor &mp) const override;
 
-		private:
-			//Informationen des zu �bermittelnden Tasks
+            std::string serialize() const override;
 
-			Task task;
+            const Task &GetTask() const;
 
 		};
 	}

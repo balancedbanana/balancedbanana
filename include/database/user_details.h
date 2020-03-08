@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cinttypes>
+#include <string>
 
 namespace balancedbanana {
     namespace database {
@@ -15,6 +16,15 @@ namespace balancedbanana {
 
             std::string public_key;
 
+            // true if empty, otherwise false;
+            bool empty = true;
+
+            inline bool operator==(const user_details& rhs){
+                return this->email == rhs.email
+                       && this->public_key == rhs.public_key
+                       && this->name == rhs.name
+                       && this->empty == rhs.empty;
+            }
         };
     }
 }

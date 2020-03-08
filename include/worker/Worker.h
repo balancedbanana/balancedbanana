@@ -1,10 +1,10 @@
 #pragma once
+#if 0
+#include <worker/docker/Container.h>
 
-
+namespace balancedbanana::worker {
 class Worker {
 public:
-	processSnapshot(const Message& msg);
-
 	Container getContainerbyTaskID(unsigned long tid);
 
 	//Ermittelt HW Details
@@ -26,11 +26,48 @@ public:
 	//location: wo auf dem FileServer soll der Snapshot gespeichert werden.
 	void moveSnapshotToFileServer(const Snapshot& snapshot, const std::string& location);
 
-	//Speichert einen Snapshot aller laufenden Aufgaben an der angegebenen Stelle im FileServer oder nur auf dem Worker, falls location keine gültige Stelle auf dem File Server ist.
+	//Speichert einen Snapshot aller laufenden Aufgaben an der angegebenen Stelle im FileServer oder nur auf dem Worker, falls location keine gï¿½ltige Stelle auf dem File Server ist.
 	void backup(const std::string& location);
 
 
 private:
-	Container* container;
 
 };
+}
+#else
+#pragma once
+
+#include <memory>
+
+#include <communication/Task.h>
+#include <communication/Communicator.h>
+#include <configfiles/ApplicationConfig.h>
+#include "WorkerMP.h"
+
+
+namespace balancedbanana
+{
+namespace worker
+{
+
+class Worker
+{
+public:
+
+    Worker();
+
+    void connectWithServer(const std::string& serverIpAdress, short serverPort);
+    void authenticateWithServer();
+    void processCommandLineArguments(int argc, const char* const * argv);
+
+private:
+    balancedbanana::configfiles::ApplicationConfig config;
+    std::shared_ptr<balancedbanana::communication::Communicator> communicator;
+    std::shared_ptr<WorkerMP> workerMP;
+    std::shared_ptr<balancedbanana::communication::Task> task;
+};
+
+} // namespace worker
+
+} // namespace balancedbanana
+#endif

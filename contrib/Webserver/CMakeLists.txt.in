@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 2.8.2)
+
+project(Webserver-download NONE)
+
+include(ExternalProject)
+ExternalProject_Add(Webserver
+  GIT_REPOSITORY    https://github.com/ChristopherHX/Webserver.git
+  GIT_TAG           master
+  GIT_SUBMODULES    ""
+  SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/Webserver-src"
+  BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/Webserver-build"
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND     ""
+  INSTALL_COMMAND   ""
+  TEST_COMMAND      ""
+)

@@ -1,30 +1,34 @@
 #pragma once
 
-#include "Message.h"
+#include <communication/message/Message.h>
 
 namespace balancedbanana {
     namespace communication {
 
 		//Nachricht mit allen Hardware Angaben (CPU RAM OS)
 		class HardwareDetailMessage : public Message {
+            //Anzahl der CPU Kerne
+            uint32_t coreCount;
+
+            //Größe des verfügbaren Arbeitsspeichers
+            uint32_t ramSize;
+
+            //Irgendeine Information, die das Betriebssystem identifiziert
+            std::string osIdentifier;
 		public:
-			void process(const std::shared_ptr<MessageProcessor> & msgProcessor);
+            HardwareDetailMessage(uint32_t coreCount, uint32_t ramSize, std::string  osIdentifier);
 
+            HardwareDetailMessage(const char *data, size_t &iterator, size_t size);
 
-		private:
-			//Anzahl der CPU Kerne
-			int coreCount;
+            void process(MessageProcessor &mp) const override;
 
-			//Größe des verfügbaren Arbeitsspeichers
-			int ramSize;
+            std::string serialize() const override;
 
-			//Irgendeine Information, die das Betriebssystem identifiziert
-			std::string osIdentifier;
+            uint32_t GetCoreCount() const;
 
+            uint32_t GetRamSize() const;
 
-		public:
-			HardwareDetailMessage(int coreCount, int ramSize, const std::string& osIdentifier);
-
+            const std::string &GetOsIdentifier() const;
 		};
 	}
 }
