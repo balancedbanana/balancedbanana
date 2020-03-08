@@ -67,11 +67,10 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`
     `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,
     `space`      BIGINT(10) UNSIGNED NULL DEFAULT NULL,
     `address`    VARCHAR(255)        NULL DEFAULT NULL,
-    `public_key` VARCHAR(255)        NULL DEFAULT NULL,
+    `public_key` LONGTEXT        NULL DEFAULT NULL,
     `name`       VARCHAR(45)         NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `id_UNIQUE` (`id` ASC),
-    UNIQUE INDEX `public_key_UNIQUE` (`public_key` ASC),
     UNIQUE INDEX `address_UNIQUE` (`address` ASC)
 )
 ENGINE = InnoDB
