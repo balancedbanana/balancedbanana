@@ -82,6 +82,13 @@ void Worker::processCommandLineArguments(int argc, const char* const * argv)
         switch ((TaskType)task->getType())
         {
         case TaskType::WORKERSTART: {
+            std::string cmd;
+            while(1) {
+                std::cin >> cmd;
+                if(cmd == "stop") {
+                    exit(0);
+                }
+            }
             break;
         }
         default:
