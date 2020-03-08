@@ -1,6 +1,7 @@
 #include <commandLineInterface/SchedulerCommandLineProcessor.h>
 #include <communication/CommunicatorListener.h>
 #include <scheduler/SchedulerClientMP.h>
+#include <scheduler/SchedulerWorkerMP.h>
 #include <scheduler/httpserver/HttpServer.h>
 #include <iostream>
 #include <scheduler/Worker.h>
@@ -50,7 +51,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
         switch ((TaskType)task->getType())
         {
         case TaskType::SERVERSTART: {
-            communicatorlistener = std::make_shared<CommunicatorListener>([](){
+            clientlistener = std::make_shared<CommunicatorListener>([](){
                 return std::make_shared<SchedulerClientMP>([](uint64_t id) -> std::shared_ptr<balancedbanana::scheduler::Job> {
                     throw std::runtime_error("Good one, TODO");
                 }, [](uint64_t id, balancedbanana::database::JobStatus newstatus) -> void {
@@ -59,9 +60,17 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                     throw std::runtime_error("Good one, TODO");
                 });
             });
-            communicatorlistener->listen(2434, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+            clientlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerClientMP>(com->GetMP());
                 mp->setClient(com);
+                com->detach();
+            });
+            workerlistener = std::make_shared<CommunicatorListener>([](){
+                return std::make_shared<SchedulerWorkerMP>();
+            });
+            workerlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+                auto mp = std::static_pointer_cast<SchedulerWorkerMP>(com->GetMP());
+                mp->setWorker(com);
                 com->detach();
             });
             break;

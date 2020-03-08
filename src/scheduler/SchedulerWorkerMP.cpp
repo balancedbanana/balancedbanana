@@ -35,3 +35,7 @@ void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadRespons
 void SchedulerWorkerMP::OnWorkerLoadResponse(std::function<void(const WorkerLoadResponseMessage &msg)>&& func) {
     this->onWorkerLoadResponseMessage = std::move(func);
 }
+
+void SchedulerWorkerMP::setWorker(const std::shared_ptr<Communicator>& com) {
+    this->com = com;
+}

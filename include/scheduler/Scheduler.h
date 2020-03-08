@@ -23,7 +23,8 @@ public:
 
 private:
     balancedbanana::configfiles::ApplicationConfig config;
-    std::shared_ptr<balancedbanana::communication::CommunicatorListener> communicatorlistener;
+    std::shared_ptr<balancedbanana::communication::CommunicatorListener> clientlistener;
+    std::shared_ptr<balancedbanana::communication::CommunicatorListener> workerlistener;
     std::shared_ptr<balancedbanana::communication::Task> task;
 };
 

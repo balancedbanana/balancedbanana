@@ -10,6 +10,7 @@ namespace balancedbanana {
             bool authenticated = false;
             std::function<void(const communication::WorkerLoadResponseMessage &msg)> onWorkerLoadResponseMessage;
             std::function<void(const std::shared_ptr<Worker> &worker)> addWorker;
+            std::shared_ptr<communication::Communicator> com;
         public:
 #if 0
             SchedulerWorkerMP(Communicator *);
@@ -20,6 +21,7 @@ namespace balancedbanana {
             void processWorkerAuthMessage(const communication::WorkerAuthMessage &msg) override;
             void processWorkerLoadResponseMessage(const communication::WorkerLoadResponseMessage &msg) override;
             void OnWorkerLoadResponse(std::function<void(const communication::WorkerLoadResponseMessage &msg)>&& func);
+            void setWorker(const std::shared_ptr<communication::Communicator>& com);
         };
     }
 }
