@@ -81,6 +81,9 @@ void Worker::processCommandLineArguments(int argc, const char* const * argv)
         authenticateWithServer();
         switch ((TaskType)task->getType())
         {
+        case TaskType::WORKERSTART: {
+            break;
+        }
         default:
             throw std::runtime_error("Sadly not implemented yet :(");
             break;
