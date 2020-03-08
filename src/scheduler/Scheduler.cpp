@@ -58,6 +58,8 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                     throw std::runtime_error("Good one, TODO");
                 }, [](uint64_t id, const std::shared_ptr<JobConfig>& config) -> uint64_t {
                     throw std::runtime_error("Good one, TODO");
+                }, [](const std::string& username) -> std::shared_ptr<User> {
+                    return std::make_shared<User>(2434, "christopher", "3454645");
                 });
             });
             clientlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {

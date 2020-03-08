@@ -7,6 +7,7 @@
 #include <configfiles/ApplicationConfig.h>
 #include <communication/message/RespondToClientMessage.h>
 #include <communication/message/AuthResultMessage.h>
+#include <communication/message/PublicKeyAuthMessage.h>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
@@ -24,8 +25,9 @@ MessageProcessor(communicator){
 
 SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
                                      const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob) :
-                                     dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob)
+                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob,
+                                     const std::function<std::shared_ptr<User>(const std::string& username)> &dbgetUserByName) :
+                                     dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob), dbgetUserByName(dbgetUserByName)
 {
 }
 
@@ -44,7 +46,18 @@ void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
 
 void SchedulerClientMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg)
 {
-    //TODO implement
+    try {
+        auto user = dbgetUserByName(msg.GetUserName());
+        if(!user) {
+            throw std::runtime_error("Unknown User");
+        }
+        authenticator::AuthHandler::GetDefault()->publickeyauthenticate(user, msg.GetUserNameSignature());
+        AuthResultMessage result(0);
+        getClient().send(result);
+    } catch(const std::exception& ex) {
+        AuthResultMessage result(-1);
+        getClient().send(result);
+    }
 }
 
 void fillWithGlobals(const std::shared_ptr<Task> &task)
