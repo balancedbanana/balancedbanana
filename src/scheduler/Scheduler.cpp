@@ -6,6 +6,7 @@
 #include <iostream>
 #include <scheduler/Worker.h>
 #include <scheduler/Scheduler.h>
+#include <database/Repository.h>
 
 using namespace balancedbanana::commandLineInterface;
 using namespace balancedbanana::communication;
@@ -47,6 +48,39 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
         } else if(config.Contains("port")) {
             port = std::stoi(config["port"]);
         }
+
+        std::string databasehost = "localhost";
+        short databaseport = 3306;
+        std::string databaseschema = "balancedbanana";
+        std::string databaseuser = "balancedbanana";
+        std::string databasepassword = "balancedbanana";
+        /* if(!task->getServerIP().empty()) {
+            databasehost = task->getServerIP();
+        } else  */if(config.Contains("databasehost")) {
+            databasehost = config["databasehost"];
+        }
+        /* if(task->getServerPort()) {
+            databaseschema = task->getServerPort();
+        } else  */if(config.Contains("databaseschema")) {
+            databaseschema = config["databaseschema"];
+        }
+        /* if(task->getServerPort()) {
+            databaseuser = task->getServerPort();
+        } else  */if(config.Contains("databaseuser")) {
+            databaseuser = config["databaseuser"];
+        }
+        /* if(task->getServerPort()) {
+            databaseuser = task->getServerPort();
+        } else  */if(config.Contains("databasepassword")) {
+            databasepassword = config["databasepassword"];
+        }
+        /* if(task->getServerPort()) {
+            databaseport = task->getServerPort();
+        } else  */if(config.Contains("databaseport")) {
+            databaseport = std::stoi(config["databaseport"]);
+        }
+
+        auto repo = std::make_shared<balancedbanana::database::Repository>(databasehost, databaseschema, databaseuser, databasepassword, databaseport);
 
         switch ((TaskType)task->getType())
         {
