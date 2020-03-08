@@ -68,7 +68,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
             workerlistener = std::make_shared<CommunicatorListener>([](){
                 return std::make_shared<SchedulerWorkerMP>();
             });
-            workerlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+            workerlistener->listen(port + 1, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerWorkerMP>(com->GetMP());
                 mp->setWorker(com);
                 com->detach();
