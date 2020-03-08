@@ -1,4 +1,4 @@
-add_library(worker Worker.cpp Container.cpp Docker.cpp Checkpoint.cpp)
+add_library(worker Worker.cpp WorkerMP.cpp Container.cpp Docker.cpp Checkpoint.cpp)
 target_link_libraries(worker Qt5::Core Qt5::Network configfiles commandLineInterface)
 add_executable(bbd bbd.cpp)
 target_link_libraries(bbd worker)

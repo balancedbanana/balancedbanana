@@ -45,6 +45,7 @@ void Worker::connectWithServer(const std::string &serverIpAdress, short serverPo
 {
     workerMP = std::make_shared<WorkerMP>();
     communicator = std::make_shared<Communicator>(serverIpAdress, serverPort, workerMP);
+    workerMP->setCom(communicator);
 }
 
 
