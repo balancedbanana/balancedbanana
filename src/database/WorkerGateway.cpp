@@ -33,6 +33,7 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
     if (!areArgsValid(worker)){
         throw std::invalid_argument("addWorker error: invalid arguments");
     }
+    auto database = IGateway::AquireDatabase();
 
     // DB must contain table
     if (!Utilities::doesTableExist("workers")){
@@ -48,7 +49,7 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
     QVariant q_name = QVariant::fromValue(QString::fromStdString(worker.name));
 
     // Create query
-    QSqlQuery query("INSERT INTO workers (public_key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)");
+    QSqlQuery query("INSERT INTO workers (public_key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)", database);
     query.addBindValue(q_public_key);
     query.addBindValue(q_space);
     query.addBindValue(q_ram);
@@ -69,11 +70,12 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
  * @return True if the operation was successful, otherwise false
  */
 bool WorkerGateway::remove(uint64_t id) {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
     if (Utilities::doesRecordExist("workers", id)){
-        QSqlQuery query("DELETE FROM workers WHERE id = ?");
+        QSqlQuery query("DELETE FROM workers WHERE id = ?", database);
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
             return true;
@@ -92,12 +94,13 @@ bool WorkerGateway::remove(uint64_t id) {
  * @return The details of the worker.
  */
 worker_details WorkerGateway::getWorker(uint64_t id) {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
     worker_details details{};
     if (Utilities::doesRecordExist("workers", id)){
-        QSqlQuery query;
+        QSqlQuery query(database);
         query.prepare("SELECT public_key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
         query.bindValue(":id", QVariant::fromValue(id));
         if (query.exec()){
@@ -131,10 +134,11 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
  * @return  Vector of all the workers in the database.
  */
 std::vector<worker_details> WorkerGateway::getWorkers() {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
-    QSqlQuery query("SELECT id, public_key, space, ram, cores, address, name FROM workers");
+    QSqlQuery query("SELECT id, public_key, space, ram, cores, address, name FROM workers", database);
     std::vector<worker_details> workerVector;
     if (query.exec()) {
         while(query.next()){
@@ -164,11 +168,12 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
  * @return Returns the correct details of the worker if found, otherwise return empty details struct with invalid id
  */
 worker_details WorkerGateway::getWorkerByName(const std::string &name) {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
     worker_details details{};
-    QSqlQuery query;
+    QSqlQuery query(database);
     query.prepare("SELECT public_key, space, ram, cores, address, id FROM workers WHERE name = ?");
     query.addBindValue(QString::fromStdString(name));
     if (query.exec()){
@@ -194,6 +199,7 @@ worker_details WorkerGateway::getWorkerByName(const std::string &name) {
 }
 
 void WorkerGateway::updateWorker(const worker_details &worker) {
+    auto database = IGateway::AquireDatabase();
     if(!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
@@ -207,7 +213,7 @@ void WorkerGateway::updateWorker(const worker_details &worker) {
             throw std::invalid_argument("updateWorker error: invalid arguments");
         }
         QSqlQuery query("UPDATE workers SET name = ?, ram = ?, cores = ?, space = ?, address = ?, public_key = ? "
-                        "WHERE id = ?");
+                        "WHERE id = ?", database);
         query.addBindValue(QString::fromStdString(worker.name));
         query.addBindValue(QVariant::fromValue(worker.specs.ram));
         query.addBindValue(QVariant::fromValue(worker.specs.cores));

@@ -33,6 +33,7 @@ uint64_t UserGateway::add(const user_details& user) {
     if (!areArgsValid(user)){
         throw std::invalid_argument("addUser error: invalid arguments");
     }
+    auto database = IGateway::AquireDatabase();
 
     // DB must contain table
     if (!Utilities::doesTableExist("users")){
@@ -45,7 +46,7 @@ uint64_t UserGateway::add(const user_details& user) {
     QVariant q_public_key = QVariant::fromValue(QString::fromStdString(user.public_key));
 
     // Create query
-    QSqlQuery query("INSERT INTO users (name, email, public_key) VALUES (?, ?, ?)");
+    QSqlQuery query("INSERT INTO users (name, email, public_key) VALUES (?, ?, ?)", database);
     query.addBindValue(q_name);
     query.addBindValue(q_email);
     query.addBindValue(q_public_key);
@@ -64,11 +65,12 @@ uint64_t UserGateway::add(const user_details& user) {
  * @return True if the operation was successful, otherwise false
  */
 bool UserGateway::remove(uint64_t user_id) {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
     if (Utilities::doesRecordExist("users", user_id)){
-        QSqlQuery query("DELETE FROM users WHERE id = ?");
+        QSqlQuery query("DELETE FROM users WHERE id = ?", database);
         query.addBindValue(QVariant::fromValue(user_id));
         if (query.exec()){
             return true;
@@ -87,12 +89,13 @@ bool UserGateway::remove(uint64_t user_id) {
  * @return The details of the user.
  */
 user_details UserGateway::getUser(uint64_t id) {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
     user_details details{};
     if (Utilities::doesRecordExist("users", id)){
-        QSqlQuery query("SELECT public_key, name, email FROM users WHERE id = ?");
+        QSqlQuery query("SELECT public_key, name, email FROM users WHERE id = ?", database);
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
             if (query.next()){
@@ -120,10 +123,11 @@ user_details UserGateway::getUser(uint64_t id) {
  * @return  Vector of all the users in the database.
  */
 std::vector<user_details> UserGateway::getUsers() {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
-    QSqlQuery query("SELECT id, public_key, name, email FROM users");
+    QSqlQuery query("SELECT id, public_key, name, email FROM users", database);
     std::vector<user_details> userVector;
     if (query.exec()){
         while (query.next()){
@@ -148,11 +152,12 @@ std::vector<user_details> UserGateway::getUsers() {
  * @return Returns the correct details of the user if found, otherwise return empty details struct with invalid id
  */
 user_details UserGateway::getUserByName(const std::string &name) {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
     user_details details{};
-    QSqlQuery query("SELECT public_key, id, email FROM users WHERE name = ?");
+    QSqlQuery query("SELECT public_key, id, email FROM users WHERE name = ?", database);
     query.addBindValue(QString::fromStdString(name));
     if (query.exec()){
         if (query.next()){
@@ -175,6 +180,7 @@ user_details UserGateway::getUserByName(const std::string &name) {
  * @param user The user
  */
 void UserGateway::updateUser(const user_details &user) {
+    auto database = IGateway::AquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
@@ -187,7 +193,7 @@ void UserGateway::updateUser(const user_details &user) {
         if (!areArgsValid(user)){
             throw std::invalid_argument("updateUser error: invalid arguments");
         }
-        QSqlQuery query("UPDATE users SET name = ?, email = ?, public_key = ? WHERE id = ?");
+        QSqlQuery query("UPDATE users SET name = ?, email = ?, public_key = ? WHERE id = ?", database);
         query.addBindValue(QString::fromStdString(user.name));
         query.addBindValue(QString::fromStdString(user.email));
         query.addBindValue(QString::fromStdString(user.public_key));

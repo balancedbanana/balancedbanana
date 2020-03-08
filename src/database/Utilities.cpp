@@ -9,6 +9,7 @@
 #include <QVariant>
 #include <QSqlError>
 #include <sstream>
+#include <database/IGateway.h>
 
 using namespace balancedbanana::database;
 
@@ -17,7 +18,7 @@ using namespace balancedbanana::database;
  * @return true when it exists, otherwise false
  */
 bool Utilities::doesTableExist(const std::string& table_name){
-    return QSqlDatabase::database().tables().contains(QString::fromStdString(table_name));
+    return IGateway::AquireDatabase().tables().contains(QString::fromStdString(table_name));
 }
 
 /**

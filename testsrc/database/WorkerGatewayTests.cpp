@@ -36,7 +36,7 @@ TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
  * Deletes the all records in the workers table and resets the auto increment for the id.
  */
 void resetWorkerTable(){
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL");
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -74,7 +74,7 @@ protected:
  * @return true if the add was successful, otherwise false.
  */
 bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?");
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -188,7 +188,7 @@ class NoWorkersTableTest : public ::testing::Test{
 protected:
     void SetUp() override {
         // Deletes the workers table
-        QSqlQuery query("DROP TABLE workers");
+        QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
         query.exec();
 
         // Setup the varaibles needed
@@ -208,7 +208,7 @@ protected:
                         "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
                         "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
                         "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
-                        "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+                        "ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
         query.exec();
     }
 
@@ -242,7 +242,7 @@ TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
  * @return  true if remove was successful, otherwise false.
  */
 bool wasWorkerRemoveSuccessful(uint64_t id){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?");
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -416,7 +416,7 @@ protected:
 };
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers");
+    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
     query.exec();
     EXPECT_THROW(WorkerGateway::getWorkerByName(worker.name), std::logic_error);
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
@@ -459,7 +459,7 @@ protected:
 };
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers");
+    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
     query.exec();
     EXPECT_THROW(WorkerGateway::updateWorker(worker), std::logic_error);
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "

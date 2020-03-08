@@ -32,7 +32,7 @@ public:
  * Deletes the all records in the users table and resets the auto increment for the id.
  */
 void resetUserTable(){
-    QSqlQuery query("ALTER TABLE users CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL");
+    QSqlQuery query("ALTER TABLE users CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
     query.exec();
     query.prepare("DELETE FROM users");
     query.exec();
@@ -67,7 +67,7 @@ protected:
  * @return true if the add was successful, otherwise false.
  */
 bool wasUserAddSuccessful(const user_details& details, uint64_t id){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?");
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", IGateway::AquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -154,7 +154,7 @@ class NoUsersTableTest : public ::testing::Test{
 protected:
     void SetUp() override {
         // Deletes the users table
-        QSqlQuery query("DROP TABLE users");
+        QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
         query.exec();
 
         // Setup the varaibles needed
@@ -174,7 +174,7 @@ protected:
                         "  PRIMARY KEY (`id`),\n"
                         "  UNIQUE KEY `public_key_UNIQUE` (`public_key`),\n"
                         "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
         query.exec();
     }
 
@@ -207,7 +207,7 @@ TEST_F(NoUsersTableTest, NoUsersTableTest_GetUsers_Test){
  * @return  true if remove was successful, otherwise false.
  */
 bool wasUserRemoveSuccessful(uint64_t id){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?");
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", IGateway::AquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -363,7 +363,7 @@ protected:
 };
 
 TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users");
+    QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
     query.exec();
     EXPECT_THROW(UserGateway::getUserByName(user.name), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
@@ -406,7 +406,7 @@ protected:
 };
 
 TEST_F(UpdateUserTest, UpdateUserTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users");
+    QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
     query.exec();
     EXPECT_THROW(UserGateway::updateUser(user), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
