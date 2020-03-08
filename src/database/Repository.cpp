@@ -173,6 +173,7 @@ void Repository::FlushCache() {
     std::lock_guard lock(mtx);
     WriteBack();
     userCache.clear();
+    // ToDo keep connected Worker, to avoid loseing the Communicator 
     workerCache.clear();
     jobCache.clear();
 }
