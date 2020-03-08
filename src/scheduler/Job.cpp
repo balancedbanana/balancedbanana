@@ -76,41 +76,54 @@ std::shared_ptr<job_result> Job::getResult() const {
 
 void Job::setId(uint32_t id) {
     id_ = id;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setStarted_at(const QDateTime &started_at) {
     started_at_ = started_at;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setScheduled_at(const QDateTime &scheduled_at) {
     scheduled_at_ = scheduled_at;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setFinished_at(const QDateTime &finished_at) {
     finished_at_ = finished_at;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setAllocated_ram(uint32_t allocated_ram) {
     allocated_ram_ = allocated_ram;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setAllocated_cores(uint32_t allocated_cores) {
     allocated_cores_ = allocated_cores;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setAllocated_disk_space(uint32_t allocated_disk_space) {
     allocated_disk_space_ = allocated_disk_space;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 
 void Job::setCommand(const std::string &command) {
     command_ = command;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setWorker_id(uint64_t worker_id) {
     worker_id_ = worker_id;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setUser(const std::shared_ptr<User> &user) {
     user_ = user;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setConfig(const std::shared_ptr<JobConfig> &config) {
     config_ = config;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setStatus(JobStatus status) {
     status_ = status;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setResult(const std::shared_ptr<job_result> &result) {
     result_ = result;
+    this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
