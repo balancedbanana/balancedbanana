@@ -23,14 +23,36 @@ void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage
 }
 
 void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
-    //TODO get Worker object with name msg.GetUserName()
-    
+    try {
+        worker = getWorkerByName(msg.GetUserName());
+        if(!worker) {
+            throw std::runtime_error("Unknown worker");
+        }
+        worker->setCommunicator(com);
+        authenticator::AuthHandler::GetDefault()->publickeyauthenticate(worker, msg.GetUserNameSignature());
+        authenticated = true;
+        AuthResultMessage result(0);
+        worker->send(result);
+    } catch(const std::exception& ex) {
+        AuthResultMessage result(-1);
+        com->send(result);
+    }
 }
 
 void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
-    // addWorker(std::make_shared<Worker>(msg.GetWorkerName(), ))
-    authenticated = true;
-    // TODO Send Authresult success if successfully populated the db otherwise nonzero
+    try {
+        worker = addWorker(msg.GetWorkerName(), msg.GetPublicKey());
+        if(!worker) {
+            throw std::runtime_error("failed to add worker");
+        }
+        worker->setCommunicator(com);
+        authenticated = true;
+        AuthResultMessage result(0);
+        worker->send(result);
+    } catch(const std::exception& ex) {
+        AuthResultMessage result(-1);
+        com->send(result);
+    }
 }
 
 void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg) {
