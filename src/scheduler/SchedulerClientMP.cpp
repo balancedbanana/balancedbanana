@@ -6,6 +6,7 @@
 #include <scheduler/clientRequests/ClientRequest.h>
 #include <configfiles/ApplicationConfig.h>
 #include <communication/message/RespondToClientMessage.h>
+#include <communication/message/AuthResultMessage.h>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
@@ -30,8 +31,15 @@ SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<balance
 
 void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
 {
-    auto user = std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey());
-    authenticator::AuthHandler::GetDefault()->authenticate(user, msg.GetPassword());
+    try {
+        auto user = std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey());
+        authenticator::AuthHandler::GetDefault()->authenticate(user, msg.GetPassword());
+        AuthResultMessage result(0);
+        getClient().send(result);
+    } catch(const std::exception& ex) {
+        AuthResultMessage result(-1);
+        getClient().send(result);
+    }
 }
 
 void SchedulerClientMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg)
