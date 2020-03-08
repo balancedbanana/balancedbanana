@@ -25,7 +25,7 @@ namespace balancedbanana {
             std::function<std::vector<int>(int workerid)> getJobIDsByWorkerId;
             std::function<std::vector<int>(int userid)> getJobIDsByUserId;
             std::function<std::vector<int>(int hours)> getJobIDsOfLastHours;
-            std::function<Job(int id)> getJobByID;
+            std::function<std::shared_ptr<Job>(int id)> getJobByID;
         public:
             /**
              * Creates the HttpServer with database queries to handle the webapi request
@@ -36,7 +36,7 @@ namespace balancedbanana {
              * @param getJobIDsOfLastHours database query for retrieving the Jobs running in the last n jours
              * @param getJobByID database query for retrieving the full Job object by id 
              **/
-            HttpServer(std::function<std::vector<std::shared_ptr<Worker>>()> && getAllWorker, std::function<std::vector<int>(int workerid)> && getJobIDsByWorkerId, std::function<std::vector<int>(int userid)> && getJobIDsByUserId, std::function<std::vector<int>(int hours)> && getJobIDsOfLastHours, std::function<Job(int id)> && getJobByID);
+            HttpServer(std::function<std::vector<std::shared_ptr<Worker>>()> && getAllWorker, std::function<std::vector<int>(int workerid)> && getJobIDsByWorkerId, std::function<std::vector<int>(int userid)> && getJobIDsByUserId, std::function<std::vector<int>(int hours)> && getJobIDsOfLastHours, std::function<std::shared_ptr<Job>(int id)> && getJobByID);
 
             /**
              * @param ip Webapi ip to listen

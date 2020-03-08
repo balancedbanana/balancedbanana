@@ -113,6 +113,47 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                 mp->setWorker(com);
                 com->detach();
             });
+            HttpServer server = HttpServer([repo]() -> std::vector<std::shared_ptr<Worker>> {
+                return repo->GetActiveWorkers();
+            }, [repo](int workerid) -> std::vector<int> {
+                std::vector<int> result;
+                // Basically I only want the jobids running on a worker, but get whole objects hmm...
+                for(auto && job : repo->GetUnfinishedJobs()) {
+                    if(job->getWorker_id() == workerid) {
+                        result.emplace_back(job->getId());
+                    }
+                }
+                return result; 
+            }, [repo](int userid) -> std::vector<int> {
+                std::vector<int> result;
+                // Basically I only want the jobids running by a user, but get whole objects hmm...
+                for(auto && job : repo->GetUnfinishedJobs()) {
+                    if(job->getUser()->id() == userid) {
+                        result.emplace_back(job->getId());
+                    }
+                }
+                return result; 
+            }, [repo](int hours) -> std::vector<int> {
+                std::vector<int> result;
+                // No Idea to access the JobGateway????
+                // for(auto && job : repo->GetUnfinishedJobs()) {
+                //     if(job->get {
+                //         result.emplace_back(job->getId());
+                //     }
+                // }
+                return result; 
+            }, [repo](int jobid) -> std::shared_ptr<Job> {
+                return repo->GetJob(jobid);
+            });
+            server.listen("localhost", 8234);
+            std::string cmd;
+            while(1) {
+                std::cin >> cmd;
+                if(cmd == "stop") {
+                    server.Cancel();
+                    exit(0);
+                }
+            }
             break;
         }
         default:

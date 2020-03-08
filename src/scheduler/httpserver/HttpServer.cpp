@@ -27,7 +27,7 @@ using namespace std::filesystem;
 
 using namespace balancedbanana::scheduler;
 
-HttpServer::HttpServer(std::function<std::vector<std::shared_ptr<Worker>>()> && getAllWorker, std::function<std::vector<int>(int workerid)> && getJobIDsByWorkerId, std::function<std::vector<int>(int userid)> && getJobIDsByUserId, std::function<std::vector<int>(int hours)> && getJobIDsOfLastHours, std::function<Job(int id)> && getJobByID) : getAllWorker(getAllWorker), getJobIDsByWorkerId(getJobIDsByWorkerId), getJobIDsByUserId(getJobIDsByUserId), getJobIDsOfLastHours(getJobIDsOfLastHours), getJobByID(getJobByID) {
+HttpServer::HttpServer(std::function<std::vector<std::shared_ptr<Worker>>()> && getAllWorker, std::function<std::vector<int>(int workerid)> && getJobIDsByWorkerId, std::function<std::vector<int>(int userid)> && getJobIDsByUserId, std::function<std::vector<int>(int hours)> && getJobIDsOfLastHours, std::function<std::shared_ptr<Job>(int id)> && getJobByID) : getAllWorker(getAllWorker), getJobIDsByWorkerId(getJobIDsByWorkerId), getJobIDsByUserId(getJobIDsByUserId), getJobIDsOfLastHours(getJobIDsOfLastHours), getJobByID(getJobByID) {
 	
 }
 
@@ -119,23 +119,23 @@ void HttpServer::listen(const std::string & ip, short port) {
 						int jobid = std::strtol(number, &end, 10);
 						if(number < end && (end - request->path.data()) == request->path.length()) {
 							response.status = 200;
-							balancedbanana::scheduler::Job job = getJobByID(jobid);
+							auto job = getJobByID(jobid);
 							std::stringstream resp;
-							resp << "user_name: " << job.getUser()->name() << "\n";
-							resp << "user_id: " << job.getUser()->id() << "\n";
-							auto status = job.getStatus();
+							resp << "user_name: " << job->getUser()->name() << "\n";
+							resp << "user_id: " << job->getUser()->id() << "\n";
+							auto status = job->getStatus();
 							resp << "status: " << status << "\n";
-							resp << "scheduled_at: " << job.getScheduled_at().toString().toStdString() << "\n";
-							resp << "finished_at: " << job.getFinished_at().toString().toStdString() << "\n";
+							resp << "scheduled_at: " << job->getScheduled_at().toString().toStdString() << "\n";
+							resp << "finished_at: " << job->getFinished_at().toString().toStdString() << "\n";
 							resp << "spent_in_queue: ";
 							switch (status)
 							{
 							case balancedbanana::database::JobStatus::scheduled:
-								resp << job.getScheduled_at().msecsTo(QDateTime::currentDateTime());
+								resp << job->getScheduled_at().msecsTo(QDateTime::currentDateTime());
 								break;
 							case balancedbanana::database::JobStatus::finished:
 							case balancedbanana::database::JobStatus::processing:
-								resp << job.getScheduled_at().msecsTo(job.getStarted_at());
+								resp << job->getScheduled_at().msecsTo(job->getStarted_at());
 								break;
 							default:
 								resp << "0";
@@ -146,20 +146,20 @@ void HttpServer::listen(const std::string & ip, short port) {
 							switch (status)
 							{
 							case balancedbanana::database::JobStatus::finished:
-								resp << job.getStarted_at().msecsTo(job.getFinished_at());
+								resp << job->getStarted_at().msecsTo(job->getFinished_at());
 								break;
 							case balancedbanana::database::JobStatus::processing:
-								resp << job.getStarted_at().msecsTo(QDateTime::currentDateTime());
+								resp << job->getStarted_at().msecsTo(QDateTime::currentDateTime());
 								break;
 							default:
 								resp << "0";
 								break;
 							}
 							resp << "\n";
-							resp << "allocated_threads: " << job.getAllocated_cores() << "\n";
-							resp << "utilization_of_threads: " << job.getAllocated_cores() << "\n";
-							resp << "allocated_ram: " << job.getAllocated_ram() << "\n";
-							resp << "utilization_of_ram: " << job.getAllocated_ram() << "\n";
+							resp << "allocated_threads: " << job->getAllocated_cores() << "\n";
+							resp << "utilization_of_threads: " << job->getAllocated_cores() << "\n";
+							resp << "allocated_ram: " << job->getAllocated_ram() << "\n";
+							resp << "utilization_of_ram: " << job->getAllocated_ram() << "\n";
 							auto responsedata = resp.str();
 							response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
 							con->SendResponse(false);
