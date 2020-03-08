@@ -85,15 +85,15 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
         switch ((TaskType)task->getType())
         {
         case TaskType::SERVERSTART: {
-            clientlistener = std::make_shared<CommunicatorListener>([](){
-                return std::make_shared<SchedulerClientMP>([](uint64_t id) -> std::shared_ptr<balancedbanana::scheduler::Job> {
-                    throw std::runtime_error("Good one, TODO");
-                }, [](uint64_t id, balancedbanana::database::JobStatus newstatus) -> void {
-                    throw std::runtime_error("Good one, TODO");
-                }, [](uint64_t id, const std::shared_ptr<JobConfig>& config) -> uint64_t {
-                    throw std::runtime_error("Good one, TODO");
-                }, [](const std::string& username) -> std::shared_ptr<User> {
-                    return std::make_shared<User>(2434, "christopher", "3454645");
+            clientlistener = std::make_shared<CommunicatorListener>([repo](){
+                return std::make_shared<SchedulerClientMP>([repo](uint64_t id) -> std::shared_ptr<balancedbanana::scheduler::Job> {
+                    return repo->GetJob(id);
+                }, [repo](uint64_t id, balancedbanana::database::JobStatus newstatus) -> void {
+                    repo->GetJob(id)->setStatus(newstatus);
+                }, [repo](uint64_t id, const std::shared_ptr<JobConfig>& config) -> uint64_t {
+                    repo->GetJob(id)->setConfig(config);
+                }, [repo](const std::string& username) -> std::shared_ptr<User> {
+                    return repo->FindUser(username);
                 });
             });
             clientlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
