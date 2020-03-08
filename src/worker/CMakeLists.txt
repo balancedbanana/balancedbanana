@@ -1,2 +1,5 @@
-add_library(worker Container.cpp Docker.cpp Checkpoint.cpp)
+add_library(worker Worker.cpp Container.cpp Docker.cpp Checkpoint.cpp)
 target_link_libraries(worker Qt5::Core Qt5::Network configfiles commandLineInterface)
+add_executable(bbd bbd.cpp)
+target_link_libraries(bbd worker)
+install (TARGETS bbd Net RUNTIME DESTINATION bin LIBRARY DESTINATION lib)

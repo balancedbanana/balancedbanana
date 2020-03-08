@@ -1,4 +1,5 @@
 #pragma once
+#if 0
 #include <worker/docker/Container.h>
 
 namespace balancedbanana::worker {
@@ -33,3 +34,40 @@ private:
 
 };
 }
+#else
+#pragma once
+
+#include <memory>
+
+#include <communication/Task.h>
+#include <communication/Communicator.h>
+#include <configfiles/ApplicationConfig.h>
+#include "WorkerMP.h"
+
+
+namespace balancedbanana
+{
+namespace worker
+{
+
+class Worker
+{
+public:
+
+    Worker();
+
+    void connectWithServer(const std::string& serverIpAdress, short serverPort);
+    void authenticateWithServer();
+    void processCommandLineArguments(int argc, const char* const * argv);
+
+private:
+    balancedbanana::configfiles::ApplicationConfig config;
+    std::shared_ptr<balancedbanana::communication::Communicator> communicator;
+    std::shared_ptr<WorkerMP> workerMP;
+    std::shared_ptr<balancedbanana::communication::Task> task;
+};
+
+} // namespace worker
+
+} // namespace balancedbanana
+#endif

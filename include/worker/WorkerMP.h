@@ -2,8 +2,13 @@
 
 #include <communication/MessageProcessor.h>
 
-class WorkerMP : public MessageProcessor {
+namespace balancedbanana
+{
+namespace worker
+{
+class WorkerMP : public communication::MessageProcessor {
 public:
-	virtual void processMsgY(const std::shared_ptr<MsgY>& msg);
-
+	// void processWorkerLoadRequestMessage(const communication::WorkerLoadResponseMessage &msg) override;
 };
+}
+}
