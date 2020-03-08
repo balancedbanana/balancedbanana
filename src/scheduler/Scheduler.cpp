@@ -49,6 +49,23 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
 
         switch ((TaskType)task->getType())
         {
+        case TaskType::SERVERSTART: {
+            communicatorlistener = std::make_shared<CommunicatorListener>([](){
+                return std::make_shared<SchedulerClientMP>([](uint64_t id) -> std::shared_ptr<balancedbanana::scheduler::Job> {
+                    throw std::runtime_error("Good one, TODO");
+                }, [](uint64_t id, balancedbanana::database::JobStatus newstatus) -> void {
+                    throw std::runtime_error("Good one, TODO");
+                }, [](uint64_t id, const std::shared_ptr<JobConfig>& config) -> uint64_t {
+                    throw std::runtime_error("Good one, TODO");
+                });
+            });
+            communicatorlistener->listen(2434, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+                auto mp = std::static_pointer_cast<SchedulerClientMP>(com->GetMP());
+                mp->setClient(com);
+                com->detach();
+            });
+            break;
+        }
         default:
             throw std::runtime_error("Sadly not implemented yet :(");
             break;

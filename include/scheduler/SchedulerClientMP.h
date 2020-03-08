@@ -16,7 +16,7 @@ namespace scheduler
 class SchedulerClientMP : public communication::MessageProcessor
 {
     bool authenticated = false;
-
+    std::shared_ptr<communication::Communicator> client;
     const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> dbGetJob;
     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> dbUpdateJobStatus;
     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> dbAddJob;
@@ -34,7 +34,8 @@ public:
     void processPublicKeyAuthMessage(const communication::PublicKeyAuthMessage &msg) override;
     void processTaskMessage(const communication::TaskMessage &msg) override;
 
-    communication::Communicator getClient();
+    void setClient(const std::shared_ptr<communication::Communicator>& com);
+    communication::Communicator& getClient();
 };
 } // namespace communication
 } // namespace balancedbanana

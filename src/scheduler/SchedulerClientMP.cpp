@@ -127,7 +127,15 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
     getClient().send(resp);
 }
 
-Communicator SchedulerClientMP::getClient() {
-    //TODO implement
-    throw std::runtime_error("unimplemented");
+void SchedulerClientMP::setClient(const std::shared_ptr<Communicator>& com) {
+    this->client = com;
+}
+
+// Bad one, but keeps stable API
+Communicator& SchedulerClientMP::getClient() {
+    if(!client) {
+        // Better wait for setter, with timeout
+        throw std::runtime_error("Not Ready");
+    }
+    return *client;
 }
