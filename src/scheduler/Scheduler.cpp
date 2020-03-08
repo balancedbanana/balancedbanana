@@ -101,8 +101,12 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                 mp->setClient(com);
                 com->detach();
             });
-            workerlistener = std::make_shared<CommunicatorListener>([](){
-                return std::make_shared<SchedulerWorkerMP>();
+            workerlistener = std::make_shared<CommunicatorListener>([repo](){
+                return std::make_shared<SchedulerWorkerMP>([repo](const std::string& name, const std::string& pubkey) -> std::shared_ptr<Worker> {
+                    return repo->AddWorker(name, pubkey, { 0 }, "Why store an address");
+                }, [repo](const std::string &worker) -> std::shared_ptr<balancedbanana::scheduler::Worker> {
+                    return repo->FindWorker(worker);
+                });
             });
             workerlistener->listen(port + 1, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerWorkerMP>(com->GetMP());

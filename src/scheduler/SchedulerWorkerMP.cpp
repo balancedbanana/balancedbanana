@@ -13,6 +13,11 @@ MessageProcessor(communicator){
 }
 #endif
 
+SchedulerWorkerMP::SchedulerWorkerMP(const std::function<std::shared_ptr<Worker>(const std::string& name, const std::string& pubkey)>& addWorker, const std::function<std::shared_ptr<Worker>(const std::string &worker)>& getWorkerByName) : addWorker(addWorker), getWorkerByName(getWorkerByName) {
+
+}
+
+
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
     //TODO populate the db with the details
 }
