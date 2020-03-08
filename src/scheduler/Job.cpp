@@ -105,12 +105,12 @@ void Job::setWorker_id(uint64_t worker_id) {
 void Job::setUser(const std::shared_ptr<User> &user) {
     user_ = user;
 }
-void Job::setConfig(std::shared_ptr<JobConfig> &config) {
+void Job::setConfig(const std::shared_ptr<JobConfig> &config) {
     config_ = config;
 }
 void Job::setStatus(JobStatus status) {
     status_ = status;
 }
-void Job::setResult(std::shared_ptr<job_result> &result) {
+void Job::setResult(const std::shared_ptr<job_result> &result) {
     result_ = result;
 }

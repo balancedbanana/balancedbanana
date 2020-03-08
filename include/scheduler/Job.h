@@ -51,9 +51,9 @@ namespace balancedbanana {
             void setCommand(const std::string &command);
             void setWorker_id(uint64_t worker_id);
             void setUser(const std::shared_ptr<User> &user);
-            void setConfig(std::shared_ptr<configfiles::JobConfig> &config);
+            void setConfig(const std::shared_ptr<configfiles::JobConfig> &config);
             void setStatus(database::JobStatus status);
-            void setResult(std::shared_ptr<database::job_result> &result);
+            void setResult(const std::shared_ptr<database::job_result> &result);
 
         private:
             uint64_t id_;
