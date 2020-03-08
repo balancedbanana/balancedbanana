@@ -23,7 +23,7 @@ public:
     virtual std::shared_ptr<std::string> executeRequestAndFetchData(const std::shared_ptr<Task> &task,
                                                                     const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
                                                                     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                                                    const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&)> &dbAddJob,
+                                                                    const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
                                                                     uint64_t userID) = 0;
 
 protected:

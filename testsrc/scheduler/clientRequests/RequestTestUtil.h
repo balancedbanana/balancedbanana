@@ -9,4 +9,4 @@ std::shared_ptr<balancedbanana::scheduler::Job> dbGetJob(uint64_t jobID);
 
 void dbUpdateJobStatus(uint64_t jobID, balancedbanana::database::JobStatus newStatus);
 
-uint64_t dbAddJob(uint64_t userID, const std::shared_ptr<balancedbanana::configfiles::JobConfig>& config);
+uint64_t dbAddJob(uint64_t userID, const std::shared_ptr<balancedbanana::configfiles::JobConfig>& config, const std::string& command);

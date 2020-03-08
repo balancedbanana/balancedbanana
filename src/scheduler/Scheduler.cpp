@@ -90,8 +90,8 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                     return repo->GetJob(id);
                 }, [repo](uint64_t id, balancedbanana::database::JobStatus newstatus) -> void {
                     repo->GetJob(id)->setStatus(newstatus);
-                }, [repo](uint64_t id, const std::shared_ptr<JobConfig>& config) -> uint64_t {
-                    repo->GetJob(id)->setConfig(config);
+                }, [repo](uint64_t userid, const std::shared_ptr<JobConfig>& config, const std::string& command) -> uint64_t {
+                    return repo->AddJob(userid, *config, QDateTime::currentDateTime(), command)->getId();
                 }, [repo](const std::string& username) -> std::shared_ptr<User> {
                     return repo->FindUser(username);
                 });

@@ -12,6 +12,6 @@ void dbUpdateJobStatus(uint64_t jobID, JobStatus newStatus)
 {
 }
 
-uint64_t dbAddJob(uint64_t userID, const std::shared_ptr<JobConfig>& config)
+uint64_t dbAddJob(uint64_t userID, const std::shared_ptr<JobConfig>& config, const std::string& command)
 {
 }
