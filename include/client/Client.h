@@ -61,6 +61,7 @@ private:
     std::shared_ptr<balancedbanana::communication::Communicator> communicator;
     std::shared_ptr<ClientMP> clientMP;
     std::shared_ptr<balancedbanana::communication::Task> task;
+    std::filesystem::path configpath;
 };
 
 } // namespace client

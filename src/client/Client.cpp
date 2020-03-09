@@ -23,7 +23,8 @@ Client::Client()
     task = std::make_shared<Task>();
     auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbc";
     std::filesystem::create_directories(configdir);
-    config = ApplicationConfig(configdir / "appconfig.ini");
+    configpath = configdir / "appconfig.ini";
+    config = ApplicationConfig();
 }
 
 void Client::connectWithServer(const std::string &serverIpAdress, short serverPort)
@@ -36,11 +37,22 @@ void Client::connectWithServer(const std::string &serverIpAdress, short serverPo
 void Client::authenticateWithServer()
 {
     balancedbanana::communication::authenticator::Authenticator auth(communicator);
-    if(config.Contains("publickey")) {
-        auth.publickeyauthenticate(getenv("USER"), config["publickey"]);
+    if(config.Contains("privatekey")) {
+        auth.publickeyauthenticate(getenv("USER"), config["privatekey"]);
     } else {
-        // TODO Read password without echo
-        auth.authenticate(getenv("USER"), "");
+        // Read password without echo
+        char * user = getenv("USER");
+        std::string username;
+        if(user) {
+            username = user;
+        } else {
+            std::cout << "Username: ";
+            std::cin >> username;
+        }
+        std::cout << "Password " << username << "@scheduler: ";
+        auto privkey = auth.authenticate(username, commandLineInterface::CommandLineProcessor::readPassword());
+        config["privatekey"] = privkey;
+        config.Save(configpath);
     }
 }
 
@@ -71,6 +83,9 @@ void Client::processCommandLineArguments(int argc, const char* const * argv)
             break;
         case TaskType::REMOVE_IMAGE :
             handleRemoveImage(task);
+            break;
+        case TaskType::RUN:
+            handleRun(task);
             break;
         default:
             throw std::runtime_error("Sadly not implemented yet :(");
