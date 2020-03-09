@@ -92,6 +92,8 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                     repo->GetJob(id)->setStatus(newstatus);
                 }, [repo](uint64_t userid, const std::shared_ptr<JobConfig>& config, const std::string& command) -> uint64_t {
                     return repo->AddJob(userid, *config, QDateTime::currentDateTime(), command)->getId();
+                }, [repo](const std::string& username, const std::string& pubkey) -> std::shared_ptr<User> {
+                    return repo->AddUser(username, "bot@localhost", pubkey);
                 }, [repo](const std::string& username) -> std::shared_ptr<User> {
                     return repo->FindUser(username);
                 });

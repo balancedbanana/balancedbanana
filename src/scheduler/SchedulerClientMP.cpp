@@ -26,16 +26,17 @@ MessageProcessor(communicator){
 SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
                                      const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                                      const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
+                                     const std::function<std::shared_ptr<User>(const std::string& username, const std::string& pubkey)> &dbaddUser,
                                      const std::function<std::shared_ptr<User>(const std::string& username)> &dbgetUserByName) :
-                                     dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob), dbgetUserByName(dbgetUserByName)
+                                     dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob), dbaddUser(dbaddUser), dbgetUserByName(dbgetUserByName)
 {
 }
 
 void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
 {
     try {
-        auto user = std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey());
-        authenticator::AuthHandler::GetDefault()->authenticate(user, msg.GetPassword());
+        authenticator::AuthHandler::GetDefault()->authenticate(std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey()), msg.GetPassword());
+        user = dbaddUser(msg.GetUsername(), msg.GetPublickey());
         AuthResultMessage result(0);
         getClient().send(result);
     } catch(const std::exception& ex) {
@@ -47,7 +48,7 @@ void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
 void SchedulerClientMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg)
 {
     try {
-        auto user = dbgetUserByName(msg.GetUserName());
+        user = dbgetUserByName(msg.GetUserName());
         if(!user) {
             throw std::runtime_error("Unknown User");
         }
