@@ -169,10 +169,9 @@ protected:
         QSqlQuery query("CREATE TABLE `users` (\n"
                         "  `name` varchar(45) NOT NULL,\n"
                         "  `email` varchar(255) NOT NULL,\n"
-                        "  `public_key` varchar(255) NOT NULL,\n"
+                        "  `public_key` longtext NOT NULL,\n"
                         "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                         "  PRIMARY KEY (`id`),\n"
-                        "  UNIQUE KEY `public_key_UNIQUE` (`public_key`),\n"
                         "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
         query.exec();
@@ -369,10 +368,9 @@ TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
     query.prepare("CREATE TABLE `users` (\n"
                     "  `name` varchar(45) NOT NULL,\n"
                     "  `email` varchar(255) NOT NULL,\n"
-                    "  `public_key` varchar(255) NOT NULL,\n"
+                    "  `public_key` longtext NOT NULL,\n"
                     "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                     "  PRIMARY KEY (`id`),\n"
-                    "  UNIQUE KEY `public_key_UNIQUE` (`public_key`),\n"
                     "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     query.exec();
@@ -412,10 +410,9 @@ TEST_F(UpdateUserTest, UpdateUserTest_NoUsersTable_Test){
     query.prepare("CREATE TABLE `users` (\n"
                   "  `name` varchar(45) NOT NULL,\n"
                   "  `email` varchar(255) NOT NULL,\n"
-                  "  `public_key` varchar(255) NOT NULL,\n"
+                  "  `public_key` longtext NOT NULL,\n"
                   "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                   "  PRIMARY KEY (`id`),\n"
-                  "  UNIQUE KEY `public_key_UNIQUE` (`public_key`),\n"
                   "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
                   ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
     query.exec();

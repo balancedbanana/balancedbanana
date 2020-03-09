@@ -851,9 +851,9 @@ TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
 
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
           "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-          "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
-          "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
-          "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
+          "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
+          "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE KEY "
+          "`address_UNIQUE` (`address`) ) "
           "ENGINE=InnoDB DEFAULT CHARSET=utf8");
     query.exec();
 }
@@ -1498,9 +1498,9 @@ TEST_F(UpdateJobTest, UpdateJobTest_NoWorkersTable_Test){
     EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
                   "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-                  "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
-                  "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
-                  "KEY `public_key_UNIQUE` (`public_key`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
+                  "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
+                  "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`),  UNIQUE KEY "
+                  "`address_UNIQUE` (`address`) ) "
                   "ENGINE=InnoDB DEFAULT CHARSET=utf8");
     query.exec();
 }
