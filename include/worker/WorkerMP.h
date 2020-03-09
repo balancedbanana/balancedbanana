@@ -3,6 +3,7 @@
 #include <communication/MessageProcessor.h>
 #include <communication/Communicator.h>
 #include <configfiles/ApplicationConfig.h>
+#include <mutex>
 
 namespace balancedbanana
 {
@@ -10,6 +11,7 @@ namespace worker
 {
 class WorkerMP : public communication::MessageProcessor {
 	std::shared_ptr<communication::Communicator> com;
+	std::mutex midtodocker;
 	configfiles::ApplicationConfig idtodocker;
 public:
 	WorkerMP();

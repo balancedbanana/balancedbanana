@@ -25,7 +25,7 @@ void WorkerMP::processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &m
 
 void WorkerMP::processTaskMessage(const TaskMessage &msg) {
     auto task = msg.GetTask();
-    std::thread([task, com = this->com]() {
+    std::thread([task, com = this->com, this]() {
         Docker docker;
         try {
             switch ((TaskType)task.getType())
@@ -36,6 +36,32 @@ void WorkerMP::processTaskMessage(const TaskMessage &msg) {
                         throw std::runtime_error("Task lacks ImageFileContent");
                     }
                     docker.BuildImage(task.getAddImageName(), content);
+                    TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
+                    com->send(resp);
+                break;
+            }
+            case TaskType::RUN: {
+                    auto container = docker.Run(task);
+                    // ToDo save the taskid / containerid mapping
+                    {
+                        std::lock_guard<std::mutex> guard(midtodocker);
+                        idtodocker[std::to_string(task.getJobId().value_or(0))] = container.GetId();
+                    }
+                    TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
+                    com->send(resp);
+                break;
+            }
+            case TaskType::TAIL: {
+                    Container container("");
+                    {
+                        std::lock_guard<std::mutex> guard(midtodocker);
+                        container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                    }
+                    // Spec said 200 lines
+                    auto lines = container.Tail(200);
+                    // ToDo send them back
+                    TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
+                    com->send(resp);
                 break;
             }
             default:
