@@ -873,18 +873,3 @@ void JobGateway::updateJob(const job_details& job){
     }
 }
 
-bool balancedbanana::database::JobGateway::updateJobPriority(balancedbanana::configfiles::Priority priority, uint64_t id) {
-    throw std::runtime_error("TODO!!!!!");
-}
-
-bool balancedbanana::database::JobGateway::pauseJob(uint64_t id) {
-    throw std::runtime_error("TODO!!!!!");
-}
-
-bool balancedbanana::database::JobGateway::interruptJob(uint64_t id) {
-    throw std::runtime_error("TODO!!!!!");
-}
-
-bool balancedbanana::database::JobGateway::cancelJob(uint64_t id) {
-    throw std::runtime_error("TODO!!!!!");
-}
