@@ -7,6 +7,10 @@ Container::Container(const std::string &id) {
     this->id = id;
 }
 
+const std::string &balancedbanana::worker::Container::GetId() const {
+    return this->id;
+}
+
 std::string Container::Tail(int lines) {
     QProcess proc;
     proc.setProgram("docker");

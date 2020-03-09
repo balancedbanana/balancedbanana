@@ -16,6 +16,11 @@ namespace balancedbanana {
 			Container(const std::string &id);
 
 			/**
+			 * Gets the id / name of the Container
+			 **/
+			const std::string& GetId() const;
+
+			/**
 			 * Return max last n lines of the Log
 			 * @param lines max lines to return
 			 **/
