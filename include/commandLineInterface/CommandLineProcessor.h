@@ -28,6 +28,7 @@ namespace balancedbanana {
 			 */
 			virtual int process(int argc, const char* const * argv, const std::shared_ptr<balancedbanana::communication::Task>& task) { return 0; }
 
+			static std::string readPassword();
 		};
 
 	}

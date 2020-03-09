@@ -1,2 +1,2 @@
-add_library(commandLineInterface ClientCommandLineProcessor.cpp SchedulerCommandLineProcessor.cpp WorkerCommandLineProcessor.cpp)
+add_library(commandLineInterface CommandLineProcessor.cpp ClientCommandLineProcessor.cpp SchedulerCommandLineProcessor.cpp WorkerCommandLineProcessor.cpp)
 target_link_libraries(commandLineInterface PUBLIC configfiles communication)
