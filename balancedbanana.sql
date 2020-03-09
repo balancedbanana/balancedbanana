@@ -49,9 +49,10 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`users`
     `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `name`  VARCHAR(45)         NOT NULL,
     `email` VARCHAR(255)         NOT NULL,
-    `public_key`   VARCHAR(255)        NOT NULL,
+    `public_key`   LONGTEXT        NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE INDEX `public_key_UNIQUE` (`public_key` ASC)
+    UNIQUE INDEX `id_UNIQUE` (`id` ASC),
+    UNIQUE INDEX `name_UNIQUE` (`name` ASC)
 )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
@@ -67,11 +68,11 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`
     `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,
     `space`      BIGINT(10) UNSIGNED NULL DEFAULT NULL,
     `address`    VARCHAR(255)        NULL DEFAULT NULL,
-    `public_key` LONGTEXT        NULL DEFAULT NULL,
+    `public_key` LONGTEXT        NULL NULL,
     `name`       VARCHAR(45)         NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `id_UNIQUE` (`id` ASC),
-    UNIQUE INDEX `address_UNIQUE` (`address` ASC)
+    UNIQUE INDEX `name_UNIQUE` (`name` ASC)
 )
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8;
