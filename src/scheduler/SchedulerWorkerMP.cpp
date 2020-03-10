@@ -2,6 +2,7 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
+#include <communication/message/HardwareDetailMessage.h>
 #include <communication/authenticator/AuthHandler.h>
 
 using namespace balancedbanana::scheduler;
@@ -19,7 +20,9 @@ SchedulerWorkerMP::SchedulerWorkerMP(const std::function<std::shared_ptr<Worker>
 
 
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
-    //TODO populate the db with the details
+    //TODO No space in HardwareDetailMessage
+    //TODO No OS Identifier in Spec
+    worker->setSpec({-1, msg.GetRamSize(), msg.GetCoreCount()});
 }
 
 void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
@@ -50,6 +53,7 @@ void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
         AuthResultMessage result(0);
         worker->send(result);
     } catch(const std::exception& ex) {
+        std::string msg = ex.what();
         AuthResultMessage result(-1);
         com->send(result);
     }

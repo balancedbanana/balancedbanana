@@ -27,6 +27,11 @@ Specs Worker::getSpec() {
     std::lock_guard guard(mtx);
     return specs;
 }
+void Worker::setSpec(const Specs& specs) {
+    std::lock_guard guard(mtx);
+    this->specs = specs;
+    Update(balancedbanana::scheduler::WorkerObservableEvent::HARDWARE_DETAIL_UPDATE);
+}
 
 uint64_t Worker::getId() {
     std::lock_guard guard(mtx);
@@ -40,6 +45,7 @@ const std::string &Worker::getAddress() {
 void Worker::setAddress(const std::string &adr) {
     std::lock_guard lock(mtx);
     address = adr;
+    Update(balancedbanana::scheduler::WorkerObservableEvent::DATA_CHANGE);
 }
 
 void Worker::setCommunicator(const std::shared_ptr<communication::Communicator>& com) {

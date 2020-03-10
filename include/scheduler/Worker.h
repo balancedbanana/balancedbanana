@@ -25,6 +25,8 @@ namespace balancedbanana {
 
             database::Specs getSpec();
 
+            void setSpec(const database::Specs& spec);
+
             uint64_t getId();
 
             const communication::WorkerLoadResponseMessage& GetWorkerLoad();
