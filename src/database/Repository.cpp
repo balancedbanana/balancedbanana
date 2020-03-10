@@ -19,6 +19,10 @@ jobCache(), workerCache(), userCache(), lastJobId(0, 0), lastWorkerId(0, 0), las
     timer.start();
 }
 
+Repository::~Repository() {
+    FlushCache();
+}
+
 std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
     std::lock_guard lock(mtx);
     auto it = workerCache.find(id);

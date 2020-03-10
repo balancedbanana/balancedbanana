@@ -40,6 +40,7 @@ namespace balancedbanana::database {
             Repository(const std::string& host_name, const std::string& databasename, const std::string& username,
                     const std::string& password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
 
+            ~Repository();
 
             std::shared_ptr<Worker> GetWorker(uint64_t id);
             std::shared_ptr<Worker> AddWorker(const std::string &name, const std::string &publickey, const Specs &specs, const std::string &address);
