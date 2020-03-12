@@ -6,26 +6,28 @@
 #include "communication/Communicator.h"
 #include "communication/CommunicatorListener.h"
 #include <configfiles/ApplicationConfig.h>
-#include "ClientMP.h"
-
+#include <future>
 
 namespace balancedbanana
 {
 namespace client
 {
 
-class Client
+class Client : private communication::MessageProcessor, public std::enable_shared_from_this<Client>
 {
 public:
 
     Client();
 
-    void connectWithServer(const std::string& serverIpAdress, short serverPort);
-    void authenticateWithServer();
-    void processCommandLineArguments(int argc, const char* const * argv);
-    bool specifiedBlock();
+    std::future<int> processCommandLineArguments(int argc, const char* const * argv);
 
 private:
+    bool publicauthfailed;
+    std::promise<int> prom;
+
+    void authenticateWithServer();
+    void connectWithServer(const std::string& serverIpAdress, short serverPort);
+    bool specifiedBlock();
     balancedbanana::configfiles::ApplicationConfig config;
 
     /**
@@ -59,9 +61,11 @@ private:
     void handleRequest(std::shared_ptr<balancedbanana::communication::Task> task);
 
     std::shared_ptr<balancedbanana::communication::Communicator> communicator;
-    std::shared_ptr<ClientMP> clientMP;
     std::shared_ptr<balancedbanana::communication::Task> task;
     std::filesystem::path configpath;
+
+    void processAuthResultMessage(const communication::AuthResultMessage &msg) override;
+	void processRespondToClientMessage(const communication::RespondToClientMessage& msg) override;
 };
 
 } // namespace client

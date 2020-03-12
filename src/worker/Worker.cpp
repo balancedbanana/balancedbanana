@@ -1,25 +1,16 @@
 #include <worker/Worker.h>
-
-#if 0
-using namespace balancedbanana::worker;
-
-Container Worker::getContainerbyTaskID(unsigned long tid) {
-
-}
-
-void balancedbanana::worker::Worker::initialize() {
-    //?*************
-}
-
-void balancedbanana::worker::Worker::getHardwareDetails() {
-    
-}
-#else
+#include <worker/docker/Docker.h>
+#include <worker/docker/Container.h>
+#include <worker/docker/Checkpoint.h>
 #include <commandLineInterface/WorkerCommandLineProcessor.h>
 #include <communication/message/TaskMessage.h>
+#include <communication/message/AuthResultMessage.h>
+#include <communication/message/WorkerLoadResponseMessage.h>
+#include <communication/message/TaskResponseMessage.h>
 #include <communication/authenticator/Authenticator.h>
 
 using namespace balancedbanana::worker;
+using namespace balancedbanana::communication;
 using balancedbanana::communication::Task;
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::communication::Communicator;
@@ -38,32 +29,40 @@ Worker::Worker()
     task = std::make_shared<Task>();
     auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbd";
     std::filesystem::create_directories(configdir);
-    config = ApplicationConfig(configdir / "appconfig.ini");
+    configpath = configdir / "appconfig.ini";
+    config = ApplicationConfig(configpath);
+    publicauthfailed = false;
 }
 
 void Worker::connectWithServer(const std::string &serverIpAdress, short serverPort)
 {
-    workerMP = std::make_shared<WorkerMP>();
-    communicator = std::make_shared<Communicator>(serverIpAdress, serverPort, workerMP);
-    workerMP->setCom(communicator);
+    communicator = std::make_shared<Communicator>(serverIpAdress, serverPort, std::shared_ptr<balancedbanana::communication::MessageProcessor>(shared_from_this(), this));
 }
-
 
 void Worker::authenticateWithServer()
 {
     balancedbanana::communication::authenticator::Authenticator auth(communicator);
-    if(config.Contains("publickey")) {
-        auth.publickeyauthenticate(getenv("USER"), config["publickey"]);
+    auto keypath = configpath.parent_path() / "privatekey.pem";
+    if(!publicauthfailed && std::filesystem::exists(keypath) && config.Contains("name")) {
+        std::ifstream file(keypath);
+        std::stringstream content;
+        content << file.rdbuf();
+        auth.publickeyauthenticate(config["name"], content.str());
     } else {
-        auth.authenticate();
+        publicauthfailed = true;
+        auto result = auth.authenticate();
+        config["name"] = result.first;
+        config.Save(configpath);
+        std::ofstream file(keypath);
+        file << result.second;
     }
 }
 
 
-void Worker::processCommandLineArguments(int argc, const char* const * argv)
+std::future<int> Worker::processCommandLineArguments(int argc, const char* const * argv)
 {
     WorkerCommandLineProcessor clp;
-    clp.process(argc, argv, task);
+    auto code = clp.process(argc, argv, task);
     if(task->getType()) {
         std::string server = "localhost";
         short port = 8444;
@@ -77,8 +76,22 @@ void Worker::processCommandLineArguments(int argc, const char* const * argv)
         } else if(config.Contains("port")) {
             port = std::stoi(config["port"]);
         }
-        connectWithServer(server, port);
+        try {
+            connectWithServer(server, port);
+        } catch(...) {
+            std::cerr << "Error: Can not find Server\n";
+            prom.set_value(code);
+            return prom.get_future();
+        }
         authenticateWithServer();
+    } else {
+        prom.set_value(code);
+    }
+    return prom.get_future();
+}
+
+void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
+    if(!msg.getStatus()) {
         switch ((TaskType)task->getType())
         {
         case TaskType::WORKERSTART: {
@@ -95,6 +108,80 @@ void Worker::processCommandLineArguments(int argc, const char* const * argv)
             throw std::runtime_error("Sadly not implemented yet :(");
             break;
         }
+    } else {
+        if(!publicauthfailed) {
+            publicauthfailed = true;
+            authenticateWithServer();
+        } else {
+            std::cerr << "Error: Could not authenticate to the Server\n";
+            prom.set_value(-1);
+        }
     }
 }
-#endif
+
+void Worker::processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg) {
+    WorkerLoadResponseMessage resp(32, 3, 1, 42, 2, 1, 12);
+    communicator->send(resp);
+}
+
+void Worker::processTaskMessage(const TaskMessage &msg) {
+    auto task = msg.GetTask();
+    std::thread([task, com = this->communicator, this]() {
+        Docker docker;
+        try {
+            switch ((TaskType)task.getType())
+            {
+            case TaskType::ADD_IMAGE: {
+                auto& content = task.getAddImageFileContent();
+                if(content.empty()) {
+                    throw std::runtime_error("Task lacks ImageFileContent");
+                }
+                docker.BuildImage(task.getAddImageName(), content);
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
+                com->send(resp);
+                break;
+            }
+            case TaskType::REMOVE_IMAGE: {
+                    docker.RemoveImage(task.getRemoveImageName());
+                    TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
+                    com->send(resp);
+                break;
+            }
+            case TaskType::RUN: {
+                auto container = docker.Run(task);
+                // ToDo save the taskid / containerid mapping
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    idtodocker[std::to_string(task.getJobId().value_or(0))] = container.GetId();
+                }
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
+                com->send(resp);
+                auto exitcode = container.Wait();
+                // How to summit the exitcode
+                TaskResponseMessage resp2(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
+                com->send(resp2);
+                break;
+            }
+            case TaskType::TAIL: {
+                Container container("");
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                // Spec said 200 lines
+                auto lines = container.Tail(200);
+                // ToDo send them back
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
+                com->send(resp);
+                break;
+            }
+            default:
+                throw std::runtime_error("Not Implented yet :(");
+            }
+        } catch(const std::exception&ex) {
+            // What should I send on Error
+            TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::interrupted);
+            com->send(resp);
+        }
+    }).detach();
+}

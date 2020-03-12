@@ -2,6 +2,8 @@
 
 #include "commandLineInterface/ClientCommandLineProcessor.h"
 #include <communication/message/TaskMessage.h>
+#include <communication/message/AuthResultMessage.h>
+#include <communication/message/RespondToClientMessage.h>
 #include <communication/authenticator/Authenticator.h>
 
 using namespace balancedbanana::client;
@@ -24,22 +26,27 @@ Client::Client()
     auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbc";
     std::filesystem::create_directories(configdir);
     configpath = configdir / "appconfig.ini";
-    config = ApplicationConfig();
+    config = ApplicationConfig(configpath);
+    publicauthfailed = false;
 }
 
 void Client::connectWithServer(const std::string &serverIpAdress, short serverPort)
 {
-    clientMP = std::make_shared<ClientMP>();
-    communicator = std::make_shared<Communicator>(serverIpAdress, serverPort, clientMP);
+    communicator = std::make_shared<Communicator>(serverIpAdress, serverPort, std::shared_ptr<balancedbanana::communication::MessageProcessor>(shared_from_this(), this));
 }
 
 
 void Client::authenticateWithServer()
 {
     balancedbanana::communication::authenticator::Authenticator auth(communicator);
-    if(config.Contains("privatekey")) {
-        auth.publickeyauthenticate(getenv("USER"), config["privatekey"]);
+    auto keypath = configpath.parent_path() / "privatekey.pem";
+    if(!publicauthfailed && std::filesystem::exists(keypath)) {
+        std::ifstream file(keypath);
+        std::stringstream content;
+        content << file.rdbuf();
+        auth.publickeyauthenticate(getenv("USER"), content.str());
     } else {
+        publicauthfailed = true;
         // Read password without echo
         char * user = getenv("USER");
         std::string username;
@@ -51,16 +58,16 @@ void Client::authenticateWithServer()
         }
         std::cout << "Password " << username << "@scheduler: ";
         auto privkey = auth.authenticate(username, commandLineInterface::CommandLineProcessor::readPassword());
-        config["privatekey"] = privkey;
-        config.Save(configpath);
+        std::ofstream file(keypath);
+        file << privkey;
     }
 }
 
 
-void Client::processCommandLineArguments(int argc, const char* const * argv)
+std::future<int> Client::processCommandLineArguments(int argc, const char* const * argv)
 {
     ClientCommandLineProcessor clp;
-    clp.process(argc, argv, task);
+    int code = clp.process(argc, argv, task);
     if(task->getType()) {
         std::string server = "localhost";
         short port = 8443;
@@ -74,24 +81,18 @@ void Client::processCommandLineArguments(int argc, const char* const * argv)
         } else if(config.Contains("port")) {
             port = std::stoi(config["port"]);
         }
-        connectWithServer(server, port);
-        authenticateWithServer();
-        switch ((TaskType)task->getType())
-        {
-        case TaskType::ADD_IMAGE:
-            handleAddImage(task);
-            break;
-        case TaskType::REMOVE_IMAGE :
-            handleRemoveImage(task);
-            break;
-        case TaskType::RUN:
-            handleRun(task);
-            break;
-        default:
-            throw std::runtime_error("Sadly not implemented yet :(");
-            break;
+        try {
+            connectWithServer(server, port);
+        } catch(...) {
+            std::cerr << "Error: Can not find Server\n";
+            prom.set_value(code);
+            return prom.get_future();
         }
+        authenticateWithServer();
+    } else {
+        prom.set_value(code);
     }
+    return prom.get_future();
 }
 
 bool Client::specifiedBlock()
@@ -129,10 +130,64 @@ void Client::handleRemoveImage(std::shared_ptr<Task> task)
 
 void Client::handleRun(std::shared_ptr<Task> task)
 {
-    // TODO: Create and send Task Message, wait for finish if blocking
+    TaskMessage message(*task);
+    communicator->send(message);
 }
 
 void Client::handleRequest(std::shared_ptr<Task> task)
 {
+    TaskMessage message(*task);
+    communicator->send(message);
     //TODO: Create and send Task Message, wait for response from server and print to std::cout
+}
+
+void Client::processAuthResultMessage(const balancedbanana::communication::AuthResultMessage &msg) {
+    if(!msg.getStatus()) {
+        switch ((TaskType)task->getType())
+        {
+        case TaskType::ADD_IMAGE:
+            handleAddImage(task);
+            break;
+        case TaskType::REMOVE_IMAGE :
+            handleRemoveImage(task);
+            break;
+        case TaskType::RUN:
+            handleRun(task);
+            break;
+        case TaskType::STATUS:
+        case TaskType::STOP:
+        case TaskType::BACKUP:
+        case TaskType::CONTINUE:
+        case TaskType::RESTORE:
+        case TaskType::PAUSE:
+        case TaskType::TAIL:
+            handleRequest(task);
+            break;
+        default:
+            throw std::runtime_error("Sadly not implemented yet :(");
+            break;
+        }
+    } else {
+        if(!publicauthfailed) {
+            publicauthfailed = true;
+            authenticateWithServer();
+        } else {
+            std::cerr << "Error: Could not authenticate to the Server\n";
+            prom.set_value(-1);
+        }
+    }
+}
+
+void Client::processRespondToClientMessage(const balancedbanana::communication::RespondToClientMessage& msg)
+{
+    // Received when the client made a request from the server
+    std::string responseMessage = msg.GetData();
+    bool unblock = msg.getUnblock();
+
+    std::cout << responseMessage << "\n"; // std::endl is not exacty what you want
+
+    if (unblock || !specifiedBlock()) {
+        // synchronize with client and tell it to unblock
+        prom.set_value(0);
+    }
 }

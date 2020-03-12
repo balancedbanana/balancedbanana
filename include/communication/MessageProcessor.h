@@ -17,7 +17,7 @@ namespace balancedbanana {
 		class WorkerLoadResponseMessage;
 		class RespondToClientMessage;
 
-        class MessageProcessor : public std::enable_shared_from_this<MessageProcessor> {
+        class MessageProcessor {
         private:
 #if 0
             std::shared_ptr<Communicator> communicator_;
