@@ -14,6 +14,7 @@ namespace balancedbanana {
 		    explicit AuthResultMessage(const char *data, size_t &iterator, size_t length);
 
 			//Gibt den Authentfication status zurück 0 falls erfolgreich sonst ungleich 0
+			//1 on Unknown Worker
 			uint32_t getStatus() const;
 
 			void process(MessageProcessor &mp) const override;

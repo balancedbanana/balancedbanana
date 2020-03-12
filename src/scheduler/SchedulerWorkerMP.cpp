@@ -29,7 +29,10 @@ void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
     try {
         worker = getWorkerByName(msg.GetUserName());
         if(!worker) {
-            throw std::runtime_error("Unknown worker");
+            // Unknown worker
+            AuthResultMessage result(1);
+            com->send(result);
+            return;
         }
         worker->setCommunicator(com);
         authenticator::AuthHandler::GetDefault()->publickeyauthenticate(worker, msg.GetUserNameSignature());
@@ -44,6 +47,10 @@ void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
 
 void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
     try {
+        worker = getWorkerByName(msg.GetWorkerName());
+        if(worker && worker->isConnected()) {
+            throw std::runtime_error("Already Connected");
+        }
         worker = addWorker(msg.GetWorkerName(), msg.GetPublicKey());
         if(!worker) {
             throw std::runtime_error("failed to add worker");

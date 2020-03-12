@@ -109,7 +109,7 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
             break;
         }
     } else {
-        if(!publicauthfailed) {
+        if(!publicauthfailed && msg.getStatus() == 1) {
             publicauthfailed = true;
             authenticateWithServer();
         } else {
