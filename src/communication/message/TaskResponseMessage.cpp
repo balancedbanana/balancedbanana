@@ -15,11 +15,11 @@ Message(JOB_STATUS), jobId(0), status(canceled) {
     status = (JobStatus) serialization::extract<uint32_t>(data, iterator, size);
 }
 
-uint64_t TaskResponseMessage::GetJobId() {
+uint64_t TaskResponseMessage::GetJobId() const {
     return jobId;
 }
 
-JobStatus TaskResponseMessage::GetJobStatus() {
+JobStatus TaskResponseMessage::GetJobStatus() const {
     return status;
 }
 

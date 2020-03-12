@@ -13,8 +13,8 @@ namespace balancedbanana::communication {
         TaskResponseMessage(uint64_t jobId, database::JobStatus status);
         TaskResponseMessage(const char *data, size_t &iterator, size_t size);
 
-        uint64_t GetJobId();
-        database::JobStatus GetJobStatus();
+        uint64_t GetJobId() const;
+        database::JobStatus GetJobStatus() const;
 
         std::string serialize() const override;
 
