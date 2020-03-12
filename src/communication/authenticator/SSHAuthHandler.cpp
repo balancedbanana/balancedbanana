@@ -8,7 +8,7 @@ std::shared_ptr<AuthHandler> balancedbanana::communication::authenticator::AuthH
     return std::make_shared<SSHAuthHandler>();
 }
 
-void balancedbanana::communication::authenticator::SSHAuthHandler::authenticate(const std::shared_ptr<IUser>& user, const std::string& password) {
+uint64_t balancedbanana::communication::authenticator::SSHAuthHandler::authenticate(const std::shared_ptr<IUser>& user, const std::string& password) {
     QProcess proc;
     proc.environment().append("");
     proc.setProgram("sshpass");
@@ -20,9 +20,10 @@ void balancedbanana::communication::authenticator::SSHAuthHandler::authenticate(
     std::string output = proc.readAllStandardOutput().toStdString();
     auto npos = output.find('\n');
     auto userid = output.substr(0, npos);
-    auto username = output.substr(0, npos);
-    if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
+    auto username = output.substr(npos + 1, output.length() - (npos + 2));
+    if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0 || username != user->name()) {
         std::string err = proc.readAllStandardError().toStdString();
         throw std::runtime_error("Invalid username or password");
     }
+    return std::stoull(userid);
 }

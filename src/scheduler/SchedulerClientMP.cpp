@@ -26,7 +26,7 @@ MessageProcessor(communicator){
 SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
                                      const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                                      const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
-                                     const std::function<std::shared_ptr<User>(const std::string& username, const std::string& pubkey)> &dbaddUser,
+                                     const std::function<std::shared_ptr<User>(uint64_t uid, const std::string& username, const std::string& pubkey)> &dbaddUser,
                                      const std::function<std::shared_ptr<User>(const std::string& username)> &dbgetUserByName) :
                                      dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob), dbaddUser(dbaddUser), dbgetUserByName(dbgetUserByName)
 {
@@ -35,8 +35,8 @@ SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<balance
 void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
 {
     try {
-        authenticator::AuthHandler::GetDefault()->authenticate(std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey()), msg.GetPassword());
-        user = dbaddUser(msg.GetUsername(), msg.GetPublickey());
+        auto uid = authenticator::AuthHandler::GetDefault()->authenticate(std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey()), msg.GetPassword());
+        user = dbaddUser(uid, msg.GetUsername(), msg.GetPublickey());
         AuthResultMessage result(0);
         getClient().send(result);
     } catch(const std::exception& ex) {

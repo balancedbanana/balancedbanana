@@ -6,7 +6,7 @@ namespace balancedbanana {
         namespace authenticator {
             class SSHAuthHandler : public AuthHandler {
             public:
-                virtual void authenticate(const std::shared_ptr<scheduler::IUser>& user, const std::string& password) override;
+                virtual uint64_t authenticate(const std::shared_ptr<scheduler::IUser>& user, const std::string& password) override;
             };
         }
     }
