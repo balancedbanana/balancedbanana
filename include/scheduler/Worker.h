@@ -6,6 +6,7 @@
 #include "IUser.h"
 #include "Observer.h"
 #include <condition_variable>
+#include <optional>
 
 namespace balancedbanana {
     namespace scheduler {

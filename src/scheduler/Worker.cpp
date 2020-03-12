@@ -9,7 +9,8 @@ using namespace balancedbanana::communication;
 using namespace balancedbanana::database;
 using namespace balancedbanana::scheduler;
 
-Worker::Worker(uint64_t id, const std::string &name, const std::string &publickey, const std::optional<Specs> &specs) :
+Worker::Worker(uint64_t id, const std::string &name, const std::string &publickey, const std::optional<database::Specs>
+        &specs) :
 IUser(name, publickey),
                id(id), specs(specs), connected(false), address(""), comm(nullptr), resp(0, 0, 0, 0, 0, 0, 0), mtx(), cnd(){
 }
