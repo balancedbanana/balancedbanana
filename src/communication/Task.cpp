@@ -23,7 +23,8 @@ Task::Task(const std::string &string) {
     size_t iterator = 0;
     size_t size = string.size();
     taskCommand = extractString(data, iterator, size);
-    config = std::make_shared<configfiles::JobConfig>(extractString(data, iterator, size));
+    std::istringstream configs(extractString(data, iterator, size));
+    config = std::make_shared<configfiles::JobConfig>(configs);
     type = extract<uint32_t>(data, iterator, size);
     addImageName = extractString(data, iterator, size);
     addImageFilePath = extractString(data, iterator, size);

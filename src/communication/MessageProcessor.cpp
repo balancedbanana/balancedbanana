@@ -25,6 +25,9 @@ std::shared_ptr<Communicator> MessageProcessor::communicator() {
 #endif
 
 void MessageProcessor::process(const std::shared_ptr<Message> &msg) {
+    if(!msg) {
+        handleInvalidMessage(*msg);
+    }
     msg->process(*this);
 }
 
@@ -33,7 +36,7 @@ void MessageProcessor::handleInvalidMessage(const Message &msg) {
 }
 
 void balancedbanana::communication::MessageProcessor::onDisconnect() {
-    
+
 }
 
 void MessageProcessor::processAuthResultMessage(const AuthResultMessage &msg) {
