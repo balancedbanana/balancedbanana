@@ -36,8 +36,8 @@ TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
  * Deletes the all records in the workers table and resets the auto increment for the id.
  */
 void resetWorkerTable(){
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
-                    IGateway::AcquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -52,9 +52,11 @@ class AddWorkerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         details.public_key = "34nrhk3hkr";
-        details.specs.space = 10240;
-        details.specs.ram = 16384;
-        details.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "Windows 10.4.1.4";
+        specs.cores = 4;
+        specs.ram = 16234;
+        details.specs = specs;
         details.address = "0.0.0.0";
         details.name = "CentOS";
         details.empty = false;
@@ -82,15 +84,21 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
             int nameIndex = query.record().indexOf("name");
             int ramIndex = query.record().indexOf("ram");
             int coresIndex = query.record().indexOf("cores");
-            int spaceIndex = query.record().indexOf("space");
+            int osIndex = query.record().indexOf("osIdentifier");
             int addressIndex = query.record().indexOf("address");
             int keyIndex = query.record().indexOf("public_key");
 
             worker_details queryDetails{};
             queryDetails.name = query.value(nameIndex).toString().toStdString();
-            queryDetails.specs.cores = query.value(coresIndex).toUInt();
-            queryDetails.specs.ram = query.value(ramIndex).toUInt();
-            queryDetails.specs.space = query.value(spaceIndex).toUInt();
+            if (query.value(coresIndex).isNull()){
+                queryDetails.specs = std::nullopt;
+            } else {
+                Specs specs{};
+                specs.cores = query.value(coresIndex).toUInt();
+                specs.ram = query.value(ramIndex).toUInt();
+                specs.osIdentifier = query.value(osIndex).toString().toStdString();
+                queryDetails.specs = specs;
+            }
             queryDetails.address = query.value(addressIndex).toString().toStdString();
             queryDetails.public_key = query.value(keyIndex).toString().toStdString();
             queryDetails.id = id;
@@ -152,9 +160,11 @@ protected:
 
         // Setup the varaibles needed
         details.public_key = "34nrhk3hkr";
-        details.specs.space = 10240;
-        details.specs.ram = 16384;
-        details.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "Ubuntu 18.04.62";
+        specs.ram = 16384;
+        specs.cores = 4;
+        details.specs = specs;
         details.address = "0.0.0.0";
         details.name = "CentOS";
         id = 1;
@@ -162,12 +172,22 @@ protected:
     }
 
     void TearDown() override {
-        QSqlQuery query("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
-                        "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-                        "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
-                        "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
-                        "KEY `address_UNIQUE` (`address`) ) "
-                        "ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AcquireDatabase());
+        auto db = IGateway::AcquireDatabase();
+        QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
+                        "(\n"
+                        "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                        "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                        "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                        "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
+                        "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
+                        "    `public_key` LONGTEXT NOT NULL,\n"
+                        "    `name`       VARCHAR(255) NOT NULL,\n"
+                        "    PRIMARY KEY (`id`),\n"
+                        "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                        "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                        ")\n"
+                        "ENGINE = InnoDB\n"
+                        "DEFAULT CHARACTER SET = utf8", db);
         query.exec();
     }
 
@@ -201,7 +221,8 @@ TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
  * @return  true if remove was successful, otherwise false.
  */
 bool wasWorkerRemoveSuccessful(uint64_t id){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AcquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -226,9 +247,11 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     // Add a worker
     worker_details details{};
     details.public_key = "34nrhk3hkr";
-    details.specs.space = 10240;
-    details.specs.ram = 16384;
-    details.specs.cores = 4;
+    Specs specs{};
+    specs.osIdentifier = "Kubuntu 18.0123";
+    specs.ram = 16384;
+    specs.cores = 6;
+    details.specs = specs;
     details.address = "0.0.0.0";
     details.name = "CentOS";
     details.id = 1;
@@ -255,9 +278,11 @@ class GetWorkerTest : public ::testing::Test{
 protected:
     void SetUp() override {
         details.public_key = "34nrhk3hkr";
-        details.specs.space = 10240;
-        details.specs.ram = 16384;
-        details.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "UNIX";
+        specs.ram = 16384;
+        specs.cores = 4;
+        details.specs = specs;
         details.address = "0.0.0.0";
         details.name = "CentOS";
         details.id = 1;
@@ -295,9 +320,11 @@ protected:
     void SetUp() override {
         // Set up the first worker
         first.public_key = "34nrhk3hkr";
-        first.specs.space = 10240;
-        first.specs.ram = 16384;
-        first.specs.cores = 4;
+        Specs firstSpecs{};
+        firstSpecs.osIdentifier = "some os";
+        firstSpecs.ram = 16384;
+        firstSpecs.cores = 4;
+        first.specs = firstSpecs;
         first.address = "0.0.0.0";
         first.name = "CentOS";
         first.id = 1;
@@ -305,9 +332,8 @@ protected:
 
         // Set up the second worker
         second.public_key = "fsd8iasdf8sadf";
-        second.specs.space = 14134;
-        second.specs.ram = 12421;
-        second.specs.cores = 3;
+        second.specs = firstSpecs;
+        second.specs->ram = 17385;
         second.address = "1.1.1.1";
         second.name = "Ubuntu";
         second.id = 2;
@@ -315,9 +341,8 @@ protected:
 
         // Set up the third worker
         third.public_key = "asdfascascsd";
-        third.specs.space = 43214;
-        third.specs.ram = 21412;
-        third.specs.cores = 2;
+        third.specs = firstSpecs;
+        third.specs->cores = 10;
         third.address = "2.2.2.2";
         third.name = "Windows";
         third.id = 3;
@@ -358,9 +383,11 @@ class GetWorkerByNameTest : public ::testing::Test {
 protected:
     void SetUp() override {
         worker.public_key = "34nrhk3hkr";
-        worker.specs.space = 10240;
-        worker.specs.ram = 16384;
-        worker.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "10240";
+        specs.ram = 16384;
+        specs.cores = 4;
+        worker.specs = specs;
         worker.address = "0.0.0.0";
         worker.name = "CentOS";
         worker.id = 1;
@@ -375,15 +402,25 @@ protected:
 };
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(WorkerGateway::getWorkerByName(worker.name), std::logic_error);
-    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
-                    "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-                    "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
-                    "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`),  UNIQUE KEY "
-                    "`address_UNIQUE` (`address`) ) "
-                    "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
+                  "(\n"
+                  "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
+                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
+                  "    `public_key` LONGTEXT NOT NULL,\n"
+                  "    `name`       VARCHAR(255) NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                  "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8;");
     query.exec();
 }
 
@@ -401,9 +438,11 @@ class UpdateWorkerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         worker.public_key = "34nrhk3hkr";
-        worker.specs.space = 10240;
-        worker.specs.ram = 16384;
-        worker.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "10240";
+        specs.ram = 16384;
+        specs.cores = 4;
+        worker.specs = specs;
         worker.address = "0.0.0.0";
         worker.name = "CentOS";
         worker.id = 1;
@@ -418,14 +457,25 @@ protected:
 };
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(WorkerGateway::updateWorker(worker), std::logic_error);
-    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
-                  "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-                  "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
-                  "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
-                  "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
+                  "(\n"
+                  "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
+                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
+                  "    `public_key` LONGTEXT NOT NULL,\n"
+                  "    `name`       VARCHAR(255) NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                  "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8;");
     query.exec();
 }
 

@@ -16,7 +16,7 @@ USE `balancedbanana` ;
 CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`
 (
     `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `space` BIGINT(10) UNSIGNED NOT NULL,
+    `osIdentifier` TEXT NOT NULL,
     `ram`   BIGINT(10) UNSIGNED NOT NULL,
     `cores` INT(10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id`),
@@ -66,10 +66,10 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`
     `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,
     `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,
-    `space`      BIGINT(10) UNSIGNED NULL DEFAULT NULL,
+    `osIdentifier`   TEXT NULL DEFAULT NULL,
     `address`    VARCHAR(255)        NULL DEFAULT NULL,
-    `public_key` LONGTEXT        NULL NULL,
-    `name`       VARCHAR(45)         NULL DEFAULT NULL,
+    `public_key` LONGTEXT NOT NULL,
+    `name`       VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `id_UNIQUE` (`id` ASC),
     UNIQUE INDEX `name_UNIQUE` (`name` ASC)

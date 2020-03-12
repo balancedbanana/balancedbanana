@@ -28,16 +28,22 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
 
     // Converting the various args into QVariant Objects
     QVariant q_public_key = QVariant::fromValue(QString::fromStdString(worker.public_key));
-    QVariant q_space = QVariant::fromValue(worker.specs.space);
-    QVariant q_ram = QVariant::fromValue(worker.specs.ram);
-    QVariant q_cores = QVariant::fromValue(worker.specs.cores);
+    QVariant q_osIdentifier;
+    QVariant q_ram;
+    QVariant q_cores;
+    if (worker.specs.has_value()){
+        q_osIdentifier = QVariant::fromValue(QString::fromStdString(worker.specs->osIdentifier));
+        q_ram = QVariant::fromValue(worker.specs->ram);
+        q_cores = QVariant::fromValue(worker.specs->cores);
+    }
     QVariant q_address = QVariant::fromValue(QString::fromStdString(worker.address));
     QVariant q_name = QVariant::fromValue(QString::fromStdString(worker.name));
 
+
     // Create query
-    QSqlQuery query("INSERT INTO workers (public_key, space, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)", database);
+    QSqlQuery query("INSERT INTO workers (public_key, osIdentifier, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)", database);
     query.addBindValue(q_public_key);
-    query.addBindValue(q_space);
+    query.addBindValue(q_osIdentifier);
     query.addBindValue(q_ram);
     query.addBindValue(q_cores);
     query.addBindValue(q_address);
@@ -87,18 +93,21 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
     worker_details details{};
     if (Utilities::doesRecordExist("workers", id)){
         QSqlQuery query(database);
-        query.prepare("SELECT public_key, space, ram, cores, address, name FROM workers WHERE id = (:id)");
+        query.prepare("SELECT public_key, osIdentifier, ram, cores, address, name FROM workers WHERE id = (:id)");
         query.bindValue(":id", QVariant::fromValue(id));
         if (query.exec()){
             if (query.next()){
                 details.id = id;
                 details.public_key = query.value(0).toString().toStdString();
-                Specs specs{};
-                specs.space = query.value(1).toInt();
-                specs.ram = query.value(2).toInt();
-                specs.cores = query.value(3).toInt();
-                specs.empty = false;
-                details.specs = specs;
+                if (query.value(1).isNull()){
+                    details.specs = std::nullopt;
+                } else {
+                    Specs specs{};
+                    specs.osIdentifier = query.value(1).toString().toStdString();
+                    specs.ram = query.value(2).toInt();
+                    specs.cores = query.value(3).toInt();
+                    details.specs = specs;
+                }
                 details.address = query.value(4).toString().toStdString();
                 details.name = query.value(5).toString().toStdString();
                 details.empty = false;
@@ -124,19 +133,22 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
-    QSqlQuery query("SELECT id, public_key, space, ram, cores, address, name FROM workers", database);
+    QSqlQuery query("SELECT id, public_key, osIdentifier, ram, cores, address, name FROM workers", database);
     std::vector<worker_details> workerVector;
     if (query.exec()) {
         while(query.next()){
             worker_details worker;
             worker.id = query.value(0).toUInt();
             worker.public_key = query.value(1).toString().toStdString();
-            Specs specs{};
-            specs.space = query.value(2).toUInt();
-            specs.ram = query.value(3).toUInt();
-            specs.cores = query.value(4).toUInt();
-            specs.empty = false;
-            worker.specs = specs;
+            if (query.value(2).isNull()){
+                worker.specs = std::nullopt;
+            } else {
+                Specs specs{};
+                specs.osIdentifier = query.value(1).toString().toStdString();
+                specs.ram = query.value(2).toInt();
+                specs.cores = query.value(3).toInt();
+                worker.specs = specs;
+            }
             worker.address = query.value(5).toString().toStdString();
             worker.name = query.value(6).toString().toStdString();
             worker.empty = false;
@@ -160,18 +172,21 @@ worker_details WorkerGateway::getWorkerByName(const std::string &name) {
     }
     worker_details details{};
     QSqlQuery query(database);
-    query.prepare("SELECT public_key, space, ram, cores, address, id FROM workers WHERE name = ?");
+    query.prepare("SELECT public_key, osIdentifier, ram, cores, address, id FROM workers WHERE name = ?");
     query.addBindValue(QString::fromStdString(name));
     if (query.exec()){
         if (query.next()){
             details.name = name;
             details.public_key = query.value(0).toString().toStdString();
-            Specs specs{};
-            specs.space = query.value(1).toInt();
-            specs.ram = query.value(2).toInt();
-            specs.cores = query.value(3).toInt();
-            specs.empty = false;
-            details.specs = specs;
+            if (query.value(1).isNull()){
+                details.specs = std::nullopt;
+            } else {
+                Specs specs{};
+                specs.osIdentifier = query.value(1).toString().toStdString();
+                specs.ram = query.value(2).toInt();
+                specs.cores = query.value(3).toInt();
+                details.specs = specs;
+            }
             details.address = query.value(4).toString().toStdString();
             details.id = query.value(5).toUInt();
             details.empty = false;
@@ -195,12 +210,21 @@ void WorkerGateway::updateWorker(const worker_details &worker) {
     }
 
     if (Utilities::doesRecordExist("workers", worker.id)){
-        QSqlQuery query("UPDATE workers SET name = ?, ram = ?, cores = ?, space = ?, address = ?, public_key = ? "
+        QSqlQuery query("UPDATE workers SET name = ?, ram = ?, cores = ?, osIdentifier = ?, address = ?, public_key ="
+                        " ? "
                         "WHERE id = ?", database);
         query.addBindValue(QString::fromStdString(worker.name));
-        query.addBindValue(QVariant::fromValue(worker.specs.ram));
-        query.addBindValue(QVariant::fromValue(worker.specs.cores));
-        query.addBindValue(QVariant::fromValue(worker.specs.space));
+        QVariant q_ram;
+        QVariant q_cores;
+        QVariant q_osIdentifier;
+        if (worker.specs.has_value()){
+            q_ram = QVariant::fromValue(worker.specs->ram);
+            q_cores = QVariant::fromValue(worker.specs->cores);
+            q_osIdentifier = QVariant::fromValue(QString::fromStdString(worker.specs->osIdentifier));
+        }
+        query.addBindValue(q_ram);
+        query.addBindValue(q_cores);
+        query.addBindValue(q_osIdentifier);
         query.addBindValue(QString::fromStdString(worker.address));
         query.addBindValue(QString::fromStdString(worker.public_key));
         query.addBindValue(QVariant::fromValue(worker.id));
@@ -208,7 +232,7 @@ void WorkerGateway::updateWorker(const worker_details &worker) {
             throw std::runtime_error("updateWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("updateWorker error: no user with id = " + std::to_string(worker.id) + " exists");
+        throw std::runtime_error("updateWorker error: no worker with id = " + std::to_string(worker.id) + " exists");
     }
 }
 

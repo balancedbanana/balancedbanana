@@ -314,9 +314,11 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Workers_Test
     worker_details second;
     // Set up the first worker
     first.public_key = "34nrhk3hkr";
-    first.specs.space = 10240;
-    first.specs.ram = 16384;
-    first.specs.cores = 4;
+    Specs firstSpecs{};
+    firstSpecs.osIdentifier = "10240";
+    firstSpecs.ram = 16384;
+    firstSpecs.cores = 4;
+    first.specs = firstSpecs;
     first.address = "0.0.0.0";
     first.name = "CentOS";
     first.id = 1;
@@ -324,9 +326,11 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Workers_Test
 
     // Set up the second worker
     second.public_key = "fsd8iasdf8sadf";
-    second.specs.space = 14134;
-    second.specs.ram = 12421;
-    second.specs.cores = 3;
+    Specs secondSpecs{};
+    secondSpecs.osIdentifier = "14134";
+    secondSpecs.ram = 12421;
+    secondSpecs.cores = 3;
+    second.specs = secondSpecs;
     second.address = "1.1.1.1";
     second.name = "Ubuntu";
     second.id = 2;
@@ -346,9 +350,11 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Workers_Test){
     worker_details first;
     // Set up the first worker
     first.public_key = "34nrhk3hkr";
-    first.specs.space = 10240;
-    first.specs.ram = 16384;
-    first.specs.cores = 4;
+    Specs firstSpecs{};
+    firstSpecs.osIdentifier = "10240";
+    firstSpecs.ram = 16384;
+    firstSpecs.cores = 4;
+    first.specs = firstSpecs;
     first.address = "0.0.0.0";
     first.name = "CentOS";
     first.id = 1;

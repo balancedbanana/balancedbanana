@@ -166,6 +166,7 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
  */
 uint64_t JobGateway::add(job_details details) {
     auto database = IGateway::AcquireDatabase();
+    qDebug() << "hi";
     // DB must contain table
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
@@ -274,12 +275,12 @@ void setAllocatedTableValues(job_details& details, QSqlQuery& query){
         details.allocated_specs = std::nullopt;
     } else {
         auto database = IGateway::AcquireDatabase();
-        QSqlQuery allocateQuery("SELECT space, ram, cores FROM allocated_resources WHERE id = ?", database);
+        QSqlQuery allocateQuery("SELECT osIdentifier, ram, cores FROM allocated_resources WHERE id = ?", database);
         allocateQuery.addBindValue(query.value(17).toUInt());
         if (allocateQuery.exec()){
             if (allocateQuery.next()) {
                 Specs specs;
-                specs.space =  allocateQuery.value(0).toUInt();
+                specs.osIdentifier =  allocateQuery.value(0).toString().toStdString();
                 specs.ram = allocateQuery.value(1).toUInt();
                 specs.cores = allocateQuery.value(2).toInt();
                 details.allocated_specs = std::make_optional<Specs>(specs);
@@ -490,7 +491,7 @@ std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
  * @param specs The resources assigned to the job
  * @return true if the operation was successful, otherwise false.
  */
-bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs, const QDateTime& start_time) {
+bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& specs, const QDateTime& start_time) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
@@ -500,9 +501,9 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs, cons
     }
     if (Utilities::doesRecordExist("jobs", job_id)){
         if (Utilities::doesRecordExist("workers", worker_id)) {
-            QSqlQuery queryAlloc("INSERT INTO allocated_resources (cores, space, ram) VALUES (?, ?, ?)", database);
+            QSqlQuery queryAlloc("INSERT INTO allocated_resources (cores, osIdentifier, ram) VALUES (?, ?, ?)", database);
             queryAlloc.addBindValue(QVariant::fromValue(specs.cores));
-            queryAlloc.addBindValue(QVariant::fromValue(specs.space));
+            queryAlloc.addBindValue(QVariant::fromValue(QString::fromStdString(specs.osIdentifier)));
             queryAlloc.addBindValue(QVariant::fromValue(specs.ram));
             uint64_t allocated_specs;
             if (queryAlloc.exec()){
@@ -748,9 +749,9 @@ void updateAllocatedSpecs(const job_details& job){
     if (query.exec()){
         if (query.next() && !query.value(0).isNull()){
             uint64_t allocated_id = query.value(0).toUInt();
-            QSqlQuery queryAlloc("UPDATE allocated_resources SET ram = ?, space = ?, cores = ? WHERE id = ?", database);
+            QSqlQuery queryAlloc("UPDATE allocated_resources SET ram = ?, osIdentifier = ?, cores = ? WHERE id = ?", database);
             queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->ram));
-            queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->space));
+            queryAlloc.addBindValue(QVariant::fromValue(QString::fromStdString(job.allocated_specs->osIdentifier)));
             queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->cores));
             queryAlloc.addBindValue(QVariant::fromValue(allocated_id));
             if (!queryAlloc.exec()){

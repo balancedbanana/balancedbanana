@@ -1,7 +1,6 @@
 #include <database/IGateway.h>
 
 #include <QSqlDatabase>
-#include <QStringList>
 #include <iostream>
 #include <QString>
 #include <QSqlQuery>
