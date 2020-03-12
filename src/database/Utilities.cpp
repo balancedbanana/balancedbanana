@@ -39,6 +39,7 @@ bool Utilities::doesRecordExist(const std::string& table_name, uint64_t id){
     if (query.exec()){
         return query.next();
     }
+    // Why not return false on error??
     throw std::runtime_error(query.lastError().databaseText().toStdString());
 }
 
