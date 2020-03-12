@@ -141,7 +141,7 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
     // run the request
 
     std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType((TaskType)task->getType());
-    std::shared_ptr<std::string> responseData = request->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, 0);
+    std::shared_ptr<std::string> responseData = request->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, user->id());
 
     // Respond to Client
 
