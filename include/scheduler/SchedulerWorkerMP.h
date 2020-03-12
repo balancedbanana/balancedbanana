@@ -21,6 +21,7 @@ namespace balancedbanana {
 #endif
             SchedulerWorkerMP(const std::function<std::shared_ptr<Worker>(const std::string& name, const std::string& pubkey)>& addWorker, const std::function<std::shared_ptr<Worker>(const std::string &worker)>& getWorkerByName, const std::function<std::shared_ptr<Job>(int id)> & getJobByID);
 
+            void onDisconnect() override;
             void processHardwareDetailMessage(const communication::HardwareDetailMessage &msg) override;
             void processPublicKeyAuthMessage(const communication::PublicKeyAuthMessage &msg) override;
             void processWorkerAuthMessage(const communication::WorkerAuthMessage &msg) override;

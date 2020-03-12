@@ -32,6 +32,10 @@ void MessageProcessor::handleInvalidMessage(const Message &msg) {
     throw std::runtime_error("Invalid Message");
 }
 
+void balancedbanana::communication::MessageProcessor::onDisconnect() {
+    
+}
+
 void MessageProcessor::processAuthResultMessage(const AuthResultMessage &msg) {
     handleInvalidMessage(msg);
 }

@@ -19,6 +19,9 @@ SchedulerWorkerMP::SchedulerWorkerMP(const std::function<std::shared_ptr<Worker>
 
 }
 
+void SchedulerWorkerMP::onDisconnect() {
+    worker->setCommunicator(nullptr);
+}
 
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
     //TODO No space in HardwareDetailMessage

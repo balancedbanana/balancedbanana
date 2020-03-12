@@ -35,6 +35,7 @@ namespace balancedbanana {
             std::shared_ptr<Communicator> communicator();
 #endif
 
+            virtual void onDisconnect();
             virtual void processAuthResultMessage(const AuthResultMessage &msg);
             virtual void processClientAuthMessage(const ClientAuthMessage &msg);
             virtual void processHardwareDetailMessage(const HardwareDetailMessage &msg);
