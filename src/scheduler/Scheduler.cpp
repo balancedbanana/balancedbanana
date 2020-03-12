@@ -106,7 +106,9 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
             });
             workerlistener = std::make_shared<CommunicatorListener>([repo](){
                 return std::make_shared<SchedulerWorkerMP>([repo](const std::string& name, const std::string& pubkey) -> std::shared_ptr<Worker> {
-                    return repo->AddWorker(name, pubkey, { (uint64_t)1024 * 1024 * 1024 * 1024, 32 * 1024, 50, false }, "Why store an address");
+                    // TODO Rakan: Ich weiss nicht was hier genau passiert, aber specs hat kein space member
+                    // 
+                    return repo->AddWorker(name, pubkey, { "", 32 * 1024, 50 }, "Why store an address");
                 }, [repo](const std::string &worker) -> std::shared_ptr<balancedbanana::scheduler::Worker> {
                     return repo->FindWorker(worker);
                 }, [repo](int jobid) -> std::shared_ptr<Job> {
