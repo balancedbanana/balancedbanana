@@ -144,9 +144,9 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
                 worker.specs = std::nullopt;
             } else {
                 Specs specs{};
-                specs.osIdentifier = query.value(1).toString().toStdString();
-                specs.ram = query.value(2).toInt();
-                specs.cores = query.value(3).toInt();
+                specs.osIdentifier = query.value(2).toString().toStdString();
+                specs.ram = query.value(3).toInt();
+                specs.cores = query.value(4).toInt();
                 worker.specs = specs;
             }
             worker.address = query.value(5).toString().toStdString();

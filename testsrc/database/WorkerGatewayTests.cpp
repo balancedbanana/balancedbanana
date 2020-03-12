@@ -121,10 +121,10 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
 TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 
     // The first entry's id should be 1
-    ASSERT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(WorkerGateway::add(details) == 1);
 
     // The add must be successful
-    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
 }
 
 // Test to see if the auto increment feature works as expected.
@@ -132,8 +132,8 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
 
     // Add the worker from the first test. Since it's the first worker, its id should be 1.
-    ASSERT_TRUE(WorkerGateway::add(details) == 1);
-    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
 
     // Initialize a new worker
     worker_details seconddetails{};
@@ -144,8 +144,8 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
     seconddetails.id = 2;
     seconddetails.empty = false;
 
-    ASSERT_TRUE(WorkerGateway::add(seconddetails) == 2);
-    ASSERT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
+    EXPECT_TRUE(WorkerGateway::add(seconddetails) == 2);
+    EXPECT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
 }
 
 /**
@@ -257,17 +257,17 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     details.id = 1;
     details.empty = false;
     // Since this is the first worker, this has to be true.
-    ASSERT_TRUE(WorkerGateway::add(details) == 1);
-    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
 
     // This must return true.
-    ASSERT_TRUE(WorkerGateway::remove(1));
-    ASSERT_TRUE(wasWorkerRemoveSuccessful(1));
+    EXPECT_TRUE(WorkerGateway::remove(1));
+    EXPECT_TRUE(wasWorkerRemoveSuccessful(1));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
-    ASSERT_FALSE(WorkerGateway::remove(1));
+    EXPECT_FALSE(WorkerGateway::remove(1));
 }
 
 
@@ -303,13 +303,13 @@ TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
 
     // Get the worker and compare it to the added worker. They should be equal.
     worker_details expected_details = WorkerGateway::getWorker(details.id);
-    ASSERT_TRUE(details == expected_details);
+    EXPECT_TRUE(details == expected_details);
 }
 
 // Test to see if the getter method returns an empty worker_details when its called with an invalid id
 TEST_F(GetWorkerTest, GetWorkerTest_NonExistentWorker_Test){
     worker_details empty_details{};
-    ASSERT_TRUE(WorkerGateway::getWorker(1) == empty_details);
+    EXPECT_TRUE(WorkerGateway::getWorker(1) == empty_details);
 }
 
 /**
@@ -371,12 +371,12 @@ TEST_F(GetWorkersTest, GetWorkersTest_SuccessfulGet_Test){
     expectedVector.push_back(third);
 
     std::vector<worker_details> actualVector = WorkerGateway::getWorkers();
-    ASSERT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
 }
 
 // Test to see if the getter method returns an empty vector if the workers table is empty
 TEST_F(GetWorkersTest, GetWorkersTest_NonExistentWorkers_Test){
-    ASSERT_TRUE(WorkerGateway::getWorkers().empty());
+    EXPECT_TRUE(WorkerGateway::getWorkers().empty());
 }
 
 class GetWorkerByNameTest : public ::testing::Test {
@@ -420,7 +420,7 @@ TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
                   "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
                   ")\n"
                   "ENGINE = InnoDB\n"
-                  "DEFAULT CHARACTER SET = utf8;");
+                  "DEFAULT CHARACTER SET = utf8");
     query.exec();
 }
 
@@ -475,7 +475,7 @@ TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
                   "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
                   ")\n"
                   "ENGINE = InnoDB\n"
-                  "DEFAULT CHARACTER SET = utf8;");
+                  "DEFAULT CHARACTER SET = utf8");
     query.exec();
 }
 

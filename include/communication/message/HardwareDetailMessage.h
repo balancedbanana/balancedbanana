@@ -11,7 +11,7 @@ namespace balancedbanana {
             uint32_t coreCount;
 
             //Größe des verfügbaren Arbeitsspeichers
-            uint64_t ramSize;
+            uint32_t ramSize;
 
             //Irgendeine Information, die das Betriebssystem identifiziert
             std::string osIdentifier;

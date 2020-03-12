@@ -166,7 +166,6 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
  */
 uint64_t JobGateway::add(job_details details) {
     auto database = IGateway::AcquireDatabase();
-    qDebug() << "hi";
     // DB must contain table
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
@@ -279,7 +278,7 @@ void setAllocatedTableValues(job_details& details, QSqlQuery& query){
         allocateQuery.addBindValue(query.value(17).toUInt());
         if (allocateQuery.exec()){
             if (allocateQuery.next()) {
-                Specs specs;
+                Specs specs{};
                 specs.osIdentifier =  allocateQuery.value(0).toString().toStdString();
                 specs.ram = allocateQuery.value(1).toUInt();
                 specs.cores = allocateQuery.value(2).toInt();
