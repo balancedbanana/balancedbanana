@@ -3,6 +3,7 @@
 #include <communication/message/PublicKeyAuthMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
+#include <communication/message/TaskResponseMessage.h>
 #include <communication/authenticator/AuthHandler.h>
 
 using namespace balancedbanana::scheduler;
@@ -14,7 +15,7 @@ MessageProcessor(communicator){
 }
 #endif
 
-SchedulerWorkerMP::SchedulerWorkerMP(const std::function<std::shared_ptr<Worker>(const std::string& name, const std::string& pubkey)>& addWorker, const std::function<std::shared_ptr<Worker>(const std::string &worker)>& getWorkerByName) : addWorker(addWorker), getWorkerByName(getWorkerByName) {
+SchedulerWorkerMP::SchedulerWorkerMP(const std::function<std::shared_ptr<Worker>(const std::string& name, const std::string& pubkey)>& addWorker, const std::function<std::shared_ptr<Worker>(const std::string &worker)>& getWorkerByName, const std::function<std::shared_ptr<Job>(int id)> & getJobByID) : addWorker(addWorker), getWorkerByName(getWorkerByName), getJobByID(getJobByID) {
 
 }
 
@@ -64,6 +65,11 @@ void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
         AuthResultMessage result(-1);
         com->send(result);
     }
+}
+
+void SchedulerWorkerMP::processTaskResponseMessage(const balancedbanana::communication::TaskResponseMessage &msg) {
+    auto job = getJobByID(msg.GetJobId());
+    job->setStatus(msg.GetJobStatus());
 }
 
 void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg) {

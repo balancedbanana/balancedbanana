@@ -11,6 +11,8 @@ struct TestMP : SchedulerWorkerMP {
         throw std::runtime_error("How the hell");
     }, [](const std::string &worker) -> std::shared_ptr<balancedbanana::scheduler::Worker> {
         throw std::runtime_error("How the hell");
+    }, [](auto) -> std::shared_ptr<Job> {
+        throw std::runtime_error("How the hell");
     }) {}
 
     std::shared_ptr<Communicator> wcom;

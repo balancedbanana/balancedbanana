@@ -108,6 +108,8 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                     return repo->AddWorker(name, pubkey, { (uint64_t)1024 * 1024 * 1024 * 1024, 32 * 1024, 50, false }, "Why store an address");
                 }, [repo](const std::string &worker) -> std::shared_ptr<balancedbanana::scheduler::Worker> {
                     return repo->FindWorker(worker);
+                }, [repo](int jobid) -> std::shared_ptr<Job> {
+                    return repo->GetJob(jobid);
                 });
             });
             workerlistener->listen(port + 1, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
