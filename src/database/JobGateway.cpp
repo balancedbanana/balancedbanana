@@ -213,23 +213,21 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     details.config.set_max_ram(Utilities::castToOptional(query.value(2).toUInt()));
     details.config.set_min_cpu_count(Utilities::castToOptional(query.value(3).toUInt()));
     details.config.set_max_cpu_count(Utilities::castToOptional(query.value(4).toUInt()));
-
-    std::optional<QVariant> castedBlocking = Utilities::castToOptional(query.value(5));
-    if (castedBlocking != std::optional<QVariant>{std::nullopt}){
-        details.config.set_blocking_mode(castedBlocking.value().toBool());
-    } else {
+    if (query.value(5).isNull()){
         details.config.set_blocking_mode(std::nullopt);
+    } else {
+        details.config.set_blocking_mode(query.value(5).toBool());
     }
 
-    std::optional<uint> castedPriorityId = Utilities::castToOptional(query.value(6).toUInt());
-    if (castedPriorityId != std::nullopt){
-        details.config.set_priority(static_cast<Priority> (query.value(6).toUInt()));
+    if (query.value(6).isNull()){
+        details.config.set_priority(Priority::normal);
+    } else {
+        details.config.set_priority(static_cast<Priority>(query.value(6).toInt()));
     }
     details.config.set_image(query.value(7).toString().toStdString());
 
-    std::optional<QVariant> castedInterruptible = Utilities::castToOptional(query.value(8));
-    if (castedInterruptible != std::optional<QVariant>{std::nullopt}){
-        details.config.set_interruptible(castedInterruptible->toBool());
+    if (!query.value(0).isNull()){
+        details.config.set_interruptible(query.value(8).toBool());
     } else {
         details.config.set_interruptible(std::nullopt);
     }
@@ -241,21 +239,21 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
         .toString()
         .toStdString()));
     }
-
     details.config.set_current_working_dir(query.value(10).toString().toStdString());
     details.command = query.value(11).toString().toStdString();
-    details.schedule_time = QDateTime::fromString(query.value(12).toString(),
-                                                       TIME_FORMAT);
-    details.worker_id = Utilities::castToOptional(query.value(13).toUInt());
+    details.schedule_time = QDateTime::fromString(query.value(12).toString(), TIME_FORMAT);
+    if (query.value(13).isNull()){
+        details.worker_id = std::nullopt;
+    } else {
+        details.worker_id = query.value(13).toUInt();
+    }
     details.status = query.value(14).toInt();
-
     if (query.value(15).isNull()){
         details.start_time = std::nullopt;
     } else {
         details.start_time = std::make_optional<QDateTime>(QDateTime::fromString(query.value(15).toString(),
                                                       TIME_FORMAT));
     }
-
     if (query.value(16).isNull()){
         details.finish_time = std::nullopt;
     } else {
