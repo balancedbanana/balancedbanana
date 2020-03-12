@@ -34,7 +34,7 @@ void Utilities::throwNoTableException(const std::string& table_name){
 * @return True if the record exists, otherwise false.
 */
 bool Utilities::doesRecordExist(const std::string& table_name, uint64_t id){
-    QSqlQuery query(QString::fromStdString("SELECT id FROM " + table_name + " WHERE id = ?"));
+    QSqlQuery query(QString::fromStdString("SELECT id FROM " + table_name + " WHERE id = ?"), IGateway::AquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return query.next();
