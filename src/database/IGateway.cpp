@@ -6,6 +6,7 @@
 #include <QString>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <random>
 
 using namespace balancedbanana::database;
 
@@ -20,7 +21,15 @@ QSqlDatabase balancedbanana::database::IGateway::AquireDatabase() {
         std::lock_guard<std::mutex> lock(sync);
         // The database currently being used is a MYSQL one. The code should still run with a different database
         // type, but new drivers may have to be installed.
-        auto db = QSqlDatabase::addDatabase("QMYSQL");
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
+        std::vector<uint32_t> name(4);
+        for (auto &&i : name) {
+            i = dis(gen);
+        }
+        std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
+        auto db = QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(sname));
         db.setHostName(QString::fromStdString(connection.host_name));
         db.setDatabaseName(QString::fromStdString(connection.databasename));
         db.setUserName(QString::fromStdString(connection.username));
