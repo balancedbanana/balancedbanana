@@ -120,6 +120,21 @@ void Job::setConfig(const std::shared_ptr<JobConfig> &config) {
     this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 void Job::setStatus(JobStatus status) {
+    // Update some Timestamps automatically
+    switch (status) {
+    case JobStatus::finished:
+        if(status_ != JobStatus::finished)
+            finished_at_ = QDateTime::currentDateTime();
+        break;
+    case JobStatus::processing:
+        if(status_ != JobStatus::processing)
+            started_at_ = QDateTime::currentDateTime();
+        break;
+    case JobStatus::scheduled:
+        if(status_ != JobStatus::scheduled)
+            scheduled_at_ = QDateTime::currentDateTime();
+        break;
+    }
     status_ = status;
     this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
