@@ -21,7 +21,7 @@ namespace balancedbanana{
             static Connection connection;
             static QThreadStorage<QSqlDatabase> caches;
         public:
-            static QSqlDatabase AquireDatabase();
+            static QSqlDatabase AcquireDatabase();
             virtual ~IGateway(){};
             static void createDBConnection(const std::string& host_name, const std::string& databasename, const
             std::string& username, const std::string& password,  uint64_t port);

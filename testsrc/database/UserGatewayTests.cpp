@@ -32,7 +32,8 @@ public:
  * Deletes the all records in the users table and resets the auto increment for the id.
  */
 void resetUserTable(){
-    QSqlQuery query("ALTER TABLE users CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+    QSqlQuery query("ALTER TABLE users CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
+                    IGateway::AcquireDatabase());
     query.exec();
     query.prepare("DELETE FROM users");
     query.exec();
@@ -67,7 +68,7 @@ protected:
  * @return true if the add was successful, otherwise false.
  */
 bool wasUserAddSuccessful(const user_details& details, uint64_t id){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -123,29 +124,6 @@ TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
     EXPECT_TRUE(wasUserAddSuccessful(seconddetails, 2));
 }
 
-// Test to see if the addUser method throws an exception when the key arg is invalid.
-TEST_F(AddUserTest, AddUserTest_InvalidKeyArg_Test){
-    user_details detailscpy = details;
-    detailscpy.public_key = "";
-    EXPECT_THROW(UserGateway
-    ::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addUser method throws an exception when the email arg is invalid.
-TEST_F(AddUserTest, AddUserTest_InvalidAddressArg_Test){
-    user_details detailscpy = details;
-    detailscpy.email = "";
-    EXPECT_THROW(UserGateway
-    ::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addUser method throws an exception when the name arg is invalid.
-TEST_F(AddUserTest, AddUserTest_InvalidNameArg_Test){
-    user_details detailscpy = details;
-    detailscpy.name = "";
-    EXPECT_THROW(UserGateway
-    ::add(detailscpy), std::invalid_argument);
-}
 
 /**
  * Fixture class that deletes the users table on setup and restores it on teardown.
@@ -154,7 +132,7 @@ class NoUsersTableTest : public ::testing::Test{
 protected:
     void SetUp() override {
         // Deletes the users table
-        QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
+        QSqlQuery query("DROP TABLE users", IGateway::AcquireDatabase());
         query.exec();
 
         // Setup the varaibles needed
@@ -173,7 +151,7 @@ protected:
                         "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                         "  PRIMARY KEY (`id`),\n"
                         "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AcquireDatabase());
         query.exec();
     }
 
@@ -206,7 +184,7 @@ TEST_F(NoUsersTableTest, NoUsersTableTest_GetUsers_Test){
  * @return  true if remove was successful, otherwise false.
  */
 bool wasUserRemoveSuccessful(uint64_t id){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -362,7 +340,7 @@ protected:
 };
 
 TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE users", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_THROW(UserGateway::getUserByName(user.name), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
@@ -404,7 +382,7 @@ protected:
 };
 
 TEST_F(UpdateUserTest, UpdateUserTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE users", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_THROW(UserGateway::updateUser(user), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
@@ -440,30 +418,6 @@ TEST_F(UpdateUserTest, UpdateUserTest_Success_Test){
     UserGateway::updateUser(new_user);
     user_details actualUser = UserGateway::getUser(new_user.id);
     EXPECT_TRUE(actualUser == new_user);
-}
-
-// Test to see if the updateUser method throws an exception when the key arg is invalid.
-TEST_F(UpdateUserTest, UpdateUserTest_InvalidKeyArg_Test){
-    EXPECT_EQ(UserGateway::add(user), user.id);
-    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
-    user.public_key = "";
-    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
-}
-
-// Test to see if the updateUser method throws an exception when the email arg is invalid.
-TEST_F(UpdateUserTest, UpdateUserTest_InvalidAddressArg_Test){
-    EXPECT_EQ(UserGateway::add(user), user.id);
-    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
-    user.email = "";
-    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
-}
-
-// Test to see if the updateUser method throws an exception when the name arg is invalid.
-TEST_F(UpdateUserTest, UpdateUserTest_InvalidNameArg_Test){
-    EXPECT_EQ(UserGateway::add(user), user.id);
-    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
-    user.name = "";
-    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
 }
 
 

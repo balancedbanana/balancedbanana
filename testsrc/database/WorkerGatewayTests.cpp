@@ -36,7 +36,8 @@ TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
  * Deletes the all records in the workers table and resets the auto increment for the id.
  */
 void resetWorkerTable(){
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
+                    IGateway::AcquireDatabase());
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -74,7 +75,7 @@ protected:
  * @return true if the add was successful, otherwise false.
  */
 bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -139,48 +140,6 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
     ASSERT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
 }
 
-// Test to see if the addWorker method throws an exception when the key arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidKeyArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.public_key = "";
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the space arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidSpaceArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.specs.space = 0;
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the ram arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidRAMArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.specs.ram = 0;
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the cores arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidCoresArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.specs.cores = 0;
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the address arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidAddressArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.address = "";
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the name arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidNameArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.name = "";
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
 /**
  * Fixture class that deletes the workers table on setup and restores it on teardown.
  */
@@ -188,7 +147,7 @@ class NoWorkersTableTest : public ::testing::Test{
 protected:
     void SetUp() override {
         // Deletes the workers table
-        QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+        QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
         query.exec();
 
         // Setup the varaibles needed
@@ -208,7 +167,7 @@ protected:
                         "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
                         "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
                         "KEY `address_UNIQUE` (`address`) ) "
-                        "ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
+                        "ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AcquireDatabase());
         query.exec();
     }
 
@@ -242,7 +201,7 @@ TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
  * @return  true if remove was successful, otherwise false.
  */
 bool wasWorkerRemoveSuccessful(uint64_t id){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -416,7 +375,7 @@ protected:
 };
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_THROW(WorkerGateway::getWorkerByName(worker.name), std::logic_error);
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
@@ -459,7 +418,7 @@ protected:
 };
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_THROW(WorkerGateway::updateWorker(worker), std::logic_error);
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
@@ -489,53 +448,4 @@ TEST_F(UpdateWorkerTest, UpdateWorkerTest_Success_Test){
     worker_details actualWorker = WorkerGateway::getWorker(worker.id);
     EXPECT_TRUE(actualWorker == new_worker);
 }
-
-// Test to see if the updateWorker method throws an exception when the key arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidKeyArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.public_key = "";
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the space arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidSpaceArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.specs.space = 0;
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the ram arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidRAMArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.specs.ram = 0;
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the cores arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidCoresArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.specs.cores = 0;
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the address arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidAddressArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.address = "";
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the name arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidNameArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.name = "";
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
 

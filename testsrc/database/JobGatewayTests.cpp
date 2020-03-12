@@ -35,7 +35,7 @@ public:
  * Deletes the all records in the jobs table and resets the auto increment for the id.
  */
 void resetJobTable() {
-    QSqlQuery query("ALTER TABLE jobs CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+    QSqlQuery query("ALTER TABLE jobs CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AcquireDatabase());
     query.exec();
     query.prepare("DELETE FROM jobs");
     query.exec();
@@ -84,7 +84,7 @@ protected:
  * @return true if the add was successful, otherwise false.
  */
 bool wasJobAddSuccessful(job_details& details, uint64_t id){
-    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -258,61 +258,6 @@ TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
     EXPECT_TRUE(wasJobAddSuccessful(seconddetails, 2));
 }
 
-// Test to see if the addJob method throws an exception when the id is invalid.
-TEST_F(AddJobTest, AddJobTest_Invalid_Job_id_Test){
-    details.user_id = 0;
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the command arg is invalid.
-TEST_F(AddJobTest, AddJobTest_Invalid_Command_Test){
-    details.command = "";
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the schedule_time arg is invalid.
-TEST_F(AddJobTest, AddJobTest_Invalid_Schedule_Time_Test){
-    details.schedule_time = QDateTime::fromString("0.13.54.13.01:5.5");
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the min_ram arg is invalid.
-TEST_F(AddJobTest, AddJobTest_Invalid_Min_RAM_TOO_SMALL_Test){
-    details.config.set_min_ram(123);
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the max_ram arg is invalid.
-TEST_F(AddJobTest, AddJobTest_Invalid_Max_RAM_TOO_SMALL_Test){
-    details.config.set_max_ram(123);
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the min_ram arg is larger than the max_ram arg.
-TEST_F(AddJobTest, AddJobTest_Invalid_Min_RAM_Larger_Than_Max_Test){
-    details.config.set_min_ram(4194305);
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the min_cpu_count arg is invalid.
-TEST_F(AddJobTest, AddJobTest_Invalid_Invalid_Min_CPU_Count_Test){
-    details.config.set_min_cpu_count(0);
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the max_cpu_count arg is invalid.
-TEST_F(AddJobTest, AddJobTest_Invalid_Max_CPU_Count_Test){
-    details.config.set_max_cpu_count(0);
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
-// Test to see if the addJob method throws an exception when the min_cpu_count arg is larger than the max_cpu_count arg
-TEST_F(AddJobTest, AddJobTest_Invalid_Min_CPU_Count_Larger_Than_Max_Test){
-    details.config.set_min_cpu_count(2);
-    details.config.set_max_cpu_count(1);
-    EXPECT_THROW(JobGateway::add(details), std::invalid_argument);
-}
-
 /**
  * Restores the jobs table
  */
@@ -342,12 +287,12 @@ void createJobsTable(){
                     "  UNIQUE KEY `id_UNIQUE` (`id`),\n"
                     "  UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`),\n"
                     "  UNIQUE KEY `result_id` (`result_id`)\n"
-                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AcquireDatabase());
     query.exec();
 }
 
 void deleteJobsTable() {
-    QSqlQuery query("DROP TABLE jobs", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE jobs", IGateway::AcquireDatabase());
     query.exec();
 }
 
@@ -447,7 +392,7 @@ TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
  * @return  true if remove was successful, otherwise false.
  */
 bool wasJobRemoveSuccessful(uint64_t id){
-    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -531,7 +476,7 @@ protected:
 };
 
 void deleteAllocResTable() {
-    QSqlQuery query("DROP TABLE allocated_resources", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE allocated_resources", IGateway::AcquireDatabase());
     query.exec();
 
 }
@@ -547,7 +492,7 @@ void createAllocResTable() {
                   "    UNIQUE INDEX `id_UNIQUE` (`id` ASC)\n"
                   ")\n"
                   "ENGINE = InnoDB\n"
-                  "DEFAULT CHARACTER SET = utf8", IGateway::AquireDatabase());
+                  "DEFAULT CHARACTER SET = utf8", IGateway::AcquireDatabase());
     query.exec();
 }
 
@@ -563,7 +508,7 @@ TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
 }
 
 void deleteResultsTable() {
-    QSqlQuery query("DROP TABLE job_results", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE job_results", IGateway::AcquireDatabase());
     query.exec();
 }
 
@@ -574,7 +519,7 @@ void createResultsTable() {
                   "  `exit_code` tinyint(3) NOT NULL,\n"
                   "  PRIMARY KEY (`id`),\n"
                   "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
+                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AcquireDatabase());
     query.exec();
 }
 
@@ -737,7 +682,8 @@ TEST_F(GetJobsTest, GetJobsTest_NonExistentJobs_Test){
  * Resets the allocated_resources table
  */
 void resetAllocResTable() {
-    QSqlQuery query("ALTER TABLE allocated_resources CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+    QSqlQuery query("ALTER TABLE allocated_resources CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
+                    IGateway::AcquireDatabase());
     query.exec();
     query.prepare("DELETE FROM allocated_resources");
     query.exec();
@@ -777,7 +723,8 @@ protected:
     void TearDown() override {
         resetJobTable();
         resetAllocResTable();
-        QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+        QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
+                        IGateway::AcquireDatabase());
         query.exec();
         query.prepare("DELETE FROM workers");
         query.exec();
@@ -792,9 +739,9 @@ protected:
 
 bool wasStartSuccessful(job_details job, worker_details worker){
     uint allocated_id = 1;
-    QSqlQuery queryAlloc("SELECT cores, ram, space FROM allocated_resources WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery queryAlloc("SELECT cores, ram, space FROM allocated_resources WHERE id = ?", IGateway::AcquireDatabase());
     queryAlloc.addBindValue(allocated_id);
-    QSqlQuery queryJobs("SELECT allocated_id, status_id, start_time FROM jobs WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery queryJobs("SELECT allocated_id, status_id, start_time FROM jobs WHERE id = ?", IGateway::AcquireDatabase());
     queryJobs.addBindValue(QVariant::fromValue(job.id));
 
     if (queryAlloc.exec()){
@@ -843,7 +790,7 @@ TEST_F(StartJobTest, StartJobTest_SuccessfulStart_Test){
 
 // Test to see if exception is thrown when no workers table exists
 TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
     query.exec();
 
     job.start_time = QDateTime::currentDateTime();
@@ -882,7 +829,8 @@ TEST_F(StartJobTest, StartJobTest_NonExistentWorker_Test){
 }
 
 void resetResultsTable() {
-        QSqlQuery query("ALTER TABLE job_results CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+        QSqlQuery query("ALTER TABLE job_results CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
+                        IGateway::AcquireDatabase());
         query.exec();
         query.prepare("DELETE FROM job_results");
         query.exec();
@@ -927,9 +875,9 @@ protected:
 
 bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code){
     uint result_id = 1;
-    QSqlQuery queryResult("SELECT stdout, exit_code FROM job_results WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery queryResult("SELECT stdout, exit_code FROM job_results WHERE id = ?", IGateway::AcquireDatabase());
     queryResult.addBindValue(result_id);
-    QSqlQuery queryJobs("SELECT finish_time, result_id FROM jobs WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery queryJobs("SELECT finish_time, result_id FROM jobs WHERE id = ?", IGateway::AcquireDatabase());
     queryJobs.addBindValue(QVariant::fromValue(job.id));
 
     if (queryResult.exec()){
@@ -1001,7 +949,8 @@ TEST_F(FinishJobTest, FinishJobTest_InvalidFinishTime_Test){
 }
 
 void resetWorker(){
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
+                    IGateway::AcquireDatabase());
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -1493,7 +1442,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_NoResultsTable_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
@@ -1532,11 +1481,11 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
     job.allocated_specs = new_specs;
     JobGateway::updateJob(job);
 
-    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(job.id));
     query.exec();
     query.next();
-    QSqlQuery allocQuery("SELECT cores, ram, space FROM allocated_resources WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery allocQuery("SELECT cores, ram, space FROM allocated_resources WHERE id = ?", IGateway::AcquireDatabase());
     EXPECT_EQ(query.value(0).toUInt(), 1);
     allocQuery.addBindValue(query.value(0));
     allocQuery.exec();
@@ -1574,7 +1523,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     // Update the worker_id
     job.worker_id = worker.id + 1;
     JobGateway::updateJob(job);
-    QSqlQuery query("SELECT worker_id FROM jobs WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT worker_id FROM jobs WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(job.id));
     query.exec();
     query.next();

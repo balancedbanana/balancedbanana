@@ -14,26 +14,12 @@ using namespace balancedbanana::database;
 
 
 /**
- * Checks if the args are valid
- * @param worker  The struct containing the args
- * @return true if the args are valid, otherwise false
- */
-bool areArgsValid(const worker_details& worker){
-    return !(worker.public_key.empty()) && worker.specs.space > 0 && worker.specs.ram > 0 && worker.specs.cores > 0
-    && !(worker.address.empty()) && !(worker.name.empty());
-}
-
-/**
  * Adds a worker to the database, Throws exceptions when errors occur.
  * @param worker  The worker to be added
  * @return The id of the worker.
  */
 uint64_t WorkerGateway::add(const worker_details& worker) {
-    // Check args
-    if (!areArgsValid(worker)){
-        throw std::invalid_argument("addWorker error: invalid arguments");
-    }
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
 
     // DB must contain table
     if (!Utilities::doesTableExist("workers")){
@@ -70,7 +56,7 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
  * @return True if the operation was successful, otherwise false
  */
 bool WorkerGateway::remove(uint64_t id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
@@ -94,7 +80,7 @@ bool WorkerGateway::remove(uint64_t id) {
  * @return The details of the worker.
  */
 worker_details WorkerGateway::getWorker(uint64_t id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
@@ -134,7 +120,7 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
  * @return  Vector of all the workers in the database.
  */
 std::vector<worker_details> WorkerGateway::getWorkers() {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
@@ -168,7 +154,7 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
  * @return Returns the correct details of the worker if found, otherwise return empty details struct with invalid id
  */
 worker_details WorkerGateway::getWorkerByName(const std::string &name) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
@@ -199,7 +185,7 @@ worker_details WorkerGateway::getWorkerByName(const std::string &name) {
 }
 
 void WorkerGateway::updateWorker(const worker_details &worker) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if(!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
@@ -209,9 +195,6 @@ void WorkerGateway::updateWorker(const worker_details &worker) {
     }
 
     if (Utilities::doesRecordExist("workers", worker.id)){
-        if (!areArgsValid(worker)){
-            throw std::invalid_argument("updateWorker error: invalid arguments");
-        }
         QSqlQuery query("UPDATE workers SET name = ?, ram = ?, cores = ?, space = ?, address = ?, public_key = ? "
                         "WHERE id = ?", database);
         query.addBindValue(QString::fromStdString(worker.name));

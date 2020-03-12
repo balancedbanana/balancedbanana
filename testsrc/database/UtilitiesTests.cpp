@@ -42,7 +42,7 @@ TEST(DoesTableExistTest, DoesTableExistTest_Allocated_Resources_Test){
 }
 
 TEST(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
-    QSqlQuery query("DROP TABLE jobs", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE jobs", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("jobs"));
     query.prepare("CREATE TABLE `jobs` (\n"
@@ -76,7 +76,7 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
 
 
 TEST(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
-    QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE users", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("users"));
     query.prepare("CREATE TABLE `users` (\n"
@@ -92,7 +92,7 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
 
 
 TEST(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("workers"));
     query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
@@ -106,7 +106,7 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
 
 
 TEST(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
-    QSqlQuery query("DROP TABLE job_results", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE job_results", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("job_results"));
     query.prepare("CREATE TABLE `job_results` (\n"
@@ -121,7 +121,7 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
 
 
 TEST(DoesTableExistTest, DoesTableExistTest_NoAllocated_Resources_Test){
-    QSqlQuery query("DROP TABLE allocated_resources", IGateway::AquireDatabase());
+    QSqlQuery query("DROP TABLE allocated_resources", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("allocated_resources"));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"

@@ -46,7 +46,7 @@ DEFAULT CHARACTER SET = utf8;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `balancedbanana`.`users`
 (
-    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id`    BIGINT(10) UNSIGNED NOT NULL,
     `name`  VARCHAR(45)         NOT NULL,
     `email` VARCHAR(255)         NOT NULL,
     `public_key`   LONGTEXT        NOT NULL,

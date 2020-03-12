@@ -14,7 +14,7 @@ std::mutex balancedbanana::database::IGateway::sync;
 balancedbanana::database::IGateway::Connection balancedbanana::database::IGateway::connection;
 QThreadStorage<QSqlDatabase> balancedbanana::database::IGateway::caches;
 
-QSqlDatabase balancedbanana::database::IGateway::AquireDatabase() {
+QSqlDatabase balancedbanana::database::IGateway::AcquireDatabase() {
     if(caches.hasLocalData()) {
         return caches.localData();
     } else {
@@ -64,5 +64,5 @@ username, const std::string& password,  uint64_t port) {
         connection.password = password;
         connection.port = port;
     }
-    AquireDatabase();
+    AcquireDatabase();
 }
