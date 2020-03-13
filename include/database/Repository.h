@@ -61,7 +61,8 @@ namespace balancedbanana::database {
             std::shared_ptr<User> FindUser(const std::string &name);
 
             static Repository &getDefault();
-
+            static void init(const std::string& host_name, const std::string& databasename, const std::string& username,
+                             const std::string& password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
         protected:
             void OnUpdate(Observable<WorkerObservableEvent> *observable, WorkerObservableEvent e) override;
             void OnUpdate(Observable<UserObservableEvent> *observable, UserObservableEvent e) override;

@@ -4,6 +4,7 @@
 #include <database/JobGateway.h>
 #include <database/UserGateway.h>
 #include <functional>
+#include <iostream>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
@@ -241,6 +242,15 @@ void Repository::OnUpdate(Observable<JobObservableEvent> *observable, JobObserva
     if(e == JobObservableEvent::DATA_CHANGE) {
         jobCache.find(job->getId())->second.second = true;
     }
+}
+
+void Repository::init(const std::string& host_name, const std::string& databasename, const std::string& username,
+                 const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) {
+    if(repo != nullptr) {
+        std::cerr << "Default repository has already been initialized" << std::endl;
+        throw std::runtime_error("repository != nullptr");
+    }
+    repo = std::make_shared<Repository>(host_name, databasename, username, password, port, updateInterval);
 }
 
 Repository &Repository::getDefault() {
