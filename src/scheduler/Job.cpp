@@ -134,6 +134,8 @@ void Job::setStatus(JobStatus status) {
         if(status_ != JobStatus::scheduled)
             scheduled_at_ = QDateTime::currentDateTime();
         break;
+    default:
+        break;
     }
     status_ = status;
     this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
