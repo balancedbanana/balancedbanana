@@ -269,32 +269,34 @@ TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
  */
 void createJobsTable(){
     auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("CREATE TABLE `jobs` (\n"
-                    "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
-                    "  `min_ram` bigint(10) unsigned DEFAULT NULL,\n"
-                    "  `start_time` varchar(60) DEFAULT NULL,\n"
-                    "  `schedule_time` varchar(60) DEFAULT NULL,\n"
-                    "  `finish_time` varchar(60) DEFAULT NULL,\n"
-                    "  `command` text NOT NULL,\n"
-                    "  `image` varchar(500) NOT NULL,\n"
-                    "  `blocking_mode` tinyint(1) DEFAULT NULL,\n"
-                    "  `working_dir` text NOT NULL,\n"
-                    "  `allocated_id` bigint(10) unsigned DEFAULT NULL,\n"
-                    "  `interruptible` tinyint(1) DEFAULT NULL,\n"
-                    "  `environment` text,\n"
-                    "  `min_cores` int(10) unsigned DEFAULT NULL,\n"
-                    "  `max_cores` int(10) unsigned DEFAULT NULL,\n"
-                    "  `priority` int(10) unsigned NOT NULL DEFAULT '2',\n"
-                    "  `status_id` int(10) unsigned NOT NULL DEFAULT '1',\n"
-                    "  `max_ram` bigint(10) unsigned DEFAULT NULL,\n"
-                    "  `user_id` bigint(10) unsigned NOT NULL,\n"
-                    "  `worker_id` bigint(10) DEFAULT NULL,\n"
-                    "  `result_id` bigint(10) unsigned DEFAULT NULL,\n"
-                    "  PRIMARY KEY (`id`),\n"
-                    "  UNIQUE KEY `id_UNIQUE` (`id`),\n"
-                    "  UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`),\n"
-                    "  UNIQUE KEY `result_id` (`result_id`)\n"
-                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8", db);
+    QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (\n"
+                    "    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                    "    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                    "    `start_time` VARCHAR(60) NULL DEFAULT NULL,\n"
+                    "    `schedule_time` VARCHAR(60) DEFAULT NULL,\n"
+                    "    `finish_time` VARCHAR(60) DEFAULT NULL,\n"
+                    "    `command` TEXT NOT NULL,\n"
+                    "    `image` VARCHAR(500) NOT NULL,\n"
+                    "    `blocking_mode` TINYINT(1) DEFAULT NULL,\n"
+                    "    `working_dir` TEXT NOT NULL,\n"
+                    "    `allocated_id` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                    "    `interruptible` TINYINT(1) DEFAULT NULL,\n"
+                    "    `environment` TEXT,\n"
+                    "    `min_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
+                    "    `max_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
+                    "    `priority` INT(10) UNSIGNED NOT NULL DEFAULT '2',\n"
+                    "    `status_id` INT(10) UNSIGNED NOT NULL DEFAULT '1',\n"
+                    "    `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                    "    `user_id` BIGINT(10) UNSIGNED NOT NULL,\n"
+                    "    `worker_id` BIGINT(10) DEFAULT NULL,\n"
+                    "    `result_id` BIGINT(10) DEFAULT NULL,\n"
+                    "    PRIMARY KEY (`id`),\n"
+                    "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                    "    UNIQUE INDEX `allocated_id_UNIQUE` (`allocated_id` ASC),\n"
+                    "    UNIQUE INDEX `result_id_UNIQUE` (`result_id` ASC)\n"
+                    ")\n"
+                    "ENGINE=InnoDB\n"
+                    "DEFAULT CHARSET=utf8;", db);
     query.exec();
 }
 
@@ -330,9 +332,11 @@ protected:
         details.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
         details.config.set_interruptible(false);
         details.config.set_current_working_dir(".");
-        details.allocated_specs->ram = 1324;
-        details.allocated_specs->cores = 4;
-        details.allocated_specs->osIdentifier = "55";
+        Specs allocated_specs{};
+        allocated_specs.ram = 1324;
+        allocated_specs.cores = 4;
+        allocated_specs.osIdentifier = "55";
+        details.allocated_specs = allocated_specs;
     }
 
     void TearDown() override {
@@ -472,13 +476,10 @@ protected:
         details.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
         details.config.set_interruptible(false);
         details.config.set_current_working_dir(".");
-        details.allocated_specs->ram = 1324;
-        details.allocated_specs->cores = 4;
-        details.allocated_specs->osIdentifier = "55";
     }
 
     void TearDown() override {
-        resetJobTable();
+       resetJobTable();
     }
 
     job_details details;
@@ -560,22 +561,23 @@ TEST_F(GetJobTest, GetJobTest_FirstAdd_Test){
     EXPECT_TRUE(JobGateway::getJob(details.id) == details);
 }
 
-// Test to see if getter works when only mandatory job memebers were added
+// Test to see if getter works when only mandatory job members were added
 TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
-    job_details details;
-    details.id = 1;
-    details.status = 1; //scheduled
-    details.user_id = 1;
-    details.command = "mkdir build";
-    details.schedule_time = QDateTime::currentDateTime();
-    details.empty = false;
-    details.config.set_image("testimage");
-    details.config.set_current_working_dir(".");
-    details.config.set_priority(Priority::low);
+    job_details detailss;
+    detailss.id = 1;
+    detailss.status = (int) JobStatus::scheduled; //scheduled
+    detailss.user_id = 1;
+    detailss.command = "mkdir build";
+    detailss.schedule_time = QDateTime::currentDateTime();
+    detailss.empty = false;
+    detailss.config.set_image("testimage");
+    detailss.config.set_current_working_dir(".");
+    detailss.config.set_priority(Priority::low);
+    detailss.config.set_interruptible(false);
 
-    EXPECT_TRUE(JobGateway::add(details) == details.id);
-    EXPECT_TRUE(wasJobAddSuccessful(details, details.id));
-    EXPECT_TRUE(JobGateway::getJob(details.id) == details);
+    EXPECT_TRUE(JobGateway::add(detailss) == detailss.id);
+    EXPECT_TRUE(wasJobAddSuccessful(detailss, detailss.id));
+    EXPECT_TRUE(JobGateway::getJob(detailss.id) == detailss);
 }
 
 /**
@@ -1007,6 +1009,7 @@ protected:
         job.empty = false;
         job.config.set_image("testimage");
         job.config.set_current_working_dir(".");
+        job.config.set_interruptible(true);
         job.status = (int)JobStatus::scheduled;
         job.start_time = std::nullopt;
         job.allocated_specs = std::nullopt;
@@ -1155,6 +1158,7 @@ protected:
         specs.osIdentifier = "10240";
         specs.ram = 2 *FOUR_MB;
         specs.cores = 4;
+        worker.specs = specs;
         worker.address = "1.2.3.4";
         worker.name = "Ubuntu";
         worker.id = 1;
@@ -1342,6 +1346,7 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     sspecs.osIdentifier = "10240";
     sspecs.ram = 2 *FOUR_MB;
     sspecs.cores = 4;
+    worker.specs = sspecs;
     worker.address = "1.2.3.4";
     worker.name = "Ubuntu";
     worker.id = 1;
@@ -1349,6 +1354,7 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     EXPECT_EQ(WorkerGateway::add(worker), worker.id);
     worker.public_key = "asdfsadcsadcsa";
     worker.address = "6.4.23.2";
+    worker.name = "Windows";
     EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
     // The job then have to be started.
     first.start_time = QDateTime::currentDateTime().addDays(-1);
@@ -1389,6 +1395,7 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     EXPECT_EQ(WorkerGateway::add(worker), worker.id);
     worker.public_key = "asdfsadcsadcsa";
     worker.address = "6.4.23.2";
+    worker.name = "Windows";
     EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
     // The job then have to be started.
     first.start_time = QDateTime::currentDateTime().addDays(-1);
@@ -1571,6 +1578,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     EXPECT_EQ(WorkerGateway::add(worker), worker.id);
     worker.public_key = "sadfsdcasd";
     worker.address = "1.2.4.5.6";
+    worker.name = "windows";
     EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
     job.status = (int) JobStatus::processing;
     job.start_time = QDateTime::currentDateTime();

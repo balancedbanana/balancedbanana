@@ -36,9 +36,6 @@ QSqlDatabase balancedbanana::database::IGateway::AcquireDatabase() {
         db.setPort(connection.port);
         if(!db.open()){
             throw std::logic_error("Error: connection with database failed.");
-        } else {
-            // Bad habit really
-            // std::cout << "Database connection was successful." << std::endl;
         }
         caches.setLocalData(db);
         return db;

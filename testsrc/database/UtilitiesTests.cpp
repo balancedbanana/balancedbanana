@@ -45,32 +45,34 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
     QSqlQuery query("DROP TABLE jobs", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("jobs"));
-    query.prepare("CREATE TABLE `jobs` (\n"
-                    "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
-                    "  `min_ram` bigint(10) unsigned DEFAULT NULL,\n"
-                    "  `start_time` varchar(60) DEFAULT NULL,\n"
-                    "  `schedule_time` varchar(60) DEFAULT NULL,\n"
-                    "  `finish_time` varchar(60) DEFAULT NULL,\n"
-                    "  `command` text NOT NULL,\n"
-                    "  `image` varchar(500) NOT NULL,\n"
-                    "  `blocking_mode` tinyint(1) DEFAULT NULL,\n"
-                    "  `working_dir` text NOT NULL,\n"
-                    "  `allocated_id` bigint(10) unsigned DEFAULT NULL,\n"
-                    "  `interruptible` tinyint(1) DEFAULT NULL,\n"
-                    "  `environment` text,\n"
-                    "  `min_cores` int(10) unsigned DEFAULT NULL,\n"
-                    "  `max_cores` int(10) unsigned DEFAULT NULL,\n"
-                    "  `priority` int(10) unsigned DEFAULT NULL,\n"
-                    "  `status_id` int(10) unsigned NOT NULL DEFAULT '1',\n"
-                    "  `max_ram` bigint(10) unsigned DEFAULT NULL,\n"
-                    "  `user_id` bigint(10) unsigned NOT NULL,\n"
-                    "  `worker_id` bigint(10) DEFAULT NULL,\n"
-                    "  `result_id` bigint(10) unsigned DEFAULT NULL,\n"
-                    "  PRIMARY KEY (`id`),\n"
-                    "  UNIQUE KEY `id_UNIQUE` (`id`),\n"
-                    "  UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`),\n"
-                    "  UNIQUE KEY `result_id` (`result_id`)\n"
-                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (\n"
+                  "    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                  "    `start_time` VARCHAR(60) NULL DEFAULT NULL,\n"
+                  "    `schedule_time` VARCHAR(60) DEFAULT NULL,\n"
+                  "    `finish_time` VARCHAR(60) DEFAULT NULL,\n"
+                  "    `command` TEXT NOT NULL,\n"
+                  "    `image` VARCHAR(500) NOT NULL,\n"
+                  "    `blocking_mode` TINYINT(1) DEFAULT NULL,\n"
+                  "    `working_dir` TEXT NOT NULL,\n"
+                  "    `allocated_id` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                  "    `interruptible` TINYINT(1) DEFAULT NULL,\n"
+                  "    `environment` TEXT,\n"
+                  "    `min_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
+                  "    `max_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
+                  "    `priority` INT(10) UNSIGNED NOT NULL DEFAULT '2',\n"
+                  "    `status_id` INT(10) UNSIGNED NOT NULL DEFAULT '1',\n"
+                  "    `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
+                  "    `user_id` BIGINT(10) UNSIGNED NOT NULL,\n"
+                  "    `worker_id` BIGINT(10) DEFAULT NULL,\n"
+                  "    `result_id` BIGINT(10) DEFAULT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                  "    UNIQUE INDEX `allocated_id_UNIQUE` (`allocated_id` ASC),\n"
+                  "    UNIQUE INDEX `result_id_UNIQUE` (`result_id` ASC)\n"
+                  ")\n"
+                  "ENGINE=InnoDB\n"
+                  "DEFAULT CHARSET=utf8");
     query.exec();
 }
 
@@ -79,14 +81,18 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
     QSqlQuery query("DROP TABLE users", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("users"));
-    query.prepare("CREATE TABLE `users` (\n"
-                    "  `name` varchar(45) NOT NULL,\n"
-                    "  `email` varchar(255) NOT NULL,\n"
-                    "  `public_key` varchar(255) NOT NULL,\n"
-                    "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
-                    "  PRIMARY KEY (`id`),\n"
-                    "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`users`\n"
+                  "(\n"
+                  "    `id`    BIGINT(10) UNSIGNED NOT NULL,\n"
+                  "    `name`  VARCHAR(45)         NOT NULL,\n"
+                  "    `email` VARCHAR(255)         NOT NULL,\n"
+                  "    `public_key`   LONGTEXT        NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                  "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8");
     query.exec();
 }
 
@@ -95,12 +101,21 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
     QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("workers"));
-    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
-                    "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-                    "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` varchar(255) DEFAULT NULL, "
-                    "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`),  UNIQUE KEY "
-                    "`address_UNIQUE` (`address`) ) "
-                    "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
+                  "(\n"
+                  "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
+                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
+                  "    `public_key` LONGTEXT NOT NULL,\n"
+                  "    `name`       VARCHAR(255) NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                  "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8");
     query.exec();
 }
 
@@ -125,16 +140,16 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoAllocated_Resources_Test){
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("allocated_resources"));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
-                    "(\n"
-                    "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
-                    "    `space` BIGINT(10) UNSIGNED NOT NULL,\n"
-                    "    `ram`   BIGINT(10) UNSIGNED NOT NULL,\n"
-                    "    `cores` INT(10) UNSIGNED NOT NULL,\n"
-                    "    PRIMARY KEY (`id`),\n"
-                    "    UNIQUE INDEX `id_UNIQUE` (`id` ASC)\n"
-                    ")\n"
-                    "ENGINE = InnoDB\n"
-                    "DEFAULT CHARACTER SET = utf8");
+                  "(\n"
+                  "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `osIdentifier` TEXT NOT NULL,\n"
+                  "    `ram`   BIGINT(10) UNSIGNED NOT NULL,\n"
+                  "    `cores` INT(10) UNSIGNED NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8");
     query.exec();
 }
 

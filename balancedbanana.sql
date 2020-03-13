@@ -101,9 +101,11 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (
     `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,
     `user_id` BIGINT(10) UNSIGNED NOT NULL,
     `worker_id` BIGINT(10) DEFAULT NULL,
+    `result_id` BIGINT(10) DEFAULT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `id_UNIQUE` (`id`),
-    UNIQUE KEY `allocated_id_UNIQUE` (`allocated_id`)
+    UNIQUE INDEX `id_UNIQUE` (`id` ASC),
+    UNIQUE INDEX `allocated_id_UNIQUE` (`allocated_id` ASC),
+    UNIQUE INDEX `result_id_UNIQUE` (`result_id` ASC)
 )
 ENGINE=InnoDB
 DEFAULT CHARSET=utf8;
