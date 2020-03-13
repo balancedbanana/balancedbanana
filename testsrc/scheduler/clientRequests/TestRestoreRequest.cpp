@@ -26,7 +26,7 @@ TEST(TestRestoreRequest, allArgs)
     task->setJobId(0);
     task->setBackupId(0);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
+    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
 }
 
 
@@ -41,5 +41,5 @@ TEST(TestRestoreRequest, noArgs)
     task->setJobId(std::nullopt);
     task->setBackupId(std::nullopt);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
+    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
 }

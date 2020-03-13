@@ -97,6 +97,8 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                     return repo->AddUser(/* uid, */username, "bot@localhost", pubkey);
                 }, [repo](const std::string& username) -> std::shared_ptr<User> {
                     return repo->FindUser(username);
+                }, [repo](uint64_t id) -> std::shared_ptr<Worker> {
+                    return repo->GetWorker(id);
                 });
             });
             clientlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {

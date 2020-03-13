@@ -27,8 +27,9 @@ SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<balance
                                      const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                                      const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
                                      const std::function<std::shared_ptr<User>(uint64_t uid, const std::string& username, const std::string& pubkey)> &dbaddUser,
-                                     const std::function<std::shared_ptr<User>(const std::string& username)> &dbgetUserByName) :
-                                     dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob), dbaddUser(dbaddUser), dbgetUserByName(dbgetUserByName)
+                                     const std::function<std::shared_ptr<User>(const std::string& username)> &dbgetUserByName,
+                                     const std::function<std::shared_ptr<Worker>(uint64_t id)> &dbGetWorker) :
+                                     dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob), dbaddUser(dbaddUser), dbgetUserByName(dbgetUserByName), dbGetWorker(dbGetWorker)
 {
 }
 
@@ -141,7 +142,7 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
     // run the request
 
     std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType((TaskType)task->getType());
-    std::shared_ptr<std::string> responseData = request->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, user->id());
+    std::shared_ptr<std::string> responseData = request->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, user->id());
 
     // Respond to Client
 
