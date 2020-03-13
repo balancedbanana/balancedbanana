@@ -34,7 +34,7 @@ std::shared_ptr<Job> Factory::createJob(const job_details& job_info, const std::
 
     if (job_info.allocated_specs.has_value()){
         job->setAllocated_ram(job_info.allocated_specs->ram);
-        job->setAllocated_disk_space(job_info.allocated_specs->space);
+        job->setAllocated_osIdentifier(job_info.allocated_specs->osIdentifier);
         job->setAllocated_cores(job_info.allocated_specs->cores);
     }
 
@@ -51,7 +51,8 @@ std::shared_ptr<Job> Factory::createJob(const job_details& job_info, const std::
  * @return The Worker object
  */
 std::shared_ptr<Worker> Factory::createWorker(const worker_details& worker_info) {
-    std::shared_ptr<Worker> worker = std::make_shared<Worker>(worker_info.id, worker_info.name, worker_info.public_key, worker_info.specs);
+    std::shared_ptr<Worker> worker = std::make_shared<Worker>(worker_info.id, worker_info.name, worker_info
+    .public_key, worker_info.specs);
     worker->setAddress(worker_info.address);
     return worker;
 }

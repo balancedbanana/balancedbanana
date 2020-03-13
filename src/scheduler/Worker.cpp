@@ -9,7 +9,9 @@ using namespace balancedbanana::communication;
 using namespace balancedbanana::database;
 using namespace balancedbanana::scheduler;
 
-Worker::Worker(uint64_t id, const std::string &name, const std::string &publickey, const Specs &specs) : IUser(name, publickey),
+Worker::Worker(uint64_t id, const std::string &name, const std::string &publickey, const std::optional<database::Specs>
+        &specs) :
+IUser(name, publickey),
                id(id), specs(specs), connected(false), address(""), comm(nullptr), resp(0, 0, 0, 0, 0, 0, 0), mtx(), cnd(){
 }
 
@@ -23,11 +25,11 @@ bool Worker::isConnected() {
     return connected;
 }
 
-Specs Worker::getSpec() {
+std::optional<Specs> Worker::getSpec() {
     std::lock_guard guard(mtx);
     return specs;
 }
-void Worker::setSpec(const Specs& specs) {
+void Worker::setSpec(const std::optional<Specs>& specs) {
     std::lock_guard guard(mtx);
     this->specs = specs;
     Update(balancedbanana::scheduler::WorkerObservableEvent::HARDWARE_DETAIL_UPDATE);

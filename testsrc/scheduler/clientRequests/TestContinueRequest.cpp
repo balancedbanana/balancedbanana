@@ -25,7 +25,7 @@ TEST(TestContinueRequest, allArgs)
     task->setType((uint32_t)TaskType::CONTINUE);
     task->setJobId(0);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
+    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
 }
 
 
@@ -39,5 +39,5 @@ TEST(TestContinueRequest, noArgs)
     task->setType((uint32_t)TaskType::CONTINUE);
     task->setJobId(std::nullopt);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
+    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
 }
