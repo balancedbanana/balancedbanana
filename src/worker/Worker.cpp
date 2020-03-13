@@ -184,6 +184,7 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 throw std::runtime_error("Not Implented yet :(");
             }
         } catch(const std::exception&ex) {
+            std::cout << "Internal Error: " << ex.what() << "\n";
             // What should I send on Error
             TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::interrupted);
             com->send(resp);
