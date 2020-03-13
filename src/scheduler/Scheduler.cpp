@@ -85,13 +85,6 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
         auto repo = std::make_shared<balancedbanana::database::Repository>(databasehost, databaseschema, databaseuser, databasepassword, databaseport);
         auto queue = std::make_shared<balancedbanana::scheduler::PriorityQueue>(std::make_shared<timedevents::Timer>(), 360, 960);
 
-        // Reload scheduled Jobs from the database into the Queue
-        for(auto && job : repo->GetUnfinishedJobs()) {
-            if(job->getStatus() == balancedbanana::database::scheduled) {
-                queue->addTask(job);
-            }
-        }
-
         struct QueueObserver : Observer<JobObservableEvent>, Observer<WorkerObservableEvent> {
             std::shared_ptr<balancedbanana::scheduler::PriorityQueue> queue;
             std::shared_ptr<balancedbanana::database::Repository> repo;
@@ -134,6 +127,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                             task.setUserId(job->getUser()->id());
                             job->setWorker_id(worker->getId());
                             task.setType((uint32_t)TaskType::RUN);
+                            task.setJobId(job->getId());
                             job->setAllocated_ram(std::min(job->getConfig()->max_ram().value_or((uint64_t)-1), spec.ram));
                             job->setAllocated_cores(std::min(job->getConfig()->max_cpu_count().value_or((uint32_t)-1), spec.cores));
                             job->setAllocated_osIdentifier(spec.osIdentifier);
@@ -148,6 +142,14 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
         std::shared_ptr<QueueObserver> observer = std::make_shared<QueueObserver>();
         observer->queue = queue;
         observer->repo = repo;
+
+        // Reload scheduled Jobs from the database into the Queue
+        for(auto && job : repo->GetUnfinishedJobs()) {
+            if(job->getStatus() == balancedbanana::database::scheduled && job->getUser() /* Avoid working with invalid jobs*/) {
+                queue->addTask(job);
+                job->RegisterObserver(observer.get());
+            }
+        }
 
         switch ((TaskType)task->getType())
         {
