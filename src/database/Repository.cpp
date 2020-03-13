@@ -4,11 +4,10 @@
 #include <database/JobGateway.h>
 #include <database/UserGateway.h>
 #include <functional>
+#include <iostream>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
-
-std::shared_ptr<Repository> Repository::repo;
 
 Repository::Repository(const std::string& host_name, const std::string& databasename, const std::string&
 username, const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) :
@@ -112,9 +111,9 @@ std::shared_ptr<User> Repository::GetUser(uint64_t id) {
     }
 }
 
-std::shared_ptr<User> Repository::AddUser(const std::string& name, const std::string& email, const std::string& public_key) {
+std::shared_ptr<User> Repository::AddUser(uint64_t id, const std::string& name, const std::string& email, const std::string& public_key) {
     user_details ud;
-    ud.id = 0;
+    ud.id = id;
     ud.empty = false;
     ud.public_key = public_key;
     ud.name = name;
@@ -141,7 +140,11 @@ void Repository::WriteBack() {
             jd.command = job->getCommand();
             jd.config = *job->getConfig();
             jd.finish_time = job->getFinished_at();
-            jd.result = *job->getResult();
+            if(job->getResult() != nullptr) {
+                jd.result = *job->getResult();
+            } else {
+                jd.result = std::nullopt;
+            }
             jd.schedule_time = job->getScheduled_at();
             jd.start_time = job->getStarted_at();
             jd.status = job->getStatus();
@@ -176,10 +179,28 @@ void Repository::WriteBack() {
 void Repository::FlushCache() {
     std::lock_guard lock(mtx);
     WriteBack();
-    userCache.clear();
-    // ToDo keep connected Worker, to avoid loseing the Communicator 
-    workerCache.clear();
-    jobCache.clear();
+
+    //Remove unused jobs
+    std::vector<uint64_t> jobTrashList;
+    for(auto &pair : jobCache) {
+        if(pair.second.first.use_count() == 1) {
+            jobTrashList.push_back(pair.first);
+        }
+    }
+    for(auto id : jobTrashList) {
+        jobCache.erase(id);
+    }
+
+    //Remove unused users
+    std::vector<uint64_t> userTrashList;
+    for(auto &pair : userCache) {
+        if(pair.second.first.use_count() == 1) {
+            userTrashList.push_back(pair.first);
+        }
+    }
+    for(auto id : userTrashList) {
+        userCache.erase(id);
+    }
 }
 
 std::vector<std::shared_ptr<Worker>> Repository::GetActiveWorkers() {
@@ -241,11 +262,4 @@ void Repository::OnUpdate(Observable<JobObservableEvent> *observable, JobObserva
     if(e == JobObservableEvent::DATA_CHANGE) {
         jobCache.find(job->getId())->second.second = true;
     }
-}
-
-Repository &Repository::getDefault() {
-    if(!repo) {
-        repo = std::make_shared<Repository>("localhost", "balancedbanana", "balancedbanana", "qwer1234", 0);
-    }
-    return *repo;
 }

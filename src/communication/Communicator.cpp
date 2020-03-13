@@ -37,6 +37,7 @@ void Communicator::msghandler(std::shared_ptr<Net::Socket> socket, std::shared_p
     while (stop.load()) {
         if(!in.ReceiveAll(buf.data(), 4)) {
             processor->onDisconnect();
+            return;
         }
         uint32_t length;
         Net::Http::V2::GetUInt32(buf.data(), length);
@@ -46,6 +47,7 @@ void Communicator::msghandler(std::shared_ptr<Net::Socket> socket, std::shared_p
         }
         if(!in.ReceiveAll(buf.data(), length)) {
             processor->onDisconnect();
+            return;
         }
         processor->process(Message::deserialize((char*)buf.data(), length));
     }

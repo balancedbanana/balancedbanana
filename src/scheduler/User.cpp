@@ -16,4 +16,10 @@ const std::string& User::email() const {
 
 void User::setEmail(const std::string& mail) {
     email_ = mail;
+    Update(UserObservableEvent::DATA_CHANGE);
+}
+
+void User::setPublickey(const std::string &key) {
+    pubkey_ = key;
+    Update(UserObservableEvent::DATA_CHANGE);
 }

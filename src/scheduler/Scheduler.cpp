@@ -94,7 +94,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                     return repo->AddJob(userid, *config, QDateTime::currentDateTime(), command)->getId();
                 }, [repo](size_t uid, const std::string& username, const std::string& pubkey) -> std::shared_ptr<User> {
                     //Important for the worker to run Jobs under the right userid!!
-                    return repo->AddUser(/* uid, */username, "bot@localhost", pubkey);
+                    return repo->AddUser(uid, username, "bot@localhost", pubkey);
                 }, [repo](const std::string& username) -> std::shared_ptr<User> {
                     return repo->FindUser(username);
                 }, [repo](uint64_t id) -> std::shared_ptr<Worker> {

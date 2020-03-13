@@ -9,6 +9,7 @@
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/WorkerLoadRequestMessage.h>
 #include <communication/message/WorkerLoadResponseMessage.h>
+#include <communication/message/RespondToClientMessage.h>
 #include <communication/message/Serialization.h>
 #include <sstream>
 
@@ -52,6 +53,8 @@ std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
             return std::make_shared<WorkerLoadRequestMessage>(msg, iterator, size);
         case MessageType::WORKERLOADRESPONSE:
             return std::make_shared<WorkerLoadResponseMessage>(msg, iterator, size);
+        case MessageType::RESPOND_TO_CLIENT:
+            return std::make_shared<RespondToClientMessage>(msg, iterator, size);
         default:
             return nullptr;
     }
