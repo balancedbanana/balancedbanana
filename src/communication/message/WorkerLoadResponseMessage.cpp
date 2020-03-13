@@ -23,7 +23,7 @@ balancedbanana::communication::WorkerLoadResponseMessage::WorkerLoadResponseMess
 }
 
 WorkerLoadResponseMessage& WorkerLoadResponseMessage::operator=(const WorkerLoadResponseMessage& msg) {
-    return *new (this) WorkerLoadResponseMessage(msg);
+    return *new (this) WorkerLoadResponseMessage(msg); //TODO this is a very dangerous copy since the user might not call delete on it
 }
 
 uint64_t WorkerLoadResponseMessage::GetCpuLoad() const {

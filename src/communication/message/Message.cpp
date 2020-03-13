@@ -4,6 +4,7 @@
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
 #include <communication/message/TaskMessage.h>
+#include <communication/message/TaskResponseMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/WorkerLoadRequestMessage.h>
 #include <communication/message/WorkerLoadResponseMessage.h>
@@ -36,6 +37,8 @@ std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
             return std::make_shared<ClientAuthMessage>(msg, iterator, size);
         case MessageType::HARDWARE_DETAIL:
             return std::make_shared<HardwareDetailMessage>(msg, iterator, size);
+        case MessageType::JOB_STATUS:
+            return std::make_shared<TaskResponseMessage>(msg, iterator, size);
         case MessageType::PUBLIC_KEY_AUTH:
             return std::make_shared<PublicKeyAuthMessage>(msg, iterator, size);
         case MessageType::TASK:
