@@ -217,6 +217,12 @@ std::vector<std::shared_ptr<Worker>> Repository::GetActiveWorkers() {
 std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     std::lock_guard lock(mtx);
     std::vector<std::shared_ptr<Job>> unfinished;
+    for(auto&& job : JobGateway::getJobs()) {
+        if ((JobStatus)job.status != JobStatus::finished) {
+            auto sjob = jobCache.find(job.id);
+            unfinished.emplace_back(sjob != jobCache.end() ? sjob->second.first : Factory::createJob(job, GetUser(job.user_id)));
+        }
+    }
     return unfinished;
 }
 std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
