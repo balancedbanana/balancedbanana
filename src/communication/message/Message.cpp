@@ -10,6 +10,7 @@
 #include <communication/message/WorkerLoadRequestMessage.h>
 #include <communication/message/WorkerLoadResponseMessage.h>
 #include <communication/message/Serialization.h>
+#include <sstream>
 
 using namespace balancedbanana::communication;
 
