@@ -44,7 +44,12 @@ void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
 {
     try {
         auto uid = authenticator::AuthHandler::GetDefault()->authenticate(std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey()), msg.GetPassword());
-        user = dbaddUser(uid, msg.GetUsername(), msg.GetPublickey());
+        user = dbgetUserByName(msg.GetUsername());
+        if(user) {
+            user->setPublickey(msg.GetPublickey());
+        } else {
+            user = dbaddUser(uid, msg.GetUsername(), msg.GetPublickey());
+        }
         AuthResultMessage result(0);
         getClient().send(result);
     } catch(const std::exception& ex) {
