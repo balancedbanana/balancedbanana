@@ -30,8 +30,10 @@ std::optional<Specs> Worker::getSpec() {
     return specs;
 }
 void Worker::setSpec(const std::optional<Specs>& specs) {
-    std::lock_guard guard(mtx);
-    this->specs = specs;
+    {
+        std::lock_guard guard(mtx);
+        this->specs = specs;
+    }
     Update(balancedbanana::scheduler::WorkerObservableEvent::HARDWARE_DETAIL_UPDATE);
 }
 
@@ -45,8 +47,10 @@ const std::string &Worker::getAddress() {
     return address;
 }
 void Worker::setAddress(const std::string &adr) {
-    std::lock_guard lock(mtx);
-    address = adr;
+    {
+        std::lock_guard lock(mtx);
+        address = adr;
+    }
     Update(balancedbanana::scheduler::WorkerObservableEvent::DATA_CHANGE);
 }
 
