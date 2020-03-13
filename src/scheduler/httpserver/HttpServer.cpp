@@ -48,63 +48,44 @@ void HttpServer::listen(const std::string & ip, short port) {
 #endif
 	listener->SetConnectionHandler([this](std::shared_ptr<Net::Socket> socket) {
         auto requesthandler = [this](std::shared_ptr<Net::Http::Connection> con) {
-            auto request = &con->GetRequest();
-            auto& response = con->GetResponse();
-			if (request->method == "GET") {
-				if (!request->path.compare(0, 17, "/v1/workmachines/", 17)) {
-					if (!request->path.compare(17, 8, "workload", 8)) {
-						response.status = 200;
-						std::stringstream resp;
-						resp << "machines:\n";
-						for(auto && worker : getAllWorker()) {
-							resp << "- id: " << worker->name() << "\n";
-							auto& load = worker->GetWorkerLoad();
-							resp << "  cpu_load: " << load.GetCpuLoad() << "\n";
-							resp << "  cpu_threads:\n";
-							resp << "    used: " << load.GetUsedThreads() << "\n";
-							resp << "    free: " << load.GetFreeThreads() << "\n";
-							resp << "  memory_load:\n";
-							resp << "    used: " << load.GetUsedMemory() << "\n";
-							resp << "    free: " << load.GetFreeMemory() << "\n";
-							resp << "  swap_space:\n";
-							resp << "    used: " << load.GetUsedSwap() << "\n";
-							resp << "    free: " << load.GetFreeSwap() << "\n";
+			try {
+				auto request = &con->GetRequest();
+				auto& response = con->GetResponse();
+				if (request->method == "GET") {
+					if (!request->path.compare(0, 17, "/v1/workmachines/", 17)) {
+						if (!request->path.compare(17, 8, "workload", 8)) {
+							response.status = 200;
+							std::stringstream resp;
+							resp << "machines:\n";
+							for(auto && worker : getAllWorker()) {
+								resp << "- id: " << worker->name() << "\n";
+								auto& load = worker->GetWorkerLoad();
+								resp << "  cpu_load: " << load.GetCpuLoad() << "\n";
+								resp << "  cpu_threads:\n";
+								resp << "    used: " << load.GetUsedThreads() << "\n";
+								resp << "    free: " << load.GetFreeThreads() << "\n";
+								resp << "  memory_load:\n";
+								resp << "    used: " << load.GetUsedMemory() << "\n";
+								resp << "    free: " << load.GetFreeMemory() << "\n";
+								resp << "  swap_space:\n";
+								resp << "    used: " << load.GetUsedSwap() << "\n";
+								resp << "    free: " << load.GetFreeSwap() << "\n";
+							}
+							auto responsedata = resp.str();
+							response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
+							con->SendResponse(false);
+							con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+							return;
 						}
-						auto responsedata = resp.str();
-						response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
-						con->SendResponse(false);
-						con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
-						return;
-					}
-					char * endptr;
-					auto bid = request->path.data() + 17;
-					int workmachineid = std::strtol(bid, &endptr, 10);
-					if(bid < endptr && !strcmp(endptr, "/jobs")) {
-						response.status = 200;
-						std::stringstream resp;
-
-						resp << "jobs:\n";
-						for(auto && jobid : getJobIDsByWorkerId(workmachineid)) {
-							resp << "- job_id: " << jobid << "\n";
-						}
-					
-						auto responsedata = resp.str();
-						response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
-						con->SendResponse(false);
-						con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
-						return;
-					}
-				}
-				else if (!request->path.compare(0, 9, "/v1/jobs/", 9)) {
-					if (!request->path.compare(9, 6, "hours/", 6)) {
-						char * number = request->path.data() + 15, *end = number;
-						int hours = std::strtol(number, &end, 10);
-						if(number < end && (end - request->path.data()) == request->path.length()) {
+						char * endptr;
+						auto bid = request->path.data() + 17;
+						int workmachineid = std::strtol(bid, &endptr, 10);
+						if(bid < endptr && !strcmp(endptr, "/jobs")) {
 							response.status = 200;
 							std::stringstream resp;
 
 							resp << "jobs:\n";
-							for(auto && jobid : getJobIDsOfLastHours(hours)) {
+							for(auto && jobid : getJobIDsByWorkerId(workmachineid)) {
 								resp << "- job_id: " << jobid << "\n";
 							}
 						
@@ -114,90 +95,113 @@ void HttpServer::listen(const std::string & ip, short port) {
 							con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
 							return;
 						}
-					} else {
-						char * number = request->path.data() + 9, *end = number;
-						int jobid = std::strtol(number, &end, 10);
-						if(number < end && (end - request->path.data()) == request->path.length()) {
-							response.status = 200;
-							auto job = getJobByID(jobid);
-							if(job) {
+					}
+					else if (!request->path.compare(0, 9, "/v1/jobs/", 9)) {
+						if (!request->path.compare(9, 6, "hours/", 6)) {
+							char * number = request->path.data() + 15, *end = number;
+							int hours = std::strtol(number, &end, 10);
+							if(number < end && (end - request->path.data()) == request->path.length()) {
+								response.status = 200;
 								std::stringstream resp;
-								if(job->getUser()) {
-									resp << "user_name: " << job->getUser()->name() << "\n";
-									resp << "user_id: " << job->getUser()->id() << "\n";
+
+								resp << "jobs:\n";
+								for(auto && jobid : getJobIDsOfLastHours(hours)) {
+									resp << "- job_id: " << jobid << "\n";
 								}
-								auto status = job->getStatus();
-								resp << "status: " << status << "\n";
-								resp << "scheduled_at: " << job->getScheduled_at().toString().toStdString() << "\n";
-								resp << "finished_at: " << job->getFinished_at().toString().toStdString() << "\n";
-								resp << "spent_in_queue: ";
-								switch (status)
-								{
-								case balancedbanana::database::JobStatus::scheduled:
-									resp << job->getScheduled_at().msecsTo(QDateTime::currentDateTime());
-									break;
-								case balancedbanana::database::JobStatus::finished:
-								case balancedbanana::database::JobStatus::processing:
-									resp << job->getScheduled_at().msecsTo(job->getStarted_at());
-									break;
-								default:
-									resp << "0";
-									break;
-								}
-								resp << "\n";
-								resp << "time_spend_running: ";
-								switch (status)
-								{
-								case balancedbanana::database::JobStatus::finished:
-									resp << job->getStarted_at().msecsTo(job->getFinished_at());
-									break;
-								case balancedbanana::database::JobStatus::processing:
-									resp << job->getStarted_at().msecsTo(QDateTime::currentDateTime());
-									break;
-								default:
-									resp << "0";
-									break;
-								}
-								resp << "\n";
-								resp << "allocated_threads: " << job->getAllocated_cores() << "\n";
-								resp << "utilization_of_threads: " << job->getAllocated_cores() << "\n";
-								resp << "allocated_ram: " << job->getAllocated_ram() << "\n";
-								resp << "utilization_of_ram: " << job->getAllocated_ram() << "\n";
+							
 								auto responsedata = resp.str();
 								response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
 								con->SendResponse(false);
 								con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
 								return;
 							}
+						} else {
+							char * number = request->path.data() + 9, *end = number;
+							int jobid = std::strtol(number, &end, 10);
+							if(number < end && (end - request->path.data()) == request->path.length()) {
+								response.status = 200;
+								auto job = getJobByID(jobid);
+								if(job) {
+									std::stringstream resp;
+									if(job->getUser()) {
+										resp << "user_name: " << job->getUser()->name() << "\n";
+										resp << "user_id: " << job->getUser()->id() << "\n";
+									}
+									auto status = job->getStatus();
+									resp << "status: " << status << "\n";
+									resp << "scheduled_at: " << job->getScheduled_at().toString().toStdString() << "\n";
+									resp << "finished_at: " << job->getFinished_at().toString().toStdString() << "\n";
+									resp << "spent_in_queue: ";
+									switch (status)
+									{
+									case balancedbanana::database::JobStatus::scheduled:
+										resp << job->getScheduled_at().msecsTo(QDateTime::currentDateTime());
+										break;
+									case balancedbanana::database::JobStatus::finished:
+									case balancedbanana::database::JobStatus::processing:
+										resp << job->getScheduled_at().msecsTo(job->getStarted_at());
+										break;
+									default:
+										resp << "0";
+										break;
+									}
+									resp << "\n";
+									resp << "time_spend_running: ";
+									switch (status)
+									{
+									case balancedbanana::database::JobStatus::finished:
+										resp << job->getStarted_at().msecsTo(job->getFinished_at());
+										break;
+									case balancedbanana::database::JobStatus::processing:
+										resp << job->getStarted_at().msecsTo(QDateTime::currentDateTime());
+										break;
+									default:
+										resp << "0";
+										break;
+									}
+									resp << "\n";
+									resp << "allocated_threads: " << job->getAllocated_cores() << "\n";
+									resp << "utilization_of_threads: " << job->getAllocated_cores() << "\n";
+									resp << "allocated_ram: " << job->getAllocated_ram() << "\n";
+									resp << "utilization_of_ram: " << job->getAllocated_ram() << "\n";
+									auto responsedata = resp.str();
+									response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
+									con->SendResponse(false);
+									con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+									return;
+								}
+							}
 						}
-					}
-				} else if (!request->path.compare(0, 9, "/v1/user/", 9)) {
-					char * number = request->path.data() + 9, *end = number;
-					int userid = std::strtol(number, &end, 10);
-					if(number < end && !strcmp(end, "/jobs")) {
-						response.status = 200;
-						std::stringstream resp;
+					} else if (!request->path.compare(0, 9, "/v1/user/", 9)) {
+						char * number = request->path.data() + 9, *end = number;
+						int userid = std::strtol(number, &end, 10);
+						if(number < end && !strcmp(end, "/jobs")) {
+							response.status = 200;
+							std::stringstream resp;
 
-						resp << "jobs:\n";
-						for(auto && job : getJobIDsByUserId(userid)) {
-							resp << "- job_id: " << "0" << "\n";
+							resp << "jobs:\n";
+							for(auto && job : getJobIDsByUserId(userid)) {
+								resp << "- job_id: " << "0" << "\n";
+							}
+						
+							auto responsedata = resp.str();
+							response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
+							con->SendResponse(false);
+							con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+							return;
 						}
-					
-						auto responsedata = resp.str();
-						response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
-						con->SendResponse(false);
-						con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
-						return;
 					}
 				}
-			}
 
-			response.status = 404;
-			response.contenttype = "text/plain";
-			std::string content = "Nicht gefunden";
-			response.headerlist.insert({ "content-length", "14" });
-			con->SendResponse(false);
-			con->SendData((const uint8_t*)content.data(), content.length(), true);
+				response.status = 404;
+				response.contenttype = "text/plain";
+				std::string content = "Nicht gefunden";
+				response.headerlist.insert({ "content-length", "14" });
+				con->SendResponse(false);
+				con->SendData((const uint8_t*)content.data(), content.length(), true);
+			} catch (const std::exception& ex) {
+				std::cout << "WEBAPI Unhandled Error: " << ex.what() << "\n";
+			}
         };
 #ifdef WEBAPITLS
 		if (socket->GetProtocol() == "h2")

@@ -6,6 +6,7 @@
 #include <communication/MessageProcessor.h>
 #include <communication/message/Message.h>
 #include <sstream>
+#include <iostream>
 
 using namespace balancedbanana::communication;
 
@@ -49,7 +50,11 @@ void Communicator::msghandler(std::shared_ptr<Net::Socket> socket, std::shared_p
             processor->onDisconnect();
             return;
         }
-        processor->process(Message::deserialize((char*)buf.data(), length));
+        try {
+            processor->process(Message::deserialize((char*)buf.data(), length));
+        } catch (const std::exception& ex) {
+            std::cout << "Communicator Unhandled Error: " << ex.what() << "\n";
+        }
     }
 }
 
