@@ -111,9 +111,9 @@ std::shared_ptr<User> Repository::GetUser(uint64_t id) {
     }
 }
 
-std::shared_ptr<User> Repository::AddUser(const std::string& name, const std::string& email, const std::string& public_key) {
+std::shared_ptr<User> Repository::AddUser(uint64_t id, const std::string& name, const std::string& email, const std::string& public_key) {
     user_details ud;
-    ud.id = 0;
+    ud.id = id;
     ud.empty = false;
     ud.public_key = public_key;
     ud.name = name;

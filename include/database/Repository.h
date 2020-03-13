@@ -48,7 +48,7 @@ namespace balancedbanana::database {
             std::shared_ptr<Job> AddJob(uint64_t user_id, const JobConfig& config, const QDateTime& schedule_time, const std::string& command);
 
             std::shared_ptr<User> GetUser(uint64_t id);
-            std::shared_ptr<User> AddUser(const std::string& name, const std::string& email, const std::string& public_key);
+            std::shared_ptr<User> AddUser(uint64_t id, const std::string& name, const std::string& email, const std::string& public_key);
 
             void WriteBack();
             void FlushCache();
