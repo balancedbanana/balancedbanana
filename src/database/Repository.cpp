@@ -23,6 +23,9 @@ Repository::~Repository() {
 }
 
 std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
+    if(id == 0) {
+        return nullptr;
+    }
     std::lock_guard lock(mtx);
     auto it = workerCache.find(id);
     if(it != workerCache.end()) {
@@ -55,6 +58,9 @@ std::shared_ptr<Worker> Repository::AddWorker(const std::string &name, const std
 }
 
 std::shared_ptr<Job> Repository::GetJob(uint64_t id) {
+    if(id == 0) {
+        return nullptr;
+    }
     std::lock_guard lock(mtx);
     auto it = jobCache.find(id);
     if(it != jobCache.end()) {
@@ -95,6 +101,9 @@ command) {
 }
 
 std::shared_ptr<User> Repository::GetUser(uint64_t id) {
+    if(id == 0) {
+        return nullptr;
+    }
     std::lock_guard lock(mtx);
     auto it = userCache.find(id);
     if(it != userCache.end()) {
