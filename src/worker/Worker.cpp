@@ -7,6 +7,7 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/WorkerLoadResponseMessage.h>
 #include <communication/message/TaskResponseMessage.h>
+#include <communication/message/HardwareDetailMessage.h>
 #include <communication/authenticator/Authenticator.h>
 
 using namespace balancedbanana::worker;
@@ -95,6 +96,8 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
         switch ((TaskType)task->getType())
         {
         case TaskType::WORKERSTART: {
+            HardwareDetailMessage detail = { 8, 16000, "GNU/Linux" };
+            communicator->send(detail);
             std::thread([]() {
                 std::string cmd;
                 while(1) {
