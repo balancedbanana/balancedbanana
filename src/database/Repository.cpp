@@ -220,7 +220,14 @@ std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     for(auto&& job : JobGateway::getJobs()) {
         if ((JobStatus)job.status != JobStatus::finished) {
             auto sjob = jobCache.find(job.id);
-            unfinished.emplace_back(sjob != jobCache.end() ? sjob->second.first : Factory::createJob(job, GetUser(job.user_id)));
+            if(sjob != jobCache.end()) {
+                unfinished.emplace_back(sjob->second.first);
+            } else {
+                auto _job = Factory::createJob(job, GetUser(job.user_id));
+                jobCache.insert(std::pair(job.id, std::pair(_job, false)));
+                _job->RegisterObserver(this);
+                unfinished.emplace_back(_job);
+            }
         }
     }
     return unfinished;
