@@ -15,7 +15,14 @@ using balancedbanana::configfiles::ApplicationConfig;
 using balancedbanana::scheduler::ClientRequest;
 using balancedbanana::communication::RespondToClientMessage;
 
-constexpr const char *schedulerConfigPath = "./schduler_config.txt";
+#ifdef _WIN32
+#define HOME_ENV "USERPROFILE"
+#else
+#define HOME_ENV "HOME"
+#endif
+
+auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs";
+auto schedulerConfigPath = (std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs") / "appconfig.ini";
 
 #if 0
 SchedulerClientMP::SchedulerClientMP(balancedbanana::communication::Communicator *communicator) :
