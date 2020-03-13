@@ -56,6 +56,13 @@ const std::string & Task::getTaskCommand() const {
     return this->taskCommand;
 }
 
+void Task::setConfig(const std::shared_ptr<configfiles::JobConfig>& config) {
+    if(config == nullptr) {
+        throw std::runtime_error("Task::setConfig called with nullptr forbidden");
+    }
+    this->config = config;
+}
+
 std::shared_ptr<configfiles::JobConfig> Task::getConfig() const {
     return this->config;
 }
