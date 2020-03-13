@@ -9,8 +9,6 @@
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
 
-std::shared_ptr<Repository> Repository::repo;
-
 Repository::Repository(const std::string& host_name, const std::string& databasename, const std::string&
 username, const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) :
 jobCache(), workerCache(), userCache(), lastJobId(0, 0), lastWorkerId(0, 0), lastUserId(0, 0), mtx(), timer() {
@@ -246,20 +244,4 @@ void Repository::OnUpdate(Observable<JobObservableEvent> *observable, JobObserva
     if(e == JobObservableEvent::DATA_CHANGE) {
         jobCache.find(job->getId())->second.second = true;
     }
-}
-
-void Repository::init(const std::string& host_name, const std::string& databasename, const std::string& username,
-                 const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) {
-    if(repo != nullptr) {
-        std::cerr << "Default repository has already been initialized" << std::endl;
-        throw std::runtime_error("repository != nullptr");
-    }
-    repo = std::make_shared<Repository>(host_name, databasename, username, password, port, updateInterval);
-}
-
-Repository &Repository::getDefault() {
-    if(!repo) {
-        repo = std::make_shared<Repository>("localhost", "balancedbanana", "balancedbanana", "qwer1234", 0);
-    }
-    return *repo;
 }
