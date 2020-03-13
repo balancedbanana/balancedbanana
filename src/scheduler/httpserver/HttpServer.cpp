@@ -120,51 +120,55 @@ void HttpServer::listen(const std::string & ip, short port) {
 						if(number < end && (end - request->path.data()) == request->path.length()) {
 							response.status = 200;
 							auto job = getJobByID(jobid);
-							std::stringstream resp;
-							resp << "user_name: " << job->getUser()->name() << "\n";
-							resp << "user_id: " << job->getUser()->id() << "\n";
-							auto status = job->getStatus();
-							resp << "status: " << status << "\n";
-							resp << "scheduled_at: " << job->getScheduled_at().toString().toStdString() << "\n";
-							resp << "finished_at: " << job->getFinished_at().toString().toStdString() << "\n";
-							resp << "spent_in_queue: ";
-							switch (status)
-							{
-							case balancedbanana::database::JobStatus::scheduled:
-								resp << job->getScheduled_at().msecsTo(QDateTime::currentDateTime());
-								break;
-							case balancedbanana::database::JobStatus::finished:
-							case balancedbanana::database::JobStatus::processing:
-								resp << job->getScheduled_at().msecsTo(job->getStarted_at());
-								break;
-							default:
-								resp << "0";
-								break;
+							if(job) {
+								std::stringstream resp;
+								if(job->getUser()) {
+									resp << "user_name: " << job->getUser()->name() << "\n";
+									resp << "user_id: " << job->getUser()->id() << "\n";
+								}
+								auto status = job->getStatus();
+								resp << "status: " << status << "\n";
+								resp << "scheduled_at: " << job->getScheduled_at().toString().toStdString() << "\n";
+								resp << "finished_at: " << job->getFinished_at().toString().toStdString() << "\n";
+								resp << "spent_in_queue: ";
+								switch (status)
+								{
+								case balancedbanana::database::JobStatus::scheduled:
+									resp << job->getScheduled_at().msecsTo(QDateTime::currentDateTime());
+									break;
+								case balancedbanana::database::JobStatus::finished:
+								case balancedbanana::database::JobStatus::processing:
+									resp << job->getScheduled_at().msecsTo(job->getStarted_at());
+									break;
+								default:
+									resp << "0";
+									break;
+								}
+								resp << "\n";
+								resp << "time_spend_running: ";
+								switch (status)
+								{
+								case balancedbanana::database::JobStatus::finished:
+									resp << job->getStarted_at().msecsTo(job->getFinished_at());
+									break;
+								case balancedbanana::database::JobStatus::processing:
+									resp << job->getStarted_at().msecsTo(QDateTime::currentDateTime());
+									break;
+								default:
+									resp << "0";
+									break;
+								}
+								resp << "\n";
+								resp << "allocated_threads: " << job->getAllocated_cores() << "\n";
+								resp << "utilization_of_threads: " << job->getAllocated_cores() << "\n";
+								resp << "allocated_ram: " << job->getAllocated_ram() << "\n";
+								resp << "utilization_of_ram: " << job->getAllocated_ram() << "\n";
+								auto responsedata = resp.str();
+								response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
+								con->SendResponse(false);
+								con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
+								return;
 							}
-							resp << "\n";
-							resp << "time_spend_running: ";
-							switch (status)
-							{
-							case balancedbanana::database::JobStatus::finished:
-								resp << job->getStarted_at().msecsTo(job->getFinished_at());
-								break;
-							case balancedbanana::database::JobStatus::processing:
-								resp << job->getStarted_at().msecsTo(QDateTime::currentDateTime());
-								break;
-							default:
-								resp << "0";
-								break;
-							}
-							resp << "\n";
-							resp << "allocated_threads: " << job->getAllocated_cores() << "\n";
-							resp << "utilization_of_threads: " << job->getAllocated_cores() << "\n";
-							resp << "allocated_ram: " << job->getAllocated_ram() << "\n";
-							resp << "utilization_of_ram: " << job->getAllocated_ram() << "\n";
-							auto responsedata = resp.str();
-							response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
-							con->SendResponse(false);
-							con->SendData((uint8_t*)responsedata.data(), responsedata.length(), true);
-							return;
 						}
 					}
 				} else if (!request->path.compare(0, 9, "/v1/user/", 9)) {
