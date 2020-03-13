@@ -36,7 +36,7 @@ Task::Task(const std::string &string) {
     webAPIPort = extract<uint16_t>(data, iterator, size);
     jobId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     backupId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
-    userId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint16_t>(data, iterator, size)) : std::nullopt;
+    userId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     if(iterator != size) {
         throw std::invalid_argument("string is too long");
     }
