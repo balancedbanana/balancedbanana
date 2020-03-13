@@ -184,8 +184,8 @@ void HttpServer::listen(const std::string & ip, short port) {
 							std::stringstream resp;
 
 							resp << "jobs:\n";
-							for(auto && job : getJobIDsByUserId(userid)) {
-								resp << "- job_id: " << "0" << "\n";
+							for(auto && jobid : getJobIDsByUserId(userid)) {
+								resp << "- job_id: " << jobid << "\n";
 							}
 						
 							auto responsedata = resp.str();
