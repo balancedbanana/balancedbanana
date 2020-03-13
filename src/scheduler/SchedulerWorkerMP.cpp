@@ -24,9 +24,7 @@ void SchedulerWorkerMP::onDisconnect() {
 }
 
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
-    //TODO No space in HardwareDetailMessage
-    //TODO No OS Identifier in Spec
-    worker->setSpec(std::make_optional<database::Specs>({"", msg.GetRamSize(), msg.GetCoreCount()}));
+    worker->setSpec(std::make_optional<database::Specs>({msg.GetOsIdentifier(), msg.GetRamSize(), msg.GetCoreCount()}));
 }
 
 void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
