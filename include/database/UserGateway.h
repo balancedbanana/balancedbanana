@@ -7,7 +7,7 @@
 namespace balancedbanana::database {
     class UserGateway : virtual public IGateway {
     public:
-        static uint64_t add(const user_details &user);
+        static bool add(const user_details &user);
 
         static bool remove(uint64_t id);
 

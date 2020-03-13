@@ -4,11 +4,10 @@
 #include <database/JobGateway.h>
 #include <database/UserGateway.h>
 #include <functional>
+#include <iostream>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
-
-std::shared_ptr<Repository> Repository::repo;
 
 Repository::Repository(const std::string& host_name, const std::string& databasename, const std::string&
 username, const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) :
@@ -137,11 +136,15 @@ void Repository::WriteBack() {
             jd.user_id = job->getUser()->id();
             jd.empty = false;
             jd.worker_id = job->getWorker_id();
-            jd.allocated_specs = {job->getAllocated_disk_space(), job->getAllocated_cores(), job->getAllocated_ram()};
+            jd.allocated_specs = {job->getAllocated_osIdentifier(), job->getAllocated_cores(), job->getAllocated_ram()};
             jd.command = job->getCommand();
             jd.config = *job->getConfig();
             jd.finish_time = job->getFinished_at();
-            jd.result = *job->getResult();
+            if(job->getResult() != nullptr) {
+                jd.result = *job->getResult();
+            } else {
+                jd.result = std::nullopt;
+            }
             jd.schedule_time = job->getScheduled_at();
             jd.start_time = job->getStarted_at();
             jd.status = job->getStatus();
@@ -259,11 +262,4 @@ void Repository::OnUpdate(Observable<JobObservableEvent> *observable, JobObserva
     if(e == JobObservableEvent::DATA_CHANGE) {
         jobCache.find(job->getId())->second.second = true;
     }
-}
-
-Repository &Repository::getDefault() {
-    if(!repo) {
-        repo = std::make_shared<Repository>("localhost", "balancedbanana", "balancedbanana", "qwer1234", 0);
-    }
-    return *repo;
 }

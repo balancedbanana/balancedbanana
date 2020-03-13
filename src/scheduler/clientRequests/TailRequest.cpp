@@ -21,6 +21,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
                                                                      const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
                                                                      const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                                                                      const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
+                                                                     const std::function<std::shared_ptr<Worker>(uint64_t id)> &dbGetWorker,
                                                                      uint64_t userID)
 {
     // Step 1: Go to DB and get job status
@@ -41,7 +42,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
         response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
-    std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
+    std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
     switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:

@@ -6,6 +6,7 @@
 #include "IUser.h"
 #include "Observer.h"
 #include <condition_variable>
+#include <optional>
 
 namespace balancedbanana {
     namespace scheduler {
@@ -23,9 +24,9 @@ namespace balancedbanana {
 
             bool isConnected();
 
-            database::Specs getSpec();
+            std::optional<database::Specs> getSpec();
 
-            void setSpec(const database::Specs& spec);
+            void setSpec(const std::optional<database::Specs>& spec);
 
             uint64_t getId();
 
@@ -37,10 +38,11 @@ namespace balancedbanana {
 
             void setCommunicator(const std::shared_ptr<communication::Communicator>& com);
 
-            Worker(uint64_t id, const std::string &name, const std::string &publickey, const database::Specs &specs);
+            Worker(uint64_t id, const std::string &name, const std::string &publickey, const
+            std::optional<database::Specs> &specs);
         private:
             uint64_t id;
-            database::Specs specs;
+            std::optional<database::Specs> specs;
             bool connected;
             std::string address;
             std::shared_ptr<communication::Communicator> comm;

@@ -4,6 +4,7 @@
 
 #include <functional>
 #include "scheduler/Job.h"
+#include "scheduler/Worker.h"
 #include "configfiles/JobConfig.h"
 
 using balancedbanana::configfiles::JobConfig;
@@ -23,6 +24,7 @@ class SchedulerClientMP : public communication::MessageProcessor
     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> dbAddJob;
     const std::function<std::shared_ptr<User>(size_t uid, const std::string& username, const std::string& pubkey)> dbaddUser;
     const std::function<std::shared_ptr<User>(const std::string& username)> dbgetUserByName;
+    const std::function<std::shared_ptr<Worker>(uint64_t id)> dbGetWorker;
 
 public:
 #if 0
@@ -33,7 +35,8 @@ public:
                       const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                       const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
                       const std::function<std::shared_ptr<User>(size_t uid, const std::string& username, const std::string& pubkey)> &dbaddUser,
-                      const std::function<std::shared_ptr<User>(const std::string& username)> &dbgetUserByName);
+                      const std::function<std::shared_ptr<User>(const std::string& username)> &dbgetUserByName,
+                      const std::function<std::shared_ptr<Worker>(uint64_t id)> &dbGetWorker);
 
     void processClientAuthMessage(const communication::ClientAuthMessage &msg) override;
     void processPublicKeyAuthMessage(const communication::PublicKeyAuthMessage &msg) override;

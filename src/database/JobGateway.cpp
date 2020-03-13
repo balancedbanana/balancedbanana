@@ -83,6 +83,8 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
     QVariant q_priority;
     if (config.priority().has_value()){
         q_priority = QVariant::fromValue(as_integer(config.priority().value()));
+    } else {
+        q_priority = QVariant::fromValue((as_integer(Priority::normal)));
     }
 
     QVariant q_interruptible;
@@ -124,47 +126,6 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const Q
     return qstruct;
 }
 
-/**
- * Checks if the args are valid
- * @param details The struct containing the args
- * @return true if the args are valid, otherwise false
- */
-bool areArgsValid(job_details details){
-
-    // Check the optional arguments
-    if (details.config.min_ram().has_value() && (details.config.min_ram().value() == 0 || details.config.min_ram() <
-    FOUR_MB)){
-       return false;
-    }
-    if (details.config.max_ram().has_value() && (details.config.max_ram().value() == 0 || details.config.max_ram() <
-    FOUR_MB)){
-        return false;
-    }
-    if (details.config.min_cpu_count().has_value() && details.config.min_cpu_count().value() == 0){
-        return false;
-    }
-    if (details.config.max_cpu_count().has_value() && details.config.max_cpu_count().value() == 0){
-        return false;
-    }
-
-    // the mins cant be larger than the maxs
-    if (details.config.min_ram().has_value() && details.config.max_ram().has_value()){
-        if (details.config.min_ram().value() > details.config.max_ram().value()){
-            return false;
-        }
-    }
-
-    if (details.config.min_cpu_count().has_value() && details.config.max_cpu_count().has_value()){
-        if (details.config.min_cpu_count().value() > details.config.max_cpu_count().value()){
-            return false;
-        }
-    }
-
-    // Check the required arguments
-    return !(details.command.empty()
-             || !details.schedule_time.isValid()
-             || details.user_id == 0);
-}
 
 /**
  * Executed the addJob query
@@ -172,7 +133,7 @@ bool areArgsValid(job_details details){
  * @return The id of the added Job
  */
 uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     // Create the query
     QSqlQuery query("INSERT INTO jobs (user_id, min_ram, max_ram, min_cores, max_cores, "
                     "blocking_mode, priority, image, interruptible, environment, working_dir, command, "
@@ -204,15 +165,10 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
  * @return The id of the added Job
  */
 uint64_t JobGateway::add(job_details details) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     // DB must contain table
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
-    }
-
-    // Check args
-    if (!areArgsValid(details)){
-        throw std::invalid_argument("addJob error: invalid arguments");
     }
 
     QVariant_JobConfig qstruct = convertJobConfig(details.user_id, details.config, details.schedule_time, details.command);
@@ -225,7 +181,7 @@ uint64_t JobGateway::add(job_details details) {
  * @return true if the operation was successful, otherwise false;
  */
 bool JobGateway::remove(uint64_t job_id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
     }
@@ -257,25 +213,21 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     details.config.set_max_ram(Utilities::castToOptional(query.value(2).toUInt()));
     details.config.set_min_cpu_count(Utilities::castToOptional(query.value(3).toUInt()));
     details.config.set_max_cpu_count(Utilities::castToOptional(query.value(4).toUInt()));
-
-    std::optional<QVariant> castedBlocking = Utilities::castToOptional(query.value(5));
-    if (castedBlocking != std::optional<QVariant>{std::nullopt}){
-        details.config.set_blocking_mode(castedBlocking.value().toBool());
-    } else {
+    if (query.value(5).isNull()){
         details.config.set_blocking_mode(std::nullopt);
+    } else {
+        details.config.set_blocking_mode(query.value(5).toBool());
     }
 
-    std::optional<uint> castedPriorityId = Utilities::castToOptional(query.value(6).toUInt());
-    if (castedPriorityId != std::nullopt){
-        details.config.set_priority(static_cast<Priority> (query.value(6).toUInt()));
+    if (query.value(6).isNull()){
+        details.config.set_priority(Priority::normal);
     } else {
-        details.config.set_priority(std::nullopt);
+        details.config.set_priority(static_cast<Priority>(query.value(6).toInt()));
     }
     details.config.set_image(query.value(7).toString().toStdString());
 
-    std::optional<QVariant> castedInterruptible = Utilities::castToOptional(query.value(8));
-    if (castedInterruptible != std::optional<QVariant>{std::nullopt}){
-        details.config.set_interruptible(castedInterruptible->toBool());
+    if (!query.value(0).isNull()){
+        details.config.set_interruptible(query.value(8).toBool());
     } else {
         details.config.set_interruptible(std::nullopt);
     }
@@ -287,21 +239,21 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
         .toString()
         .toStdString()));
     }
-
     details.config.set_current_working_dir(query.value(10).toString().toStdString());
     details.command = query.value(11).toString().toStdString();
-    details.schedule_time = QDateTime::fromString(query.value(12).toString(),
-                                                       TIME_FORMAT);
-    details.worker_id = Utilities::castToOptional(query.value(13).toUInt());
+    details.schedule_time = QDateTime::fromString(query.value(12).toString(), TIME_FORMAT);
+    if (query.value(13).isNull()){
+        details.worker_id = std::nullopt;
+    } else {
+        details.worker_id = query.value(13).toUInt();
+    }
     details.status = query.value(14).toInt();
-
     if (query.value(15).isNull()){
         details.start_time = std::nullopt;
     } else {
         details.start_time = std::make_optional<QDateTime>(QDateTime::fromString(query.value(15).toString(),
                                                       TIME_FORMAT));
     }
-
     if (query.value(16).isNull()){
         details.finish_time = std::nullopt;
     } else {
@@ -319,13 +271,13 @@ void setAllocatedTableValues(job_details& details, QSqlQuery& query){
     if (Utilities::castToOptional(query.value(17).toUInt()) == std::nullopt){
         details.allocated_specs = std::nullopt;
     } else {
-        auto database = IGateway::AquireDatabase();
-        QSqlQuery allocateQuery("SELECT space, ram, cores FROM allocated_resources WHERE id = ?", database);
+        auto database = IGateway::AcquireDatabase();
+        QSqlQuery allocateQuery("SELECT osIdentifier, ram, cores FROM allocated_resources WHERE id = ?", database);
         allocateQuery.addBindValue(query.value(17).toUInt());
         if (allocateQuery.exec()){
             if (allocateQuery.next()) {
-                Specs specs;
-                specs.space =  allocateQuery.value(0).toUInt();
+                Specs specs{};
+                specs.osIdentifier =  allocateQuery.value(0).toString().toStdString();
                 specs.ram = allocateQuery.value(1).toUInt();
                 specs.cores = allocateQuery.value(2).toInt();
                 details.allocated_specs = std::make_optional<Specs>(specs);
@@ -346,7 +298,7 @@ void setResultTableValues(job_details&  details, QSqlQuery& query){
     if (query.value(18).isNull()){
         details.result = std::nullopt;
     } else {
-        auto database = IGateway::AquireDatabase();
+        auto database = IGateway::AcquireDatabase();
         QSqlQuery resultQuery("SELECT stdout, exit_code FROM job_results WHERE id = ?", database);
         resultQuery.addBindValue(query.value(18).toUInt());
         if (resultQuery.exec()){
@@ -369,7 +321,7 @@ void setResultTableValues(job_details&  details, QSqlQuery& query){
  * @return The details of the job
  */
 job_details JobGateway::getJob(uint64_t job_id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
     }
@@ -427,7 +379,7 @@ job_details JobGateway::getJob(uint64_t job_id) {
  * @return  Vector of all the jobs in the database.
  */
 std::vector<job_details> JobGateway::getJobs() {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
     }
@@ -480,7 +432,7 @@ std::vector<job_details> JobGateway::getJobs() {
  * @return  Vector of all the jobs in the database.
  */
 std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
     }
@@ -536,8 +488,8 @@ std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
  * @param specs The resources assigned to the job
  * @return true if the operation was successful, otherwise false.
  */
-bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs, const QDateTime& start_time) {
-    auto database = IGateway::AquireDatabase();
+bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& specs, const QDateTime& start_time) {
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
     }
@@ -546,9 +498,9 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs, cons
     }
     if (Utilities::doesRecordExist("jobs", job_id)){
         if (Utilities::doesRecordExist("workers", worker_id)) {
-            QSqlQuery queryAlloc("INSERT INTO allocated_resources (cores, space, ram) VALUES (?, ?, ?)", database);
+            QSqlQuery queryAlloc("INSERT INTO allocated_resources (cores, osIdentifier, ram) VALUES (?, ?, ?)", database);
             queryAlloc.addBindValue(QVariant::fromValue(specs.cores));
-            queryAlloc.addBindValue(QVariant::fromValue(specs.space));
+            queryAlloc.addBindValue(QVariant::fromValue(QString::fromStdString(specs.osIdentifier)));
             queryAlloc.addBindValue(QVariant::fromValue(specs.ram));
             uint64_t allocated_specs;
             if (queryAlloc.exec()){
@@ -588,7 +540,7 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, Specs specs, cons
  */
 bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         , const std::string& stdout, const int8_t exit_code) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("job_results")){
         Utilities::throwNoTableException("job_results");
     }
@@ -722,7 +674,7 @@ std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, co
  * @return True if the operation was successful, otherwise false
  */
 bool updateJobPriority(Priority priority, uint64_t id){
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     QSqlQuery query("UPDATE jobs SET priority = ? WHERE id = ?", database);
     query.addBindValue(QVariant::fromValue((int) priority));
     query.addBindValue(QVariant::fromValue(id));
@@ -739,7 +691,7 @@ bool updateJobPriority(Priority priority, uint64_t id){
  * @return True if the operation was successful, otherwise false
  */
 bool cancelJob(uint64_t id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", database);
     query.addBindValue(QVariant::fromValue((int) JobStatus::canceled));
     query.addBindValue(QVariant::fromValue(id));
@@ -756,7 +708,7 @@ bool cancelJob(uint64_t id) {
  * @return True if the operation was successful, otherwise false
  */
 bool interruptJob(uint64_t id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", database);
     query.addBindValue(QVariant::fromValue((int) JobStatus::interrupted));
     query.addBindValue(QVariant::fromValue(id));
@@ -773,7 +725,7 @@ bool interruptJob(uint64_t id) {
  * @return True if the operation was successful, otherwise false
  */
 bool pauseJob(uint64_t id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", database);
     query.addBindValue(QVariant::fromValue((int) JobStatus::paused));
     query.addBindValue(QVariant::fromValue(id));
@@ -785,7 +737,7 @@ bool pauseJob(uint64_t id) {
 }
 
 void updateAllocatedSpecs(const job_details& job){
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!job.allocated_specs.has_value()){
         return;
     }
@@ -794,9 +746,9 @@ void updateAllocatedSpecs(const job_details& job){
     if (query.exec()){
         if (query.next() && !query.value(0).isNull()){
             uint64_t allocated_id = query.value(0).toUInt();
-            QSqlQuery queryAlloc("UPDATE allocated_resources SET ram = ?, space = ?, cores = ? WHERE id = ?", database);
+            QSqlQuery queryAlloc("UPDATE allocated_resources SET ram = ?, osIdentifier = ?, cores = ? WHERE id = ?", database);
             queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->ram));
-            queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->space));
+            queryAlloc.addBindValue(QVariant::fromValue(QString::fromStdString(job.allocated_specs->osIdentifier)));
             queryAlloc.addBindValue(QVariant::fromValue(job.allocated_specs->cores));
             queryAlloc.addBindValue(QVariant::fromValue(allocated_id));
             if (!queryAlloc.exec()){
@@ -811,7 +763,7 @@ void updateAllocatedSpecs(const job_details& job){
 }
 
 void updateWorkerId(const job_details& job){
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!job.worker_id.has_value()){
         return;
     }
@@ -829,7 +781,7 @@ void updateWorkerId(const job_details& job){
 }
 
 void JobGateway::updateJob(const job_details& job){
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
     }

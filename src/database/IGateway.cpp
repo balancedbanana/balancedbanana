@@ -1,7 +1,6 @@
 #include <database/IGateway.h>
 
 #include <QSqlDatabase>
-#include <QStringList>
 #include <iostream>
 #include <QString>
 #include <QSqlQuery>
@@ -14,7 +13,7 @@ std::mutex balancedbanana::database::IGateway::sync;
 balancedbanana::database::IGateway::Connection balancedbanana::database::IGateway::connection;
 QThreadStorage<QSqlDatabase> balancedbanana::database::IGateway::caches;
 
-QSqlDatabase balancedbanana::database::IGateway::AquireDatabase() {
+QSqlDatabase balancedbanana::database::IGateway::AcquireDatabase() {
     if(caches.hasLocalData()) {
         return caches.localData();
     } else {
@@ -37,9 +36,6 @@ QSqlDatabase balancedbanana::database::IGateway::AquireDatabase() {
         db.setPort(connection.port);
         if(!db.open()){
             throw std::logic_error("Error: connection with database failed.");
-        } else {
-            // Bad habit really
-            // std::cout << "Database connection was successful." << std::endl;
         }
         caches.setLocalData(db);
         return db;
@@ -64,5 +60,5 @@ username, const std::string& password,  uint64_t port) {
         connection.password = password;
         connection.port = port;
     }
-    AquireDatabase();
+    AcquireDatabase();
 }

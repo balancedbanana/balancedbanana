@@ -46,7 +46,7 @@ bool compareUsers(User &expected, User &actual){
 bool compareJobs(const Job& expected, const Job& actual){
     return compareUsers(*expected.getUser(), *actual.getUser())
     && expected.getAllocated_cores() == actual.getAllocated_cores()
-    && expected.getAllocated_disk_space() == actual.getAllocated_disk_space()
+    && expected.getAllocated_osIdentifier() == actual.getAllocated_osIdentifier()
     && expected.getAllocated_ram() == actual.getAllocated_ram()
     && expected.getId() == actual.getId()
     && expected.getStarted_at() == actual.getStarted_at()
@@ -85,7 +85,7 @@ TEST_F(CreateJobTest, CreateJobTest_Success_Test){
 
     if (job_info.allocated_specs.has_value()){
         job_expected.setAllocated_ram(job_info.allocated_specs->ram);
-        job_expected.setAllocated_disk_space(job_info.allocated_specs->space);
+        job_expected.setAllocated_osIdentifier(job_info.allocated_specs->osIdentifier);
         job_expected.setAllocated_cores(job_info.allocated_specs->cores);
     }
 
