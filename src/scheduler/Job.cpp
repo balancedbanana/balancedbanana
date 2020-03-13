@@ -8,16 +8,16 @@ using namespace balancedbanana::database;
 
 Job::Job(uint64_t id, std::shared_ptr<JobConfig> config) :
 id_(id), started_at_(), scheduled_at_(), finished_at_(), allocated_ram_(0), allocated_cores_(0),
-allocated_disk_space_(0), worker_id_(0), user_(nullptr), config_(std::move(config)), status_(scheduled), result_(nullptr) {
+allocated_osIdentifier_(""), worker_id_(0), user_(nullptr), config_(std::move(config)), status_(scheduled), result_(nullptr) {
 }
 
 Job::Job(uint32_t id, QDateTime started_at, QDateTime scheduled_at, QDateTime finished_at,
-        uint32_t allocated_ram, uint32_t allocated_cores, uint32_t allocated_disk_space, std::string command,
+        uint32_t allocated_ram, uint32_t allocated_cores, std::string allocated_osIdentifier, std::string command,
         uint64_t worker_id, std::shared_ptr<User> user, std::shared_ptr<JobConfig> config,
         JobStatus status,
         std::shared_ptr<job_result> result) :
         id_(id), started_at_(std::move(started_at)), scheduled_at_(std::move(scheduled_at)), finished_at_(std::move(finished_at)),
-        allocated_ram_(allocated_ram), allocated_cores_(allocated_cores), allocated_disk_space_(allocated_disk_space),
+        allocated_ram_(allocated_ram), allocated_cores_(allocated_cores), allocated_osIdentifier_(allocated_osIdentifier),
         command_(std::move(command)), worker_id_(worker_id), user_(std::move(user)), config_(std::move(config)), status_(status),
         result_(std::move(result)) {
 }
@@ -46,8 +46,8 @@ uint32_t Job::getAllocated_cores() const {
     return allocated_cores_;
 }
 
-uint32_t Job::getAllocated_disk_space() const {
-    return allocated_disk_space_;
+std::string Job::getAllocated_osIdentifier() const {
+    return allocated_osIdentifier_;
 }
 
 const std::string &Job::getCommand() const {
@@ -98,8 +98,8 @@ void Job::setAllocated_cores(uint32_t allocated_cores) {
     allocated_cores_ = allocated_cores;
     this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
-void Job::setAllocated_disk_space(uint32_t allocated_disk_space) {
-    allocated_disk_space_ = allocated_disk_space;
+void Job::setAllocated_osIdentifier(std::string allocated_osIdentifier) {
+    allocated_osIdentifier_ = allocated_osIdentifier;
     this->Update(balancedbanana::scheduler::JobObservableEvent::DATA_CHANGE);
 }
 

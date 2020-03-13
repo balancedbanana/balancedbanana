@@ -138,7 +138,7 @@ void Repository::WriteBack() {
             jd.user_id = job->getUser()->id();
             jd.empty = false;
             jd.worker_id = job->getWorker_id();
-            jd.allocated_specs = {job->getAllocated_disk_space(), job->getAllocated_cores(), job->getAllocated_ram()};
+            jd.allocated_specs = {job->getAllocated_osIdentifier(), job->getAllocated_cores(), job->getAllocated_ram()};
             jd.command = job->getCommand();
             jd.config = *job->getConfig();
             jd.finish_time = job->getFinished_at();

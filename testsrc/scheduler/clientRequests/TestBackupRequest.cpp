@@ -4,9 +4,7 @@
 #include <configfiles/JobConfig.h>
 #include "RequestTestUtil.h"
 
-using balancedbanana::scheduler::BackupRequest;
-using balancedbanana::scheduler::ClientRequest;
-using balancedbanana::scheduler::Job;
+using namespace balancedbanana::scheduler;
 using balancedbanana::database::JobStatus;
 using balancedbanana::configfiles::JobConfig;
 
@@ -24,7 +22,7 @@ TEST(BackupRequest, allArgs)
     task->setType((uint32_t)TaskType::BACKUP);
     task->setJobId(0);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
+    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
 }
 
 
@@ -38,5 +36,5 @@ TEST(BackupRequest, noArgs)
     task->setType((uint32_t)TaskType::BACKUP);
     task->setJobId(std::nullopt);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
+    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
 }

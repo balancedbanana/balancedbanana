@@ -21,6 +21,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
                                                                         const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
                                                                         const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                                                                         const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
+                                                                        const std::function<std::shared_ptr<Worker>(uint64_t id)> &dbGetWorker,
                                                                         uint64_t userID)
 {
     // Step 1: Go to DB and get job status
@@ -42,7 +43,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData(const st
         return std::make_shared<std::string>(response.str());
     }
 
-    std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
+    std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
     switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:

@@ -3,6 +3,7 @@
 #include <functional>
 #include "communication/Task.h"
 #include "scheduler/Job.h"
+#include "scheduler/Worker.h"
 #include "configfiles/JobConfig.h"
 #include "scheduler/clientRequests/Responses.h"
 
@@ -24,6 +25,7 @@ public:
                                                                     const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
                                                                     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
                                                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
+                                                                    const std::function<std::shared_ptr<Worker>(uint64_t id)> &dbGetWorker,
                                                                     uint64_t userID) = 0;
 
 protected:

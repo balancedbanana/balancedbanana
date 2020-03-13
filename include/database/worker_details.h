@@ -4,6 +4,7 @@
 
 #include <string>
 #include <cstdint>
+#include <optional>
 
 namespace balancedbanana {
     namespace database {
@@ -14,7 +15,7 @@ namespace balancedbanana {
             std::string name;
 
             //The specs of the worker.
-            Specs specs;
+            std::optional<Specs> specs;
 
             std::string address;
 
@@ -25,7 +26,8 @@ namespace balancedbanana {
 
             inline bool operator==(const worker_details& rhs){
                 return this->address == rhs.address
-                       && this->specs == rhs.specs
+                        && ((!this->specs.has_value() && !rhs.specs.has_value()) ||
+                         (this->specs.value() == rhs.specs.value()))
                        && this->public_key == rhs.public_key
                        && this->name == rhs.name
                        && this->empty == rhs.empty;
