@@ -137,7 +137,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                 std::vector<int> result;
                 // Basically I only want the jobids running by a user, but get whole objects hmm...
                 for(auto && job : repo->GetUnfinishedJobs()) {
-                    if(job->getUser()->id() == userid) {
+                    if(job->getUser() && job->getUser()->id() == userid) {
                         result.emplace_back(job->getId());
                     }
                 }

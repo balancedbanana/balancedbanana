@@ -217,6 +217,7 @@ std::vector<std::shared_ptr<Worker>> Repository::GetActiveWorkers() {
 std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     std::lock_guard lock(mtx);
     std::vector<std::shared_ptr<Job>> unfinished;
+    return unfinished;
 }
 std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
     std::lock_guard lock(mtx);
