@@ -179,10 +179,28 @@ void Repository::WriteBack() {
 void Repository::FlushCache() {
     std::lock_guard lock(mtx);
     WriteBack();
-    userCache.clear();
-    // ToDo keep connected Worker, to avoid loseing the Communicator 
-    workerCache.clear();
-    jobCache.clear();
+
+    //Remove unused jobs
+    std::vector<uint64_t> jobTrashList;
+    for(auto &pair : jobCache) {
+        if(pair.second.first.use_count() == 1) {
+            jobTrashList.push_back(pair.first);
+        }
+    }
+    for(auto id : jobTrashList) {
+        jobCache.erase(id);
+    }
+
+    //Remove unused users
+    std::vector<uint64_t> userTrashList;
+    for(auto &pair : userCache) {
+        if(pair.second.first.use_count() == 1) {
+            userTrashList.push_back(pair.first);
+        }
+    }
+    for(auto id : userTrashList) {
+        userCache.erase(id);
+    }
 }
 
 std::vector<std::shared_ptr<Worker>> Repository::GetActiveWorkers() {
