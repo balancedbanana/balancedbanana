@@ -2,7 +2,6 @@
 #include <gtest/gtest.h>
 #include <scheduler/Job.h>
 #include <configfiles/JobConfig.h>
-#include "RequestTestUtil.h"
 
 using balancedbanana::scheduler::BackupRequest;
 using balancedbanana::scheduler::ClientRequest;
@@ -24,7 +23,7 @@ TEST(BackupRequest, allArgs)
     task->setType((uint32_t)TaskType::BACKUP);
     task->setJobId(0);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
+    auto response = req->executeRequestAndFetchData(task, userID);
 }
 
 
@@ -38,5 +37,5 @@ TEST(BackupRequest, noArgs)
     task->setType((uint32_t)TaskType::BACKUP);
     task->setJobId(std::nullopt);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
+    auto response = req->executeRequestAndFetchData(task, userID);
 }

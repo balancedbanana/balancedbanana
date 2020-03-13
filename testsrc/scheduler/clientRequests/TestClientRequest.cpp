@@ -7,7 +7,6 @@
 #include <scheduler/clientRequests/StatusRequest.h>
 #include <scheduler/clientRequests/StopRequest.h>
 #include <scheduler/clientRequests/TailRequest.h>
-#include "RequestTestUtil.h"
 
 #include <gtest/gtest.h>
 #include <memory>

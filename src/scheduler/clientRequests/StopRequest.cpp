@@ -9,9 +9,9 @@
 
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::database::JobStatus;
+using balancedbanana::database::Repository;
 using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
-using balancedbanana::database::Repository;
 
 namespace balancedbanana
 {
@@ -19,10 +19,7 @@ namespace scheduler
 {
 
 std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
-                                                                     const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
-                                                                     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
-                                                                     uint64_t userID)
+                                                                     const uint64_t userID)
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
@@ -34,7 +31,7 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
         response << NO_JOB_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
-    std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
+    std::shared_ptr<Job> job = Repository::getDefault().GetJob(task->getJobId().value());
 
     if (job == nullptr)
     {
@@ -46,12 +43,13 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
     std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
     switch ((job->getStatus()))
     {
-    case (int)JobStatus::scheduled: {
+    case (int)JobStatus::scheduled:
+    {
         // stop job and respond success or failure
         bool success = Queue::remove(job->getId());
         if (success)
         {
-            dbUpdateJobStatus(job->getId(), JobStatus::canceled);
+            job->setStatus(JobStatus::canceled);
             response << OPERATION_SUCCESS << std::endl;
         }
         else
