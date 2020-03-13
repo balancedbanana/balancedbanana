@@ -42,6 +42,7 @@ void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
         AuthResultMessage result(0);
         worker->send(result);
     } catch(const std::exception& ex) {
+        std::string msg = ex.what();
         AuthResultMessage result(-1);
         com->send(result);
     }
