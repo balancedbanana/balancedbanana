@@ -142,7 +142,11 @@ void Repository::WriteBack() {
             jd.command = job->getCommand();
             jd.config = *job->getConfig();
             jd.finish_time = job->getFinished_at();
-            jd.result = *job->getResult();
+            if(job->getResult() != nullptr) {
+                jd.result = *job->getResult();
+            } else {
+                jd.result = std::nullopt;
+            }
             jd.schedule_time = job->getScheduled_at();
             jd.start_time = job->getStarted_at();
             jd.status = job->getStatus();
