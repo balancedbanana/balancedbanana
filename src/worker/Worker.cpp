@@ -95,13 +95,15 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
         switch ((TaskType)task->getType())
         {
         case TaskType::WORKERSTART: {
-            std::string cmd;
-            while(1) {
-                std::cin >> cmd;
-                if(cmd == "stop") {
-                    exit(0);
+            std::thread([]() {
+                std::string cmd;
+                while(1) {
+                    std::cin >> cmd;
+                    if(cmd == "stop") {
+                        exit(0);
+                    }
                 }
-            }
+            }).detach();
             break;
         }
         default:
