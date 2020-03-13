@@ -58,18 +58,22 @@ void HttpServer::listen(const std::string & ip, short port) {
 							std::stringstream resp;
 							resp << "machines:\n";
 							for(auto && worker : getAllWorker()) {
-								resp << "- id: " << worker->name() << "\n";
-								auto& load = worker->GetWorkerLoad();
-								resp << "  cpu_load: " << load.GetCpuLoad() << "\n";
-								resp << "  cpu_threads:\n";
-								resp << "    used: " << load.GetUsedThreads() << "\n";
-								resp << "    free: " << load.GetFreeThreads() << "\n";
-								resp << "  memory_load:\n";
-								resp << "    used: " << load.GetUsedMemory() << "\n";
-								resp << "    free: " << load.GetFreeMemory() << "\n";
-								resp << "  swap_space:\n";
-								resp << "    used: " << load.GetUsedSwap() << "\n";
-								resp << "    free: " << load.GetFreeSwap() << "\n";
+								resp << "- id: " << worker->getId() << "\n";
+								try {
+									auto& load = worker->GetWorkerLoad();
+									resp << "  cpu_load: " << load.GetCpuLoad() << "\n";
+									resp << "  cpu_threads:\n";
+									resp << "    used: " << load.GetUsedThreads() << "\n";
+									resp << "    free: " << load.GetFreeThreads() << "\n";
+									resp << "  memory_load:\n";
+									resp << "    used: " << load.GetUsedMemory() << "\n";
+									resp << "    free: " << load.GetFreeMemory() << "\n";
+									resp << "  swap_space:\n";
+									resp << "    used: " << load.GetUsedSwap() << "\n";
+									resp << "    free: " << load.GetFreeSwap() << "\n";
+								} catch (const std::exception& ex) {
+									resp << "  error: Not Responding\n";
+								}
 							}
 							auto responsedata = resp.str();
 							response.headerlist.insert({ "content-length", std::to_string(responsedata.length()) });
