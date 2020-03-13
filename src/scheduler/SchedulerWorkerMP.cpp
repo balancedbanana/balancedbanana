@@ -70,8 +70,9 @@ void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
 }
 
 void SchedulerWorkerMP::processTaskResponseMessage(const balancedbanana::communication::TaskResponseMessage &msg) {
-    auto job = getJobByID(msg.GetJobId());
-    job->setStatus(msg.GetJobStatus());
+    if(auto job = getJobByID(msg.GetJobId())) {
+        job->setStatus(msg.GetJobStatus());
+    }
 }
 
 void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg) {
