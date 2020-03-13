@@ -3,13 +3,13 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
+#include <communication//message/RespondToClientMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/message/TaskResponseMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/WorkerLoadRequestMessage.h>
 #include <communication/message/WorkerLoadResponseMessage.h>
 #include <communication/message/Serialization.h>
-#include <Net/Http/V2/Stream.h>
 
 using namespace balancedbanana::communication;
 
@@ -29,7 +29,7 @@ std::string Message::serialize() const {
 
 std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
     size_t iterator = 0;
-    uint32_t type = serialization::extract<uint32_t>(msg, iterator, size);
+    auto type = serialization::extract<uint32_t>(msg, iterator, size);
     switch(type) {
         case MessageType::AUTH_RESULT:
             return std::make_shared<AuthResultMessage>(msg, iterator, size);
@@ -41,6 +41,8 @@ std::shared_ptr<Message> Message::deserialize(const char *msg, uint32_t size) {
             return std::make_shared<TaskResponseMessage>(msg, iterator, size);
         case MessageType::PUBLIC_KEY_AUTH:
             return std::make_shared<PublicKeyAuthMessage>(msg, iterator, size);
+        case MessageType::RESPOND_TO_CLIENT:
+            return std::make_shared<RespondToClientMessage>(msg, iterator, size);
         case MessageType::TASK:
             return std::make_shared<TaskMessage>(msg, iterator, size);
         case MessageType::WORKER_AUTH:
