@@ -4,6 +4,7 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
+#include <communication/message/RespondToClientMessage.h>
 #include <communication/message/TaskMessage.h>
 #include <communication/message/TaskResponseMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
@@ -28,6 +29,10 @@ class TestProcessor : public MessageProcessor {
 
     void processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) override {
         EXPECT_EQ(PUBLIC_KEY_AUTH, msg.GetType());
+    }
+
+    void processRespondToClientMessage(const RespondToClientMessage &msg) override {
+        EXPECT_EQ(RESPOND_TO_CLIENT, msg.GetType());
     }
 
     void processTaskMessage(const TaskMessage &msg) override {
@@ -82,6 +87,10 @@ TEST_F(MessagesProcessTest, HardwareDetail) {
 
 TEST_F(MessagesProcessTest, PublicKeyAuth) {
     mp->process(std::make_shared<PublicKeyAuthMessage>("", ""));
+}
+
+TEST_F(MessagesProcessTest, RespondToClient) {
+    mp->process(std::make_shared<RespondToClientMessage>("my data", false));
 }
 
 TEST_F(MessagesProcessTest, Task) {
