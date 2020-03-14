@@ -52,6 +52,52 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
             port = std::stoi(config["port"]);
         }
 
+        std::string workerserver = "localhost";
+        short workerport = port + 1;
+        /* if(!task->getServerIP().empty()) {
+            webapiserver = task->getServerIP();
+        } else  */if(config.Contains("workerserver")) {
+            workerserver = config["workerserver"];
+        }
+        /* if(task->getServerPort()) {
+            webapiport = task->getServerPort();
+        } else  */if(config.Contains("workerport")) {
+            workerport = std::stoi(config["workerport"]);
+        }
+
+        std::string smtpserver = "localhost";
+        short smtpport = 25;
+        std::string email = "balancedbanana@localhost";
+        
+        /* if(!task->getServerIP().empty()) {
+            webapiserver = task->getServerIP();
+        } else  */if(config.Contains("smtpserver")) {
+            smtpserver = config["smtpserver"];
+        }
+        /* if(task->getServerPort()) {
+            webapiport = task->getServerPort();
+        } else  */if(config.Contains("smtpport")) {
+            smtpport = std::stoi(config["smtpport"]);
+        }
+        /* if(task->getServerPort()) {
+            webapiport = task->getServerPort();
+        } else  */if(config.Contains("email")) {
+            email = config["email"];
+        }
+
+        std::string webapiserver = "localhost";
+        short webapiport = 8443;
+        /* if(!task->getServerIP().empty()) {
+            webapiserver = task->getServerIP();
+        } else  */if(config.Contains("webapiserver")) {
+            webapiserver = config["webapiserver"];
+        }
+        /* if(task->getServerPort()) {
+            webapiport = task->getServerPort();
+        } else  */if(config.Contains("webapiport")) {
+            webapiport = std::stoi(config["webapiport"]);
+        }
+
         std::string databasehost = "localhost";
         short databaseport = 3306;
         std::string databaseschema = "balancedbanana";
@@ -183,7 +229,7 @@ private:
         std::shared_ptr<QueueObserver> observer = std::make_shared<QueueObserver>();
         observer->queue = queue;
         observer->repo = repo;
-        observer->mailclient = std::make_shared<SmtpServer>("localhost", 25, false, "balancedbanana@localhost");
+        observer->mailclient = std::make_shared<SmtpServer>(smtpserver, smtpport, false, email);
 
         // Reload scheduled Jobs from the database into the Queue
         for(auto && job : repo->GetUnfinishedJobs()) {
@@ -276,7 +322,7 @@ private:
             }, [repo](int jobid) -> std::shared_ptr<Job> {
                 return repo->GetJob(jobid);
             });
-            server.listen("localhost", 8234);
+            server.listen(webapiserver, webapiport);
             std::string cmd;
             while(1) {
                 std::cin >> cmd;

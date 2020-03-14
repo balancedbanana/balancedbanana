@@ -58,6 +58,7 @@ void Client::authenticateWithServer()
         }
         std::cout << "Password " << username << "@scheduler: ";
         auto privkey = auth.authenticate(username, commandLineInterface::CommandLineProcessor::readPassword());
+        std::cout << "\n";
         std::ofstream file(keypath);
         file << privkey;
     }
