@@ -31,6 +31,28 @@ try:
     #auth client agains server
     bbc.communicate(input=b'thePassword\n')
     bbc.wait()
+    time.sleep(1)
+    res = requests.get("http://localhost:8202/v1/jobs/2365")
+    result = yaml.safe_load(res.content)
+    assert result['user_name'] != '', "Username must not be empty"
+    res = requests.get("http://localhost:8202/v1/jobs/hours/3")
+    result = yaml.safe_load(res.content)
+    for job in result['jobs']:
+        print(job['job_id'])
+    res = requests.get("http://localhost:8202/v1/workmachines/0/jobs")
+    result = yaml.safe_load(res.content)
+    for job in result['jobs']:
+        print(job['job_id'])
+    res = requests.get("http://localhost:8202/v1/user/330/jobs")
+    result = yaml.safe_load(res.content)
+    for job in result['jobs']:
+        print(job['job_id'])
+    res = requests.get("http://localhost:8202/v1/user//jobs")
+    res = requests.get("http://localhost:8202/v1/workmachines/workload")
+    result = yaml.safe_load(res.content)
+    bbd.communicate(input=b'stop\n')
+    bbd.wait()
+    bbd = subprocess.Popen("../../src/worker/bbd", stdin=subprocess.PIPE, env=my_env)
     time.sleep(5)
 except:
     bbs.communicate(input=b'stop\n')
