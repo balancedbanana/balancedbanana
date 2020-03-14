@@ -26,17 +26,18 @@ TailRequest::TailRequest(const std::shared_ptr<Task> &task,
 {
 }
 
-std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData()
+std::shared_ptr<RespondToClientMessage> TailRequest::executeRequestAndFetchData()
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
+    bool shouldClientUnblock = true;
 
     if (task->getJobId().has_value() == false)
     {
         // Note that job id is required for the stop command
         // exit with the reponse set to the error message of not having a jobid
         response << NO_JOB_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
@@ -44,7 +45,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData()
     {
         // Job not found
         response << NO_JOB_WITH_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
     switch ((job->getStatus()))
@@ -60,6 +61,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData()
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to tail job
@@ -69,7 +71,11 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData()
     case (int)JobStatus::paused:
         // get tail by asking the worker
         {
-            //TODO implement
+            // Set userId for Worker
+            task->setUserId(userID);
+            // Just Send to Worker
+            worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to tail job
@@ -79,7 +85,11 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData()
     case (int)JobStatus::interrupted:
         // get tail by asking the worker
         {
-            //TODO implement
+            // Set userId for Worker
+            task->setUserId(userID);
+            // Just Send to Worker
+            worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to tail job
@@ -89,7 +99,11 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData()
     case (int)JobStatus::canceled:
         // get tail by asking the worker
         {
-            //TODO implement
+            // Set userId for Worker
+            task->setUserId(userID);
+            // Just Send to Worker
+            worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to tail job
@@ -108,7 +122,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData()
     }
 
     // Step 2: Create and send ResponseMessage with status as string
-    return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
 }
 
 } // namespace scheduler

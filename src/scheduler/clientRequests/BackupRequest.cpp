@@ -27,17 +27,18 @@ BackupRequest::BackupRequest(const std::shared_ptr<Task> &task,
 {
 }
 
-std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData()
+std::shared_ptr<RespondToClientMessage> BackupRequest::executeRequestAndFetchData()
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
+    bool shouldClientUnblock = true;
 
     if (task->getJobId().has_value() == false)
     {
         // Note that job id is required for the backup command
         // exit with the reponse set to the error message of not having a jobid
         response << NO_JOB_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
@@ -45,7 +46,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData()
     {
         // Job not found
         response << NO_JOB_WITH_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
 
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
@@ -63,6 +64,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData()
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
         response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
@@ -74,6 +76,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData()
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
         response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
@@ -85,6 +88,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData()
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
         response << OPERATION_PROGRESSING_BACKUP << std::endl;
         break;
@@ -103,7 +107,7 @@ std::shared_ptr<std::string> BackupRequest::executeRequestAndFetchData()
     }
 
     // Step 2: Create and send ResponseMessage with status as string
-    return std::make_shared<std::string>(response.str());
+    return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
 }
 
 } // namespace scheduler

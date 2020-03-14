@@ -26,17 +26,18 @@ RestoreRequest::RestoreRequest(const std::shared_ptr<Task> &task,
 {
 }
 
-std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData()
+std::shared_ptr<RespondToClientMessage> RestoreRequest::executeRequestAndFetchData()
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
+    bool shouldClientUnblock = true;
 
     if (task->getJobId().has_value() == false)
     {
         // Note that job id is required for the restore command
         // exit with the reponse set to the error message of not having a jobid
         response << NO_JOB_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
@@ -44,7 +45,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData()
     {
         // Job not found
         response << NO_JOB_WITH_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
 
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
@@ -57,7 +58,11 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData()
     case (int)JobStatus::processing:
         // restore and respond success / failure
         {
-            //TODO implement
+            // Set userId for Worker
+            task->setUserId(userID);
+            // Just Send to Worker
+            worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to restore job
@@ -67,7 +72,11 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData()
     case (int)JobStatus::paused:
         // restore and respond success / failure
         {
-            //TODO implement
+            // Set userId for Worker
+            task->setUserId(userID);
+            // Just Send to Worker
+            worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to restore job
@@ -81,6 +90,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData()
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to restore job
@@ -102,7 +112,7 @@ std::shared_ptr<std::string> RestoreRequest::executeRequestAndFetchData()
     }
 
     // Step 2: Create and send ResponseMessage with status as string
-    return std::make_shared<std::string>(response.str());
+    return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
 }
 
 } // namespace scheduler

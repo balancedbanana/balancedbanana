@@ -12,7 +12,7 @@ namespace scheduler
 class PauseRequest : public ClientRequest
 {
 public:
-    std::shared_ptr<std::string> executeRequestAndFetchData() override;
+    std::shared_ptr<RespondToClientMessage> executeRequestAndFetchData() override;
 
     PauseRequest(const std::shared_ptr<Task> &task,
                     const uint64_t userID,

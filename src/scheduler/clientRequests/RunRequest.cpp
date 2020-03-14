@@ -23,7 +23,7 @@ RunRequest::RunRequest(const std::shared_ptr<Task> &task,
 {
 }
 
-std::shared_ptr<std::string> RunRequest::executeRequestAndFetchData()
+std::shared_ptr<RespondToClientMessage> RunRequest::executeRequestAndFetchData()
 {
     // Step 1: enter Job into Database
     std::stringstream response;
@@ -35,7 +35,7 @@ std::shared_ptr<std::string> RunRequest::executeRequestAndFetchData()
     response << PREFIX_JOB_ID << job->getId() << std::endl;
 
     // Step 2: Create RespondToClientMessage with string containing ID of new Job or error message in case of failure
-    return std::make_shared<std::string>(response.str());
+    return std::make_shared<RespondToClientMessage>(response.str(), true);
 }
 
 } // namespace scheduler
