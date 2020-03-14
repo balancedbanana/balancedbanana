@@ -9,6 +9,7 @@
 #include <database/Repository.h>
 #include <scheduler/queue/PriorityQueue.h>
 #include <communication/message/TaskMessage.h>
+#include <scheduler/smtpserver/SmtpServer.h>
 
 using namespace balancedbanana::commandLineInterface;
 using namespace balancedbanana::communication;
@@ -88,6 +89,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
         struct QueueObserver : Observer<JobObservableEvent>, Observer<WorkerObservableEvent> {
             std::shared_ptr<balancedbanana::scheduler::PriorityQueue> queue;
             std::shared_ptr<balancedbanana::database::Repository> repo;
+            std::shared_ptr<SmtpServer> mailclient;
             std::mutex updatelock;
             std::unordered_map<uint64_t, std::shared_ptr<Job>> senttoworker;
 
@@ -108,6 +110,16 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                 }
                 if(job->getStatus() == balancedbanana::database::finished) {
                     job->UnregisterObserver(this);
+                    if(auto user = job->getUser()) {
+                        auto mail = user->email();
+                        if(!mail.empty()) {
+                            try {
+                                mailclient->sendMail(mail, "Your Job" + std::to_string(job->getId()) +  "finished", "The exitcode was " + std::to_string(job->getResult() ? job->getResult()->exit_code : -1));
+                            } catch(const std::exception& ex) {
+                                std::cout << "Failed to sent mail: " << ex.what() << "\n";
+                            }
+                        }
+                    }
                 }
             }
 
@@ -171,6 +183,7 @@ private:
         std::shared_ptr<QueueObserver> observer = std::make_shared<QueueObserver>();
         observer->queue = queue;
         observer->repo = repo;
+        observer->mailclient = std::make_shared<SmtpServer>("localhost", 25, false, "balancedbanana@localhost");
 
         // Reload scheduled Jobs from the database into the Queue
         for(auto && job : repo->GetUnfinishedJobs()) {
