@@ -263,7 +263,7 @@ private:
                     return repo->GetWorker(id);
                 });
             });
-            clientlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+            clientlistener->listen(server, port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerClientMP>(com->GetMP());
                 mp->setClient(com);
                 com->detach();
@@ -285,7 +285,7 @@ private:
                     return repo->GetJob(jobid);
                 });
             });
-            workerlistener->listen(port + 1, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+            workerlistener->listen(workerserver, workerport, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerWorkerMP>(com->GetMP());
                 mp->setWorker(com);
                 com->detach();

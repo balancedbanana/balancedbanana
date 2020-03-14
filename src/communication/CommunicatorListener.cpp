@@ -28,7 +28,7 @@ CommunicatorListener::~CommunicatorListener() {
 	}
 }
 
-void CommunicatorListener::listen(short port, const std::function<void(std::shared_ptr<Communicator>)>& callback) {
+void CommunicatorListener::listen(const std::string & ip, short port, const std::function<void(std::shared_ptr<Communicator>)>& callback) {
     if(listener) {
 		throw std::runtime_error("Already listening");
 	}
@@ -36,7 +36,25 @@ void CommunicatorListener::listen(short port, const std::function<void(std::shar
     listener->SetConnectionHandler([this, callback = callback](std::shared_ptr<Net::Socket> socket) {
         callback(std::make_shared<Communicator>(socket, processorfactory()));
     });
-    auto address = std::make_shared<sockaddr_in6>();
+    struct addrinfo hints, *result, *ptr;
+	memset(&hints, 0, sizeof(addrinfo));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+	if(getaddrinfo(ip.data(), std::to_string(port).data(), &hints, &result) == 0) {
+		for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
+			auto socketaddress = std::shared_ptr<sockaddr>((sockaddr*)new char[ptr->ai_addrlen]);
+			memcpy(socketaddress.get(), ptr->ai_addr, ptr->ai_addrlen);
+			if(listenthread = listener->Listen(socketaddress, ptr->ai_addrlen)) {
+				freeaddrinfo(result);
+				return;
+			}
+		}
+		freeaddrinfo(result);
+	}
+	// Fallback accept all networkcards for incoming connections tcp/ipv4 and tcp/ipv6
+	auto address = std::make_shared<sockaddr_in6>();
 	memset(address.get(), 0, sizeof(sockaddr_in6));
 	address->sin6_family = AF_INET6;
 	address->sin6_port = htons(port);
