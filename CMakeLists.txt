@@ -14,7 +14,7 @@ link_libraries(Threads::Threads)
 SET(COVERAGE OFF CACHE BOOL "Coverage")
 SET(TESTING OFF CACHE BOOL "Enable Tests")
 SET(ENABLE_ADDRESS_SANITIZER OFF CACHE BOOL "Enable Address Sanitizer")
-SET(TESTING 1)
+
 if(ENABLE_ADDRESS_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O1 -g -fsanitize=address -fno-omit-frame-pointer")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g -fsanitize=address")

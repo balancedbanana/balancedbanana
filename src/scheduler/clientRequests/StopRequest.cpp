@@ -2,37 +2,42 @@
 
 #include "scheduler/Job.h"
 #include "scheduler/Worker.h"
-#include "scheduler/queue/Queue.h"
 #include <sstream>
 #include <communication/message/TaskMessage.h>
-#include <database/Repository.h>
 
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::database::JobStatus;
 using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
-using balancedbanana::database::Repository;
 
 namespace balancedbanana
 {
 namespace scheduler
 {
 
-std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
-                                                                     const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
-                                                                     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
-                                                                     uint64_t userID)
+StopRequest::StopRequest(const std::shared_ptr<Task> &task,
+                         const uint64_t userID,
+                         const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
+                         const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
+                         const std::function<std::shared_ptr<Job>(const uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> &dbAddJob,
+                         const std::function<bool(uint64_t jobID)> &queueRemoveJob,
+                         const std::function<uint64_t(uint64_t jobID)> &queueGetPosition)
+    : ClientRequest(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition)
+{
+}
+
+std::shared_ptr<RespondToClientMessage> StopRequest::executeRequestAndFetchData()
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
+    bool shouldClientUnblock = true;
 
     if (task->getJobId().has_value() == false)
     {
         // Note that job id is required for the stop command
         // exit with the reponse set to the error message of not having a jobid
         response << NO_JOB_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
@@ -40,18 +45,19 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
     {
         // Job not found
         response << NO_JOB_WITH_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
 
-    std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
+    std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
     switch ((job->getStatus()))
     {
-    case (int)JobStatus::scheduled: {
+    case (int)JobStatus::scheduled:
+    {
         // stop job and respond success or failure
-        bool success = Queue::remove(job->getId());
+        bool success = queueRemoveJob(job->getId());
         if (success)
         {
-            dbUpdateJobStatus(job->getId(), JobStatus::canceled);
+            job->setStatus(JobStatus::canceled);
             response << OPERATION_SUCCESS << std::endl;
         }
         else
@@ -63,7 +69,11 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
     case (int)JobStatus::processing:
         // stop job and respond success or failure
         {
-            //TODO implenent
+            // Set userId for Worker
+            task->setUserId(userID);
+            // Just Send to Worker
+            worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to stop job
@@ -77,6 +87,7 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to stop job
@@ -86,7 +97,11 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
     case (int)JobStatus::interrupted:
         // stop job and respond success or failure
         {
-            //TODO implenent
+            // Set userId for Worker
+            task->setUserId(userID);
+            // Just Send to Worker
+            worker->send(TaskMessage(*task));
+            shouldClientUnblock = false;
         }
 
         // Use some message to tell worker to stop job
@@ -108,7 +123,7 @@ std::shared_ptr<std::string> StopRequest::executeRequestAndFetchData(const std::
     }
 
     // Step 2: Create and send ResponseMessage with status as string
-    return std::make_shared<std::string>(response.str());
+    return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
 }
 
 } // namespace scheduler

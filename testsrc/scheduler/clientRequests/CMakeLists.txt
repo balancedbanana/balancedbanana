@@ -1,5 +1,5 @@
 include(GoogleTest)
 
-add_executable(clientResponseTests RequestTestUtil.cpp TestClientRequest.cpp TestBackupRequest.cpp TestContinueRequest.cpp TestPauseRequest.cpp TestRestoreRequest.cpp TestRunRequest.cpp TestStatusRequest.cpp TestStopRequest.cpp TestTailRequest.cpp)
+add_executable(clientResponseTests TestClientRequestsUtils.cpp TestClientRequest.cpp TestBackupRequest.cpp TestContinueRequest.cpp TestPauseRequest.cpp TestRestoreRequest.cpp TestRunRequest.cpp TestStatusRequest.cpp TestStopRequest.cpp TestTailRequest.cpp)
 target_link_libraries(clientResponseTests ${GTEST} clientRequests scheduler configfiles database)
 gtest_discover_tests(clientResponseTests)

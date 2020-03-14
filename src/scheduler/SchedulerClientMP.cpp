@@ -11,11 +11,18 @@
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
+using balancedbanana::communication::RespondToClientMessage;
 using balancedbanana::configfiles::ApplicationConfig;
 using balancedbanana::scheduler::ClientRequest;
-using balancedbanana::communication::RespondToClientMessage;
 
-constexpr const char *schedulerConfigPath = "./schduler_config.txt";
+#ifdef _WIN32
+#define HOME_ENV "USERPROFILE"
+#else
+#define HOME_ENV "HOME"
+#endif
+
+auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs";
+auto schedulerConfigPath = (std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs") / "appconfig.ini";
 
 #if 0
 SchedulerClientMP::SchedulerClientMP(balancedbanana::communication::Communicator *communicator) :
@@ -23,23 +30,29 @@ MessageProcessor(communicator){
 }
 #endif
 
-SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
-                                     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
-                                     const std::function<std::shared_ptr<User>(uint64_t uid, const std::string& username, const std::string& pubkey)> &dbaddUser,
-                                     const std::function<std::shared_ptr<User>(const std::string& username)> &dbgetUserByName) :
-                                     dbGetJob(dbGetJob), dbUpdateJobStatus(dbUpdateJobStatus), dbAddJob(dbAddJob), dbaddUser(dbaddUser), dbgetUserByName(dbgetUserByName)
+SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
+                                     const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
+                                     const std::function<std::shared_ptr<Job>(uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime,
+                                        const std::string &jobCommand)> &dbAddJob,
+                                     const std::function<bool(uint64_t jobID)> &queueRemoveJob,
+                                     const std::function<uint64_t(uint64_t jobID)> &queueGetPosition,
+                                     const std::function<std::shared_ptr<User>(size_t uid, const std::string &username, const std::string &pubkey)> &dbaddUser,
+                                     const std::function<std::shared_ptr<User>(const std::string &username)> &dbgetUserByName)
+    : dbGetJob(dbGetJob), dbGetWorker(dbGetWorker), dbAddJob(dbAddJob), queueRemoveJob(queueRemoveJob), queueGetPosition(queueGetPosition), dbaddUser(dbaddUser), dbgetUserByName(dbgetUserByName)
 {
 }
 
 void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
 {
-    try {
+    try
+    {
         auto uid = authenticator::AuthHandler::GetDefault()->authenticate(std::make_shared<balancedbanana::scheduler::IUser>(msg.GetUsername(), msg.GetPublickey()), msg.GetPassword());
         user = dbaddUser(uid, msg.GetUsername(), msg.GetPublickey());
         AuthResultMessage result(0);
         getClient().send(result);
-    } catch(const std::exception& ex) {
+    }
+    catch (const std::exception &ex)
+    {
         AuthResultMessage result(-1);
         getClient().send(result);
     }
@@ -47,15 +60,19 @@ void SchedulerClientMP::processClientAuthMessage(const ClientAuthMessage &msg)
 
 void SchedulerClientMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg)
 {
-    try {
+    try
+    {
         user = dbgetUserByName(msg.GetUserName());
-        if(!user) {
+        if (!user)
+        {
             throw std::runtime_error("Unknown User");
         }
         authenticator::AuthHandler::GetDefault()->publickeyauthenticate(user, msg.GetUserNameSignature());
         AuthResultMessage result(0);
         getClient().send(result);
-    } catch(const std::exception& ex) {
+    }
+    catch (const std::exception &ex)
+    {
         AuthResultMessage result(-1);
         getClient().send(result);
     }
@@ -114,7 +131,8 @@ void fillWithGlobals(const std::shared_ptr<Task> &task)
     {
         bool goodPrio = false;
         auto prio = balancedbanana::configfiles::stopriority(globalConfig.find("global.priority")->second, goodPrio);
-        if (goodPrio) {
+        if (goodPrio)
+        {
             config->set_priority(prio);
         }
     }
@@ -140,22 +158,24 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
 
     // run the request
 
-    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType((TaskType)task->getType());
-    std::shared_ptr<std::string> responseData = request->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, user->id());
+    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType(task, user->id(), dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    std::shared_ptr<RespondToClientMessage> response = request->executeRequestAndFetchData();
 
     // Respond to Client
 
-    RespondToClientMessage resp(*responseData, false);
-    getClient().send(resp);
+    getClient().send(*response);
 }
 
-void SchedulerClientMP::setClient(const std::shared_ptr<Communicator>& com) {
+void SchedulerClientMP::setClient(const std::shared_ptr<Communicator> &com)
+{
     this->client = com;
 }
 
 // Bad one, but keeps stable API
-Communicator& SchedulerClientMP::getClient() {
-    if(!client) {
+Communicator &SchedulerClientMP::getClient()
+{
+    if (!client)
+    {
         // Better wait for setter, with timeout
         throw std::runtime_error("Not Ready");
     }

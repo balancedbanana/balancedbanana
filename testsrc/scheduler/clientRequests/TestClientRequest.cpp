@@ -7,11 +7,12 @@
 #include <scheduler/clientRequests/StatusRequest.h>
 #include <scheduler/clientRequests/StopRequest.h>
 #include <scheduler/clientRequests/TailRequest.h>
-#include "RequestTestUtil.h"
 
 #include <gtest/gtest.h>
 #include <memory>
 #include <scheduler/Job.h>
+
+#include "TestClientRequestsUtils.h"
 
 using balancedbanana::scheduler::ClientRequest;
 using balancedbanana::scheduler::BackupRequest;
@@ -26,30 +27,46 @@ using balancedbanana::scheduler::TailRequest;
 using balancedbanana::scheduler::Job;
 using balancedbanana::database::JobStatus;
 
-// Good one why this should this even compile (compile time error)
-#if 0
-TEST(ClientRequest, noConstructor)
-{
-    // Constructor should not be available for any ClientRequest
-    // user ClientRequest::selectRequestType instead
-    ASSERT_ANY_THROW(ClientRequest req());
-}
-#endif
 
 TEST(ClientRequest, selectType)
 {
-    auto addimageReq = ClientRequest::selectRequestType(TaskType::ADD_IMAGE);
-    auto backupReq = ClientRequest::selectRequestType(TaskType::BACKUP);
-    auto continueReq = ClientRequest::selectRequestType(TaskType::CONTINUE);
-    auto pauseReq = ClientRequest::selectRequestType(TaskType::PAUSE);
-    auto removeimageReq = ClientRequest::selectRequestType(TaskType::REMOVE_IMAGE);
-    auto restoreReq = ClientRequest::selectRequestType(TaskType::RESTORE);
-    auto runReq = ClientRequest::selectRequestType(TaskType::RUN);
-    auto serverstartReq = ClientRequest::selectRequestType(TaskType::SERVERSTART);
-    auto statusReq = ClientRequest::selectRequestType(TaskType::STATUS);
-    auto stopReq = ClientRequest::selectRequestType(TaskType::STOP);
-    auto tailReq = ClientRequest::selectRequestType(TaskType::TAIL);
-    auto workerstartReq = ClientRequest::selectRequestType(TaskType::WORKERSTART);
+    std::shared_ptr<Task> task = std::make_shared<Task>();
+
+    task->setType((uint32_t)TaskType::ADD_IMAGE);
+    auto addimageReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::BACKUP);
+    auto backupReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::CONTINUE);
+    auto continueReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::PAUSE);
+    auto pauseReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::REMOVE_IMAGE);
+    auto removeimageReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::RESTORE);
+    auto restoreReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::RUN);
+    auto runReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::SERVERSTART);
+    auto serverstartReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::STATUS);
+    auto statusReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::STOP);
+    auto stopReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::TAIL);
+    auto tailReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+
+    task->setType((uint32_t)TaskType::WORKERSTART);
+    auto workerstartReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
     ASSERT_TRUE(addimageReq == nullptr);
     if (BackupRequest* b = dynamic_cast<BackupRequest*>(&*backupReq)) {} else FAIL();
