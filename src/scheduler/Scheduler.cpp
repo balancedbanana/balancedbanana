@@ -103,11 +103,22 @@ void Scheduler::processCommandLineArguments(int argc, const char *const *argv)
         {
         case TaskType::SERVERSTART:
         {
-            clientlistener = std::make_shared<CommunicatorListener>([repo]() {
-                return std::make_shared<SchedulerClientMP>([repo](size_t uid, const std::string &username, const std::string &pubkey) -> std::shared_ptr<User> {
-                    //Important for the worker to run Jobs under the right userid!!
-                    return repo->AddUser(/* uid, */username, "bot@localhost", pubkey); }, [repo](const std::string &username) -> std::shared_ptr<User> { return repo->FindUser(username); });
-            });
+            clientlistener = std::make_shared<CommunicatorListener>(
+                [repo]() {
+                    return std::make_shared<SchedulerClientMP>(
+
+                        [repo](uint64_t jobID) -> std::shared_ptr<Job> { return repo->GetJob(jobID); },
+                        [repo](uint64_t workerID) -> std::shared_ptr<Worker> { return repo->GetWorker(workerID); },
+                        [repo](uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand) -> std::shared_ptr<Job> { return repo->AddJob(userID, *config, scheduleTime, jobCommand); },
+
+                        [repo](uint64_t jobID) -> bool { return false; },
+                        [repo](uint64_t jobID) -> uint64_t { return 0; },
+
+                        [repo](size_t uid, const std::string &username, const std::string &pubkey) -> std::shared_ptr<User> {
+                            //Important for the worker to run Jobs under the right userid!!
+                            return repo->AddUser(/* uid, */username, "bot@localhost", pubkey); },
+                        [repo](const std::string &username) -> std::shared_ptr<User> { return repo->FindUser(username); });
+                });
             clientlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerClientMP>(com->GetMP());
                 mp->setClient(com);

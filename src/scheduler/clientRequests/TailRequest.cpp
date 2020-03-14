@@ -4,11 +4,9 @@
 #include "scheduler/Worker.h"
 #include <sstream>
 #include <communication/message/TaskMessage.h>
-#include <database/Repository.h>
 
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::database::JobStatus;
-using balancedbanana::database::Repository;
 using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
 
@@ -17,8 +15,18 @@ namespace balancedbanana
 namespace scheduler
 {
 
-std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
-                                                                     const uint64_t userID)
+TailRequest::TailRequest(const std::shared_ptr<Task> &task,
+                         const uint64_t userID,
+                         const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
+                         const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
+                         const std::function<std::shared_ptr<Job>(const uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> &dbAddJob,
+                         const std::function<bool(uint64_t jobID)> &queueRemoveJob,
+                         const std::function<uint64_t(uint64_t jobID)> &queueGetPosition)
+    : ClientRequest(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition)
+{
+}
+
+std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData()
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
@@ -30,7 +38,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
         response << NO_JOB_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
-    std::shared_ptr<Job> job = Repository::getDefault().GetJob(task->getJobId().value());
+    std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
     if (job == nullptr)
     {
@@ -38,7 +46,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
         response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<std::string>(response.str());
     }
-    std::shared_ptr<Worker> worker = Repository::getDefault().GetWorker(job->getWorker_id());
+    std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
     switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:
