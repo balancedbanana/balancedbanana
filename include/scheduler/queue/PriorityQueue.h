@@ -12,7 +12,7 @@
 //Prioritizes Task
 namespace balancedbanana {
     namespace scheduler {
-        class PriorityQueue : public Queue, public std::enable_shared_from_this<PriorityQueue> {
+        class PriorityQueue : public Queue {
         public:
             virtual void addTask(const std::shared_ptr<Job> job);
 

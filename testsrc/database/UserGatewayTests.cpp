@@ -29,15 +29,13 @@ public:
 ::testing::Environment* const user_env = ::testing::AddGlobalTestEnvironment(new UserGatewayEnvironment);
 
 /**
- * Deletes the all records in the users table and resets the auto increment for the id.
+ * Deletes the all records in the users table for the id.
  */
 void resetUserTable(){
-    QSqlQuery query("ALTER TABLE users CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("DELETE FROM users", db);
     query.exec();
-    query.prepare("DELETE FROM users");
-    query.exec();
-    query.prepare("ALTER TABLE users CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT");
-    query.exec();
+
 }
 
 /**
@@ -67,7 +65,8 @@ protected:
  * @return true if the add was successful, otherwise false.
  */
 bool wasUserAddSuccessful(const user_details& details, uint64_t id){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -98,7 +97,7 @@ bool wasUserAddSuccessful(const user_details& details, uint64_t id){
 TEST_F(AddUserTest, AddUserTest_AddFirstUserSuccess_Test){
 
     // The first entry's id should be 1
-    EXPECT_TRUE(UserGateway::add(details) == 1);
+    EXPECT_TRUE(UserGateway::add(details));
 
     // The add must be successful
     EXPECT_TRUE(wasUserAddSuccessful(details, 1));
@@ -108,7 +107,7 @@ TEST_F(AddUserTest, AddUserTest_AddFirstUserSuccess_Test){
 TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
 
     // Add the user from the first test. Since it's the first user, its id should be 1.
-    EXPECT_TRUE(UserGateway::add(details) == 1);
+    EXPECT_TRUE(UserGateway::add(details));
     EXPECT_TRUE(wasUserAddSuccessful(details, 1));
 
     // Initialize a new user
@@ -119,33 +118,10 @@ TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
     seconddetails.empty = false;
     seconddetails.id = 2;
 
-    EXPECT_TRUE(UserGateway::add(seconddetails) == 2);
+    EXPECT_TRUE(UserGateway::add(seconddetails));
     EXPECT_TRUE(wasUserAddSuccessful(seconddetails, 2));
 }
 
-// Test to see if the addUser method throws an exception when the key arg is invalid.
-TEST_F(AddUserTest, AddUserTest_InvalidKeyArg_Test){
-    user_details detailscpy = details;
-    detailscpy.public_key = "";
-    EXPECT_THROW(UserGateway
-    ::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addUser method throws an exception when the email arg is invalid.
-TEST_F(AddUserTest, AddUserTest_InvalidAddressArg_Test){
-    user_details detailscpy = details;
-    detailscpy.email = "";
-    EXPECT_THROW(UserGateway
-    ::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addUser method throws an exception when the name arg is invalid.
-TEST_F(AddUserTest, AddUserTest_InvalidNameArg_Test){
-    user_details detailscpy = details;
-    detailscpy.name = "";
-    EXPECT_THROW(UserGateway
-    ::add(detailscpy), std::invalid_argument);
-}
 
 /**
  * Fixture class that deletes the users table on setup and restores it on teardown.
@@ -154,7 +130,8 @@ class NoUsersTableTest : public ::testing::Test{
 protected:
     void SetUp() override {
         // Deletes the users table
-        QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
+        auto db = IGateway::AcquireDatabase();
+        QSqlQuery query("DROP TABLE users", db);
         query.exec();
 
         // Setup the varaibles needed
@@ -166,14 +143,15 @@ protected:
     }
 
     void TearDown() override {
+        auto db = IGateway::AcquireDatabase();
         QSqlQuery query("CREATE TABLE `users` (\n"
                         "  `name` varchar(45) NOT NULL,\n"
                         "  `email` varchar(255) NOT NULL,\n"
                         "  `public_key` longtext NOT NULL,\n"
-                        "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
+                        "  `id` bigint(10) unsigned NOT NULL,\n"
                         "  PRIMARY KEY (`id`),\n"
                         "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", db);
         query.exec();
     }
 
@@ -206,7 +184,8 @@ TEST_F(NoUsersTableTest, NoUsersTableTest_GetUsers_Test){
  * @return  true if remove was successful, otherwise false.
  */
 bool wasUserRemoveSuccessful(uint64_t id){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -236,7 +215,7 @@ TEST_F(RemoveUserTest, RemoveUserTest_SuccessfulRemove_Test){
     details.empty = false;
     details.id = 1;
     // Since this is the first user, this has to be true.
-    EXPECT_TRUE(UserGateway::add(details) == 1);
+    EXPECT_TRUE(UserGateway::add(details));
     EXPECT_TRUE(wasUserAddSuccessful(details, 1));
 
     // This must return true.
@@ -272,7 +251,7 @@ protected:
 // Test to see if the first user can be retrieved correctly.
 TEST_F(GetUserTest, GetUserTest_SuccessfulGet_Test){
     // Add the user. Its id should be 1, since it's the first to be added.
-    EXPECT_EQ(UserGateway::add(details), details.id);
+    EXPECT_TRUE(UserGateway::add(details));
 
     // Get the user and compare it to the added user. They should be equal.
     user_details expected_details = UserGateway::getUser(details.id);
@@ -325,9 +304,9 @@ protected:
 // Test to see if getUsers retrieves a vector of previously added users from the database
 TEST_F(GetUsersTest, GetUsersTest_SuccessfulGet_Test){
     // Add the users. Their ids should match the order of their addition.
-    EXPECT_EQ(UserGateway::add(first), first.id);
-    EXPECT_EQ(UserGateway::add(second), second.id);
-    EXPECT_EQ(UserGateway::add(third), third.id);
+    EXPECT_TRUE(UserGateway::add(first));
+    EXPECT_TRUE(UserGateway::add(second));
+    EXPECT_TRUE(UserGateway::add(third));
 
     std::vector<user_details> expectedVector;
     expectedVector.push_back(first);
@@ -362,14 +341,15 @@ protected:
 };
 
 TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("DROP TABLE users", db);
     query.exec();
     EXPECT_THROW(UserGateway::getUserByName(user.name), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
                     "  `name` varchar(45) NOT NULL,\n"
                     "  `email` varchar(255) NOT NULL,\n"
                     "  `public_key` longtext NOT NULL,\n"
-                    "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
+                    "  `id` bigint(10) unsigned NOT NULL,\n"
                     "  PRIMARY KEY (`id`),\n"
                     "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
@@ -377,7 +357,7 @@ TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
 }
 
 TEST_F(GetUserByNameTest, GetUserByNameTest_UserFound_Test){
-    EXPECT_EQ(UserGateway::add(user), user.id);
+    EXPECT_TRUE(UserGateway::add(user));
     EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
     EXPECT_TRUE(UserGateway::getUserByName(user.name) == user);
 }
@@ -404,14 +384,15 @@ protected:
 };
 
 TEST_F(UpdateUserTest, UpdateUserTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("DROP TABLE users", db);
     query.exec();
     EXPECT_THROW(UserGateway::updateUser(user), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
                   "  `name` varchar(45) NOT NULL,\n"
                   "  `email` varchar(255) NOT NULL,\n"
                   "  `public_key` longtext NOT NULL,\n"
-                  "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
+                  "  `id` bigint(10) unsigned NOT NULL,\n"
                   "  PRIMARY KEY (`id`),\n"
                   "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
                   ") ENGINE=InnoDB DEFAULT CHARSET=utf8");
@@ -428,7 +409,7 @@ TEST_F(UpdateUserTest, UpdateUserTest_NoUser_Test){
 }
 
 TEST_F(UpdateUserTest, UpdateUserTest_Success_Test){
-    EXPECT_EQ(UserGateway::add(user), user.id);
+    EXPECT_TRUE(UserGateway::add(user));
     EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
     // Add new details
     user_details new_user;
@@ -440,30 +421,6 @@ TEST_F(UpdateUserTest, UpdateUserTest_Success_Test){
     UserGateway::updateUser(new_user);
     user_details actualUser = UserGateway::getUser(new_user.id);
     EXPECT_TRUE(actualUser == new_user);
-}
-
-// Test to see if the updateUser method throws an exception when the key arg is invalid.
-TEST_F(UpdateUserTest, UpdateUserTest_InvalidKeyArg_Test){
-    EXPECT_EQ(UserGateway::add(user), user.id);
-    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
-    user.public_key = "";
-    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
-}
-
-// Test to see if the updateUser method throws an exception when the email arg is invalid.
-TEST_F(UpdateUserTest, UpdateUserTest_InvalidAddressArg_Test){
-    EXPECT_EQ(UserGateway::add(user), user.id);
-    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
-    user.email = "";
-    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
-}
-
-// Test to see if the updateUser method throws an exception when the name arg is invalid.
-TEST_F(UpdateUserTest, UpdateUserTest_InvalidNameArg_Test){
-    EXPECT_EQ(UserGateway::add(user), user.id);
-    EXPECT_TRUE(wasUserAddSuccessful(user, user.id));
-    user.name = "";
-    EXPECT_THROW(UserGateway::updateUser(user), std::invalid_argument);
 }
 
 

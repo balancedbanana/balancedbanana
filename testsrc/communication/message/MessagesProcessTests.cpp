@@ -4,7 +4,9 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
+#include <communication/message/RespondToClientMessage.h>
 #include <communication/message/TaskMessage.h>
+#include <communication/message/TaskResponseMessage.h>
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/WorkerLoadRequestMessage.h>
 #include <communication/message/WorkerLoadResponseMessage.h>
@@ -29,8 +31,16 @@ class TestProcessor : public MessageProcessor {
         EXPECT_EQ(PUBLIC_KEY_AUTH, msg.GetType());
     }
 
+    void processRespondToClientMessage(const RespondToClientMessage &msg) override {
+        EXPECT_EQ(RESPOND_TO_CLIENT, msg.GetType());
+    }
+
     void processTaskMessage(const TaskMessage &msg) override {
         EXPECT_EQ(TASK, msg.GetType());
+    }
+
+    void processTaskResponseMessage(const TaskResponseMessage &msg) override {
+        EXPECT_EQ(JOB_STATUS, msg.GetType());
     }
 
     void processWorkerAuthMessage(const WorkerAuthMessage &msg) override {
@@ -79,8 +89,16 @@ TEST_F(MessagesProcessTest, PublicKeyAuth) {
     mp->process(std::make_shared<PublicKeyAuthMessage>("", ""));
 }
 
+TEST_F(MessagesProcessTest, RespondToClient) {
+    mp->process(std::make_shared<RespondToClientMessage>("my data", false));
+}
+
 TEST_F(MessagesProcessTest, Task) {
     mp->process(std::make_shared<TaskMessage>(Task()));
+}
+
+TEST_F(MessagesProcessTest, TaskResponse) {
+    mp->process(std::make_shared<TaskResponseMessage>(12, balancedbanana::database::canceled));
 }
 
 TEST_F(MessagesProcessTest, WorkerAuth) {

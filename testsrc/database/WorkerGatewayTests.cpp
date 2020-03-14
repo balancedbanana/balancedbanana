@@ -36,7 +36,8 @@ TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
  * Deletes the all records in the workers table and resets the auto increment for the id.
  */
 void resetWorkerTable(){
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -51,9 +52,11 @@ class AddWorkerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         details.public_key = "34nrhk3hkr";
-        details.specs.space = 10240;
-        details.specs.ram = 16384;
-        details.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "Windows 10.4.1.4";
+        specs.cores = 4;
+        specs.ram = 16234;
+        details.specs = specs;
         details.address = "0.0.0.0";
         details.name = "CentOS";
         details.empty = false;
@@ -74,22 +77,28 @@ protected:
  * @return true if the add was successful, otherwise false.
  */
 bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AquireDatabase());
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AcquireDatabase());
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
             int nameIndex = query.record().indexOf("name");
             int ramIndex = query.record().indexOf("ram");
             int coresIndex = query.record().indexOf("cores");
-            int spaceIndex = query.record().indexOf("space");
+            int osIndex = query.record().indexOf("osIdentifier");
             int addressIndex = query.record().indexOf("address");
             int keyIndex = query.record().indexOf("public_key");
 
             worker_details queryDetails{};
             queryDetails.name = query.value(nameIndex).toString().toStdString();
-            queryDetails.specs.cores = query.value(coresIndex).toUInt();
-            queryDetails.specs.ram = query.value(ramIndex).toUInt();
-            queryDetails.specs.space = query.value(spaceIndex).toUInt();
+            if (query.value(coresIndex).isNull()){
+                queryDetails.specs = std::nullopt;
+            } else {
+                Specs specs{};
+                specs.cores = query.value(coresIndex).toUInt();
+                specs.ram = query.value(ramIndex).toUInt();
+                specs.osIdentifier = query.value(osIndex).toString().toStdString();
+                queryDetails.specs = specs;
+            }
             queryDetails.address = query.value(addressIndex).toString().toStdString();
             queryDetails.public_key = query.value(keyIndex).toString().toStdString();
             queryDetails.id = id;
@@ -112,10 +121,10 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
 TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 
     // The first entry's id should be 1
-    ASSERT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(WorkerGateway::add(details) == 1);
 
     // The add must be successful
-    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
 }
 
 // Test to see if the auto increment feature works as expected.
@@ -123,8 +132,8 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
 
     // Add the worker from the first test. Since it's the first worker, its id should be 1.
-    ASSERT_TRUE(WorkerGateway::add(details) == 1);
-    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
 
     // Initialize a new worker
     worker_details seconddetails{};
@@ -135,50 +144,8 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
     seconddetails.id = 2;
     seconddetails.empty = false;
 
-    ASSERT_TRUE(WorkerGateway::add(seconddetails) == 2);
-    ASSERT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
-}
-
-// Test to see if the addWorker method throws an exception when the key arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidKeyArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.public_key = "";
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the space arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidSpaceArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.specs.space = 0;
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the ram arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidRAMArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.specs.ram = 0;
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the cores arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidCoresArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.specs.cores = 0;
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the address arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidAddressArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.address = "";
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
-}
-
-// Test to see if the addWorker method throws an exception when the name arg is invalid.
-TEST_F(AddWorkerTest, AddWorkerTest_InvalidNameArg_Test){
-    worker_details detailscpy = details;
-    detailscpy.name = "";
-    ASSERT_THROW(WorkerGateway::add(detailscpy), std::invalid_argument);
+    EXPECT_TRUE(WorkerGateway::add(seconddetails) == 2);
+    EXPECT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
 }
 
 /**
@@ -188,14 +155,16 @@ class NoWorkersTableTest : public ::testing::Test{
 protected:
     void SetUp() override {
         // Deletes the workers table
-        QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+        QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
         query.exec();
 
         // Setup the varaibles needed
         details.public_key = "34nrhk3hkr";
-        details.specs.space = 10240;
-        details.specs.ram = 16384;
-        details.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "Ubuntu 18.04.62";
+        specs.ram = 16384;
+        specs.cores = 4;
+        details.specs = specs;
         details.address = "0.0.0.0";
         details.name = "CentOS";
         id = 1;
@@ -203,12 +172,22 @@ protected:
     }
 
     void TearDown() override {
-        QSqlQuery query("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
-                        "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-                        "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
-                        "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE "
-                        "KEY `address_UNIQUE` (`address`) ) "
-                        "ENGINE=InnoDB DEFAULT CHARSET=utf8", IGateway::AquireDatabase());
+        auto db = IGateway::AcquireDatabase();
+        QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
+                        "(\n"
+                        "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                        "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                        "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                        "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
+                        "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
+                        "    `public_key` LONGTEXT NOT NULL,\n"
+                        "    `name`       VARCHAR(255) NOT NULL,\n"
+                        "    PRIMARY KEY (`id`),\n"
+                        "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                        "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                        ")\n"
+                        "ENGINE = InnoDB\n"
+                        "DEFAULT CHARACTER SET = utf8", db);
         query.exec();
     }
 
@@ -242,7 +221,8 @@ TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
  * @return  true if remove was successful, otherwise false.
  */
 bool wasWorkerRemoveSuccessful(uint64_t id){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -267,25 +247,27 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     // Add a worker
     worker_details details{};
     details.public_key = "34nrhk3hkr";
-    details.specs.space = 10240;
-    details.specs.ram = 16384;
-    details.specs.cores = 4;
+    Specs specs{};
+    specs.osIdentifier = "Kubuntu 18.0123";
+    specs.ram = 16384;
+    specs.cores = 6;
+    details.specs = specs;
     details.address = "0.0.0.0";
     details.name = "CentOS";
     details.id = 1;
     details.empty = false;
     // Since this is the first worker, this has to be true.
-    ASSERT_TRUE(WorkerGateway::add(details) == 1);
-    ASSERT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
 
     // This must return true.
-    ASSERT_TRUE(WorkerGateway::remove(1));
-    ASSERT_TRUE(wasWorkerRemoveSuccessful(1));
+    EXPECT_TRUE(WorkerGateway::remove(1));
+    EXPECT_TRUE(wasWorkerRemoveSuccessful(1));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
-    ASSERT_FALSE(WorkerGateway::remove(1));
+    EXPECT_FALSE(WorkerGateway::remove(1));
 }
 
 
@@ -296,9 +278,11 @@ class GetWorkerTest : public ::testing::Test{
 protected:
     void SetUp() override {
         details.public_key = "34nrhk3hkr";
-        details.specs.space = 10240;
-        details.specs.ram = 16384;
-        details.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "UNIX";
+        specs.ram = 16384;
+        specs.cores = 4;
+        details.specs = specs;
         details.address = "0.0.0.0";
         details.name = "CentOS";
         details.id = 1;
@@ -319,13 +303,13 @@ TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
 
     // Get the worker and compare it to the added worker. They should be equal.
     worker_details expected_details = WorkerGateway::getWorker(details.id);
-    ASSERT_TRUE(details == expected_details);
+    EXPECT_TRUE(details == expected_details);
 }
 
 // Test to see if the getter method returns an empty worker_details when its called with an invalid id
 TEST_F(GetWorkerTest, GetWorkerTest_NonExistentWorker_Test){
     worker_details empty_details{};
-    ASSERT_TRUE(WorkerGateway::getWorker(1) == empty_details);
+    EXPECT_TRUE(WorkerGateway::getWorker(1) == empty_details);
 }
 
 /**
@@ -336,9 +320,11 @@ protected:
     void SetUp() override {
         // Set up the first worker
         first.public_key = "34nrhk3hkr";
-        first.specs.space = 10240;
-        first.specs.ram = 16384;
-        first.specs.cores = 4;
+        Specs firstSpecs{};
+        firstSpecs.osIdentifier = "some os";
+        firstSpecs.ram = 16384;
+        firstSpecs.cores = 4;
+        first.specs = firstSpecs;
         first.address = "0.0.0.0";
         first.name = "CentOS";
         first.id = 1;
@@ -346,9 +332,8 @@ protected:
 
         // Set up the second worker
         second.public_key = "fsd8iasdf8sadf";
-        second.specs.space = 14134;
-        second.specs.ram = 12421;
-        second.specs.cores = 3;
+        second.specs = firstSpecs;
+        second.specs->ram = 17385;
         second.address = "1.1.1.1";
         second.name = "Ubuntu";
         second.id = 2;
@@ -356,9 +341,8 @@ protected:
 
         // Set up the third worker
         third.public_key = "asdfascascsd";
-        third.specs.space = 43214;
-        third.specs.ram = 21412;
-        third.specs.cores = 2;
+        third.specs = firstSpecs;
+        third.specs->cores = 10;
         third.address = "2.2.2.2";
         third.name = "Windows";
         third.id = 3;
@@ -387,21 +371,23 @@ TEST_F(GetWorkersTest, GetWorkersTest_SuccessfulGet_Test){
     expectedVector.push_back(third);
 
     std::vector<worker_details> actualVector = WorkerGateway::getWorkers();
-    ASSERT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
+    EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
 }
 
 // Test to see if the getter method returns an empty vector if the workers table is empty
 TEST_F(GetWorkersTest, GetWorkersTest_NonExistentWorkers_Test){
-    ASSERT_TRUE(WorkerGateway::getWorkers().empty());
+    EXPECT_TRUE(WorkerGateway::getWorkers().empty());
 }
 
 class GetWorkerByNameTest : public ::testing::Test {
 protected:
     void SetUp() override {
         worker.public_key = "34nrhk3hkr";
-        worker.specs.space = 10240;
-        worker.specs.ram = 16384;
-        worker.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "10240";
+        specs.ram = 16384;
+        specs.cores = 4;
+        worker.specs = specs;
         worker.address = "0.0.0.0";
         worker.name = "CentOS";
         worker.id = 1;
@@ -416,15 +402,25 @@ protected:
 };
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(WorkerGateway::getWorkerByName(worker.name), std::logic_error);
-    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
-                    "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-                    "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
-                    "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`),  UNIQUE KEY "
-                    "`address_UNIQUE` (`address`) ) "
-                    "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
+                  "(\n"
+                  "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
+                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
+                  "    `public_key` LONGTEXT NOT NULL,\n"
+                  "    `name`       VARCHAR(255) NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                  "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8");
     query.exec();
 }
 
@@ -442,9 +438,11 @@ class UpdateWorkerTest : public ::testing::Test {
 protected:
     void SetUp() override {
         worker.public_key = "34nrhk3hkr";
-        worker.specs.space = 10240;
-        worker.specs.ram = 16384;
-        worker.specs.cores = 4;
+        Specs specs{};
+        specs.osIdentifier = "10240";
+        specs.ram = 16384;
+        specs.cores = 4;
+        worker.specs = specs;
         worker.address = "0.0.0.0";
         worker.name = "CentOS";
         worker.id = 1;
@@ -459,14 +457,25 @@ protected:
 };
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AquireDatabase());
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(WorkerGateway::updateWorker(worker), std::logic_error);
-    query.prepare("CREATE TABLE `workers` (`id` bigint(10) unsigned NOT NULL AUTO_INCREMENT, `ram` bigint(10) "
-                  "unsigned DEFAULT NULL, `cores` int(10) unsigned DEFAULT NULL,`space` bigint(10) unsigned "
-                  "DEFAULT NULL, `address` varchar(255) DEFAULT NULL, `public_key` longtext DEFAULT NULL, "
-                  "`name` varchar(45) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `id_UNIQUE` (`id`), UNIQUE KEY `address_UNIQUE` (`address`) ) "
-                  "ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
+                  "(\n"
+                  "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
+                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
+                  "    `public_key` LONGTEXT NOT NULL,\n"
+                  "    `name`       VARCHAR(255) NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                  "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8");
     query.exec();
 }
 
@@ -489,53 +498,4 @@ TEST_F(UpdateWorkerTest, UpdateWorkerTest_Success_Test){
     worker_details actualWorker = WorkerGateway::getWorker(worker.id);
     EXPECT_TRUE(actualWorker == new_worker);
 }
-
-// Test to see if the updateWorker method throws an exception when the key arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidKeyArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.public_key = "";
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the space arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidSpaceArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.specs.space = 0;
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the ram arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidRAMArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.specs.ram = 0;
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the cores arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidCoresArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.specs.cores = 0;
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the address arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidAddressArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.address = "";
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
-// Test to see if the updateWorker method throws an exception when the name arg is invalid.
-TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidNameArg_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    worker.name = "";
-    ASSERT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
-}
-
 

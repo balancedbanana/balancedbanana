@@ -54,6 +54,7 @@ public:
 	void setTaskCommand(const std::string &taskCommand);
 	const std::string &getTaskCommand() const;
 
+	void setConfig(const std::shared_ptr<configfiles::JobConfig>& config);
 	std::shared_ptr<configfiles::JobConfig> getConfig() const;
 
 	void setAddImageName(const std::string &addImageName);

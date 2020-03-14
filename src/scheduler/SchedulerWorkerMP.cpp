@@ -24,9 +24,7 @@ void SchedulerWorkerMP::onDisconnect() {
 }
 
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
-    //TODO No space in HardwareDetailMessage
-    //TODO No OS Identifier in Spec
-    worker->setSpec({(uint64_t)-1, msg.GetRamSize(), msg.GetCoreCount()});
+    worker->setSpec(std::make_optional<database::Specs>({msg.GetOsIdentifier(), msg.GetRamSize(), msg.GetCoreCount()}));
 }
 
 void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &msg) {
@@ -44,6 +42,7 @@ void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
         AuthResultMessage result(0);
         worker->send(result);
     } catch(const std::exception& ex) {
+        std::string msg = ex.what();
         AuthResultMessage result(-1);
         com->send(result);
     }
@@ -71,8 +70,9 @@ void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
 }
 
 void SchedulerWorkerMP::processTaskResponseMessage(const balancedbanana::communication::TaskResponseMessage &msg) {
-    auto job = getJobByID(msg.GetJobId());
-    job->setStatus(msg.GetJobStatus());
+    if(auto job = getJobByID(msg.GetJobId())) {
+        job->setStatus(msg.GetJobStatus());
+    }
 }
 
 void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg) {

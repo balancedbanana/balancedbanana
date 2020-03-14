@@ -5,9 +5,7 @@
 
 #include "TestClientRequestsUtils.h"
 
-using balancedbanana::scheduler::BackupRequest;
-using balancedbanana::scheduler::ClientRequest;
-using balancedbanana::scheduler::Job;
+using namespace balancedbanana::scheduler;
 using balancedbanana::database::JobStatus;
 using balancedbanana::configfiles::JobConfig;
 

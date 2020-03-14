@@ -13,7 +13,7 @@ namespace communication
 class RespondToClientMessage : public Message
 {
 public:
-    explicit RespondToClientMessage(const std::string &data, bool unblock);
+    explicit RespondToClientMessage(std::string data, bool unblock);
 
     RespondToClientMessage(const char *data, size_t &iterator, size_t size);
 
@@ -22,7 +22,7 @@ public:
     std::string serialize() const override;
 
     const std::string &GetData() const;
-    const uint32_t getUnblock() const;
+    bool getUnblock() const;
 
 private:
 

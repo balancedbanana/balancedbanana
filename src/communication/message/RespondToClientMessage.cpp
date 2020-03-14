@@ -1,6 +1,7 @@
 #include <communication/message/RespondToClientMessage.h>
 #include <communication/message/Serialization.h>
 #include <sstream>
+#include <utility>
 #include <communication/MessageProcessor.h>
 
 namespace balancedbanana
@@ -8,8 +9,8 @@ namespace balancedbanana
 namespace communication
 {
 
-RespondToClientMessage::RespondToClientMessage(const std::string &data, bool unblock)
-    : Message(RESPOND_TO_CLIENT), data(data), unblock(unblock)
+RespondToClientMessage::RespondToClientMessage(std::string data, bool unblock)
+    : Message(RESPOND_TO_CLIENT), data(std::move(data)), unblock(unblock)
 {
 }
 
@@ -37,7 +38,7 @@ const std::string &RespondToClientMessage::GetData() const
     return this->data;
 }
 
-const uint32_t RespondToClientMessage::getUnblock() const
+bool RespondToClientMessage::getUnblock() const
 {
     return this->unblock;
 }

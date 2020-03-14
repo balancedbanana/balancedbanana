@@ -29,6 +29,8 @@ namespace balancedbanana {
 
             //setter for the email_ attribute, might be added later
             void setEmail(const std::string& mail);
+
+            void setPublickey(const std::string& key);
         };
     }
 }

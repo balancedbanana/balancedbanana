@@ -13,27 +13,14 @@ using namespace balancedbanana::database;
 
 
 
-/**
- * Checks if the args are valid
- * @param user  The struct containing the args
- * @return true if the args are valid, otherwise false
- */
-bool areArgsValid(const user_details& user){
-    return !user.name.empty() && !user.email.empty() && !user.public_key.empty();
-}
 
 /**
  * Adds a user to the database, Utilities::throws exceptions when errors occur.
  * @param user  The user to be added
  * @return The id of the user.
  */
-uint64_t UserGateway::add(const user_details& user) {
-
-    // Check args
-    if (!areArgsValid(user)){
-        throw std::invalid_argument("addUser error: invalid arguments");
-    }
-    auto database = IGateway::AquireDatabase();
+bool UserGateway::add(const user_details& user) {
+    auto database = IGateway::AcquireDatabase();
 
     // DB must contain table
     if (!Utilities::doesTableExist("users")){
@@ -41,12 +28,14 @@ uint64_t UserGateway::add(const user_details& user) {
     }
 
     // Converting the various args into QVariant Objects
+    QVariant q_id = QVariant::fromValue(user.id);
     QVariant q_name = QVariant::fromValue(QString::fromStdString(user.name));
     QVariant q_email = QVariant::fromValue(QString::fromStdString(user.email));
     QVariant q_public_key = QVariant::fromValue(QString::fromStdString(user.public_key));
 
     // Create query
-    QSqlQuery query("INSERT INTO users (name, email, public_key) VALUES (?, ?, ?)", database);
+    QSqlQuery query("INSERT INTO users (id, name, email, public_key) VALUES (?, ?, ?, ?)", database);
+    query.addBindValue(q_id);
     query.addBindValue(q_name);
     query.addBindValue(q_email);
     query.addBindValue(q_public_key);
@@ -56,7 +45,7 @@ uint64_t UserGateway::add(const user_details& user) {
         throw std::runtime_error(query.lastError().databaseText().toStdString());
     }
 
-    return query.lastInsertId().toUInt();
+    return true;
 }
 
 /**
@@ -65,7 +54,7 @@ uint64_t UserGateway::add(const user_details& user) {
  * @return True if the operation was successful, otherwise false
  */
 bool UserGateway::remove(uint64_t user_id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
@@ -89,7 +78,7 @@ bool UserGateway::remove(uint64_t user_id) {
  * @return The details of the user.
  */
 user_details UserGateway::getUser(uint64_t id) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
@@ -123,7 +112,7 @@ user_details UserGateway::getUser(uint64_t id) {
  * @return  Vector of all the users in the database.
  */
 std::vector<user_details> UserGateway::getUsers() {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
@@ -152,7 +141,7 @@ std::vector<user_details> UserGateway::getUsers() {
  * @return Returns the correct details of the user if found, otherwise return empty details struct with invalid id
  */
 user_details UserGateway::getUserByName(const std::string &name) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
@@ -180,7 +169,7 @@ user_details UserGateway::getUserByName(const std::string &name) {
  * @param user The user
  */
 void UserGateway::updateUser(const user_details &user) {
-    auto database = IGateway::AquireDatabase();
+    auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
     }
@@ -190,9 +179,6 @@ void UserGateway::updateUser(const user_details &user) {
     }
 
     if (Utilities::doesRecordExist("users", user.id)){
-        if (!areArgsValid(user)){
-            throw std::invalid_argument("updateUser error: invalid arguments");
-        }
         QSqlQuery query("UPDATE users SET name = ?, email = ?, public_key = ? WHERE id = ?", database);
         query.addBindValue(QString::fromStdString(user.name));
         query.addBindValue(QString::fromStdString(user.email));

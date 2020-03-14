@@ -7,6 +7,7 @@
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/WorkerLoadResponseMessage.h>
 #include <communication/message/TaskResponseMessage.h>
+#include <communication/message/HardwareDetailMessage.h>
 #include <communication/authenticator/Authenticator.h>
 
 using namespace balancedbanana::worker;
@@ -95,13 +96,17 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
         switch ((TaskType)task->getType())
         {
         case TaskType::WORKERSTART: {
-            std::string cmd;
-            while(1) {
-                std::cin >> cmd;
-                if(cmd == "stop") {
-                    exit(0);
+            HardwareDetailMessage detail = { 8, 16000, "GNU/Linux" };
+            communicator->send(detail);
+            std::thread([]() {
+                std::string cmd;
+                while(1) {
+                    std::cin >> cmd;
+                    if(cmd == "stop") {
+                        exit(0);
+                    }
                 }
-            }
+            }).detach();
             break;
         }
         default:
@@ -179,6 +184,7 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 throw std::runtime_error("Not Implented yet :(");
             }
         } catch(const std::exception&ex) {
+            std::cout << "Internal Error: " << ex.what() << "\n";
             // What should I send on Error
             TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::interrupted);
             com->send(resp);

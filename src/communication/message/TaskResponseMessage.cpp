@@ -11,7 +11,7 @@ Message(JOB_STATUS), jobId(jobId), status(status) {
 }
 TaskResponseMessage::TaskResponseMessage(const char *data, size_t &iterator, size_t size) :
 Message(JOB_STATUS), jobId(0), status(canceled) {
-    jobId = serialization::extract<uint32_t>(data, iterator, size);
+    jobId = serialization::extract<uint64_t>(data, iterator, size);
     status = (JobStatus) serialization::extract<uint32_t>(data, iterator, size);
 }
 
