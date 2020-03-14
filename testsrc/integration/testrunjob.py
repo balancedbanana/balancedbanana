@@ -26,6 +26,11 @@ try:
     #auth client agains server
     bbc.communicate(input=b'thePassword\n')
     bbc.wait()
+    bbc = subprocess.Popen(["sshpass", "../../src/client/bbc", "run", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
+    time.sleep(1)
+    #auth client agains server
+    bbc.communicate(input=b'thePassword\n')
+    bbc.wait()
     time.sleep(5)
 except:
     bbs.communicate(input=b'stop\n')
