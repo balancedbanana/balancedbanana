@@ -63,7 +63,7 @@ std::future<int> Worker::processCommandLineArguments(int argc, const char* const
 {
     WorkerCommandLineProcessor clp;
     auto code = clp.process(argc, argv, task);
-    if(task->getType()) {
+    if((uint32_t)task->getType()) {
         std::string server = "localhost";
         short port = 8444;
         if(!task->getServerIP().empty()) {

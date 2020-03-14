@@ -35,7 +35,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
 {
     SchedulerCommandLineProcessor clp;
     clp.process(argc, argv, task);
-    if(task->getType()) {
+    if((uint32_t)task->getType()) {
         std::string server = "localhost";
         short port = 8443;
         if(!task->getServerIP().empty()) {

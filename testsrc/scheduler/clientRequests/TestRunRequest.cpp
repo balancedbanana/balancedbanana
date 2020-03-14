@@ -22,7 +22,7 @@ TEST(TestRunRequest, allArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::RUN);
+    task->setType(TaskType::RUN);
     task->setJobId(0);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
@@ -36,7 +36,7 @@ TEST(TestRunRequest, requiredArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::RUN);
+    task->setType(TaskType::RUN);
     task->setJobId(0);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
@@ -50,7 +50,7 @@ TEST(TestRunRequest, noArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::RUN);
+    task->setType(TaskType::RUN);
     task->setJobId(std::nullopt);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);

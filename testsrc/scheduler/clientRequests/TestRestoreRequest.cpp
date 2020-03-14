@@ -22,7 +22,7 @@ TEST(TestRestoreRequest, allArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::RESTORE);
+    task->setType(TaskType::RESTORE);
     task->setJobId(0);
     task->setBackupId(0);
 
@@ -37,7 +37,7 @@ TEST(TestRestoreRequest, noArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::RESTORE);
+    task->setType(TaskType::RESTORE);
     task->setJobId(std::nullopt);
     task->setBackupId(std::nullopt);
 

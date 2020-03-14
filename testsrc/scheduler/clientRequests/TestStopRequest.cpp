@@ -22,7 +22,7 @@ TEST(TestStopRequest, allArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::STOP);
+    task->setType(TaskType::STOP);
     task->setJobId(0);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
@@ -36,7 +36,7 @@ TEST(TestStopRequest, noArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::STOP);
+    task->setType(TaskType::STOP);
     task->setJobId(std::nullopt);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);

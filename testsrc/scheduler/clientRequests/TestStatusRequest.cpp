@@ -22,7 +22,7 @@ TEST(TestStatusRequest, allArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::STATUS);
+    task->setType(TaskType::STATUS);
     task->setJobId(0);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
@@ -36,7 +36,7 @@ TEST(TestStatusRequest, noArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::STATUS);
+    task->setType(TaskType::STATUS);
     task->setJobId(std::nullopt);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);

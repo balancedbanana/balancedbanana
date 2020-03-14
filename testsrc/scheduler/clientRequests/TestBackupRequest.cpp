@@ -21,7 +21,7 @@ TEST(BackupRequest, allArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::BACKUP);
+    task->setType(TaskType::BACKUP);
     task->setJobId(0);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
@@ -35,7 +35,7 @@ TEST(BackupRequest, noArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::BACKUP);
+    task->setType(TaskType::BACKUP);
     task->setJobId(std::nullopt);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);

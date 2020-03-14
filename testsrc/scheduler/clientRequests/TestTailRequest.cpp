@@ -20,7 +20,7 @@ TEST(TestTailRequest, allArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::TAIL);
+    task->setType(TaskType::TAIL);
     task->setJobId(0);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
@@ -34,7 +34,7 @@ TEST(TestTailRequest, noArgs)
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::TAIL);
+    task->setType(TaskType::TAIL);
     task->setJobId(std::nullopt);
 
     auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, userID);
