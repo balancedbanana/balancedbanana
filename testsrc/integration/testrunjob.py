@@ -40,16 +40,16 @@ try:
     bbc.wait()
     time.sleep(1)
     res = requests.get("http://localhost:8202/v1/jobs/1")
-    result = yaml.safe_load(res.content)
-    assert result['user_name'] != my_env["USER"], "Username must be steve"
+    # result = yaml.safe_load(res.content)
+    # assert result['user_name'] != my_env["USER"], "Username must be steve"
     res = requests.get("http://localhost:8202/v1/jobs/hours/3")
-    result = yaml.safe_load(res.content)
-    for job in result['jobs']:
-        print(job['job_id'])
+    # result = yaml.safe_load(res.content)
+    # for job in result['jobs']:
+    #     print(job['job_id'])
     res = requests.get("http://localhost:8202/v1/workmachines/1/jobs")
-    result = yaml.safe_load(res.content)
-    for job in result['jobs']:
-        print(job['job_id'])
+    # result = yaml.safe_load(res.content)
+    # for job in result['jobs']:
+    #     print(job['job_id'])
     res = requests.get("http://localhost:8202/v1/user/330/jobs")
     # result = yaml.safe_load(res.content)
     # for job in result['jobs']:
