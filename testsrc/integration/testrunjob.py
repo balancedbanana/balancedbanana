@@ -24,6 +24,12 @@ time.sleep(1)
 bbd = subprocess.Popen("../../src/worker/bbd", stdin=subprocess.PIPE, env=my_env)
 time.sleep(1)
 try:
+    #test for failed auth
+    bbc = subprocess.Popen(["../../src/client/bbc", "run", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
+    time.sleep(1)
+    # try auth client agains server
+    bbc.communicate(input=b'theP3assword2\n')
+    bbc.wait()
     #start client
     bbc = subprocess.Popen(["../../src/client/bbc", "run", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
     time.sleep(1)
