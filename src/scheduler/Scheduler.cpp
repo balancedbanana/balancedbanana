@@ -88,30 +88,53 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
         struct QueueObserver : Observer<JobObservableEvent>, Observer<WorkerObservableEvent> {
             std::shared_ptr<balancedbanana::scheduler::PriorityQueue> queue;
             std::shared_ptr<balancedbanana::database::Repository> repo;
+            std::mutex updatelock;
+            std::unordered_map<uint64_t, std::shared_ptr<Job>> senttoworker;
 
             void OnUpdate(Observable<JobObservableEvent> *obsable, JobObservableEvent event) override {
                 auto job = (Job*)obsable;
                 if(job->getStatus() != balancedbanana::database::scheduled) {
                     // Remove aborted, canced or other jobs from the queue
-                    queue->pullJob(job->getId());
+                    // if(queue->pullJob(job->getId()) /* updatelock.try_lock() */) {
+                        std::lock_guard<std::mutex> guard(updatelock/* , std::adopt_lock */);
+                        auto found = senttoworker.find(job->getId()); //std::find(senttoworker.begin(), senttoworker.end(), job);
+                        if(found != senttoworker.end())
+                            senttoworker.erase(found);
+                        for(auto && worker : repo->GetActiveWorkers()) {
+                            processWorkerload(worker.get());
+                        }
+                    // }
+
                 }
                 if(job->getStatus() == balancedbanana::database::finished) {
                     job->UnregisterObserver(this);
-                    for(auto && worker : repo->GetActiveWorkers()) {
-                        processWorkerload(worker.get());
-                    }
                 }
             }
 
             void OnUpdate(Observable<WorkerObservableEvent> *obsable, WorkerObservableEvent event) override {
                 if(event == WorkerObservableEvent::HARDWARE_DETAIL_UPDATE || event == WorkerObservableEvent::STATUS_UPDATE) {
+                    std::lock_guard<std::mutex> guard(updatelock);
                     processWorkerload((Worker*)obsable);
                 }
             }
 
+            void OnJobAdded() {
+                std::lock_guard<std::mutex> guard(updatelock);
+                for(auto && worker : repo->GetActiveWorkers()) {
+                    processWorkerload(worker.get());
+                }
+            }
+private:
             void processWorkerload(Worker * worker) {
                 if(worker->getSpec().has_value() && worker->isConnected()) {
                     auto spec = *worker->getSpec();
+                    for(auto && job : senttoworker) {
+                        if(job.second->getWorker_id() == worker->getId() && job.second->getStatus() == balancedbanana::database::scheduled) {
+                            // Reduce spec with running Jobs
+                            spec.cores -= job.second->getAllocated_cores();
+                            spec.ram -= job.second->getAllocated_ram();
+                        }
+                    }
                     for(auto && job : repo->GetUnfinishedJobs()) {
                         if(job->getWorker_id() == worker->getId() && job->getStatus() == balancedbanana::database::processing) {
                             // Reduce spec with running Jobs
@@ -119,7 +142,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                             spec.ram -= job->getAllocated_ram();
                         }
                     }
-                    if(spec.ram > 4 /*4 MB limit avoid errors*/ && spec.cores > 0 /* 0 means no cores available for jobs*/ ) {
+                    while(spec.ram > 4 /*4 MB limit avoid errors*/ && spec.cores > 0 /* 0 means no cores available for jobs*/ ) {
                         if(auto job = queue->getJob(spec.ram, spec.cores)) {
                             Task task;
                             task.setConfig(job->getConfig());
@@ -133,6 +156,12 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                             job->setAllocated_osIdentifier(spec.osIdentifier);
                             TaskMessage message(task);
                             worker->send(message);
+                            spec.cores -= job->getAllocated_cores();
+                            spec.ram -= job->getAllocated_ram();
+                            senttoworker[job->getId()] = job;
+                            // senttoworker.emplace_back(std::move(job));
+                        } else {
+                            break;
                         }
                     }
                 }
@@ -164,6 +193,7 @@ void Scheduler::processCommandLineArguments(int argc, const char* const * argv)
                     // Add newly created Jobs to the Queue
                     observer->queue->addTask(job);
                     job->RegisterObserver(observer.get());
+                    observer->OnJobAdded();
                     return job->getId();
                 }, [repo](size_t uid, const std::string& username, const std::string& pubkey) -> std::shared_ptr<User> {
                     //Important for the worker to run Jobs under the right userid!!
