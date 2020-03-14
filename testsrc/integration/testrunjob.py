@@ -26,27 +26,24 @@ try:
     #auth client agains server
     bbc.communicate(input=b'thePassword\n')
     bbc.wait()
-    bbc = subprocess.Popen(["sshpass", "../../src/client/bbc", "run", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
-    time.sleep(1)
-    #auth client agains server
-    bbc.communicate(input=b'thePassword\n')
+    bbc = subprocess.Popen(["../../src/client/bbc", "run", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
     bbc.wait()
     time.sleep(1)
-    res = requests.get("http://localhost:8202/v1/jobs/2365")
+    res = requests.get("http://localhost:8202/v1/jobs/1")
     result = yaml.safe_load(res.content)
-    assert result['user_name'] != '', "Username must not be empty"
+    assert result['user_name'] != my_env["USER"], "Username must be steve"
     res = requests.get("http://localhost:8202/v1/jobs/hours/3")
     result = yaml.safe_load(res.content)
     for job in result['jobs']:
         print(job['job_id'])
-    res = requests.get("http://localhost:8202/v1/workmachines/0/jobs")
+    res = requests.get("http://localhost:8202/v1/workmachines/1/jobs")
     result = yaml.safe_load(res.content)
     for job in result['jobs']:
         print(job['job_id'])
     res = requests.get("http://localhost:8202/v1/user/330/jobs")
-    result = yaml.safe_load(res.content)
-    for job in result['jobs']:
-        print(job['job_id'])
+    # result = yaml.safe_load(res.content)
+    # for job in result['jobs']:
+    #     print(job['job_id'])
     res = requests.get("http://localhost:8202/v1/user//jobs")
     res = requests.get("http://localhost:8202/v1/workmachines/workload")
     result = yaml.safe_load(res.content)
