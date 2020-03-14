@@ -13,6 +13,10 @@ bbc = subprocess.Popen(["../../src/client/bbc", "--help"], stdin=subprocess.PIPE
 bbc.wait()
 bbc = subprocess.Popen(["../../src/client/bbc", "run", "--help"], stdin=subprocess.PIPE, env=my_env)
 bbc.wait()
+bbc = subprocess.Popen(["../../src/client/bbc", "run", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
+bbc.wait()
+bbd = subprocess.Popen("../../src/worker/bbd", stdin=subprocess.PIPE, env=my_env)
+bbd.wait()
 # start server
 bbs = subprocess.Popen("../../src/scheduler/bbs", stdin=subprocess.PIPE, env=my_env)
 time.sleep(1)
