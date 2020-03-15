@@ -32,40 +32,40 @@ TEST(ClientRequest, selectType)
 {
     std::shared_ptr<Task> task = std::make_shared<Task>();
 
-    task->setType((uint32_t)TaskType::ADD_IMAGE);
+    task->setType(TaskType::ADD_IMAGE);
     auto addimageReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::BACKUP);
+    task->setType(TaskType::BACKUP);
     auto backupReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::CONTINUE);
+    task->setType(TaskType::CONTINUE);
     auto continueReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::PAUSE);
+    task->setType(TaskType::PAUSE);
     auto pauseReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::REMOVE_IMAGE);
+    task->setType(TaskType::REMOVE_IMAGE);
     auto removeimageReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::RESTORE);
+    task->setType(TaskType::RESTORE);
     auto restoreReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::RUN);
+    task->setType(TaskType::RUN);
     auto runReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::SERVERSTART);
+    task->setType(TaskType::SERVERSTART);
     auto serverstartReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::STATUS);
+    task->setType(TaskType::STATUS);
     auto statusReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::STOP);
+    task->setType(TaskType::STOP);
     auto stopReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::TAIL);
+    task->setType(TaskType::TAIL);
     auto tailReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
-    task->setType((uint32_t)TaskType::WORKERSTART);
+    task->setType(TaskType::WORKERSTART);
     auto workerstartReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
 
     ASSERT_TRUE(addimageReq == nullptr);

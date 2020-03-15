@@ -6,7 +6,7 @@ std::shared_ptr<Job> dbGetJob(uint64_t jobID)
     struct job_result job_result{"result", 0};
 
     return std::make_shared<Job>(jobID, QDateTime::currentDateTime(), QDateTime::currentDateTime(), QDateTime::currentDateTime(),
-                                 1024, 4, 4096,
+                                 1024, 4, "GNU/Linux",
                                  "echo \"Hello World!\"", 0, std::make_shared<User>(0, "Username", "Publickey"),
                                  std::make_shared<JobConfig>(), JobStatus::scheduled,
                                  std::make_shared<struct job_result>(job_result));
@@ -24,7 +24,7 @@ std::shared_ptr<Job> dbAddJob(const uint64_t userID, const std::shared_ptr<JobCo
     struct job_result job_result = {"result", 0};
 
     return std::make_shared<Job>(0, scheduleTime, scheduleTime, scheduleTime,
-                                 1024, 4, 4096,
+                                 1024, 4, "GNU/Linux",
                                  jobCommand, 0, std::make_shared<User>(userID, "Username", "Publickey"),
                                  config, JobStatus::scheduled,
                                  std::make_shared<struct job_result>(job_result));
