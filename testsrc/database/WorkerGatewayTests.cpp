@@ -9,6 +9,11 @@
 #include <QDebug>
 #include <QSqlError>
 #include <QSqlRecord>
+#include <random>
+#include <QTextCodec>
+#include <iostream>
+#include <string>
+#include <locale>
 
 using namespace balancedbanana::database;
 
@@ -497,5 +502,73 @@ TEST_F(UpdateWorkerTest, UpdateWorkerTest_Success_Test){
     WorkerGateway::updateWorker(new_worker);
     worker_details actualWorker = WorkerGateway::getWorker(worker.id);
     EXPECT_TRUE(actualWorker == new_worker);
+}
+
+std::string random_string( size_t length )
+{
+    auto randchar = []() -> char
+    {
+        const char charset[] =
+                "0123456789"
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz";
+        const size_t max_index = (sizeof(charset) - 1);
+        return charset[ rand() % max_index ];
+    };
+    std::string str(length,0);
+    std::generate_n( str.begin(), length, randchar );
+    return str;
+}
+
+// Generate an unicode string of length 'len' whose characters are in range [start, end]
+std::wstring generateRandomUnicodeString(size_t len, size_t start, size_t end)
+{
+    wchar_t* ustr = new wchar_t[len+1];      // +1 for '\0'
+    size_t intervalLength = end - start + 1; // +1 for inclusive range
+
+    srand(time(NULL));
+    for (auto i = 0; i < len; i++) {
+        ustr[i] = (rand() % intervalLength) + start;
+    }
+    ustr[len] = L'\0';
+    return std::wstring(ustr);
+}
+
+
+TEST(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
+    /*
+    worker_details worker;
+    worker.public_key = "safdsadf";
+    std::string name = u8"GROẞBUCHSTABEN";
+    worker.name = name;
+    worker.empty = false;
+    worker.id = 1;
+    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    worker_details actualWorker = WorkerGateway::getWorker(worker.id);
+    EXPECT_EQ(WorkerGateway::getWorker(worker.id).name, worker.name);
+    qDebug() << QString::fromStdString(actualWorker.name) << QString::fromStdString(worker.name);
+
+     */
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
+    std::vector<uint32_t> name(4);
+    for (auto &&i : name) {
+        i = dis(gen);
+    }
+    std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
+
+    std::wstring output = generateRandomUnicodeString(5, 0x0400, 0x04FF);
+    auto db = IGateway::AcquireDatabase();
+    QSqlQuery query("INSERT INTO workers (name, public_key) VALUES (?,?)", db);
+    query.addBindValue(QString::fromStdWString(output));
+    query.addBindValue("something");
+    query.exec();
+    query.prepare("SELECT name FROM workers WHERE id = 1");
+    if (query.exec() && query.next()){
+        EXPECT_EQ(query.value(0).toString().toStdWString(), output);
+    }
+
+    resetWorkerTable();
 }
 
