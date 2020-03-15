@@ -14,7 +14,7 @@ std::shared_ptr<Job> dbGetJob(uint64_t jobID)
 
 std::shared_ptr<Worker> dbGetWorker(uint64_t workerID)
 {
-    struct Specs specs{8192, 8192, 8, true};
+    struct Specs specs{"GNU/Linux", 8192, 8};
 
     return std::make_shared<Worker>(workerID, "Workername", "Publickey", specs);
 }
