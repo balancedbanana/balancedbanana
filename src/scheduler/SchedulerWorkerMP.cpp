@@ -20,7 +20,9 @@ SchedulerWorkerMP::SchedulerWorkerMP(const std::function<std::shared_ptr<Worker>
 }
 
 void SchedulerWorkerMP::onDisconnect() {
-    worker->setCommunicator(nullptr);
+    if(worker) {
+        worker->setCommunicator(nullptr);
+    }
 }
 
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {

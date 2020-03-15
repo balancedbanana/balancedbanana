@@ -12,7 +12,7 @@ uint64_t balancedbanana::communication::authenticator::SSHAuthHandler::authentic
     QProcess proc;
     proc.environment().append("");
     proc.setProgram("sshpass");
-    proc.setArguments({ "ssh", "-o", "StrictHostKeyChecking=no", QString::fromStdString(user->name()) + "@localhost", "echo $UID && echo $USER"});
+    proc.setArguments({ "ssh", "-o", "StrictHostKeyChecking=no", QString::fromStdString(user->name()) + "@localhost", "bash -c 'echo $UID && echo $USER'"});
     proc.start();
     proc.write(password.data(), password.length());
     proc.write("\n", 1);

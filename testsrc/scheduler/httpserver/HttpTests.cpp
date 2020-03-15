@@ -33,7 +33,7 @@ int main() {
     auto listener = std::make_shared<CommunicatorListener>([testmp](){
         return testmp;
     });
-    listener->listen(2435, [listener, &worker, testmp](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+    listener->listen("localhost", 2435, [listener, &worker, testmp](std::shared_ptr<balancedbanana::communication::Communicator> com) {
         worker.emplace_back(std::make_shared<Worker>(0, "name", "key", balancedbanana::database::Specs{"GNU/Linux", 0, 0}))->setCommunicator(com);
         testmp->wcom = com;
         com->detach();

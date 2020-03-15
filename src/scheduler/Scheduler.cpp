@@ -58,6 +58,52 @@ void Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             port = std::stoi(config["port"]);
         }
 
+        std::string workerserver = "localhost";
+        short workerport = port + 1;
+        /* if(!task->getServerIP().empty()) {
+            webapiserver = task->getServerIP();
+        } else  */if(config.Contains("workerserver")) {
+            workerserver = config["workerserver"];
+        }
+        /* if(task->getServerPort()) {
+            webapiport = task->getServerPort();
+        } else  */if(config.Contains("workerport")) {
+            workerport = std::stoi(config["workerport"]);
+        }
+
+        std::string smtpserver = "localhost";
+        short smtpport = 25;
+        std::string email = "balancedbanana@localhost";
+        
+        /* if(!task->getServerIP().empty()) {
+            webapiserver = task->getServerIP();
+        } else  */if(config.Contains("smtpserver")) {
+            smtpserver = config["smtpserver"];
+        }
+        /* if(task->getServerPort()) {
+            webapiport = task->getServerPort();
+        } else  */if(config.Contains("smtpport")) {
+            smtpport = std::stoi(config["smtpport"]);
+        }
+        /* if(task->getServerPort()) {
+            webapiport = task->getServerPort();
+        } else  */if(config.Contains("email")) {
+            email = config["email"];
+        }
+
+        std::string webapiserver = "localhost";
+        short webapiport = 8443;
+        /* if(!task->getServerIP().empty()) {
+            webapiserver = task->getServerIP();
+        } else  */if(config.Contains("webapiserver")) {
+            webapiserver = config["webapiserver"];
+        }
+        /* if(task->getServerPort()) {
+            webapiport = task->getServerPort();
+        } else  */if(config.Contains("webapiport")) {
+            webapiport = std::stoi(config["webapiport"]);
+        }
+
         std::string databasehost = "localhost";
         short databaseport = 3306;
         std::string databaseschema = "balancedbanana";
@@ -199,7 +245,7 @@ private:
         std::shared_ptr<QueueObserver> observer = std::make_shared<QueueObserver>();
         observer->queue = queue;
         observer->repo = repo;
-        observer->mailclient = std::make_shared<SmtpServer>("localhost", 25, false, "balancedbanana@localhost");
+        observer->mailclient = std::make_shared<SmtpServer>(smtpserver, smtpport, false, email);
 
         // Reload scheduled Jobs from the database into the Queue
         for(auto && job : repo->GetUnfinishedJobs()) {
@@ -213,23 +259,22 @@ private:
         {
         case TaskType::SERVERSTART:
         {
-            clientlistener = std::make_shared<CommunicatorListener>(
-                [repo]() {
-                    return std::make_shared<SchedulerClientMP>(
+            clientlistener = std::make_shared<CommunicatorListener>([repo]() {
+                return std::make_shared<SchedulerClientMP>(
 
-                        [repo](uint64_t jobID) -> std::shared_ptr<Job> { return repo->GetJob(jobID); },
-                        [repo](uint64_t workerID) -> std::shared_ptr<Worker> { return repo->GetWorker(workerID); },
-                        [repo](uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand) -> std::shared_ptr<Job> { return repo->AddJob(userID, *config, scheduleTime, jobCommand); },
+                    [repo](uint64_t jobID) -> std::shared_ptr<Job> { return repo->GetJob(jobID); },
+                    [repo](uint64_t workerID) -> std::shared_ptr<Worker> { return repo->GetWorker(workerID); },
+                    [repo](uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand) -> std::shared_ptr<Job> { return repo->AddJob(userID, *config, scheduleTime, jobCommand); },
 
-                        [repo](uint64_t jobID) -> bool { return false; },
-                        [repo](uint64_t jobID) -> uint64_t { return 0; },
+                    [repo](uint64_t jobID) -> bool { return false; },
+                    [repo](uint64_t jobID) -> uint64_t { return 0; },
 
-                        [repo](size_t uid, const std::string &username, const std::string &pubkey) -> std::shared_ptr<User> {
-                            //Important for the worker to run Jobs under the right userid!!
-                            return repo->AddUser(uid, username, "bot@localhost", pubkey); },
-                        [repo](const std::string &username) -> std::shared_ptr<User> { return repo->FindUser(username); });
-                });
-            clientlistener->listen(port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+                    [repo](size_t uid, const std::string &username, const std::string &pubkey) -> std::shared_ptr<User> {
+                        //Important for the worker to run Jobs under the right userid!!
+                        return repo->AddUser(uid, username, "bot@localhost", pubkey); },
+                    [repo](const std::string &username) -> std::shared_ptr<User> { return repo->FindUser(username); });
+            });
+            clientlistener->listen(server, port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerClientMP>(com->GetMP());
                 mp->setClient(com);
                 com->detach();
@@ -251,7 +296,7 @@ private:
                     return repo->GetJob(jobid);
                 });
             });
-            workerlistener->listen(port + 1, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+            workerlistener->listen(workerserver, workerport, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerWorkerMP>(com->GetMP());
                 mp->setWorker(com);
                 com->detach();
@@ -280,8 +325,11 @@ private:
                 //         result.emplace_back(job->getId());
                 //     }
                 // }
-                return result; }, [repo](int jobid) -> std::shared_ptr<Job> { return repo->GetJob(jobid); });
-            server.listen("localhost", 8234);
+                return result; 
+            }, [repo](int jobid) -> std::shared_ptr<Job> {
+                return repo->GetJob(jobid);
+            });
+            server.listen(webapiserver, webapiport);
             std::string cmd;
             while (1)
             {
