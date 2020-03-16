@@ -34,7 +34,7 @@ void Worker::setSpec(const std::optional<Specs>& specs) {
         std::lock_guard guard(mtx);
         this->specs = specs;
     }
-    Update(balancedbanana::scheduler::WorkerObservableEvent::HARDWARE_DETAIL_UPDATE);
+    Observable<balancedbanana::scheduler::WorkerObservableEvent>::Update(balancedbanana::scheduler::WorkerObservableEvent::HARDWARE_DETAIL_UPDATE);
 }
 
 uint64_t Worker::getId() {
@@ -51,7 +51,7 @@ void Worker::setAddress(const std::string &adr) {
         std::lock_guard lock(mtx);
         address = adr;
     }
-    Update(balancedbanana::scheduler::WorkerObservableEvent::DATA_CHANGE);
+    Observable<balancedbanana::scheduler::WorkerObservableEvent>::Update(balancedbanana::scheduler::WorkerObservableEvent::DATA_CHANGE);
 }
 
 void Worker::setCommunicator(const std::shared_ptr<communication::Communicator>& com) {
@@ -63,6 +63,8 @@ void Worker::setCommunicator(const std::shared_ptr<communication::Communicator>&
             resp = res;
             cnd.notify_all();
         });
+        mp->balancedbanana::scheduler::Observable<WorkerTailEvent>::RegisterObserver(this);
+        mp->balancedbanana::scheduler::Observable<WorkerErrorEvent>::RegisterObserver(this);
     }
 }
 
@@ -74,4 +76,12 @@ const WorkerLoadResponseMessage& Worker::GetWorkerLoad() {
         throw std::runtime_error("Timeout");
     }
     return resp;
+}
+
+void Worker::OnUpdate(Observable<WorkerTailEvent> *obsable, WorkerTailEvent event) {
+    balancedbanana::scheduler::Observable<WorkerTailEvent>::Update(event);
+}
+
+void Worker::OnUpdate(Observable<WorkerErrorEvent> *obsable, WorkerErrorEvent event) {
+    balancedbanana::scheduler::Observable<WorkerErrorEvent>::Update(event);
 }
