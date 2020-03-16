@@ -100,7 +100,7 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
             // TODO Might check return value of sysinfo
             struct sysinfo info;
             sysinfo(&info);
-            HardwareDetailMessage detail = { std::thread::hardware_concurrency(), info.totalram, "GNU/Linux" };
+            HardwareDetailMessage detail = { std::thread::hardware_concurrency(), info.totalram / (1024 * 1024), "GNU/Linux" };
             communicator->send(detail);
             std::thread([]() {
                 std::string cmd;
@@ -134,7 +134,7 @@ void Worker::processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg
     // Might check return value of sysinfo
     struct sysinfo info;
     sysinfo(&info);
-    WorkerLoadResponseMessage resp(info.loads[0], (info.loads[0] * std::thread::hardware_concurrency()) / 100, std::thread::hardware_concurrency(), info.freeram, info.totalram, info.freeswap, info.totalswap);
+    WorkerLoadResponseMessage resp(info.loads[0], (info.loads[0] * std::thread::hardware_concurrency()) / 100, std::thread::hardware_concurrency(), info.freeram / (1024 * 1024), info.totalram / (1024 * 1024), info.freeswap / (1024 * 1024), info.totalswap / (1024 * 1024));
     communicator->send(resp);
 }
 
