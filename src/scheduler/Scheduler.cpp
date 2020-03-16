@@ -39,7 +39,7 @@ void Scheduler::processCommandLineArguments(int argc, const char *const *argv)
     SchedulerCommandLineProcessor clp;
     clp.process(argc, argv, task);
     if((uint32_t)task->getType()) {
-        std::string server = "localhost";
+        std::string server = "";
         short port = 8443;
         if (!task->getServerIP().empty())
         {
@@ -58,7 +58,7 @@ void Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             port = std::stoi(config["port"]);
         }
 
-        std::string workerserver = "localhost";
+        std::string workerserver = "";
         short workerport = port + 1;
         /* if(!task->getServerIP().empty()) {
             webapiserver = task->getServerIP();
@@ -91,7 +91,7 @@ void Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             email = config["email"];
         }
 
-        std::string webapiserver = "localhost";
+        std::string webapiserver = "";
         short webapiport = 8443;
         /* if(!task->getServerIP().empty()) {
             webapiserver = task->getServerIP();
