@@ -44,7 +44,9 @@ std::shared_ptr<RespondToClientMessage> StatusRequest::executeRequestAndFetchDat
         response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
-
+    if(!job->getUser() || job->getUser()->id() != userID) {
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+    }
     switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:

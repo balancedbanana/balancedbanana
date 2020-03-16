@@ -39,7 +39,9 @@ std::shared_ptr<RespondToClientMessage> ContinueRequest::executeRequestAndFetchD
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
-
+    if(!job->getUser() || job->getUser()->id() != userID) {
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+    }
     if (job == nullptr)
     {
         // Job not found

@@ -47,6 +47,9 @@ std::shared_ptr<RespondToClientMessage> TailRequest::executeRequestAndFetchData(
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
+    if(!job->getUser() || job->getUser()->id() != userID) {
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+    }
     switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:

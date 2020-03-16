@@ -46,13 +46,16 @@ std::shared_ptr<RespondToClientMessage> PauseRequest::executeRequestAndFetchData
         response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
-
+    if(!job->getUser() || job->getUser()->id() != userID) {
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+    }
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
     switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:
     {
         // pause job and respond success
+        // How to idendify a never processed Job (Workerid = 0?)
         job->setStatus(JobStatus::paused);
         response << OPERATION_SUCCESS << std::endl;
         break;
