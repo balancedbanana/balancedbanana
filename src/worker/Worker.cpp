@@ -189,6 +189,28 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 com->send(resp);
                 break;
             }
+            case TaskType::PAUSE: {
+                Container container("");
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                container.Pause();
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::paused);
+                com->send(resp);
+                break;
+            }
+            case TaskType::CONTINUE: {
+                Container container("");
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                container.Continue();
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
+                com->send(resp);
+                break;
+            }
             default:
                 throw std::runtime_error("Not Implented yet :(");
             }

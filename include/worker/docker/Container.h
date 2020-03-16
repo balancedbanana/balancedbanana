@@ -53,6 +53,16 @@ namespace balancedbanana {
 			void Start();
 
 			/**
+			 * Pause a running Container
+			 **/
+			void Pause();
+
+			/**
+			 * Continues a paused Container
+			 **/
+			void Continue();
+
+			/**
 			 * Wait for the Container to stop
 			 * returns the exit status of the container
 			 **/
