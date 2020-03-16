@@ -274,7 +274,6 @@ private:
                         return job;
                     },
 
-                    [repo](uint64_t jobID) -> bool { return false; },
                     [repo](uint64_t jobID) -> uint64_t { return 0; },
 
                     [repo](size_t uid, const std::string &username, const std::string &pubkey) -> std::shared_ptr<User> {

@@ -19,7 +19,7 @@ TEST(BackupRequest, allArgs)
     task->setType(TaskType::BACKUP);
     task->setJobId(0);
 
-    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
     auto response = req->executeRequestAndFetchData();
 }
 
@@ -32,6 +32,6 @@ TEST(BackupRequest, noArgs)
     task->setType(TaskType::BACKUP);
     task->setJobId(std::nullopt);
 
-    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
     auto response = req->executeRequestAndFetchData();
 }

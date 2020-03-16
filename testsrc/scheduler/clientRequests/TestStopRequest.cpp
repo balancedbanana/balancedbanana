@@ -21,7 +21,7 @@ TEST(TestStopRequest, allArgs)
     task->setType(TaskType::STOP);
     task->setJobId(0);
 
-    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
     auto response = req->executeRequestAndFetchData();
 }
 
@@ -34,6 +34,6 @@ TEST(TestStopRequest, noArgs)
     task->setType(TaskType::STOP);
     task->setJobId(std::nullopt);
 
-    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
     auto response = req->executeRequestAndFetchData();
 }
