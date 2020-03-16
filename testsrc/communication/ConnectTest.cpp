@@ -83,14 +83,14 @@ TEST(communication, Connect)
     auto listener = std::make_shared<CommunicatorListener>([testmp](){
         return testmp;
     });
-    listener->listen("localhost", 2434, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+    listener->listen("", 2434, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
         com->detach();
     });
     EXPECT_ANY_THROW(listener->listen("localhost", 23453, [](std::shared_ptr<balancedbanana::communication::Communicator> com){}));
     auto listener2 = std::make_shared<CommunicatorListener>([testmp](){
         return nullptr;
     });
-    EXPECT_ANY_THROW(listener2->listen("localhost", 2434, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
+    EXPECT_ANY_THROW(listener2->listen("", 2434, [listener, clauth](std::shared_ptr<balancedbanana::communication::Communicator> com) {
     }));
     auto com = std::make_shared<Communicator>("localhost", 2434, testmp);
     com->detach();
