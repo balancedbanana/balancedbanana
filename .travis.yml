@@ -1,5 +1,6 @@
 dist: bionic
 language: cpp
+if: tag IS blank
 
 before_install:
   - pip install --user cpp-coveralls
