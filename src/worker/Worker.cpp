@@ -9,6 +9,7 @@
 #include <communication/message/TaskResponseMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/authenticator/Authenticator.h>
+#include <sys/sysinfo.h>
 
 using namespace balancedbanana::worker;
 using namespace balancedbanana::communication;
@@ -96,7 +97,10 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
         switch ((TaskType)task->getType())
         {
         case TaskType::WORKERSTART: {
-            HardwareDetailMessage detail = { 8, 16000, "GNU/Linux" };
+            // TODO Might check return value of sysinfo
+            struct sysinfo info;
+            sysinfo(&info);
+            HardwareDetailMessage detail = { std::thread::hardware_concurrency(), info.totalram, "GNU/Linux" };
             communicator->send(detail);
             std::thread([]() {
                 std::string cmd;
@@ -125,7 +129,12 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
 }
 
 void Worker::processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg) {
-    WorkerLoadResponseMessage resp(32, 3, 1, 42, 2, 1, 12);
+    // This might need more adjustments
+    // TODO Are threads the virtual number of threads reserved by Jobs and number of threads never used
+    // Might check return value of sysinfo
+    struct sysinfo info;
+    sysinfo(&info);
+    WorkerLoadResponseMessage resp(info.loads[0], (info.loads[0] * std::thread::hardware_concurrency()) / 100, std::thread::hardware_concurrency(), info.freeram, info.totalram, info.freeswap, info.totalswap);
     communicator->send(resp);
 }
 
