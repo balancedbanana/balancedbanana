@@ -27,9 +27,6 @@ bbd.wait()
 # start server
 bbs = subprocess.Popen("../../src/scheduler/bbs", stdin=subprocess.PIPE, env=my_env)
 time.sleep(1)
-# start worker
-bbd = subprocess.Popen("../../src/worker/bbd", stdin=subprocess.PIPE, env=my_env)
-time.sleep(1)
 try:
     #test for failed auth
     bbc = subprocess.Popen(["../../src/client/bbc", "run", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
@@ -43,6 +40,14 @@ try:
     #auth client agains server
     bbc.communicate(input=b'thePassword\n')
     bbc.wait()
+    # restart scheduler
+    bbs.communicate(input=b'stop\n')
+    bbs.wait()
+    bbs = subprocess.Popen("../../src/scheduler/bbs", stdin=subprocess.PIPE, env=my_env)
+    time.sleep(1)
+    # start worker
+    bbd = subprocess.Popen("../../src/worker/bbd", stdin=subprocess.PIPE, env=my_env)
+    time.sleep(1)
     bbc = subprocess.Popen(["../../src/client/bbc", "run", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
     bbc.wait()
     time.sleep(1)
