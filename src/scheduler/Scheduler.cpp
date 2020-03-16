@@ -259,12 +259,20 @@ private:
         {
         case TaskType::SERVERSTART:
         {
-            clientlistener = std::make_shared<CommunicatorListener>([repo]() {
+            clientlistener = std::make_shared<CommunicatorListener>([repo, observer]() {
                 return std::make_shared<SchedulerClientMP>(
 
                     [repo](uint64_t jobID) -> std::shared_ptr<Job> { return repo->GetJob(jobID); },
                     [repo](uint64_t workerID) -> std::shared_ptr<Worker> { return repo->GetWorker(workerID); },
-                    [repo](uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand) -> std::shared_ptr<Job> { return repo->AddJob(userID, *config, scheduleTime, jobCommand); },
+                    
+                    [repo, observer](uint64_t userid, const std::shared_ptr<JobConfig>& config, const std::string& command) -> std::shared_ptr<Job> {
+                        auto job = repo->AddJob(userid, *config, QDateTime::currentDateTime(), command);
+                        // Add newly created Jobs to the Queue
+                        observer->queue->addTask(job);
+                        job->RegisterObserver(observer.get());
+                        observer->OnJobAdded();
+                        return job;
+                    },
 
                     [repo](uint64_t jobID) -> bool { return false; },
                     [repo](uint64_t jobID) -> uint64_t { return 0; },
