@@ -27,22 +27,22 @@ PauseRequest::PauseRequest(const std::shared_ptr<Task> &task,
 
 std::shared_ptr<RespondToClientMessage> PauseRequest::executeRequestAndFetchData()
 {
-    // Step 1: Go to DB and get job status
+    // prepare to respond
     std::stringstream response;
     bool shouldClientUnblock = true;
 
+    // fail if no jobID was received
     if (task->getJobId().has_value() == false)
     {
-        // Note that job id is required for the pause command
-        // exit with the reponse set to the error message of not having a jobid
         response << NO_JOB_ID << std::endl;
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
+
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
+    // fail if no Job with given ID exists
     if (job == nullptr)
     {
-        // Job not found
         response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
@@ -58,34 +58,40 @@ std::shared_ptr<RespondToClientMessage> PauseRequest::executeRequestAndFetchData
         break;
     }
     case (int)JobStatus::processing:
-        // stop job and respond success or failure
+        // tell worker (if present) to pause a job
+        //worker is expected to send a jobupdate message of sorts which will appropriately set the jobstatus
         {
+            // fail if no worker was found
+            if (worker == nullptr) {
+                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+            }
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
             shouldClientUnblock = false;
         }
-
-        // Use some message to tell worker to pause job
-
         response << OPERATION_PROGRESSING_PAUSE << std::endl;
     case (int)JobStatus::paused:
         // Job has already been paused
         response << OPERATION_ALREADY_APPLIED << std::endl;
         break;
     case (int)JobStatus::interrupted:
-        // stop job and respond success or failure
+        // tell worker (if present) to pause a job
+        //worker is expected to send a jobupdate message of sorts which will appropriately set the jobstatus
         {
+            // fail if no worker was found
+            if (worker == nullptr) {
+                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+            }
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
             shouldClientUnblock = false;
         }
-
-        // Use some message to tell worker to pause job
-
         response << OPERATION_PROGRESSING_PAUSE << std::endl;
         break;
     case (int)JobStatus::canceled:
@@ -102,7 +108,7 @@ std::shared_ptr<RespondToClientMessage> PauseRequest::executeRequestAndFetchData
         break;
     }
 
-    // Step 2: Create and send ResponseMessage with status as string
+    // respond if no error occured
     return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
 }
 

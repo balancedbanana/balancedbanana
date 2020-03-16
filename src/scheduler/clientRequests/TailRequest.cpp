@@ -27,22 +27,22 @@ TailRequest::TailRequest(const std::shared_ptr<Task> &task,
 
 std::shared_ptr<RespondToClientMessage> TailRequest::executeRequestAndFetchData()
 {
-    // Step 1: Go to DB and get job status
+    // prepare to respond
     std::stringstream response;
     bool shouldClientUnblock = true;
 
+    // fail if no jobID was received
     if (task->getJobId().has_value() == false)
     {
-        // Note that job id is required for the stop command
-        // exit with the reponse set to the error message of not having a jobid
         response << NO_JOB_ID << std::endl;
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
+
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
+    // fail if no job with given id exists
     if (job == nullptr)
     {
-        // Job not found
         response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
@@ -54,63 +54,67 @@ std::shared_ptr<RespondToClientMessage> TailRequest::executeRequestAndFetchData(
         response << OPERATION_UNAVAILABLE_JOB_NOT_RUN << std::endl;
         break;
     case (int)JobStatus::processing:
-        // get tail by asking the worker
+        // tell worker (if present) to send the tail of the job
         {
+            if (worker == nullptr) {
+                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+            }
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
             shouldClientUnblock = false;
         }
-
-        // Use some message to tell worker to tail job
-
         response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::paused:
-        // get tail by asking the worker
+        // tell worker (if present) to send the tail of the job
         {
+            if (worker == nullptr) {
+                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+            }
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
             shouldClientUnblock = false;
         }
-
-        // Use some message to tell worker to tail job
-
         response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::interrupted:
-        // get tail by asking the worker
+        // tell worker (if present) to send the tail of the job
         {
+            if (worker == nullptr) {
+                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+            }
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
             shouldClientUnblock = false;
         }
-
-        // Use some message to tell worker to tail job
-
         response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::canceled:
-        // get tail by asking the worker
+        // tell worker (if present) to send the tail of the job
         {
+            if (worker == nullptr) {
+                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+            }
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
             shouldClientUnblock = false;
         }
-
-        // Use some message to tell worker to tail job
-
         response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::finished:
-        // get result
+        // get result as the job is done
         response << job->getResult()->stdout << std::endl
                  << PREFIX_JOB_EXIT_CODE << job->getResult()->exit_code << std::endl;
         break;
@@ -120,8 +124,8 @@ std::shared_ptr<RespondToClientMessage> TailRequest::executeRequestAndFetchData(
         break;
     }
 
-    // Step 2: Create and send ResponseMessage with status as string
-        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+    // respond if no error occured
+    return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
 }
 
 } // namespace scheduler

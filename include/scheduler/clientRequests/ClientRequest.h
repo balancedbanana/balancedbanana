@@ -22,6 +22,10 @@ namespace scheduler
 class ClientRequest
 {
 public:
+    /**
+     * Get the appropriate Request based on the type of the Task.
+     * Use executeRequestAndFetchData to complete the request.
+    */
     static std::shared_ptr<ClientRequest> selectRequestType(const std::shared_ptr<Task> &task,
                                                             const uint64_t userID,
                                                             const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
@@ -31,6 +35,10 @@ public:
 
     virtual std::shared_ptr<RespondToClientMessage> executeRequestAndFetchData() = 0;
 
+    /**
+     * Construct a ClientRequest with the appropriate function callbacks.
+     * It is recommended to use selectRequestType over using this constructor.
+     */
     ClientRequest(const std::shared_ptr<Task> &task,
                   const uint64_t userID,
                   const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,

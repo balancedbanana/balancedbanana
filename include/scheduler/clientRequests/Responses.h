@@ -24,6 +24,8 @@ constexpr const char OPERATION_UNAVAILABLE_JOB_NOT_RUN[] = "Could not perform th
 constexpr const char OPERATION_UNAVAILABLE_JOB_ABORTED[] = "Could not perform this operation as the Job has been aborted.";
 constexpr const char OPERATION_UNAVAILABLE_JOB_FINISHED[] = "Could not perform this operation as the Job has been finished.";
 
+constexpr const char OPERATION_UNAVAILABLE_NO_WORKER[] = "Could not perform this operation as the Job cannot be associated with a Worker.";
+
 constexpr const char OPERATION_PROGRESSING_BACKUP[] = "Backing Job up. Please wait.";
 constexpr const char OPERATION_PROGRESSING_PAUSE[] = "Pausing Job. Please wait.";
 constexpr const char OPERATION_PROGRESSING_RESTORE[] = "Restoring Job. Please wait.";

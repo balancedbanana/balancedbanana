@@ -27,22 +27,22 @@ ContinueRequest::ContinueRequest(const std::shared_ptr<Task> &task,
 
 std::shared_ptr<RespondToClientMessage> ContinueRequest::executeRequestAndFetchData()
 {
-    // Step 1: Go to DB and get job status
+    // prepare to repond
     std::stringstream response;
     bool shouldClientUnblock = true;
 
+    // fail if no jobID was received
     if (task->getJobId().has_value() == false)
     {
-        // Note that job id is required for the continue command
-        // exit with the reponse set to the error message of not having a jobid
         response << NO_JOB_ID << std::endl;
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
+    
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
+    // fail if no Job with given ID exists
     if (job == nullptr)
     {
-        // Job not found
         response << NO_JOB_WITH_ID << std::endl;
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
@@ -59,8 +59,13 @@ std::shared_ptr<RespondToClientMessage> ContinueRequest::executeRequestAndFetchD
         response << OPERATION_UNAVAILABLE_JOB_NOT_PAUSED << std::endl;
         break;
     case JobStatus::paused:
-        // resume job and respond success or failure
+        // tell worker (if present) to continue a paused job
         {
+            // fail if no worker was found
+            if (worker == nullptr) {
+                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+            }
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
@@ -88,7 +93,7 @@ std::shared_ptr<RespondToClientMessage> ContinueRequest::executeRequestAndFetchD
         break;
     }
 
-    // Step 2: Create and send ResponseMessage with status as string
+    // respond if no error occured
     return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
 }
 

@@ -24,16 +24,22 @@ RunRequest::RunRequest(const std::shared_ptr<Task> &task,
 
 std::shared_ptr<RespondToClientMessage> RunRequest::executeRequestAndFetchData()
 {
-    // Step 1: enter Job into Database
+    // prepare response
     std::stringstream response;
 
+    // enter job into database
     auto config = task->getConfig();
     QDateTime scheduleTime = QDateTime::currentDateTime();
     std::shared_ptr<Job> job = dbAddJob(userID, config, scheduleTime, task->getTaskCommand());
 
-    response << PREFIX_JOB_ID << job->getId() << std::endl;
+    // fail if job could not be created, otherwise return success
+    if (job == nullptr) {
+        response << OPERATION_FAILURE << std::endl;
+    } else {
+        response << PREFIX_JOB_ID << job->getId() << std::endl;
+    }
 
-    // Step 2: Create RespondToClientMessage with string containing ID of new Job or error message in case of failure
+    // respond
     return std::make_shared<RespondToClientMessage>(response.str(), true);
 }
 
