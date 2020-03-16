@@ -85,7 +85,7 @@ void callbackSubCommandRun(const std::shared_ptr<Task> &task, bool block, std::s
                            std::optional<uint32_t> &min_cpu_count, std::optional<uint64_t> &max_ram, std::optional<uint64_t> &min_ram)
 {
     auto config = task->getConfig();
-    task->setType((int)TaskType::RUN);
+    task->setType(TaskType::RUN);
 
     config->set_blocking_mode(block);
     config->set_email(email);
@@ -145,14 +145,14 @@ void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandAddImage(const std::shared_ptr<Task> &task, std::vector<std::string> &imageNameAndPath)
 {
-    task->setType((int)TaskType::ADD_IMAGE);
+    task->setType(TaskType::ADD_IMAGE);
     task->setAddImageName(imageNameAndPath[0]);
     task->setAddImageFilePath(imageNameAndPath[1]);
 }
 
 void callbackSubCommandRemoveImage(const std::shared_ptr<Task> &task, std::string &removeImageName)
 {
-    task->setType((int)TaskType::REMOVE_IMAGE);
+    task->setType(TaskType::REMOVE_IMAGE);
     task->setRemoveImageName(removeImageName);
 }
 
@@ -179,7 +179,7 @@ void addSubCommandsImage(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandStatus(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    task->setType((int)TaskType::STATUS);
+    task->setType(TaskType::STATUS);
 
     task->setJobId(jobID);
 }
@@ -200,7 +200,7 @@ void addSubCommandStatus(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandTail(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    task->setType((int)TaskType::TAIL);
+    task->setType(TaskType::TAIL);
 
     task->setJobId(jobID);
 }
@@ -221,7 +221,7 @@ void addSubCommandTail(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandStop(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    task->setType((int)TaskType::STOP);
+    task->setType(TaskType::STOP);
 
     task->setJobId(jobID);
 }
@@ -242,7 +242,7 @@ void addSubCommandStop(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandPause(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    task->setType((int)TaskType::PAUSE);
+    task->setType(TaskType::PAUSE);
 
     task->setJobId(jobID);
 }
@@ -263,7 +263,7 @@ void addSubCommandPause(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandContinue(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    task->setType((int)TaskType::CONTINUE);
+    task->setType(TaskType::CONTINUE);
 
     task->setJobId(jobID);
 }
@@ -284,7 +284,7 @@ void addSubCommandContinue(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandBackup(const std::shared_ptr<Task> &task, uint64_t jobID)
 {
-    task->setType((int)TaskType::BACKUP);
+    task->setType(TaskType::BACKUP);
 
     task->setJobId(jobID);
 }
@@ -305,7 +305,7 @@ void addSubCommandBackup(const std::shared_ptr<Task> &task, CLI::App &app)
 
 void callbackSubCommandRestore(const std::shared_ptr<Task> &task, std::vector<uint64_t> &jobAndBackupID)
 {
-    task->setType((int)TaskType::RESTORE);
+    task->setType(TaskType::RESTORE);
 
     //jobAndBackupID
 

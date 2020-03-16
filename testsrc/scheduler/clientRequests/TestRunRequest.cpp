@@ -2,7 +2,8 @@
 #include <gtest/gtest.h>
 #include <scheduler/Job.h>
 #include <configfiles/JobConfig.h>
-#include "RequestTestUtil.h"
+
+#include "TestClientRequestsUtils.h"
 
 using balancedbanana::scheduler::RunRequest;
 using balancedbanana::scheduler::ClientRequest;
@@ -12,46 +13,40 @@ using balancedbanana::configfiles::JobConfig;
 
 
 
-constexpr uint64_t userID = 0;
-
-
 TEST(TestRunRequest, allArgs)
 {
-    auto req = ClientRequest::selectRequestType(TaskType::RUN);
-
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::RUN);
+    task->setType(TaskType::RUN);
     task->setJobId(0);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
+    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    auto response = req->executeRequestAndFetchData();
 }
 
 
 TEST(TestRunRequest, requiredArgs)
 {
-    auto req = ClientRequest::selectRequestType(TaskType::RUN);
-
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::RUN);
+    task->setType(TaskType::RUN);
     task->setJobId(0);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
+    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    auto response = req->executeRequestAndFetchData();
 }
 
 
 TEST(TestRunRequest, noArgs)
 {
-    auto req = ClientRequest::selectRequestType(TaskType::RUN);
-
     auto task = std::make_shared<Task>();
     auto config = task->getConfig();
 
-    task->setType((uint32_t)TaskType::RUN);
+    task->setType(TaskType::RUN);
     task->setJobId(std::nullopt);
 
-    auto response = req->executeRequestAndFetchData(task, dbGetJob, dbUpdateJobStatus, dbAddJob, dbGetWorker, userID);
+    auto req = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    auto response = req->executeRequestAndFetchData();
 }

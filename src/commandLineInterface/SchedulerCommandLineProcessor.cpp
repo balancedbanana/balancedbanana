@@ -16,7 +16,7 @@ namespace commandLineInterface
  */
 void callbackSchedulerStart(const std::shared_ptr<Task> &task, std::string &serverIpAddress, short serverPort, std::string &webAPIIpAddress, short webAPIPort)
 {
-    task->setType((int)TaskType::SERVERSTART);
+    task->setType(TaskType::SERVERSTART);
 
     task->setServerIP(serverIpAddress);
     task->setServerPort(serverPort);

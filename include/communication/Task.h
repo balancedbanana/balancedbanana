@@ -28,7 +28,7 @@ class Task
 {
 	std::string taskCommand;
 	std::shared_ptr<configfiles::JobConfig> config;
-	uint32_t type;
+	TaskType type;
 	std::string addImageName;
 	std::string addImageFilePath;
 	std::string addImageFileContent;
@@ -48,8 +48,8 @@ public:
 
 	explicit Task(const std::string &string);
 
-	void setType(uint32_t type);
-	uint32_t getType() const;
+	void setType(TaskType type);
+	TaskType getType() const;
 
 	void setTaskCommand(const std::string &taskCommand);
 	const std::string &getTaskCommand() const;

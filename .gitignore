@@ -65,3 +65,5 @@ test/test_runner
 *.json
 *.cmake
 *.gitignore
+
+venv/

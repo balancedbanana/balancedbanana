@@ -12,14 +12,16 @@ namespace scheduler
 class PauseRequest : public ClientRequest
 {
 public:
-    std::shared_ptr<std::string> executeRequestAndFetchData(const std::shared_ptr<Task> &task,
-                                                            const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
-                                                            const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                                            const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
-                                                            const std::function<std::shared_ptr<Worker>(uint64_t id)> &dbGetWorker,
-                                                            uint64_t userID) override;
+    std::shared_ptr<RespondToClientMessage> executeRequestAndFetchData() override;
 
-private:
+    PauseRequest(const std::shared_ptr<Task> &task,
+                    const uint64_t userID,
+                    const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
+                    const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
+                    const std::function<std::shared_ptr<Job>(const uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> &dbAddJob,
+                    const std::function<bool(uint64_t jobID)> &queueRemoveJob,
+                    const std::function<uint64_t(uint64_t jobID)> &queueGetPosition);
+
 };
 
 } // namespace scheduler

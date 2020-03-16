@@ -25,7 +25,7 @@ Task::Task(const std::string &string) {
     taskCommand = extractString(data, iterator, size);
     std::istringstream configs(extractString(data, iterator, size));
     config = std::make_shared<configfiles::JobConfig>(configs);
-    type = extract<uint32_t>(data, iterator, size);
+    type = (TaskType)extract<uint32_t>(data, iterator, size);
     addImageName = extractString(data, iterator, size);
     addImageFilePath = extractString(data, iterator, size);
     addImageFileContent = extractString(data, iterator, size);
@@ -42,10 +42,10 @@ Task::Task(const std::string &string) {
     }
 }
 
-void Task::setType(uint32_t type) {
+void Task::setType(TaskType type) {
     this->type = type;
 }
-uint32_t Task::getType() const {
+TaskType Task::getType() const {
     return this->type;
 }
 
@@ -154,7 +154,7 @@ std::string Task::serialize() const {
     std::stringstream configstream;
     config->Serialize(configstream);
     insertString(stream, configstream.str());
-    insert<uint32_t>(stream, type);
+    insert<uint32_t>(stream, (uint32_t)type);
     insertString(stream, addImageName);
     insertString(stream, addImageFilePath);
     insertString(stream, addImageFileContent);

@@ -16,7 +16,7 @@ TEST(WorkerCommandLineProcessor, noArguments)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::WORKERSTART);
+    ASSERT_EQ(task->getType(), TaskType::WORKERSTART);
     ASSERT_STREQ(task->getServerIP().c_str(), "");
     ASSERT_EQ(task->getServerPort(), 0);
 }
@@ -33,7 +33,7 @@ TEST(WorkerCommandLineProcessor, legalArguments)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::WORKERSTART);
+    ASSERT_EQ(task->getType(), TaskType::WORKERSTART);
     ASSERT_STREQ(task->getServerIP().c_str(), argv[2]);
     ASSERT_EQ(task->getServerPort(), 25567);
 }

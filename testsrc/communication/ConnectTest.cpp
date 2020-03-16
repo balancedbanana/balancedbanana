@@ -66,7 +66,7 @@ struct TestMP : MessageProcessor {
     
     void processTaskMessage(const TaskMessage &msg) override {
         ASSERT_EQ(msg.GetType(), MessageType::TASK);
-        ASSERT_EQ(msg.GetTask().getType(), -1);
+        ASSERT_EQ((uint32_t)msg.GetTask().getType(), -1);
         ASSERT_NE(msg.GetTask().getWebAPIIP(), "");
         ASSERT_NE(msg.GetTask().getServerIP(), "");
         taskmsg = true;
@@ -101,7 +101,7 @@ TEST(communication, Connect)
     HardwareDetailMessage hwdet(1, 4096, "GNU/Linux");
     com->send(hwdet);
     Task task;
-    task.setType(-1);
+    task.setType((TaskType)-1);
     task.setWebAPIIP("1h5al9");
     task.setServerIP("1ha2l9");
     TaskMessage taskmsg(task);
