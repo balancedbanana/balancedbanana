@@ -265,8 +265,8 @@ private:
                     [repo](uint64_t jobID) -> std::shared_ptr<Job> { return repo->GetJob(jobID); },
                     [repo](uint64_t workerID) -> std::shared_ptr<Worker> { return repo->GetWorker(workerID); },
                     
-                    [repo, observer](uint64_t userid, const std::shared_ptr<JobConfig>& config, const std::string& command) -> std::shared_ptr<Job> {
-                        auto job = repo->AddJob(userid, *config, QDateTime::currentDateTime(), command);
+                    [repo, observer](uint64_t userid, const std::shared_ptr<JobConfig>& config, QDateTime &scheduleTime, const std::string& command) -> std::shared_ptr<Job> {
+                        auto job = repo->AddJob(userid, *config, scheduleTime, command);
                         // Add newly created Jobs to the Queue
                         observer->queue->addTask(job);
                         job->RegisterObserver(observer.get());
