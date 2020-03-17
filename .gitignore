@@ -66,4 +66,6 @@ test/test_runner
 *.cmake
 *.gitignore
 
+*/*.pem
+
 venv/

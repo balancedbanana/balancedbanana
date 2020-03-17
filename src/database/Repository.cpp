@@ -234,6 +234,19 @@ std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     }
     return unfinished;
 }
+
+std::vector<std::shared_ptr<Job>>
+Repository::GetJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
+    std::lock_guard lock(mtx);
+    std::vector<std::shared_ptr<Job>> intervalJobs;
+    auto details = JobGateway::getJobsInInterval(from, to, status);
+    intervalJobs.reserve(details.size());
+    for (auto &entry : details){
+        intervalJobs.push_back(GetJob(entry.id));
+    }
+    return intervalJobs;
+}
+
 std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
     std::lock_guard lock(mtx);
     std::vector<std::shared_ptr<Worker>> workers;
@@ -279,3 +292,5 @@ void Repository::OnUpdate(Observable<JobObservableEvent> *observable, JobObserva
         jobCache.find(job->getId())->second.second = true;
     }
 }
+
+

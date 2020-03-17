@@ -55,6 +55,8 @@ namespace balancedbanana::database {
 
             std::vector<std::shared_ptr<Worker>> GetActiveWorkers();
             std::vector<std::shared_ptr<Job>> GetUnfinishedJobs();
+            std::vector<std::shared_ptr<Job>> GetJobsInInterval(const QDateTime& from, const QDateTime& to, JobStatus
+            status);
             std::vector<std::shared_ptr<Worker>> GetWorkers();
             std::shared_ptr<Worker> FindWorker(const std::string &name);
             std::shared_ptr<User> FindUser(const std::string &name);
