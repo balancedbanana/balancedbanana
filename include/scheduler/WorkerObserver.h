@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <cstdint>
+#include <optional>
 
 struct WorkerTailEvent {
     uint64_t jobid;
