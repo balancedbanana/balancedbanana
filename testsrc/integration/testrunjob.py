@@ -17,8 +17,15 @@ bbc = subprocess.Popen(["../../src/client/bbc", "run", "--image=centos", "--job"
 bbc.wait()
 bbc = subprocess.Popen(["../../src/client/bbc", "run", "-s", "localhos", "-S", "8000", "--image=centos", "--job", "echo Hi"], stdin=subprocess.PIPE, env=my_env)
 bbc.wait()
+# bbd Help
+bbd = subprocess.Popen(["../../src/worker/bbd", "--help"], stdin=subprocess.PIPE, env=my_env)
+bbd.wait()
+# Test fail to find with overrides
 bbd = subprocess.Popen(["../../src/worker/bbd", "-s", "localhos", "-S", "8000"], stdin=subprocess.PIPE, env=my_env)
 bbd.wait()
+# bbs Help
+bbs = subprocess.Popen(["../../src/scheduler/bbs", "--help"], stdin=subprocess.PIPE, env=my_env)
+bbs.wait()
 bbs = subprocess.Popen(["../../src/scheduler/bbs", "-s", "localhos", "-S", "8000", "-W", "9000", "-w", "ocalhost"], stdin=subprocess.PIPE, env=my_env)
 bbs.communicate(input=b'stop\n')
 bbs.wait()
