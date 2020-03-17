@@ -47,6 +47,8 @@ try:
     #auth client agains server
     bbc.communicate(input=b'thePassword\n')
     bbc.wait()
+    bbc = subprocess.Popen(["../../src/client/bbc", "run", "--image=:(", "--job", "echo Bye"], stdin=subprocess.PIPE, env=my_env)
+    bbc.wait()
     # restart scheduler
     bbs.communicate(input=b'stop\n')
     bbs.wait()
