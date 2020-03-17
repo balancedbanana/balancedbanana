@@ -13,6 +13,7 @@
 #include <QDebug>
 #include <QDataStream>
 #include <QDateTime>
+#include <QtCore/QTimeZone>
 
 using namespace balancedbanana::database;
 
@@ -1232,15 +1233,23 @@ TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NonExistentJobs_Test){
     EXPECT_TRUE(JobGateway::getJobsWithWorkerId(worker.id).empty());
 }
 
+/**
+ * Creates three jobs and an epoch on SetUp and resets the table on TearDown.
+ */
 class GetJobsInIntervalTest : public ::testing::Test {
 protected:
     void SetUp() override{
+        // Set up a date/time to work with
+        epoch.setDate(QDate(2020, 3, 17));
+        epoch.setTime(QTime(20, 30));
+        epoch.setTimeZone(QTimeZone::systemTimeZone());
+
         // Set up the first job
         first.id = 1;
         first.user_id = 3;
         first.command = "mkdir build";
         first.status = (int) JobStatus::scheduled;
-        first.schedule_time = QDateTime::currentDateTime().addDays(-7);
+        first.schedule_time = epoch.addDays(-7);
         first.empty = false;
         first.config.set_min_ram(4194304);
         first.config.set_max_ram(4194305);
@@ -1258,7 +1267,7 @@ protected:
         second.user_id = 1;
         second.command = "mkdir build";
         second.status = (int) JobStatus::scheduled;
-        second.schedule_time = QDateTime::currentDateTime().addDays(-8);
+        second.schedule_time = epoch.addDays(-8);
         second.empty = false;
         second.config.set_min_ram(4194304);
         second.config.set_max_ram(4194305);
@@ -1277,7 +1286,7 @@ protected:
         third.user_id = 1;
         third.command = "mkdir build";
         third.status = (int) JobStatus::scheduled;
-        third.schedule_time = QDateTime::currentDateTime().addDays(-2);
+        third.schedule_time = epoch.addDays(-2);
         third.empty = false;
         third.config.set_min_ram(4194304);
         third.config.set_max_ram(4194305);
@@ -1314,6 +1323,7 @@ protected:
     job_details first;
     job_details second;
     job_details third;
+    QDateTime epoch;
 };
 
 /**
@@ -1323,8 +1333,8 @@ protected:
  * scheduled one week prior, the second job 8 days prior and the third job 2 days prior.
  */
 TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Scheduled_Test){
-    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
-            (-7),QDateTime::currentDateTime(), JobStatus::scheduled);
+    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+            (-7),epoch, JobStatus::scheduled);
 
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(first);
@@ -1357,17 +1367,17 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     worker.name = "Windows";
     EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
     // The job then have to be started.
-    first.start_time = QDateTime::currentDateTime().addDays(-1);
+    first.start_time = epoch.addDays(-1);
     first.status = (int) JobStatus::processing;
     first.allocated_specs = worker.specs;
     first.worker_id = worker.id;
     EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
-    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), QDateTime::currentDateTime().addDays
+    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
     (-3)));
 
     // This is where the test begins.
-    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
-            (-2), QDateTime::currentDateTime(), JobStatus::processing);
+    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+            (-2), epoch, JobStatus::processing);
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(first);
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
@@ -1398,16 +1408,16 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     worker.name = "Windows";
     EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
     // The job then have to be started.
-    first.start_time = QDateTime::currentDateTime().addDays(-1);
+    first.start_time = epoch.addDays(-1);
     first.status = (int) JobStatus::processing;
     first.allocated_specs = worker.specs;
     first.worker_id = worker.id;
     EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
-    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), QDateTime::currentDateTime().addDays
+    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
     (-3)));
 
     // Finish the third job
-    third.finish_time = QDateTime::currentDateTime().addDays(-1);
+    third.finish_time = epoch.addDays(-1);
     third.status = (int)JobStatus::finished;
     job_result result;
     result.stdout = "error";
@@ -1415,8 +1425,8 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     third.result = result;
     EXPECT_TRUE(JobGateway::finishJob(third.id, third.finish_time.value(), third.result->stdout, third
     .result->exit_code));
-     std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
-             (-1), QDateTime::currentDateTime(), JobStatus::finished);
+     std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+             (-1), epoch, JobStatus::finished);
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(third);
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));

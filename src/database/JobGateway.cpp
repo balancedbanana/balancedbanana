@@ -589,7 +589,7 @@ void sortByFinishInterval(const QDateTime& from, const QDateTime& to, std::vecto
 std::vector<job_details>& jobs){
     for (job_details job : jobs){
         if (job.finish_time.has_value()){
-            if (from.date() <= job.finish_time->date() && job.finish_time->date() <= to.date()){
+            if (from <= job.finish_time && job.finish_time <= to){
                 jobsInterval.push_back(job);
             }
         }
@@ -606,7 +606,7 @@ std::vector<job_details>& jobs){
 void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
     for (job_details job : jobs){
         if (job.start_time.has_value()){
-            if (from.date() <= job.start_time->date() && job.start_time->date() <= to.date()){
+            if (from <= job.start_time && job.start_time <= to){
                 jobsInterval.push_back(job);
             }
         }
@@ -623,7 +623,7 @@ void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector
 void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval,
         const std::vector<job_details>& jobs){
     for (const job_details& job : jobs){
-        if (from.date() <= job.schedule_time.date() && job.schedule_time.date() <= to.date()){
+        if (from <= job.schedule_time && job.schedule_time <= to){
             jobsInterval.push_back(job);
         }
     }
@@ -632,9 +632,7 @@ void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::ve
 /**
  * Getter for Jobs that were either started, finished or scheduled within a certain time interval.
  *
- * Note: The method doesn't give jobs within the exact time interval. That wouldn't be possible to due to the seconds
- * between methods calls. The method will return the jobs, whose dates (so no time in secs, mins, etc.) are within
- * the time interval's dates.
+ * Note: The Job's status is irrelevant to this method. The only thing that matters is the time field in its record.
  *
  * @param from The lower bound of the interval (inclusive)
  * @param to  The upper bound of the interval (inclusive)
@@ -642,7 +640,7 @@ void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::ve
  * @return Vector of the wanted Jobs
  */
 std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
-    if (from.date() > to.date()){
+    if (from > to){
         throw std::invalid_argument("getJobsInInterval error: lower bound of interval can't be greater than the upper bound.");
     }
     std::vector<job_details> jobs = getJobs();
