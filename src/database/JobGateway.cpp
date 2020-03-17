@@ -585,7 +585,7 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
  * @param jobsInterval The vector to fill with the wanted jobs
  * @param jobs The vector of all jobs.
  */
-void sortByFinishInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
+void addFinishedJobsInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
 std::vector<job_details>& jobs){
     for (job_details job : jobs){
         if (job.finish_time.has_value()){
@@ -603,7 +603,7 @@ std::vector<job_details>& jobs){
  * @param jobsInterval The vector to fill with the wanted jobs
  * @param jobs The vector of all jobs.
  */
-void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
+void addStartedJobsInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
     for (job_details job : jobs){
         if (job.start_time.has_value()){
             if (from <= job.start_time && job.start_time <= to){
@@ -620,8 +620,8 @@ void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector
  * @param jobsInterval The vector to fill with the wanted jobs
  * @param jobs The vector of all jobs.
  */
-void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval,
-        const std::vector<job_details>& jobs){
+void addScheduledJobsInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval,
+                              const std::vector<job_details>& jobs){
     for (const job_details& job : jobs){
         if (from <= job.schedule_time && job.schedule_time <= to){
             jobsInterval.push_back(job);
@@ -647,15 +647,15 @@ std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, co
     std::vector<job_details> jobsInterval;
     switch(status){
         case JobStatus::processing:
-            sortByStartInterval(from, to, jobsInterval, jobs);
+            addStartedJobsInterval(from, to, jobsInterval, jobs);
             break;
 
         case JobStatus::scheduled:
-            sortByScheduledInterval(from, to, jobsInterval, jobs);
+            addScheduledJobsInterval(from, to, jobsInterval, jobs);
             break;
 
         case JobStatus::finished:
-            sortByFinishInterval(from, to, jobsInterval, jobs);
+            addFinishedJobsInterval(from, to, jobsInterval, jobs);
             break;
 
         default:
