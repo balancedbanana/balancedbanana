@@ -55,6 +55,13 @@ void Worker::setAddress(const std::string &adr) {
 }
 
 void Worker::setCommunicator(const std::shared_ptr<communication::Communicator>& com) {
+    if(comm != nullptr) {
+        Observable<WorkerTailEvent>::Update({ (uint64_t)-1, "Disconnected" });
+        Observable<WorkerErrorEvent>::Update({ std::nullopt, "Disconnected" });
+        auto mp = std::static_pointer_cast<SchedulerWorkerMP>(comm->GetMP());
+        mp->balancedbanana::scheduler::Observable<WorkerTailEvent>::UnregisterObserver(this);
+        mp->balancedbanana::scheduler::Observable<WorkerErrorEvent>::UnregisterObserver(this);
+    }
     comm = com;
     connected = com != nullptr;
     if(connected) {

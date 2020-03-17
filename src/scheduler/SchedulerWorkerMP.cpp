@@ -97,6 +97,10 @@ void balancedbanana::scheduler::SchedulerWorkerMP::processTaskMessage(const bala
             break;
         case TaskType::HELP:
             Observable<WorkerErrorEvent>::Update({ task.getJobId().value_or(0), task.getAddImageFileContent() });
+            if(auto job = getJobByID(task.getJobId().value_or(0))) {
+                job->setResult(std::make_shared<balancedbanana::database::job_result>(balancedbanana::database::job_result {task.getAddImageFileContent(), (int8_t)-1}));
+                job->setStatus(balancedbanana::database::JobStatus::interrupted);
+            }
             break;
     }
 }

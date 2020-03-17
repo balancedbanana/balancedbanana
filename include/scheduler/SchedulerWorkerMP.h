@@ -3,6 +3,7 @@
 #include <scheduler/Worker.h>
 #include <scheduler/Job.h>
 #include <functional>
+#include "WorkerObserver.h"
 
 namespace balancedbanana {
     namespace scheduler {
@@ -12,16 +13,6 @@ namespace balancedbanana {
         //     uint32_t exitcode;
         //     std::string tail;
         // };
-
-        struct WorkerTailEvent {
-            uint64_t jobid;
-            std::string tail;
-        };
-
-        struct WorkerErrorEvent {
-            std::optional<uint64_t> jobid;
-            std::string errormsg;
-        };
 
         class SchedulerWorkerMP : public communication::MessageProcessor/* , public Observable<WorkerFinishEvent> */, public Observable<WorkerTailEvent>, public Observable<WorkerErrorEvent> {
             bool authenticated = false;
@@ -43,7 +34,7 @@ namespace balancedbanana {
             void processWorkerAuthMessage(const communication::WorkerAuthMessage &msg) override;
             void processTaskResponseMessage(const communication::TaskResponseMessage &msg) override;
             void processWorkerLoadResponseMessage(const communication::WorkerLoadResponseMessage &msg) override;
-            void processTaskMessage(const TaskMessage &msg) override;
+            void processTaskMessage(const communication::TaskMessage &msg) override;
             void OnWorkerLoadResponse(std::function<void(const communication::WorkerLoadResponseMessage &msg)>&& func);
             void setWorker(const std::shared_ptr<communication::Communicator>& com);
         };

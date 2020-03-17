@@ -5,7 +5,7 @@
 #include <database/Specs.h>
 #include "IUser.h"
 #include "Observer.h"
-#include "SchedulerWorkerMP.h"
+#include "WorkerObserver.h"
 #include <condition_variable>
 #include <optional>
 

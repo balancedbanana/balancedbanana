@@ -151,19 +151,19 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                     throw std::runtime_error("Task lacks ImageFileContent");
                 }
                 docker.BuildImage(task.getAddImageName(), content);
-                Task task;
-                task.setType(TaskType::ADD_IMAGE);
-                task.setJobId(task.getJobId());
-                TaskMessage taskmess(task);
+                Task response;
+                response.setType(TaskType::ADD_IMAGE);
+                response.setJobId(task.getJobId());
+                TaskMessage taskmess(response);
                 com->send(taskmess);
                 break;
             }
             case TaskType::REMOVE_IMAGE: {
                 docker.RemoveImage(task.getRemoveImageName());
-                Task task;
-                task.setType(TaskType::REMOVE_IMAGE);
-                task.setJobId(task.getJobId());
-                TaskMessage taskmess(task);
+                Task response;
+                response.setType(TaskType::REMOVE_IMAGE);
+                response.setJobId(task.getJobId());
+                TaskMessage taskmess(response);
                 com->send(taskmess);
                 break;
             }
@@ -177,17 +177,14 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
                 com->send(resp);
                 auto exitcode = container.Wait();
-                Task task;
-                task.setType(TaskType::RUN);
-                task.setUserId(exitcode);
+                Task response;
+                response.setType(TaskType::RUN);
+                response.setUserId(exitcode);
                 // Spec said 200 lines
-                task.setAddImageFileContent(container.Tail(200));
-                task.setJobId(task.getJobId());
-                TaskMessage taskmess(task);
+                response.setAddImageFileContent(container.Tail(200));
+                response.setJobId(task.getJobId());
+                TaskMessage taskmess(response);
                 com->send(taskmess);
-                // // How to summit the exitcode
-                // TaskResponseMessage resp2(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
-                // com->send(resp2);
                 break;
             }
             case TaskType::TAIL: {
@@ -198,15 +195,12 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 }
                 // Spec said 200 lines
                 auto lines = container.Tail(200);
-                Task task;
-                task.setType(TaskType::TAIL);
-                task.setAddImageFileContent(lines);
-                task.setJobId(task.getJobId());
-                TaskMessage taskmess(task);
+                Task response;
+                response.setType(TaskType::TAIL);
+                response.setAddImageFileContent(lines);
+                response.setJobId(task.getJobId());
+                TaskMessage taskmess(response);
                 com->send(taskmess);
-                // ToDo send them back
-                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
-                com->send(resp);
                 break;
             }
             case TaskType::PAUSE: {
@@ -236,15 +230,12 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
             }
         } catch(const std::exception&ex) {
             std::cout << "Internal Error: " << ex.what() << "\n";
-            Task task;
-            task.setType(TaskType::HELP);
-            task.setAddImageFileContent(ex.what());
-            task.setJobId(task.getJobId());
-            TaskMessage taskmess(task);
+            Task response;
+            response.setType(TaskType::HELP);
+            response.setAddImageFileContent(ex.what());
+            response.setJobId(task.getJobId());
+            TaskMessage taskmess(response);
             com->send(taskmess);
-            // What should I send on Error
-            TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::interrupted);
-            com->send(resp);
         }
     }).detach();
 }
