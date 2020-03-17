@@ -34,11 +34,10 @@ SchedulerClientMP::SchedulerClientMP(const std::function<std::shared_ptr<Job>(ui
                                      const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
                                      const std::function<std::shared_ptr<Job>(uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime,
                                         const std::string &jobCommand)> &dbAddJob,
-                                     const std::function<bool(uint64_t jobID)> &queueRemoveJob,
                                      const std::function<uint64_t(uint64_t jobID)> &queueGetPosition,
                                      const std::function<std::shared_ptr<User>(size_t uid, const std::string &username, const std::string &pubkey)> &dbaddUser,
                                      const std::function<std::shared_ptr<User>(const std::string &username)> &dbgetUserByName)
-    : dbGetJob(dbGetJob), dbGetWorker(dbGetWorker), dbAddJob(dbAddJob), queueRemoveJob(queueRemoveJob), queueGetPosition(queueGetPosition), dbaddUser(dbaddUser), dbgetUserByName(dbgetUserByName)
+    : dbGetJob(dbGetJob), dbGetWorker(dbGetWorker), dbAddJob(dbAddJob), queueGetPosition(queueGetPosition), dbaddUser(dbaddUser), dbgetUserByName(dbgetUserByName)
 {
 }
 
@@ -163,7 +162,7 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
 
     // run the request
 
-    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType(task, user->id(), dbGetJob, dbGetWorker, dbAddJob, queueRemoveJob, queueGetPosition);
+    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType(task, user->id(), dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
     std::shared_ptr<RespondToClientMessage> response = request->executeRequestAndFetchData();
 
     // Respond to Client

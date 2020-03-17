@@ -34,7 +34,7 @@ std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
         }
         std::shared_ptr<Worker> worker = Factory::createWorker(wd);
         workerCache.insert(std::pair(id, std::pair(worker, false)));
-        worker->RegisterObserver(this);
+        worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(this);
         return worker;
     }
 }
@@ -50,7 +50,7 @@ std::shared_ptr<Worker> Repository::AddWorker(const std::string &name, const std
     wd.id = WorkerGateway::add(wd);
     std::shared_ptr<Worker> worker = Factory::createWorker(wd);
     workerCache.insert(std::pair(wd.id, std::pair(worker, true)));
-    worker->RegisterObserver(this);
+    worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(this);
     return worker;
 }
 

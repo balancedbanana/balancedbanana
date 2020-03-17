@@ -106,6 +106,36 @@ void Container::Start() {
     }
 }
 
+void Container::Pause() {
+    QProcess proc;
+    proc.setProgram("docker");
+    QStringList args = { "pause" };
+    args.append(QString::fromStdString(id));
+    proc.setArguments(args);
+    proc.start();
+    proc.waitForFinished(-1);
+    std::string output = proc.readAllStandardOutput().toStdString();
+    if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
+        std::string err = proc.readAllStandardError().toStdString();
+        throw std::runtime_error("Failed to pause container:\n" + output + "Error:\n" + err);
+    }
+}
+
+void Container::Continue() {
+    QProcess proc;
+    proc.setProgram("docker");
+    QStringList args = { "unpause" };
+    args.append(QString::fromStdString(id));
+    proc.setArguments(args);
+    proc.start();
+    proc.waitForFinished(-1);
+    std::string output = proc.readAllStandardOutput().toStdString();
+    if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
+        std::string err = proc.readAllStandardError().toStdString();
+        throw std::runtime_error("Failed to resume container:\n" + output + "Error:\n" + err);
+    }
+}
+
 uint32_t Container::Wait() {
     QProcess proc;
     proc.setProgram("docker");

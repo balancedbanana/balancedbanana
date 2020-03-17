@@ -23,9 +23,11 @@ CommunicatorListener::CommunicatorListener(std::function<std::shared_ptr<Message
 }
 
 CommunicatorListener::~CommunicatorListener() {
-	if(listenthread) {
-		listenthread->join();
-	}
+	Cancel();
+}
+
+void CommunicatorListener::Cancel() {
+	listener->Cancel();
 }
 
 void CommunicatorListener::listen(const std::string & ip, short port, const std::function<void(std::shared_ptr<Communicator>)>& callback) {
@@ -36,6 +38,9 @@ void CommunicatorListener::listen(const std::string & ip, short port, const std:
     listener->SetConnectionHandler([this, callback = callback](std::shared_ptr<Net::Socket> socket) {
         callback(std::make_shared<Communicator>(socket, processorfactory()));
     });
+	auto p = GenerateCert();
+    listener->UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
+    listener->UsePrivateKey((uint8_t*)p.first.data(), (int)p.first.length(), Net::SSLFileType::PEM);
     struct addrinfo hints, *result, *ptr;
 	memset(&hints, 0, sizeof(addrinfo));
     hints.ai_family = AF_UNSPEC;
@@ -59,9 +64,6 @@ void CommunicatorListener::listen(const std::string & ip, short port, const std:
 	address->sin6_family = AF_INET6;
 	address->sin6_port = htons(port);
 	address->sin6_addr = in6addr_any;
-    auto p = GenerateCert();
-    listener->UseCertificate((uint8_t*)p.second.data(), (int)p.second.length(), Net::SSLFileType::PEM);
-    listener->UsePrivateKey((uint8_t*)p.first.data(), (int)p.first.length(), Net::SSLFileType::PEM);
     if(!(listenthread = listener->Listen(std::shared_ptr<sockaddr>(address, (sockaddr*)address.get()), sizeof(sockaddr_in6)))) {
 		throw std::runtime_error("Failed to listen");
 	}

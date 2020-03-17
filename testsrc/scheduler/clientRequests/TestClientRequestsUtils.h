@@ -29,6 +29,4 @@ std::shared_ptr<Worker> dbGetWorker(uint64_t workerID);
 
 std::shared_ptr<Job> dbAddJob(const uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand);
 
-bool queueRemoveJob(uint64_t jobID);
-
 uint64_t queueGetPosition(uint64_t jobID);

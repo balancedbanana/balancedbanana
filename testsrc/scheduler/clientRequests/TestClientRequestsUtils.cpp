@@ -30,11 +30,6 @@ std::shared_ptr<Job> dbAddJob(const uint64_t userID, const std::shared_ptr<JobCo
                                  std::make_shared<struct job_result>(job_result));
 }
 
-bool queueRemoveJob(uint64_t jobID)
-{
-    return true;
-}
-
 uint64_t queueGetPosition(uint64_t jobID)
 {
     return 1;

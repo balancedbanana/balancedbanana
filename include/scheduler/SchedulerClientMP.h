@@ -22,7 +22,6 @@ class SchedulerClientMP : public communication::MessageProcessor
     const std::function<std::shared_ptr<Job>(uint64_t jobID)> dbGetJob;
     const std::function<std::shared_ptr<Worker>(uint64_t workerID)> dbGetWorker;
     const std::function<std::shared_ptr<Job>(uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> dbAddJob;
-    const std::function<bool(uint64_t jobID)> queueRemoveJob;
     const std::function<uint64_t(uint64_t jobID)> queueGetPosition;
     const std::function<std::shared_ptr<User>(size_t uid, const std::string &username, const std::string &pubkey)> dbaddUser;
     const std::function<std::shared_ptr<User>(const std::string &username)> dbgetUserByName;
@@ -35,7 +34,6 @@ public:
     SchedulerClientMP(const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
                       const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
                       const std::function<std::shared_ptr<Job>(uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> &dbAddJob,
-                      const std::function<bool(uint64_t jobID)> &queueRemoveJob,
                       const std::function<uint64_t(uint64_t jobID)> &queueGetPosition,
                       const std::function<std::shared_ptr<User>(size_t uid, const std::string &username, const std::string &pubkey)> &dbaddUser,
                       const std::function<std::shared_ptr<User>(const std::string &username)> &dbgetUserByName);

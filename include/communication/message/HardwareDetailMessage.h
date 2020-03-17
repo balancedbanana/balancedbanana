@@ -10,13 +10,13 @@ namespace balancedbanana {
             //Anzahl der CPU Kerne
             uint32_t coreCount;
 
-            //Größe des verfügbaren Arbeitsspeichers
-            uint32_t ramSize;
+            //Größe des verfügbaren Arbeitsspeichers in MiB
+            uint64_t ramSize;
 
             //Irgendeine Information, die das Betriebssystem identifiziert
             std::string osIdentifier;
 		public:
-            HardwareDetailMessage(uint32_t coreCount, uint32_t ramSize, std::string  osIdentifier);
+            HardwareDetailMessage(uint32_t coreCount, uint64_t ramSize, std::string  osIdentifier);
 
             HardwareDetailMessage(const char *data, size_t &iterator, size_t size);
 
@@ -26,7 +26,7 @@ namespace balancedbanana {
 
             uint32_t GetCoreCount() const;
 
-            uint32_t GetRamSize() const;
+            uint64_t GetRamSize() const;
 
             const std::string &GetOsIdentifier() const;
 		};
