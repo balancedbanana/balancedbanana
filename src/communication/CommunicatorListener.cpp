@@ -23,9 +23,11 @@ CommunicatorListener::CommunicatorListener(std::function<std::shared_ptr<Message
 }
 
 CommunicatorListener::~CommunicatorListener() {
-	if(listenthread) {
-		listenthread->join();
-	}
+	Cancel();
+}
+
+void CommunicatorListener::Cancel() {
+	listener->Cancel();
 }
 
 void CommunicatorListener::listen(const std::string & ip, short port, const std::function<void(std::shared_ptr<Communicator>)>& callback) {
