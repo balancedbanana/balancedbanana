@@ -119,7 +119,9 @@ std::shared_ptr<User> Repository::AddUser(uint64_t id, const std::string& name, 
     ud.name = name;
     ud.email = email;
     std::lock_guard lock(mtx);
-    ud.id = UserGateway::add(ud);
+    if (!UserGateway::add(ud)){
+        return nullptr;
+    }
     std::shared_ptr<User> user = Factory::createUser(ud);
     userCache.insert(std::pair(ud.id, std::pair(user, false)));
     user->RegisterObserver(this);
