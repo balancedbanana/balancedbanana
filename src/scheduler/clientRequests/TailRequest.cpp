@@ -4,35 +4,40 @@
 #include "scheduler/Worker.h"
 #include <sstream>
 #include <communication/message/TaskMessage.h>
-#include <database/Repository.h>
+#include <future>
 
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::database::JobStatus;
 using balancedbanana::scheduler::Job;
 using balancedbanana::scheduler::Worker;
-using balancedbanana::database::Repository;
 
 namespace balancedbanana
 {
 namespace scheduler
 {
 
-std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::shared_ptr<Task> &task,
-                                                                     const std::function<std::shared_ptr<balancedbanana::scheduler::Job>(uint64_t)> &dbGetJob,
-                                                                     const std::function<void(uint64_t, balancedbanana::database::JobStatus)> &dbUpdateJobStatus,
-                                                                     const std::function<uint64_t(uint64_t, const std::shared_ptr<JobConfig>&, const std::string& command)> &dbAddJob,
-                                                                     const std::function<std::shared_ptr<Worker>(uint64_t id)> &dbGetWorker,
-                                                                     uint64_t userID)
+TailRequest::TailRequest(const std::shared_ptr<Task> &task,
+                         const uint64_t userID,
+                         const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
+                         const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
+                         const std::function<std::shared_ptr<Job>(const uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> &dbAddJob,
+                         const std::function<uint64_t(uint64_t jobID)> &queueGetPosition)
+    : ClientRequest(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition)
+{
+}
+
+std::shared_ptr<RespondToClientMessage> TailRequest::executeRequestAndFetchData()
 {
     // Step 1: Go to DB and get job status
     std::stringstream response;
+    bool shouldClientUnblock = true;
 
     if (task->getJobId().has_value() == false)
     {
         // Note that job id is required for the stop command
         // exit with the reponse set to the error message of not having a jobid
         response << NO_JOB_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
 
@@ -40,62 +45,56 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
     {
         // Job not found
         response << NO_JOB_WITH_ID << std::endl;
-        return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
     }
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
+    if(!job->getUser() || job->getUser()->id() != userID) {
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+    }
     switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:
         // add info job hasnt started yet to response
         response << OPERATION_UNAVAILABLE_JOB_NOT_RUN << std::endl;
         break;
-    case (int)JobStatus::processing:
-        // get tail by asking the worker
-        {
+    case (int)JobStatus::processing: {
+            // get tail by asking the worker
+            struct ObserverContext : Observer<WorkerTailEvent>
+            {
+                uint64_t jobid;
+                std::promise<WorkerTailEvent> event;
+                void OnUpdate(Observable<WorkerTailEvent> *obsable, WorkerTailEvent event) override {
+                    if(this->jobid == event.jobid || event.jobid == 0) {
+                        this->event.set_value(event);
+                    }
+                };
+            };
+            ObserverContext context;
+            context.jobid = job->getId();
+            worker->Observable<WorkerTailEvent>::RegisterObserver(&context);
             // Set userId for Worker
             task->setUserId(userID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
+            auto res = context.event.get_future().get();
+            worker->Observable<WorkerTailEvent>::UnregisterObserver(&context);
+            response << (res.jobid ? res.tail : OPERATION_FAILURE ) << "\n";
         }
-
-        // Use some message to tell worker to tail job
-
-        response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::paused:
-        // get tail by asking the worker
-        {
-            //TODO implement
-        }
-
-        // Use some message to tell worker to tail job
-
-        response << OPERATION_PROGRESSING_TAIL << std::endl;
-        break;
-    case (int)JobStatus::interrupted:
-        // get tail by asking the worker
-        {
-            //TODO implement
-        }
-
-        // Use some message to tell worker to tail job
-
-        response << OPERATION_PROGRESSING_TAIL << std::endl;
-        break;
     case (int)JobStatus::canceled:
-        // get tail by asking the worker
-        {
-            //TODO implement
-        }
-
-        // Use some message to tell worker to tail job
-
-        response << OPERATION_PROGRESSING_TAIL << std::endl;
-        break;
+    case (int)JobStatus::interrupted:
     case (int)JobStatus::finished:
-        // get result
-        response << job->getResult()->stdout << std::endl
-                 << PREFIX_JOB_EXIT_CODE << job->getResult()->exit_code << std::endl;
+        if(job->getResult()) {
+            // get result
+            response << job->getResult()->stdout << "\n";
+            if(job->getStatus() != JobStatus::paused)
+                response << PREFIX_JOB_EXIT_CODE << std::hex << (uint32_t)job->getResult()->exit_code << std::endl;
+        } else {
+            response << OPERATION_FAILURE << std::endl;
+        }
+        
+        
         break;
     default:
         // add info job has corrupted status to response
@@ -104,7 +103,7 @@ std::shared_ptr<std::string> TailRequest::executeRequestAndFetchData(const std::
     }
 
     // Step 2: Create and send ResponseMessage with status as string
-    return std::make_shared<std::string>(response.str());
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
 }
 
 } // namespace scheduler

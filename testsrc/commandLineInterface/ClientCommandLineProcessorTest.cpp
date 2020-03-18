@@ -18,7 +18,7 @@ TEST(ClientCommandLineProcessor, addImage)
     
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::ADD_IMAGE);
+    ASSERT_EQ(task->getType(), TaskType::ADD_IMAGE);
     ASSERT_STREQ(task->getAddImageName().c_str(), "imageName");
     ASSERT_STREQ(task->getAddImageFilePath().c_str(), "imagePath");
 }
@@ -35,7 +35,7 @@ TEST(ClientCommandLineProcessor, removeImage)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::REMOVE_IMAGE);
+    ASSERT_EQ(task->getType(), TaskType::REMOVE_IMAGE);
     ASSERT_STREQ(task->getRemoveImageName().c_str(), "imageName");
 }
 
@@ -51,7 +51,7 @@ TEST(ClientCommandLineProcessor, backup)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::BACKUP);
+    ASSERT_EQ(task->getType(), TaskType::BACKUP);
     ASSERT_EQ(task->getJobId(), 1337);
 }
 
@@ -67,7 +67,7 @@ TEST(ClientCommandLineProcessor, resume)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::CONTINUE);
+    ASSERT_EQ(task->getType(), TaskType::CONTINUE);
     ASSERT_EQ(task->getJobId(), 1337);
 }
 
@@ -83,7 +83,7 @@ TEST(ClientCommandLineProcessor, pause)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::PAUSE);
+    ASSERT_EQ(task->getType(), TaskType::PAUSE);
     ASSERT_EQ(task->getJobId(), 1337);
 }
 
@@ -99,7 +99,7 @@ TEST(ClientCommandLineProcessor, restore)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::RESTORE);
+    ASSERT_EQ(task->getType(), TaskType::RESTORE);
     ASSERT_EQ(task->getJobId(), 1337);
     ASSERT_EQ(task->getBackupId(), 42);
 }
@@ -116,7 +116,7 @@ TEST(ClientCommandLineProcessor, status)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::STATUS);
+    ASSERT_EQ(task->getType(), TaskType::STATUS);
     ASSERT_EQ(task->getJobId(), 1337);
 }
 
@@ -132,7 +132,7 @@ TEST(ClientCommandLineProcessor, stop)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::STOP);
+    ASSERT_EQ(task->getType(), TaskType::STOP);
     ASSERT_EQ(task->getJobId(), 1337);
 }
 
@@ -148,7 +148,7 @@ TEST(ClientCommandLineProcessor, tail)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::TAIL);
+    ASSERT_EQ(task->getType(), TaskType::TAIL);
     ASSERT_EQ(task->getJobId(), 1337);
 }
 
@@ -164,7 +164,7 @@ TEST(ClientCommandLineProcessor, run)
     
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::RUN);
+    ASSERT_EQ(task->getType(), TaskType::RUN);
     ASSERT_TRUE(task->getConfig()->blocking_mode());
     ASSERT_STREQ(task->getConfig()->email().c_str(), "example@example.email");
     ASSERT_STREQ(task->getConfig()->image().c_str(), "docker Image");
@@ -188,7 +188,7 @@ TEST(ClientCommandLineProcessor, run2)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::RUN);
+    ASSERT_EQ(task->getType(), TaskType::RUN);
     ASSERT_FALSE(task->getConfig()->blocking_mode().value());
     ASSERT_EQ(task->getConfig()->email(), "");
     ASSERT_STREQ(task->getConfig()->image().c_str(), "docker Image");

@@ -4,6 +4,7 @@
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/TaskResponseMessage.h>
+#include <communication/message/TaskMessage.h>
 #include <communication/authenticator/AuthHandler.h>
 
 using namespace balancedbanana::scheduler;
@@ -20,7 +21,9 @@ SchedulerWorkerMP::SchedulerWorkerMP(const std::function<std::shared_ptr<Worker>
 }
 
 void SchedulerWorkerMP::onDisconnect() {
-    worker->setCommunicator(nullptr);
+    if(worker) {
+        worker->setCommunicator(nullptr);
+    }
 }
 
 void SchedulerWorkerMP::processHardwareDetailMessage(const HardwareDetailMessage &msg) {
@@ -42,6 +45,7 @@ void SchedulerWorkerMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
         AuthResultMessage result(0);
         worker->send(result);
     } catch(const std::exception& ex) {
+        std::string msg = ex.what();
         AuthResultMessage result(-1);
         com->send(result);
     }
@@ -69,12 +73,36 @@ void SchedulerWorkerMP::processWorkerAuthMessage(const WorkerAuthMessage &msg) {
 }
 
 void SchedulerWorkerMP::processTaskResponseMessage(const balancedbanana::communication::TaskResponseMessage &msg) {
-    auto job = getJobByID(msg.GetJobId());
-    job->setStatus(msg.GetJobStatus());
+    if(auto job = getJobByID(msg.GetJobId())) {
+        job->setStatus(msg.GetJobStatus());
+    }
 }
 
 void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg) {
     this->onWorkerLoadResponseMessage(msg);
+}
+
+void balancedbanana::scheduler::SchedulerWorkerMP::processTaskMessage(const balancedbanana::communication::TaskMessage &msg) {
+    auto&& task = msg.GetTask();
+    switch(task.getType()) {
+        case TaskType::RUN:
+            if(auto job = getJobByID(task.getJobId().value_or(0))) {
+                job->setResult(std::make_shared<balancedbanana::database::job_result>(balancedbanana::database::job_result {task.getAddImageFileContent(), (int8_t)task.getUserId().value_or(-1)}));
+                job->setStatus(balancedbanana::database::JobStatus::finished);
+            }
+            // Observable<WorkerFinishEvent>::Update({ task.getJobId().value_or(0), task.getUserId().value_or(-1), task.getAddImageFileContent() });
+            break;
+        case TaskType::TAIL:
+            Observable<WorkerTailEvent>::Update({ task.getJobId().value_or(0), task.getAddImageFileContent() });
+            break;
+        case TaskType::HELP:
+            Observable<WorkerErrorEvent>::Update({ task.getJobId().value_or(0), task.getAddImageFileContent() });
+            if(auto job = getJobByID(task.getJobId().value_or(0))) {
+                job->setResult(std::make_shared<balancedbanana::database::job_result>(balancedbanana::database::job_result {task.getAddImageFileContent(), (int8_t)-1}));
+                job->setStatus(balancedbanana::database::JobStatus::interrupted);
+            }
+            break;
+    }
 }
 
 void SchedulerWorkerMP::OnWorkerLoadResponse(std::function<void(const WorkerLoadResponseMessage &msg)>&& func) {

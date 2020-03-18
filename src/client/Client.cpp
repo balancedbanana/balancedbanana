@@ -58,6 +58,7 @@ void Client::authenticateWithServer()
         }
         std::cout << "Password " << username << "@scheduler: ";
         auto privkey = auth.authenticate(username, commandLineInterface::CommandLineProcessor::readPassword());
+        std::cout << "\n";
         std::ofstream file(keypath);
         file << privkey;
     }
@@ -68,7 +69,7 @@ std::future<int> Client::processCommandLineArguments(int argc, const char* const
 {
     ClientCommandLineProcessor clp;
     int code = clp.process(argc, argv, task);
-    if(task->getType()) {
+    if((uint32_t)task->getType()) {
         std::string server = "localhost";
         short port = 8443;
         if(!task->getServerIP().empty()) {
@@ -98,7 +99,7 @@ std::future<int> Client::processCommandLineArguments(int argc, const char* const
 bool Client::specifiedBlock()
 {
     // safety measure: can only block if run command was used
-    if (!this->task || this->task->getType() != (uint32_t)TaskType::RUN) return false;
+    if (!this->task || this->task->getType() != TaskType::RUN) return false;
     return this->task->getConfig()->blocking_mode().value_or(false);
 }
 

@@ -1,4 +1,5 @@
 #include <timedevents/Timer.h>
+#include <iostream>
 
 using balancedbanana::timedevents::Timer;
 
@@ -67,7 +68,12 @@ void Timer::start()
                     std::thread callerThread([&]() {
                         for (auto i = this->timerFunctions.begin(); i != this->timerFunctions.end(); ++i)
                         {
-                            (*i)();
+                            try {
+                                (*i)();
+
+                            } catch (const std::exception& ex) {
+                                std::cout << "TIMER Unhandled Error:" << ex.what() << "\n";
+                            }
                         }
                     });
                     callerThread.detach();

@@ -16,7 +16,7 @@ namespace commandLineInterface
  */
 void callbackWorkerStart(const std::shared_ptr<Task>& task, std::string& ipAddress, short serverPort)
 {
-    task->setType((int)TaskType::WORKERSTART);
+    task->setType(TaskType::WORKERSTART);
         
     task->setServerIP(ipAddress);
     task->setServerPort(serverPort);

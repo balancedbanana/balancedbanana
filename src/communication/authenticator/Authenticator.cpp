@@ -147,13 +147,13 @@ void balancedbanana::communication::authenticator::Authenticator::publickeyauthe
 std::pair<std::string, std::string> balancedbanana::communication::authenticator::Authenticator::authenticate() {
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
-    std::vector<uint32_t> name(4);
+    std::uniform_int_distribution<char> dis('A', 'Z');
+    std::vector<char> name(32);
     for (auto &&i : name) {
         i = dis(gen);
     }
     auto res = GeneratePrivatePublicKeyPair();
-    std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
+    std::string sname((char*)name.data(), name.size());
     WorkerAuthMessage message(sname, res.second);
     comm->send(message);
     return { sname, res.first };

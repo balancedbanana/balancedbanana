@@ -25,7 +25,7 @@ Task::Task(const std::string &string) {
     taskCommand = extractString(data, iterator, size);
     std::istringstream configs(extractString(data, iterator, size));
     config = std::make_shared<configfiles::JobConfig>(configs);
-    type = extract<uint32_t>(data, iterator, size);
+    type = (TaskType)extract<uint32_t>(data, iterator, size);
     addImageName = extractString(data, iterator, size);
     addImageFilePath = extractString(data, iterator, size);
     addImageFileContent = extractString(data, iterator, size);
@@ -36,16 +36,16 @@ Task::Task(const std::string &string) {
     webAPIPort = extract<uint16_t>(data, iterator, size);
     jobId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     backupId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
-    userId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint16_t>(data, iterator, size)) : std::nullopt;
+    userId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     if(iterator != size) {
         throw std::invalid_argument("string is too long");
     }
 }
 
-void Task::setType(uint32_t type) {
+void Task::setType(TaskType type) {
     this->type = type;
 }
-uint32_t Task::getType() const {
+TaskType Task::getType() const {
     return this->type;
 }
 
@@ -54,6 +54,13 @@ void Task::setTaskCommand(const std::string &taskCommand) {
 }
 const std::string & Task::getTaskCommand() const {
     return this->taskCommand;
+}
+
+void Task::setConfig(const std::shared_ptr<configfiles::JobConfig>& config) {
+    if(config == nullptr) {
+        throw std::runtime_error("Task::setConfig called with nullptr forbidden");
+    }
+    this->config = config;
 }
 
 std::shared_ptr<configfiles::JobConfig> Task::getConfig() const {
@@ -147,7 +154,7 @@ std::string Task::serialize() const {
     std::stringstream configstream;
     config->Serialize(configstream);
     insertString(stream, configstream.str());
-    insert<uint32_t>(stream, type);
+    insert<uint32_t>(stream, (uint32_t)type);
     insertString(stream, addImageName);
     insertString(stream, addImageFilePath);
     insertString(stream, addImageFileContent);

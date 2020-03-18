@@ -16,7 +16,7 @@ TEST(SchedulerCommandLineProcessor, noArguments)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::SERVERSTART);
+    ASSERT_EQ(task->getType(), TaskType::SERVERSTART);
     ASSERT_STREQ(task->getServerIP().c_str(), "");
     ASSERT_STREQ(task->getWebAPIIP().c_str(), "");
     ASSERT_EQ(task->getServerPort(), 0);
@@ -35,7 +35,7 @@ TEST(SchedulerCommandLineProcessor, legalArguments)
 
     clp.process(argc, argv, task);
 
-    ASSERT_EQ(task->getType(), (int)TaskType::SERVERSTART);
+    ASSERT_EQ(task->getType(), TaskType::SERVERSTART);
     ASSERT_STREQ(task->getServerIP().c_str(), argv[2]);
     ASSERT_STREQ(task->getWebAPIIP().c_str(), argv[4]);
     ASSERT_EQ(task->getServerPort(), 25567);
