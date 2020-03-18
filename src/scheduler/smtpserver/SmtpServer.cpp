@@ -15,7 +15,7 @@ void SmtpServer::sendMail(const std::string & mail, const std::string & subject,
 
   auto socket = smtps ? Net::TLSSocket::Connect(mailserver.data(), port, true) : Net::Socket::Connect(mailserver.data(), port);
   if(!socket) {
-    throw std::runtime_error("Failed to connect to Mailserver (" + mailserver + ":" + std::to_string(port)));
+    throw std::runtime_error("Failed to connect to Mailserver (" + mailserver + ":" + std::to_string(port) + ")");
   }
   auto in = socket->GetInputStream();
   auto out = socket->GetOutputStream();
