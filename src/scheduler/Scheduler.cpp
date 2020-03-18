@@ -361,8 +361,8 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
 int main(int argc, char **argv)
 {
     int _argc = 1;
-    char _argv[][] = { "bbs" };
-    QCoreApplication qapp(_argc, {});
+    char* _argv[] = { "bbs" };
+    QCoreApplication qapp(_argc, _argv);
     Scheduler scheduler;
     return scheduler.processCommandLineArguments(argc, argv);
 }
