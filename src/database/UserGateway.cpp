@@ -13,13 +13,7 @@ using namespace balancedbanana::database;
 
 
 
-
-/**
- * Adds a user to the database, Utilities::throws exceptions when errors occur.
- * @param user  The user to be added
- * @return The id of the user.
- */
-bool UserGateway::add(const user_details& user) {
+bool UserGateway::addUser(const user_details& user) {
     auto database = IGateway::AcquireDatabase();
 
     // DB must contain table
@@ -48,12 +42,8 @@ bool UserGateway::add(const user_details& user) {
     return true;
 }
 
-/**
- * Deletes a user with the given id from the database,
- * @param id  The id of the user to be deleted.
- * @return True if the operation was successful, otherwise false
- */
-bool UserGateway::remove(uint64_t user_id) {
+
+bool UserGateway::removeUser(uint64_t user_id) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
         Utilities::throwNoTableException("users");
@@ -72,11 +62,7 @@ bool UserGateway::remove(uint64_t user_id) {
     }
 }
 
-/**
- * Getter method for the information of a user with the given id.
- * @param id  The id of the user.
- * @return The details of the user.
- */
+
 user_details UserGateway::getUser(uint64_t id) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
@@ -107,10 +93,7 @@ user_details UserGateway::getUser(uint64_t id) {
 
 }
 
-/**
- * Getter for all the users in the database.
- * @return  Vector of all the users in the database.
- */
+
 std::vector<user_details> UserGateway::getUsers() {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
@@ -135,11 +118,6 @@ std::vector<user_details> UserGateway::getUsers() {
     }
 }
 
-/**
- * Getter for a user with a specific name
- * @param name The name of the user
- * @return Returns the correct details of the user if found, otherwise return empty details struct with invalid id
- */
 user_details UserGateway::getUserByName(const std::string &name) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
@@ -164,10 +142,7 @@ user_details UserGateway::getUserByName(const std::string &name) {
     return details;
 }
 
-/**
- * Updates the given user's fields in the database.
- * @param user The user
- */
+
 void UserGateway::updateUser(const user_details &user) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("users")){
