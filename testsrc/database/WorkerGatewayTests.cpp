@@ -32,10 +32,6 @@ public:
 
 ::testing::Environment* const worker_env = ::testing::AddGlobalTestEnvironment(new WorkerGatewayEnvironment);
 
-/**
- * Test to see if the connection to the DB was correctly established.
- */
-TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
 
 /**
  * Deletes the all records in the workers table and resets the auto increment for the id.
