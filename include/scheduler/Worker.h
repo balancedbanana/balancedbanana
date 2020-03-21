@@ -44,7 +44,7 @@ namespace balancedbanana {
         private:
             void OnUpdate(Observable<WorkerTailEvent> *obsable, WorkerTailEvent event) override;
             void OnUpdate(Observable<WorkerErrorEvent> *obsable, WorkerErrorEvent event) override;
-
+            // TODO Kein Name??
             uint64_t id;
             std::optional<database::Specs> specs;
             bool connected;

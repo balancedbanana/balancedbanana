@@ -13,6 +13,33 @@
 using namespace balancedbanana::database;
 using namespace balancedbanana::scheduler;
 
+class CreateUserTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        user_info.public_key = "34nrhk3hkr";
+        user_info.email = "someemail@kit.edu";
+        user_info.name = "CentOS";
+        user_info.id = 1;
+    }
+
+    user_details user_info;
+};
+
+bool compareUsers(User &expected, User &actual){
+    return expected.pubkey() == actual.pubkey()
+           && expected.id() == actual.id()
+           && expected.name() == actual.name()
+           && expected.email() == actual.email();
+}
+
+
+TEST_F(CreateUserTest, CreateUserTest_Success_Test) {
+    User user_expected = User(user_info.id, user_info.name, user_info.public_key);
+    user_expected.setEmail(user_info.email);
+    std::shared_ptr<User> user_actual = Factory::createUser(user_info);
+    ASSERT_TRUE(compareUsers(user_expected, *user_actual));
+}
+
 class CreateJobTest : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -36,14 +63,6 @@ protected:
     job_details job_info;
     user_details user_info;
 };
-
-bool compareUsers(User &expected, User &actual){
-    return expected.pubkey() == actual.pubkey()
-    && expected.id() == actual.id()
-    && expected.name() == actual.name()
-    && expected.email() == actual.email();
-}
-
 
 bool compareJobs(const Job& expected, const Job& actual){
     return compareUsers(*expected.getUser(), *actual.getUser())
@@ -112,4 +131,32 @@ TEST_F(CreateJobTest, CreateJobTest_FullCreate_Test){
     fillJobWithDetails(job_info, user, job_expected);
     std::shared_ptr<Job> job_actual = Factory::createJob(job_info, user);
     ASSERT_TRUE(compareJobs(job_expected, *job_actual));
+}
+
+class CreateWorkerTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        worker_info.empty = false;
+        worker_info.public_key = "casdasdc";
+        worker_info.specs = {.osIdentifier = " ", .ram = 5, .cores = 6};
+        worker_info.address = "0.5.2.3";
+        worker_info.id = 1;
+        worker_info.name = "Rakan";
+    }
+
+    worker_details worker_info;
+};
+
+bool compareWorkers(Worker& expected, Worker& actual){
+    return expected.getId() == actual.getId()
+    && expected.getAddress() == actual.getAddress()
+    && ((!expected.getSpec().has_value() && !actual.getSpec().has_value())
+    || (expected.getSpec().value() == actual.getSpec().value()));
+}
+
+TEST_F(CreateWorkerTest, CreateWorkerTest_Success_Test){
+    Worker worker_expected = Worker(worker_info.id, worker_info.name, worker_info.public_key, worker_info.specs);
+    worker_expected.setAddress(worker_info.address);
+    std::shared_ptr<Worker> worker_actual = Factory::createWorker(worker_info);
+    ASSERT_TRUE(compareWorkers(worker_expected, *worker_actual));
 }
