@@ -1,11 +1,13 @@
 #include <database/Factory.h>
 #include <database/job_details.h>
 #include <database/user_details.h>
+#include <database/job_result.h>
 #include <scheduler/User.h>
 #include <scheduler/Worker.h>
 #include <scheduler/Job.h>
 #include <database/JobStatus.h>
 #include <scheduler/IUser.h>
+#include <QDebug>
 #include <gtest/gtest.h>
 
 using namespace balancedbanana::database;
@@ -57,15 +59,11 @@ bool compareJobs(const Job& expected, const Job& actual){
     && expected.getConfig()->image() == actual.getConfig()->image()
     && expected.getConfig()->current_working_dir() == actual.getConfig()->current_working_dir()
     && static_cast<int>(expected.getStatus()) == static_cast<int>(actual.getStatus())
-    && expected.getResult() == actual.getResult();
+    && expected.getResult()->stdout == actual.getResult()->stdout
+    && expected.getResult()->exit_code == actual.getResult()->exit_code;
 }
 
-
-TEST_F(CreateJobTest, CreateJobTest_Success_Test){
-    std::shared_ptr<User> user = std::make_shared<User>(user_info.id, user_info.name, user_info.public_key);
-    user->setEmail(user_info.email);
-
-    Job job_expected(job_info.id, std::make_shared<JobConfig>(job_info.config));
+void fillJobWithDetails(const job_details& job_info, std::shared_ptr<User> user, Job& job_expected){
     job_expected.setUser(user);
     job_expected.setStatus(static_cast<JobStatus>(job_info.status));
     job_expected.setCommand(job_info.command);
@@ -93,6 +91,25 @@ TEST_F(CreateJobTest, CreateJobTest_Success_Test){
         std::shared_ptr<job_result> resultPtr = std::make_shared<job_result>(job_info.result.value());
         job_expected.setResult(resultPtr);
     }
+}
+
+TEST_F(CreateJobTest, CreateJobTest_Success_Test){
+    std::shared_ptr<User> user = std::make_shared<User>(user_info.id, user_info.name, user_info.public_key);
+    user->setEmail(user_info.email);
+    Job job_expected(job_info.id, std::make_shared<JobConfig>(job_info.config));
+    fillJobWithDetails(job_info, user, job_expected);
+    std::shared_ptr<Job> job_actual = Factory::createJob(job_info, user);
+    ASSERT_TRUE(compareJobs(job_expected, *job_actual));
+}
+
+TEST_F(CreateJobTest, CreateJobTest_FullCreate_Test){
+    job_info.finish_time = QDateTime::currentDateTime();
+    job_info.allocated_specs = {" ", .ram = 5, .cores = 4};
+    job_info.result = {.stdout = " ", .exit_code = 5};
+    std::shared_ptr<User> user = std::make_shared<User>(user_info.id, user_info.name, user_info.public_key);
+    user->setEmail(user_info.email);
+    Job job_expected(job_info.id, std::make_shared<JobConfig>(job_info.config));
+    fillJobWithDetails(job_info, user, job_expected);
     std::shared_ptr<Job> job_actual = Factory::createJob(job_info, user);
     ASSERT_TRUE(compareJobs(job_expected, *job_actual));
 }
