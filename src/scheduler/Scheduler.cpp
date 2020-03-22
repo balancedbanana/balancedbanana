@@ -11,6 +11,7 @@
 #include <communication/message/TaskMessage.h>
 #include <scheduler/smtpserver/SmtpServer.h>
 #include <QtCore/QCoreApplication>
+#include <database/JobGateway.h>
 
 using namespace balancedbanana::commandLineInterface;
 using namespace balancedbanana::communication;
@@ -156,9 +157,10 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
 
             std::mutex updatelock;
             std::unordered_map<uint64_t, std::shared_ptr<Job>> senttoworker;
+            std::filesystem::path images;
 
             QueueObserver(balancedbanana::scheduler::PriorityQueue& queue, balancedbanana::database::Repository& repo, SmtpServer && mailclient) : queue(queue), repo(repo), mailclient(std::move(mailclient)) {
-                
+                images = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs" / "images";
             }
 
             void OnUpdate(Observable<JobObservableEvent> *obsable, JobObservableEvent event) override {
@@ -233,6 +235,16 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                             job->setAllocated_ram(std::min(job->getConfig()->max_ram().value_or((uint64_t)-1), spec.ram));
                             job->setAllocated_cores(std::min(job->getConfig()->max_cpu_count().value_or((uint32_t)-1), spec.cores));
                             job->setAllocated_osIdentifier(spec.osIdentifier);
+                            // Read the dockerfile and send it, to allow new Workers anytime to build the image ondemand
+                            auto imagepath = images / (job->getConfig()->image() + ".txt");
+                            std::ifstream f(imagepath);
+                            if(f.is_open()) {
+                                std::stringstream fc;
+                                fc << f.rdbuf();
+                                task.setAddImageFileContent(fc.str());
+                                auto wrtime = std::filesystem::last_write_time(images);
+                                task.setBackupId((int64_t)wrtime.time_since_epoch().count());
+                            }
                             TaskMessage message(task);
                             worker->send(message);
                             spec.cores -= job->getAllocated_cores();
@@ -328,6 +340,10 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 }
                 return result; }, [&repo](int hours) -> std::vector<int> {
                 std::vector<int> result;
+                for(auto && job : repo.GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
+                    result.emplace_back(job->getId());
+                }
+
                 // No Idea to access the JobGateway????
                 // for(auto && job : repo.GetUnfinishedJobs()) {
                 //     if(job->get {
