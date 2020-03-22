@@ -78,8 +78,8 @@ bool compareJobs(const Job& expected, const Job& actual){
     && expected.getConfig()->image() == actual.getConfig()->image()
     && expected.getConfig()->current_working_dir() == actual.getConfig()->current_working_dir()
     && static_cast<int>(expected.getStatus()) == static_cast<int>(actual.getStatus())
-    && expected.getResult()->stdout == actual.getResult()->stdout
-    && expected.getResult()->exit_code == actual.getResult()->exit_code;
+    && ((!expected.getResult() && !actual.getResult()) || (expected.getResult()->stdout == actual.getResult()->stdout
+    && expected.getResult()->exit_code == actual.getResult()->exit_code));
 }
 
 void fillJobWithDetails(const job_details& job_info, std::shared_ptr<User> user, Job& job_expected){
