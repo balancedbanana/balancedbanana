@@ -53,7 +53,7 @@ auto as_integer(Enumeration const value)
  * @param command The job command.
  * @return QVariant_JobConfig that has all the QVariant version of the Job args
  */
-QVariant_JobConfig convertJobConfig(uint64_t user_id, JobConfig& config, const QDateTime &schedule_time
+QVariant_JobConfig convertJobConfig(uint64_t user_id, const JobConfig& config, const QDateTime &schedule_time
         , const std::string &command){
     // Convert the optional args
     QVariant q_min_ram;
@@ -733,6 +733,125 @@ void updateWorkerId(const job_details& job, const std::shared_ptr<QSqlDatabase> 
     if (!query.exec()){
         throw std::runtime_error("updateJob error : updateWorker error: " + query.lastError().databaseText()
         .toStdString());
+    }
+}
+
+void JobGateway::updateJobBypassWriteProtection(const job_details &job) {
+    if (!Utilities::doesTableExist("jobs", db)){
+        Utilities::throwNoTableException("jobs");
+    }
+    if (!Utilities::doesTableExist("allocated_resources", db)){
+        Utilities::throwNoTableException("allocated_resources");
+    }
+    if (!Utilities::doesTableExist("job_results", db)){
+        Utilities::throwNoTableException("job_results");
+    }
+    if (!Utilities::doesTableExist("workers", db)){
+        Utilities::throwNoTableException("workers");
+    }
+    if (job.id == 0){
+        throw std::invalid_argument("updateJob error: invalid arguments.");
+    }
+    if (!Utilities::doesRecordExist("jobs", job.id, db)){
+        throw std::runtime_error("updateJob error: no job with id = " + std::to_string(job.id) + " exists");
+    }
+
+    //update allocated resources
+    QSqlQuery resourceQuery;
+    bool updateResourceId = false;
+    if(job.allocated_specs) {
+        QSqlQuery resIdQuery("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+        resIdQuery.addBindValue(QVariant::fromValue(job.id));
+        if(!resIdQuery.exec()) {
+            throw std::runtime_error("updateJob error: " + resIdQuery.lastError().databaseText().toStdString());
+        }
+        if(resIdQuery.first() && resIdQuery.value(0).isNull()) {
+            resourceQuery = QSqlQuery("INSERT INTO allocated_resources (osIdentifier, ram, cores) VALUES (?, ?, ?)", *db);
+            resourceQuery.addBindValue(QVariant::fromValue(QString::fromStdString(job.allocated_specs->osIdentifier)));
+            resourceQuery.addBindValue(QVariant::fromValue(job.allocated_specs->ram));
+            resourceQuery.addBindValue(QVariant::fromValue(job.allocated_specs->cores));
+            updateResourceId = true;
+        } else {
+            resourceQuery = QSqlQuery("UPDATE allocated_resources SET osIdentifier = ?, ram = ?, cores = ? WHERE id=?", *db);
+            resourceQuery.addBindValue(QVariant::fromValue(QString::fromStdString(job.allocated_specs->osIdentifier)));
+            resourceQuery.addBindValue(QVariant::fromValue(job.allocated_specs->ram));
+            resourceQuery.addBindValue(QVariant::fromValue(job.allocated_specs->cores));
+            resourceQuery.addBindValue(resIdQuery.value(0));
+        }
+    } else {
+        resourceQuery = QSqlQuery("UPDATE jobs SET allocated_id = NULL WHERE id=?", *db);
+        resourceQuery.addBindValue(QVariant::fromValue(job.id));
+    }
+    if(!resourceQuery.exec()) {
+        throw std::runtime_error("updateJob error: " + resourceQuery.lastError().databaseText().toStdString());
+    }
+    if(updateResourceId) {
+        QSqlQuery resIdUpdateQuery("UPDATE jobs SET allocated_id=? WHERE id=?", *db);
+        resIdUpdateQuery.addBindValue(resourceQuery.lastInsertId());
+        resIdUpdateQuery.addBindValue(QVariant::fromValue(job.id));
+        if(!resIdUpdateQuery.exec()) {
+            throw std::runtime_error("updateJob error: " + resIdUpdateQuery.lastError().databaseText().toStdString());
+        }
+    }
+
+    //update result
+    QSqlQuery resultQuery;
+    bool updateResultId = false;
+    if(job.result) {
+        QSqlQuery resIdQuery("SELECT result_id FROM jobs WHERE id = ?", *db);
+        resIdQuery.addBindValue(QVariant::fromValue(job.id));
+        if(!resIdQuery.exec()) {
+            throw std::runtime_error("updateJob error: " + resIdQuery.lastError().databaseText().toStdString());
+        }
+        if(resIdQuery.first() && resIdQuery.value(0).isNull()) {
+            resultQuery = QSqlQuery("INSERT INTO job_results (stdout, exit_code) VALUES (?, ?)", *db);
+            resultQuery.addBindValue(QVariant::fromValue(QString::fromStdString(job.result->stdout)));
+            resultQuery.addBindValue(QVariant::fromValue(job.result->exit_code));
+            updateResultId = true;
+        } else {
+            resultQuery = QSqlQuery("UPDATE job_results SET stdout = ?, exit_code = ? WHERE id=?", *db);
+            resultQuery.addBindValue(QVariant::fromValue(QString::fromStdString(job.result->stdout)));
+            resultQuery.addBindValue(QVariant::fromValue(job.result->exit_code));
+            resultQuery.addBindValue(resIdQuery.value(0));
+        }
+    } else {
+        resultQuery = QSqlQuery("UPDATE jobs SET result_id = NULL WHERE id=?", *db);
+        resultQuery.addBindValue(QVariant::fromValue(job.id));
+    }
+    if(!resultQuery.exec()) {
+        throw std::runtime_error("updateJob error: " + resultQuery.lastError().databaseText().toStdString());
+    }
+    if(updateResultId) {
+        QSqlQuery resIdUpdateQuery("UPDATE jobs SET allocated_id=? WHERE id=?", *db);
+        resIdUpdateQuery.addBindValue(resourceQuery.lastInsertId());
+        resIdUpdateQuery.addBindValue(QVariant::fromValue(job.id));
+        if(!resIdUpdateQuery.exec()) {
+            throw std::runtime_error("updateJob error: " + resIdUpdateQuery.lastError().databaseText().toStdString());
+        }
+    }
+
+    //update rest of job
+    QSqlQuery query("UPDATE jobs SET min_ram=?,start_time=?,schedule_time=?,finish_time=?,command=?,image=?,blocking_mode=?,working_dir=?,interruptible=?,environment=?,min_cores=?,max_cores=?,priority=?,status_id=?,max_ram=?,user_id=?,worker_id=?", *db);
+    QVariant_JobConfig qconf = convertJobConfig(job.user_id, job.config, job.schedule_time, job.command);
+    query.addBindValue(qconf.q_min_ram);
+    query.addBindValue(job.start_time ? QVariant::fromValue(*job.start_time) : QVariant());
+    query.addBindValue(qconf.q_schedule_time);
+    query.addBindValue(job.finish_time ? QVariant::fromValue(*job.finish_time) : QVariant());
+    query.addBindValue(qconf.q_command);
+    query.addBindValue(qconf.q_image);
+    query.addBindValue(qconf.q_blocking_mode);
+    query.addBindValue(qconf.q_current_working_dir);
+    query.addBindValue(qconf.q_interruptible);
+    query.addBindValue(qconf.q_environment);
+    query.addBindValue(qconf.q_min_cpu_count);
+    query.addBindValue(qconf.q_max_cpu_count);
+    query.addBindValue(qconf.q_priority);
+    query.addBindValue(QVariant::fromValue(job.status));
+    query.addBindValue(qconf.q_max_ram);
+    query.addBindValue(qconf.q_user_id);
+    query.addBindValue(job.worker_id ? QVariant::fromValue(*job.worker_id) : QVariant());
+    if(!query.exec()) {
+        throw std::runtime_error("updateJob error: " + query.lastError().databaseText().toStdString());
     }
 }
 

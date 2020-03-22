@@ -208,7 +208,7 @@ void Repository::WriteBack() {
             jd.schedule_time = job->getScheduled_at();
             jd.start_time = job->getStarted_at();
             jd.status = job->getStatus();
-            JobGateway(GetDatabase()).updateJob(jd);
+            JobGateway(GetDatabase()).updateJobBypassWriteProtection(jd);
             entry.second.second = false;
         }
     }

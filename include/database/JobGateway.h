@@ -85,5 +85,7 @@ namespace balancedbanana::database {
          * @param job_details The Job.
          */
         void updateJob(const job_details &job_details);
+
+        void updateJobBypassWriteProtection(const job_details &job);
     };
 }
