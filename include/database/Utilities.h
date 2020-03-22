@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <QSqlDatabase>
 #include "Specs.h"
 #include "worker_details.h"
 #include "job_details.h"
@@ -11,9 +12,9 @@
 namespace balancedbanana::database {
     class Utilities {
     public:
-        static bool doesTableExist(const std::string& table_name);
+        static bool doesTableExist(const std::string& table_name, const std::shared_ptr<QSqlDatabase>& database);
         static void throwNoTableException(const std::string& table_name);
-        static bool doesRecordExist(const std::string& table_name, uint64_t id);
+        static bool doesRecordExist(const std::string& table_name, uint64_t id, const std::shared_ptr<QSqlDatabase>& db);
         template<typename T>
         static std::string serializeVector(std::vector<T> vector);
         template<typename T>

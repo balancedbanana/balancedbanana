@@ -17,8 +17,8 @@ using namespace balancedbanana::database;
  * Checks if table_name exists
  * @return true when it exists, otherwise false
  */
-bool Utilities::doesTableExist(const std::string& table_name){
-    return IGateway::AcquireDatabase().tables().contains(QString::fromStdString(table_name));
+bool Utilities::doesTableExist(const std::string& table_name, const std::shared_ptr<QSqlDatabase>& db){
+    return db->tables().contains(QString::fromStdString(table_name));
 }
 
 /**
@@ -33,9 +33,8 @@ void Utilities::throwNoTableException(const std::string& table_name){
 * @param id The id of the record.
 * @return True if the record exists, otherwise false.
 */
-bool Utilities::doesRecordExist(const std::string& table_name, uint64_t id){
-    QSqlQuery query(QString::fromStdString("SELECT id FROM " + table_name + " WHERE id = ?"),
-                    IGateway::AcquireDatabase());
+bool Utilities::doesRecordExist(const std::string& table_name, uint64_t id, const std::shared_ptr<QSqlDatabase>& db){
+    QSqlQuery query(QString::fromStdString("SELECT id FROM " + table_name + " WHERE id = ?"), *db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return query.next();
