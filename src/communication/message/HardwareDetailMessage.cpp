@@ -14,7 +14,7 @@ Message(HARDWARE_DETAIL), coreCount(coreCount), ramSize(ramSize), osIdentifier(s
 HardwareDetailMessage::HardwareDetailMessage(const char *data, size_t &iterator, size_t size) :
 Message(HARDWARE_DETAIL), coreCount(0), ramSize(0), osIdentifier("") {
     coreCount = extract<uint32_t>(data, iterator, size);
-    ramSize = extract<uint64_t>(data, iterator, size);
+    ramSize = extract<uint32_t>(data, iterator, size);
     osIdentifier = extractString(data, iterator, size);
 }
 
@@ -26,7 +26,7 @@ std::string HardwareDetailMessage::serialize() const {
     std::stringstream s;
     s << Message::serialize();
     insert<uint32_t>(s, coreCount);
-    insert<uint64_t>(s, ramSize);
+    insert<uint32_t>(s, ramSize);
     insertString(s, osIdentifier);
     return s.str();
 }
