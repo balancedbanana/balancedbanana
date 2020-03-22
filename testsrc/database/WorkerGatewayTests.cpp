@@ -32,10 +32,6 @@ public:
 
 ::testing::Environment* const worker_env = ::testing::AddGlobalTestEnvironment(new WorkerGatewayEnvironment);
 
-/**
- * Test to see if the connection to the DB was correctly established.
- */
-TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
 
 /**
  * Deletes the all records in the workers table and resets the auto increment for the id.
@@ -126,7 +122,7 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
 TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 
     // The first entry's id should be 1
-    EXPECT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(WorkerGateway::addWorker(details) == 1);
 
     // The add must be successful
     EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
@@ -137,7 +133,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
 
     // Add the worker from the first test. Since it's the first worker, its id should be 1.
-    EXPECT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(WorkerGateway::addWorker(details) == 1);
     EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
 
     // Initialize a new worker
@@ -149,7 +145,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
     seconddetails.id = 2;
     seconddetails.empty = false;
 
-    EXPECT_TRUE(WorkerGateway::add(seconddetails) == 2);
+    EXPECT_TRUE(WorkerGateway::addWorker(seconddetails) == 2);
     EXPECT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
 }
 
@@ -202,12 +198,12 @@ protected:
 
 // Test to see if an exception is thrown when a worker is being added, but no workers' table exists.
 TEST_F(NoWorkersTableTest, NoWorkersTableTest_AddWorker_Test){
-    EXPECT_THROW(WorkerGateway::add(details), std::logic_error);
+    EXPECT_THROW(WorkerGateway::addWorker(details), std::logic_error);
 }
 
 // Test to see if an exception is thrown when a worker is being removed, but no workers' table exists.
 TEST_F(NoWorkersTableTest, NoWorkersTableTest_RemoveWorker_Test){
-    EXPECT_THROW(WorkerGateway::remove(id), std::logic_error);
+    EXPECT_THROW(WorkerGateway::removeWorker(id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the worker getter is called, but no workers' table exists.
@@ -262,17 +258,17 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     details.id = 1;
     details.empty = false;
     // Since this is the first worker, this has to be true.
-    EXPECT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(WorkerGateway::addWorker(details) == 1);
     EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
 
     // This must return true.
-    EXPECT_TRUE(WorkerGateway::remove(1));
+    EXPECT_TRUE(WorkerGateway::removeWorker(1));
     EXPECT_TRUE(wasWorkerRemoveSuccessful(1));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
-    EXPECT_FALSE(WorkerGateway::remove(1));
+    EXPECT_FALSE(WorkerGateway::removeWorker(1));
 }
 
 
@@ -304,7 +300,7 @@ protected:
 // Test to see if the first worker can be retrieved correctly.
 TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
     // Add the worker. Its id should be 1, since it's the first worker to be added.
-    EXPECT_EQ(WorkerGateway::add(details), details.id);
+    EXPECT_EQ(WorkerGateway::addWorker(details), details.id);
 
     // Get the worker and compare it to the added worker. They should be equal.
     worker_details expected_details = WorkerGateway::getWorker(details.id);
@@ -366,9 +362,9 @@ protected:
 // Test to see if getWorkers retrieves a vector of previously added workers from the database
 TEST_F(GetWorkersTest, GetWorkersTest_SuccessfulGet_Test){
     // Add the workers. Their ids should match the order of their addition.
-    EXPECT_EQ(WorkerGateway::add(first), first.id);
-    EXPECT_EQ(WorkerGateway::add(second), second.id);
-    EXPECT_EQ(WorkerGateway::add(third), third.id);
+    EXPECT_EQ(WorkerGateway::addWorker(first), first.id);
+    EXPECT_EQ(WorkerGateway::addWorker(second), second.id);
+    EXPECT_EQ(WorkerGateway::addWorker(third), third.id);
 
     std::vector<worker_details> expectedVector;
     expectedVector.push_back(first);
@@ -430,7 +426,7 @@ TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
 }
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_WorkerFound_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id);
     EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
     EXPECT_TRUE(WorkerGateway::getWorkerByName(worker.name) == worker);
 }
@@ -494,7 +490,7 @@ TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorker_Test){
 }
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_Success_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id);
     EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
 
     worker_details new_worker = worker;
@@ -543,7 +539,7 @@ TEST(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
     worker.name = name;
     worker.empty = false;
     worker.id = 1;
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id);
     worker_details actualWorker = WorkerGateway::getWorker(worker.id);
     EXPECT_EQ(WorkerGateway::getWorker(worker.id).name, worker.name);
     qDebug() << QString::fromStdString(actualWorker.name) << QString::fromStdString(worker.name);

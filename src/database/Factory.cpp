@@ -8,11 +8,7 @@
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::database;
 
-/**
- * Creates a Job object from the given job_details struct
- * @param job_info The struct
- * @return The Job object
- */
+
 std::shared_ptr<Job> Factory::createJob(const job_details& job_info, const std::shared_ptr<User> &user) {
     std::shared_ptr<Job> job = std::make_shared<Job>(job_info.id, std::make_shared<JobConfig>(job_info.config));
     job->setUser(user);
@@ -45,11 +41,7 @@ std::shared_ptr<Job> Factory::createJob(const job_details& job_info, const std::
     return job;
 }
 
-/**
- * Creates a Worker object from the given worker_details struct
- * @param worker_info The struct
- * @return The Worker object
- */
+
 std::shared_ptr<Worker> Factory::createWorker(const worker_details& worker_info) {
     std::shared_ptr<Worker> worker = std::make_shared<Worker>(worker_info.id, worker_info.name, worker_info
     .public_key, worker_info.specs);
@@ -57,11 +49,7 @@ std::shared_ptr<Worker> Factory::createWorker(const worker_details& worker_info)
     return worker;
 }
 
-/**
- * Creates a User object from the given user_details struct
- * @param user_info The struct
- * @return The User object
- */
+
 std::shared_ptr<User> Factory::createUser(const user_details& user_info) {
     std::shared_ptr<User> user = std::make_shared<User>(user_info.id, user_info.name, user_info.public_key);
     user->setEmail(user_info.email);

@@ -13,12 +13,8 @@
 using namespace balancedbanana::database;
 
 
-/**
- * Adds a worker to the database, Throws exceptions when errors occur.
- * @param worker  The worker to be added
- * @return The id of the worker.
- */
-uint64_t WorkerGateway::add(const worker_details& worker) {
+
+uint64_t WorkerGateway::addWorker(const worker_details& worker) {
     auto database = IGateway::AcquireDatabase();
 
     // DB must contain table
@@ -56,12 +52,7 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
     return query.lastInsertId().toUInt();
 }
 
-/**
- * Deletes a worker with the given id from the database,
- * @param id  The id of the worker to be deleted.
- * @return True if the operation was successful, otherwise false
- */
-bool WorkerGateway::remove(uint64_t id) {
+bool WorkerGateway::removeWorker(uint64_t id) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
         Utilities::throwNoTableException("workers");
@@ -80,11 +71,6 @@ bool WorkerGateway::remove(uint64_t id) {
     }
 }
 
-/**
- * Getter method for the information of a worker with the given id.
- * @param id  The id of the worker.
- * @return The details of the worker.
- */
 worker_details WorkerGateway::getWorker(uint64_t id) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
@@ -124,10 +110,6 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
     return details;
 }
 
-/**
- * Getter for all the workers in the database.
- * @return  Vector of all the workers in the database.
- */
 std::vector<worker_details> WorkerGateway::getWorkers() {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
@@ -160,11 +142,6 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
     }
 }
 
-/**
- * Getter for a worker with a specific name
- * @param name The name of the worker
- * @return Returns the correct details of the worker if found, otherwise return empty details struct with invalid id
- */
 worker_details WorkerGateway::getWorkerByName(const std::string &name) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
