@@ -12,6 +12,8 @@
 
 using namespace balancedbanana::database;
 
+WorkerGateway::WorkerGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(std::move(db)) {
+}
 
 /**
  * Adds a worker to the database, Throws exceptions when errors occur.
@@ -19,10 +21,8 @@ using namespace balancedbanana::database;
  * @return The id of the worker.
  */
 uint64_t WorkerGateway::add(const worker_details& worker) {
-    auto database = IGateway::AcquireDatabase();
-
     // DB must contain table
-    if (!Utilities::doesTableExist("workers")){
+    if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
 
@@ -41,7 +41,7 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
 
 
     // Create query
-    QSqlQuery query("INSERT INTO workers (public_key, osIdentifier, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)", database);
+    QSqlQuery query("INSERT INTO workers (public_key, osIdentifier, ram, cores, address, name) VALUES (?, ?, ?, ?, ?, ?)", *db);
     query.addBindValue(q_public_key);
     query.addBindValue(q_osIdentifier);
     query.addBindValue(q_ram);
@@ -62,12 +62,11 @@ uint64_t WorkerGateway::add(const worker_details& worker) {
  * @return True if the operation was successful, otherwise false
  */
 bool WorkerGateway::remove(uint64_t id) {
-    auto database = IGateway::AcquireDatabase();
-    if (!Utilities::doesTableExist("workers")){
+    if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
-    if (Utilities::doesRecordExist("workers", id)){
-        QSqlQuery query("DELETE FROM workers WHERE id = ?", database);
+    if (Utilities::doesRecordExist("workers", id, db)){
+        QSqlQuery query("DELETE FROM workers WHERE id = ?", *db);
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
             return true;
@@ -86,13 +85,12 @@ bool WorkerGateway::remove(uint64_t id) {
  * @return The details of the worker.
  */
 worker_details WorkerGateway::getWorker(uint64_t id) {
-    auto database = IGateway::AcquireDatabase();
-    if (!Utilities::doesTableExist("workers")){
+    if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
     worker_details details{};
-    if (Utilities::doesRecordExist("workers", id)){
-        QSqlQuery query(database);
+    if (Utilities::doesRecordExist("workers", id, db)){
+        QSqlQuery query(*db);
         query.prepare("SELECT public_key, osIdentifier, ram, cores, address, name FROM workers WHERE id = (:id)");
         query.bindValue(":id", QVariant::fromValue(id));
         if (query.exec()){
@@ -129,11 +127,10 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
  * @return  Vector of all the workers in the database.
  */
 std::vector<worker_details> WorkerGateway::getWorkers() {
-    auto database = IGateway::AcquireDatabase();
-    if (!Utilities::doesTableExist("workers")){
+    if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
-    QSqlQuery query("SELECT id, public_key, osIdentifier, ram, cores, address, name FROM workers", database);
+    QSqlQuery query("SELECT id, public_key, osIdentifier, ram, cores, address, name FROM workers", *db);
     std::vector<worker_details> workerVector;
     if (query.exec()) {
         while(query.next()){
@@ -166,12 +163,11 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
  * @return Returns the correct details of the worker if found, otherwise return empty details struct with invalid id
  */
 worker_details WorkerGateway::getWorkerByName(const std::string &name) {
-    auto database = IGateway::AcquireDatabase();
-    if (!Utilities::doesTableExist("workers")){
+    if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
     worker_details details{};
-    QSqlQuery query(database);
+    QSqlQuery query(*db);
     query.prepare("SELECT public_key, osIdentifier, ram, cores, address, id FROM workers WHERE name = ?");
     query.addBindValue(QString::fromStdString(name));
     if (query.exec()){
@@ -200,8 +196,7 @@ worker_details WorkerGateway::getWorkerByName(const std::string &name) {
 }
 
 void WorkerGateway::updateWorker(const worker_details &worker) {
-    auto database = IGateway::AcquireDatabase();
-    if(!Utilities::doesTableExist("workers")){
+    if(!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
 
@@ -209,10 +204,10 @@ void WorkerGateway::updateWorker(const worker_details &worker) {
         throw std::invalid_argument("updateWorker error: invalid arguments");
     }
 
-    if (Utilities::doesRecordExist("workers", worker.id)){
+    if (Utilities::doesRecordExist("workers", worker.id, db)){
         QSqlQuery query("UPDATE workers SET name = ?, ram = ?, cores = ?, osIdentifier = ?, address = ?, public_key ="
                         " ? "
-                        "WHERE id = ?", database);
+                        "WHERE id = ?", *db);
         query.addBindValue(QString::fromStdString(worker.name));
         QVariant q_ram;
         QVariant q_cores;

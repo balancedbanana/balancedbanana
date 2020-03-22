@@ -7,12 +7,15 @@
 
 namespace balancedbanana::database {
         class WorkerGateway : virtual public IGateway {
+
         public:
-            static uint64_t add(const worker_details& details);
-            static bool remove(uint64_t id);
-            static worker_details getWorker(uint64_t id);
-            static std::vector<worker_details> getWorkers();
-            static worker_details getWorkerByName(const std::string& name);
-            static void updateWorker(const worker_details& worker);
+            explicit WorkerGateway(std::shared_ptr<QSqlDatabase> db);
+
+            uint64_t add(const worker_details& details);
+            bool remove(uint64_t id);
+            worker_details getWorker(uint64_t id);
+            std::vector<worker_details> getWorkers();
+            worker_details getWorkerByName(const std::string& name);
+            void updateWorker(const worker_details& worker);
         };
     }
