@@ -16,6 +16,12 @@ protected:
 
 };
 
+TEST_F(RepositoryTest, GetRepository) {
+    EXPECT_EQ(Repository::GetRepository("balancedbanana", "localhost", "balancedbanana", "balancedbanana", "qwer1234", 3306), repo);
+    EXPECT_EQ(Repository::GetRepository("balancedbanana"), repo);
+    EXPECT_THROW(Repository::GetRepository("invalid database name"), std::runtime_error);
+}
+
 TEST_F(RepositoryTest, AddUser_GetUser) {
     EXPECT_EQ(repo->GetUser(0), nullptr);
     EXPECT_NO_THROW(repo->AddUser(1, "name", "email", "publickey"));
@@ -29,6 +35,36 @@ TEST_F(RepositoryTest, AddUser_GetUser) {
     EXPECT_EQ(ptr->name(), "name");
     EXPECT_EQ(ptr->email(), "email");
     EXPECT_EQ(ptr->pubkey(), "publickey");
+}
+
+TEST_F(RepositoryTest, AlterUser) {
+    std::shared_ptr<User> user = nullptr;
+    EXPECT_NO_THROW(user = repo->AddUser(1, "name", "email", "public key"));
+    EXPECT_NE(user, nullptr);
+    user->setEmail("new email");
+    repo->WriteBack();
+    repo->ClearCache();
+    user = nullptr;
+    EXPECT_NO_THROW(user = repo->GetUser(1));
+    EXPECT_NE(user, nullptr);
+    EXPECT_EQ(user->email(), "new email");
+    repo->ClearCache();
+
+}
+
+TEST_F(RepositoryTest, FindUser) {
+    EXPECT_NO_THROW(repo->AddUser(1, "user 1", "email 1", "public key 1"));
+    EXPECT_NO_THROW(repo->AddUser(2, "user 2", "email 2", "public key 2"));
+    EXPECT_NO_THROW(repo->AddUser(3, "user 3", "email 3", "public key 3"));
+    EXPECT_NO_THROW(repo->AddUser(4, "user 4", "email 4", "public key 4"));
+    EXPECT_NO_THROW(repo->AddUser(5, "user 5", "email 5", "public key 5"));
+    EXPECT_NO_THROW(repo->AddUser(6, "user 6", "email 6", "public key 6"));
+    EXPECT_EQ(repo->FindUser("user 3")->id(), 3);
+    EXPECT_EQ(repo->FindUser("user 5")->id(), 5);
+    repo->WriteBack();
+    repo->ClearCache();
+    EXPECT_EQ(repo->FindUser("user 4")->id(), 4);
+    EXPECT_EQ(repo->FindUser("invalid user"), nullptr);
 }
 
 TEST_F(RepositoryTest, AddJob_GetJob) {
