@@ -15,29 +15,17 @@
 #include <QDateTime>
 #include <QtCore/QTimeZone>
 
+#include "DatabaseTest.h"
+
 using namespace balancedbanana::database;
 
-/**
- * Test environment that has a global SetUp and TearDown methods for all test suites/tests.
- *
- * Sets up the database connection.
- *
- */
-class JobGatewayEnvironment : public ::testing::Environment {
-public:
-    void SetUp() override {
-        Repository("localhost", "balancedbanana", "balancedbanana", "qwer1234", 3306);
-    }
-};
-
-::testing::Environment* const job_env = ::testing::AddGlobalTestEnvironment(new JobGatewayEnvironment);
+using JobGatewayTest = DatabaseTest;
 
 /**
  * Deletes the all records in the jobs table and resets the auto increment for the id.
  */
-void resetJobTable() {
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("ALTER TABLE jobs CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
+void resetJobTable(const std::shared_ptr<QSqlDatabase> &db) {
+    QSqlQuery query("ALTER TABLE jobs CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
     query.exec();
     query.prepare("DELETE FROM jobs");
     query.exec();
@@ -48,9 +36,10 @@ void resetJobTable() {
 /**
  * Fixture class that initializes a sample job's details.
  */
-class AddJobTest : public ::testing::Test {
+class AddJobTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         details.id = 1;
         details.status = 1; //scheduled
         details.user_id = 1;
@@ -75,7 +64,7 @@ protected:
     }
 
     void TearDown() override {
-        resetJobTable();
+        resetJobTable(db);
     }
 
     job_details details;
@@ -87,9 +76,8 @@ protected:
  * @param id The id of the added record.
  * @return true if the add was successful, otherwise false.
  */
-bool wasJobAddSuccessful(job_details& details, uint64_t id){
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", db);
+bool wasJobAddSuccessful(job_details& details, uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
+    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", *db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -225,22 +213,22 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
 TEST_F(AddJobTest, AddJobTest_FirstJobSuccess_Test){
 
     // The first entry's id should be 1
-    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(jobGateway->add(details) == 1);
 
     // The add must be successful
-    EXPECT_TRUE(wasJobAddSuccessful(details, 1));
+    EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 }
 
 // Test to see if the auto increment feature works as expected.
 TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
 
     // Add the user from the first test. Since it's the first user, its id should be 1.
-    EXPECT_TRUE(JobGateway::add(details) == 1);
-    EXPECT_TRUE(wasJobAddSuccessful(details, 1));
+    EXPECT_TRUE(jobGateway->add(details) == 1);
+    EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 
     // Initialize another job
     // Note that basically all the fields can be equal
-    job_details seconddetails{};
+    job_details seconddetails;
     seconddetails.id = 2;
     seconddetails.status = 1; //scheduled
     seconddetails.user_id = 1;
@@ -257,19 +245,20 @@ TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
     seconddetails.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
     seconddetails.config.set_interruptible(false);
     seconddetails.config.set_current_working_dir(".");
-    seconddetails.allocated_specs->ram = 1324;
-    seconddetails.allocated_specs->cores = 4;
-    seconddetails.allocated_specs->osIdentifier = "55";
+    Specs specs;
+    specs.ram = 1324;
+    specs.cores = 4;
+    specs.osIdentifier = "55";
+    seconddetails.allocated_specs = specs;
 
-    EXPECT_TRUE(JobGateway::add(seconddetails) == 2);
-    EXPECT_TRUE(wasJobAddSuccessful(seconddetails, 2));
+    EXPECT_TRUE(jobGateway->add(seconddetails) == 2);
+    EXPECT_TRUE(wasJobAddSuccessful(seconddetails, 2, db));
 }
 
 /**
  * Restores the jobs table
  */
-void createJobsTable(){
-    auto db = IGateway::AcquireDatabase();
+void createJobsTable(const std::shared_ptr<QSqlDatabase> &db){
     QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (\n"
                     "    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
                     "    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
@@ -297,24 +286,24 @@ void createJobsTable(){
                     "    UNIQUE INDEX `result_id_UNIQUE` (`result_id` ASC)\n"
                     ")\n"
                     "ENGINE=InnoDB\n"
-                    "DEFAULT CHARSET=utf8;", db);
+                    "DEFAULT CHARSET=utf8;", *db);
     query.exec();
 }
 
-void deleteJobsTable() {
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("DROP TABLE jobs", db);
+void deleteJobsTable(const std::shared_ptr<QSqlDatabase> &db) {
+    QSqlQuery query("DROP TABLE jobs", *db);
     query.exec();
 }
 
 /**
  * Fixture class that deletes the jobs table on setup and restores it on teardown.
  */
-class NoJobsTableTest : public ::testing::Test{
+class NoJobsTableTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         // Deletes the jobs table
-        deleteJobsTable();
+        deleteJobsTable(db);
 
         // Setup the variables needed
         details.id = 1;
@@ -341,7 +330,7 @@ protected:
     }
 
     void TearDown() override {
-        createJobsTable();
+        createJobsTable(db);
     }
 
     job_details details;
@@ -349,31 +338,32 @@ protected:
 
 // Test to see if an exception is thrown when a job is being added, but no jobs' table exists.
 TEST_F(NoJobsTableTest, NoJobsTableTest_AddJob_Test){
-    EXPECT_THROW(JobGateway::add(details), std::logic_error);
+    EXPECT_THROW(jobGateway->add(details), std::logic_error);
 }
 
 // Test to see if an exception is thrown when a job is being removed, but no jobs' table exists.
 TEST_F(NoJobsTableTest, NoJobsTableTest_RemoveJob_Test){
-    EXPECT_THROW(JobGateway::remove(details.id), std::logic_error);
+    EXPECT_THROW(jobGateway->remove(details.id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the job getter is called, but no jobs' table exists.
 TEST_F(NoJobsTableTest, NoJobsTableTest_GetJob_Test){
-    EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
+    EXPECT_THROW(jobGateway->getJob(details.id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the jobs getter is called, but no jobs' table exists.
 TEST_F(NoJobsTableTest, NoJobsTableTest_GetJobs_Test){
-    EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
+    EXPECT_THROW(jobGateway->getJobs(), std::logic_error);
 }
 
 /**
  * Fixture class that initializes a sample job with only the mandatory information (a.k.a the optionals don't have
  * values)
  */
-class AddJobMandatoryTest : public ::testing::Test {
+class AddJobMandatoryTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         details.id = 1;
         details.status = 1; //scheduled
         details.user_id = 1;
@@ -386,7 +376,7 @@ protected:
     }
 
     void TearDown() override {
-        resetJobTable();
+        resetJobTable(db);
     }
 
     job_details details;
@@ -395,8 +385,8 @@ protected:
 // First add with only the mandatory information
 TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
 
-    EXPECT_TRUE(JobGateway::add(details) == 1);
-    EXPECT_TRUE(wasJobAddSuccessful(details, 1));
+    EXPECT_TRUE(jobGateway->add(details) == 1);
+    EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 }
 
 /**
@@ -404,9 +394,8 @@ TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
  * @param id The id of the removed record.
  * @return  true if remove was successful, otherwise false.
  */
-bool wasJobRemoveSuccessful(uint64_t id){
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", db);
+bool wasJobRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
+    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", *db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -419,10 +408,10 @@ bool wasJobRemoveSuccessful(uint64_t id){
 /**
  * Fixture class that resets the jobs table on teardown
  */
-class RemoveJobTest : public ::testing::Test {
+class RemoveJobTest : public JobGatewayTest {
 protected:
     void TearDown() override{
-        resetJobTable();
+        resetJobTable(db);
     }
 };
 
@@ -441,25 +430,26 @@ TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
     details.config.set_priority(Priority::low);
 
     // Since this is the first job, this has to be true.
-    EXPECT_TRUE(JobGateway::add(details) == 1);
-    EXPECT_TRUE(wasJobAddSuccessful(details, 1));
+    EXPECT_TRUE(jobGateway->add(details) == 1);
+    EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 
     // This must return true.
-    EXPECT_TRUE(JobGateway::remove(1));
-    EXPECT_TRUE(wasJobRemoveSuccessful(1));
+    EXPECT_TRUE(jobGateway->remove(1));
+    EXPECT_TRUE(wasJobRemoveSuccessful(1, db));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveJobTest, RemoveJobTest_FailureRemove_Test){
-    EXPECT_FALSE(JobGateway::remove(1));
+    EXPECT_FALSE(jobGateway->remove(1));
 }
 
 /**
  * Fixture class that initializes a sample job on setup and resets the jobs table on teardown
  */
-class GetJobTest : public ::testing::Test {
+class GetJobTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         // Setup the variables needed
         details.id = 1;
         details.status = 1; //scheduled
@@ -480,21 +470,19 @@ protected:
     }
 
     void TearDown() override {
-       resetJobTable();
+       resetJobTable(db);
     }
 
     job_details details;
 };
 
-void deleteAllocResTable() {
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("DROP TABLE allocated_resources", db);
+void deleteAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
+    QSqlQuery query("DROP TABLE allocated_resources", *db);
     query.exec();
 
 }
 
-void createAllocResTable() {
-    auto db = IGateway::AcquireDatabase();
+void createAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
                     "(\n"
                     "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -505,61 +493,59 @@ void createAllocResTable() {
                     "    UNIQUE INDEX `id_UNIQUE` (`id` ASC)\n"
                     ")\n"
                     "ENGINE = InnoDB\n"
-                    "DEFAULT CHARACTER SET = utf8", db);
+                    "DEFAULT CHARACTER SET = utf8", *db);
     query.exec();
 }
 
 // Test to see if an exception is thrown when the getter is called but no allocated_resorces table exists
 TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
     // Deletes the allocated_resources table
-    deleteAllocResTable();
+    deleteAllocResTable(db);
 
-    EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
+    EXPECT_THROW(jobGateway->getJob(details.id), std::logic_error);
 
     // Restore the table
-    createAllocResTable();
+    createAllocResTable(db);
 }
 
-void deleteResultsTable() {
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("DROP TABLE job_results", db);
+void deleteResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
+    QSqlQuery query("DROP TABLE job_results", *db);
     query.exec();
 }
 
-void createResultsTable() {
-    auto db = IGateway::AcquireDatabase();
+void createResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("CREATE TABLE `job_results` (\n"
                   "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                   "  `stdout` text NOT NULL,\n"
                   "  `exit_code` tinyint(3) NOT NULL,\n"
                   "  PRIMARY KEY (`id`),\n"
                   "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8", db);
+                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8", *db);
     query.exec();
 }
 
 // Test to see if an exception is thrown when the getter is called but no job_results table exists
 TEST_F(GetJobTest, GetJobTest_NoJobResultsTable_Test){
     // Deletes the job_results table
-    deleteResultsTable();
+    deleteResultsTable(db);
 
-    EXPECT_THROW(JobGateway::getJob(details.id), std::logic_error);
+    EXPECT_THROW(jobGateway->getJob(details.id), std::logic_error);
 
     // Restore the table
-    createResultsTable();
+    createResultsTable(db);
 }
 
 // Test to see if getter returns empty struct when no job was added
 TEST_F(GetJobTest, GetJobTest_NonExistentJob_Test){
-    EXPECT_TRUE(JobGateway::getJob(details.id).empty);
+    EXPECT_TRUE(jobGateway->getJob(details.id).empty);
 }
 
 // Test to see if getter returns correct struct when a job was added
 TEST_F(GetJobTest, GetJobTest_FirstAdd_Test){
     // Add the job. Should work without issues
-    EXPECT_TRUE(JobGateway::add(details) == details.id);
-    EXPECT_TRUE(wasJobAddSuccessful(details, details.id));
-    EXPECT_TRUE(JobGateway::getJob(details.id) == details);
+    EXPECT_TRUE(jobGateway->add(details) == details.id);
+    EXPECT_TRUE(wasJobAddSuccessful(details, details.id, db));
+    EXPECT_TRUE(jobGateway->getJob(details.id) == details);
 }
 
 // Test to see if getter works when only mandatory job members were added
@@ -576,17 +562,18 @@ TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
     detailss.config.set_priority(Priority::low);
     detailss.config.set_interruptible(false);
 
-    EXPECT_TRUE(JobGateway::add(detailss) == detailss.id);
-    EXPECT_TRUE(wasJobAddSuccessful(detailss, detailss.id));
-    EXPECT_TRUE(JobGateway::getJob(detailss.id) == detailss);
+    EXPECT_TRUE(jobGateway->add(detailss) == detailss.id);
+    EXPECT_TRUE(wasJobAddSuccessful(detailss, detailss.id, db));
+    EXPECT_TRUE(jobGateway->getJob(detailss.id) == detailss);
 }
 
 /**
  * Fixture class that initializes three jobs on setup and resets the table on teardown.
  */
-class GetJobsTest : public ::testing::Test {
+class GetJobsTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         // Set up the first job
         first.id = 1;
         first.status = 1; //scheduled
@@ -644,7 +631,7 @@ protected:
     }
 
     void TearDown() override {
-        resetJobTable();
+        resetJobTable(db);
     }
 
     job_details first;
@@ -655,53 +642,50 @@ protected:
 // Test to see if getJobs retrieves a vector of previously added jobs from the database
 TEST_F(GetJobsTest, GetJobsTest_SuccessfulGet_Test){
     // Add the jobs. Their ids should match the order of their addition.
-    EXPECT_EQ(JobGateway::add(first), first.id);
-    EXPECT_EQ(JobGateway::add(second), second.id);
-    EXPECT_EQ(JobGateway::add(third), third.id);
+    EXPECT_EQ(jobGateway->add(first), first.id);
+    EXPECT_EQ(jobGateway->add(second), second.id);
+    EXPECT_EQ(jobGateway->add(third), third.id);
 
     std::vector<job_details> expectedVector;
     expectedVector.push_back(first);
     expectedVector.push_back(second);
     expectedVector.push_back(third);
 
-    std::vector<job_details> actualVector = JobGateway::getJobs();
+    std::vector<job_details> actualVector = jobGateway->getJobs();
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
 }
 
 // Test to see if an exception is thrown when the getter is called but no allocated_resorces table exists
 TEST_F(GetJobsTest, GetJobsTest_NoAllocatedResourcesTable_Test){
     // Deletes the allocated_resources table
-    deleteAllocResTable();
-    EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
+    deleteAllocResTable(db);
+    EXPECT_THROW(jobGateway->getJobs(), std::logic_error);
 
     // Restore the table
-    createAllocResTable();
+    createAllocResTable(db);
 }
 
 // Test to see if an exception is thrown when the getter is called but no job_results table exists
 TEST_F(GetJobsTest, GetJobsTest_NoJobResultsTable_Test){
-    auto db = IGateway::AcquireDatabase();
     // Deletes the job_results table
-    deleteResultsTable();
+    deleteResultsTable(db);
 
-    EXPECT_THROW(JobGateway::getJobs(), std::logic_error);
+    EXPECT_THROW(jobGateway->getJobs(), std::logic_error);
 
     // Restore the table
-    createResultsTable();
+    createResultsTable(db);
 }
 
 // Test to see if the getter method returns an empty vector if the jobs table is empty
 TEST_F(GetJobsTest, GetJobsTest_NonExistentJobs_Test){
-    EXPECT_TRUE(JobGateway::getJobs().empty());
+    EXPECT_TRUE(jobGateway->getJobs().empty());
 }
 
 /**
  * Resets the allocated_resources table
  */
-void resetAllocResTable() {
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("ALTER TABLE allocated_resources CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
-                    db);
+void resetAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
+    QSqlQuery query("ALTER TABLE allocated_resources CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
     query.exec();
     query.prepare("DELETE FROM allocated_resources");
     query.exec();
@@ -714,9 +698,10 @@ void resetAllocResTable() {
  * Fixture class that initializes a worker and job on setup and resets the allocated_resoucres, jobs and workers
  * tables on teardown
  */
-class StartJobTest : public ::testing::Test {
+class StartJobTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         // Setup Job
         job.id = 1;
         job.status = 1; //scheduled
@@ -741,11 +726,9 @@ protected:
         worker.empty = false;
     }
     void TearDown() override {
-        resetJobTable();
-        resetAllocResTable();
-        auto db = IGateway::AcquireDatabase();
-        QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
-                        db);
+        resetJobTable(db);
+        resetAllocResTable(db);
+        QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
         query.exec();
         query.prepare("DELETE FROM workers");
         query.exec();
@@ -753,19 +736,16 @@ protected:
         query.exec();
     }
 
-
     job_details job;
     worker_details worker;
 };
 
-bool wasStartSuccessful(job_details job, worker_details worker){
+bool wasStartSuccessful(job_details job, worker_details worker, const std::shared_ptr<QSqlDatabase> &db){
     uint allocated_id = 1;
-    auto db = IGateway::AcquireDatabase();
     QSqlQuery queryAlloc("SELECT cores, ram, osIdentifier FROM allocated_resources WHERE id = ?",
-            db);
+            *db);
     queryAlloc.addBindValue(allocated_id);
-    auto dbb = IGateway::AcquireDatabase();
-    QSqlQuery queryJobs("SELECT allocated_id, status_id, start_time FROM jobs WHERE id = ?", dbb);
+    QSqlQuery queryJobs("SELECT allocated_id, status_id, start_time FROM jobs WHERE id = ?", *db);
     queryJobs.addBindValue(QVariant::fromValue(job.id));
 
     if (queryAlloc.exec()){
@@ -799,27 +779,26 @@ bool wasStartSuccessful(job_details job, worker_details worker){
 // Test to see if successful startJob call sets the values in all tables properly
 TEST_F(StartJobTest, StartJobTest_SuccessfulStart_Test){
     // Setup by adding a job and worker to the database
-    EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_TRUE(workerGateway->add(worker) == worker.id);
+    EXPECT_TRUE(jobGateway->add(job) == job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
     job.start_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
-    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
 
 
     // Check if the values were set properly
-    EXPECT_TRUE(wasStartSuccessful(job, worker));
+    EXPECT_TRUE(wasStartSuccessful(job, worker, db));
 }
 
 
 // Test to see if exception is thrown when no workers table exists
 TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("DROP TABLE workers", db);
+    QSqlQuery query("DROP TABLE workers", *db);
     query.exec();
 
     job.start_time = QDateTime::currentDateTime();
-    EXPECT_THROW(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()), std::logic_error);
+    EXPECT_THROW(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
                   "(\n"
                   "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -840,31 +819,29 @@ TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
 
 // Test to see if exception is thrown when no jobs table exists
 TEST_F(StartJobTest, StartJobTest_NoJobsTable_Test){
-    deleteJobsTable();
+    deleteJobsTable(db);
     job.start_time = QDateTime::currentDateTime();
-    EXPECT_THROW(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()), std::logic_error);
-
-    createJobsTable();
+    EXPECT_THROW(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()), std::logic_error);
+    createJobsTable(db);
 }
 
 // Test to see if exception is thrown when no job with the id arg exists in the database
 TEST_F(StartJobTest, StartJobTest_NonExistentJob_Test){
     job.start_time = QDateTime::currentDateTime();
-    EXPECT_FALSE(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_FALSE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
 }
 
 // Test to see if exception is thrown when no worker with the id arg exists in the database
 TEST_F(StartJobTest, StartJobTest_NonExistentWorker_Test){
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_TRUE(jobGateway->add(job) == job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.start_time = QDateTime::currentDateTime();
-    EXPECT_FALSE(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_FALSE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
 }
 
-void resetResultsTable() {
-    auto db = IGateway::AcquireDatabase();
+void resetResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("ALTER TABLE job_results CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
-                    db);
+                    *db);
     query.exec();
     query.prepare("DELETE FROM job_results");
     query.exec();
@@ -876,9 +853,10 @@ void resetResultsTable() {
  * Fixture class that initializes sample finish data for a Job on SetUp and resets the jobs and job_results tables on
  * TearDown
  */
-class FinishJobTest : public ::testing::Test {
+class FinishJobTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         // Setup Job
         job.id = 1;
         job.status = 1; //scheduled
@@ -897,8 +875,8 @@ protected:
     }
 
     void TearDown() override {
-        resetJobTable();
-        resetResultsTable();
+        resetJobTable(db);
+        resetResultsTable(db);
     }
 
     job_details job;
@@ -907,13 +885,11 @@ protected:
     int8_t exit_code;
 };
 
-bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code){
+bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code, const std::shared_ptr<QSqlDatabase> &db){
     uint result_id = 1;
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery queryResult("SELECT stdout, exit_code FROM job_results WHERE id = ?", db);
+    QSqlQuery queryResult("SELECT stdout, exit_code FROM job_results WHERE id = ?", *db);
     queryResult.addBindValue(result_id);
-    db = IGateway::AcquireDatabase();
-    QSqlQuery queryJobs("SELECT finish_time, result_id FROM jobs WHERE id = ?", db);
+    QSqlQuery queryJobs("SELECT finish_time, result_id FROM jobs WHERE id = ?", *db);
     queryJobs.addBindValue(QVariant::fromValue(job.id));
 
     if (queryResult.exec()){
@@ -945,50 +921,48 @@ bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code){
 // Test to see if successful finishJob call sets the values in all tables properly
 TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
     // Add the job to the DB. This operation should be successful
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_TRUE(jobGateway->add(job) == job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
-    EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
+    EXPECT_TRUE(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code));
 
     // Check if the values were set properly
-    EXPECT_TRUE(wasFinishSuccessful(stdout, job, exit_code));
+    EXPECT_TRUE(wasFinishSuccessful(stdout, job, exit_code, db));
 }
 
 // Test to see if exception is thrown when finishJob is called, but no job_results table exists
 TEST_F(FinishJobTest, FinishJobTest_NoJobResultsTable_Test){
-    auto db = IGateway::AcquireDatabase();
-    deleteResultsTable();
+    deleteResultsTable(db);
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
-    EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
-    createResultsTable();
+    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
+    createResultsTable(db);
 }
 
 // Test to see if exception is thrown when finishJob is called, but no jobs table exists
 TEST_F(FinishJobTest, FinishJobTest_NoJobsTable_Test){
-    deleteJobsTable();
+    deleteJobsTable(db);
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
-    EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
-    createJobsTable();
+    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
+    createJobsTable(db);
 }
 
 // Test to see if finishJob returns false, when no job exists with the id arg
 TEST_F(FinishJobTest, FinishJobTest_NonExistentJob_Test){
     job.finish_time = QDateTime::currentDateTime();
-    EXPECT_FALSE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
+    EXPECT_FALSE(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code));
 }
 
 // Test to see if an exception is thrown when finishJob is called with an invalid finish_time
 TEST_F(FinishJobTest, FinishJobTest_InvalidFinishTime_Test){
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_TRUE(jobGateway->add(job) == job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::fromString("0.13.54.13.01:5.5"));
-    EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::invalid_argument);
+    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::invalid_argument);
 }
 
-void resetWorker(){
-    auto db = IGateway::AcquireDatabase();
+void resetWorker(const std::shared_ptr<QSqlDatabase> &db){
     QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
-                    db);
+                    *db);
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -999,9 +973,10 @@ void resetWorker(){
 /*
  * Fixture class that initializes Job and Worker on Setup and resets all tables besides users on TearDown
  */
-class GetJobCompleteTest : public ::testing::Test {
+class GetJobCompleteTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         // Setup Job
         job.id = 1;
         job.user_id = 1;
@@ -1038,10 +1013,10 @@ protected:
     }
 
     void TearDown() override {
-        resetResultsTable();
-        resetJobTable();
-        resetAllocResTable();
-        resetWorker();
+        resetResultsTable(db);
+        resetJobTable(db);
+        resetAllocResTable(db);
+        resetWorker(db);
     }
 
     job_details job;
@@ -1053,47 +1028,48 @@ protected:
 
 // Getter test for after startJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
-    EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_TRUE(workerGateway->add(worker) == worker.id);
+    EXPECT_TRUE(jobGateway->add(job) == job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.start_time = QDateTime::currentDateTime();
     job.worker_id = 1;
     job.allocated_specs = worker.specs;
     job.status = (int) JobStatus::processing;
-    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
-    EXPECT_TRUE(wasStartSuccessful(job, worker));
+    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_TRUE(wasStartSuccessful(job, worker, db));
 
-    job_details queryDetails = JobGateway::getJob(job.id);
+    job_details queryDetails = jobGateway->getJob(job.id);
     EXPECT_TRUE(queryDetails == job);
 }
 
 // Getter test for after finishJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
-    EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_TRUE(workerGateway->add(worker) == worker.id);
+    EXPECT_TRUE(jobGateway->add(job) == job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.start_time = QDateTime::currentDateTime();
     job.worker_id = 1;
     job.allocated_specs = worker.specs;
     job.status = (int) JobStatus::processing;
-    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
-    EXPECT_TRUE(wasStartSuccessful(job, worker));
+    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_TRUE(wasStartSuccessful(job, worker, db));
     job.finish_time = QDateTime::currentDateTime().addDays(2);
     job.result = result;
     job.status = (int) JobStatus::finished;
-    EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
-    EXPECT_TRUE(wasFinishSuccessful(result.stdout, job, result.exit_code));
+    EXPECT_TRUE(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
+    EXPECT_TRUE(wasFinishSuccessful(result.stdout, job, result.exit_code, db));
 
-    job_details queryDetails = JobGateway::getJob(job.id);
+    job_details queryDetails = jobGateway->getJob(job.id);
     EXPECT_TRUE(queryDetails == job);
 }
 
 /**
  * Fixture class that initializes three jobs on setup and resets the tables on teardown.
  */
-class GetJobsWithWorkerIdTest : public ::testing::Test {
+class GetJobsWithWorkerIdTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         // Set up the first job
         first.id = 1;
         first.status = 1; //scheduled
@@ -1168,9 +1144,9 @@ protected:
     }
 
     void TearDown() override {
-        resetJobTable();
-        resetWorker();
-        resetAllocResTable();
+        resetJobTable(db);
+        resetWorker(db);
+        resetAllocResTable(db);
     }
 
     job_details first;
@@ -1184,13 +1160,13 @@ protected:
 // the database
 TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_SuccessfulGet_Test){
     // Add the jobs. Their ids should match the order of their addition.
-    EXPECT_EQ(JobGateway::add(first), first.id);
-    EXPECT_EQ(JobGateway::add(second), second.id);
-    EXPECT_EQ(JobGateway::add(third), third.id);
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id, worker.specs.value(),
+    EXPECT_EQ(jobGateway->add(first), first.id);
+    EXPECT_EQ(jobGateway->add(second), second.id);
+    EXPECT_EQ(jobGateway->add(third), third.id);
+    EXPECT_EQ(workerGateway->add(worker), worker.id);
+    EXPECT_TRUE(jobGateway->startJob(second.id, worker.id, worker.specs.value(),
             QDateTime::fromString("2020.02.20:13.13.13.5", TIME_FORMAT)));
-    EXPECT_TRUE(JobGateway::startJob(third.id, worker.id, worker.specs.value(),
+    EXPECT_TRUE(jobGateway->startJob(third.id, worker.id, worker.specs.value(),
                                      QDateTime::fromString("2020.02.21:13.13.13.5", TIME_FORMAT)));
     second.status = (int) JobStatus::processing;
     third.status = (int) JobStatus::processing;
@@ -1202,43 +1178,43 @@ TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_SuccessfulGet_Test){
     expectedVector.push_back(second);
     expectedVector.push_back(third);
 
-    std::vector<job_details> actualVector = JobGateway::getJobsWithWorkerId(third.worker_id.value());
+    std::vector<job_details> actualVector = jobGateway->getJobsWithWorkerId(third.worker_id.value());
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
 }
 
 // Test to see if an exception is thrown when the getter is called but no allocated_resources table exists
 TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NoAllocatedResourcesTable_Test){
     // Deletes the allocated_resources table
-    deleteAllocResTable();
-    EXPECT_THROW(JobGateway::getJobsWithWorkerId(worker.id), std::logic_error);
+    deleteAllocResTable(db);
+    EXPECT_THROW(jobGateway->getJobsWithWorkerId(worker.id), std::logic_error);
 
     // Restore the table
-    createAllocResTable();
+    createAllocResTable(db);
 }
 
 // Test to see if an exception is thrown when the getter is called but no job_results table exists
 TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NoJobResultsTable_Test){
-    auto db = IGateway::AcquireDatabase();
     // Deletes the job_results table
-    deleteResultsTable();
+    deleteResultsTable(db);
 
-    EXPECT_THROW(JobGateway::getJobsWithWorkerId(worker.id), std::logic_error);
+    EXPECT_THROW(jobGateway->getJobsWithWorkerId(worker.id), std::logic_error);
 
     // Restore the table
-    createResultsTable();
+    createResultsTable(db);
 }
 
 // Test to see if the getter method returns an empty vector if the jobs table is empty
 TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NonExistentJobs_Test){
-    EXPECT_TRUE(JobGateway::getJobsWithWorkerId(worker.id).empty());
+    EXPECT_TRUE(jobGateway->getJobsWithWorkerId(worker.id).empty());
 }
 
 /**
  * Creates three jobs and an epoch on SetUp and resets the table on TearDown.
  */
-class GetJobsInIntervalTest : public ::testing::Test {
+class GetJobsInIntervalTest : public JobGatewayTest {
 protected:
     void SetUp() override{
+        JobGatewayTest::SetUp();
         // Set up a date/time to work with
         epoch.setDate(QDate(2020, 3, 17));
         epoch.setTime(QTime(20, 30));
@@ -1300,24 +1276,24 @@ protected:
         third.config.set_current_working_dir(".");
 
         // Standard procedure to add jobs and to get them. This should work flawlessly
-        EXPECT_EQ(JobGateway::add(first), first.id);
-        EXPECT_EQ(JobGateway::add(second), second.id);
-        EXPECT_EQ(JobGateway::add(third), third.id);
+        EXPECT_EQ(jobGateway->add(first), first.id);
+        EXPECT_EQ(jobGateway->add(second), second.id);
+        EXPECT_EQ(jobGateway->add(third), third.id);
 
         std::vector<job_details> expectedVector;
         expectedVector.push_back(first);
         expectedVector.push_back(second);
         expectedVector.push_back(third);
 
-        std::vector<job_details> actualVector = JobGateway::getJobs();
+        std::vector<job_details> actualVector = jobGateway->getJobs();
         EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
     }
 
     void TearDown() override {
-        resetJobTable();
-        resetWorker();
-        resetAllocResTable();
-        resetResultsTable();
+        resetJobTable(db);
+        resetWorker(db);
+        resetAllocResTable(db);
+        resetResultsTable(db);
     }
 
     job_details first;
@@ -1333,7 +1309,7 @@ protected:
  * scheduled one week prior, the second job 8 days prior and the third job 2 days prior.
  */
 TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Scheduled_Test){
-    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+    std::vector<job_details> actualIntervalJobs = jobGateway->getJobsInInterval(epoch.addDays
             (-7),epoch, JobStatus::scheduled);
 
     std::vector<job_details> expectedIntervalJobs;
@@ -1361,22 +1337,22 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     worker.name = "Ubuntu";
     worker.id = 1;
     worker.empty = false;
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(workerGateway->add(worker), worker.id);
     worker.public_key = "asdfsadcsadcsa";
     worker.address = "6.4.23.2";
     worker.name = "Windows";
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    EXPECT_EQ(workerGateway->add(worker), worker.id + 1);
     // The job then have to be started.
     first.start_time = epoch.addDays(-1);
     first.status = (int) JobStatus::processing;
     first.allocated_specs = worker.specs;
     first.worker_id = worker.id;
-    EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
-    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
+    EXPECT_TRUE(jobGateway->startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
+    EXPECT_TRUE(jobGateway->startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
     (-3)));
 
     // This is where the test begins.
-    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+    std::vector<job_details> actualIntervalJobs = jobGateway->getJobsInInterval(epoch.addDays
             (-2), epoch, JobStatus::processing);
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(first);
@@ -1402,18 +1378,18 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     worker.name = "Ubuntu";
     worker.id = 1;
     worker.empty = false;
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(workerGateway->add(worker), worker.id);
     worker.public_key = "asdfsadcsadcsa";
     worker.address = "6.4.23.2";
     worker.name = "Windows";
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    EXPECT_EQ(workerGateway->add(worker), worker.id + 1);
     // The job then have to be started.
     first.start_time = epoch.addDays(-1);
     first.status = (int) JobStatus::processing;
     first.allocated_specs = worker.specs;
     first.worker_id = worker.id;
-    EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
-    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
+    EXPECT_TRUE(jobGateway->startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
+    EXPECT_TRUE(jobGateway->startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
     (-3)));
 
     // Finish the third job
@@ -1423,9 +1399,9 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     result.stdout = "error";
     result.exit_code = 0;
     third.result = result;
-    EXPECT_TRUE(JobGateway::finishJob(third.id, third.finish_time.value(), third.result->stdout, third
+    EXPECT_TRUE(jobGateway->finishJob(third.id, third.finish_time.value(), third.result->stdout, third
     .result->exit_code));
-     std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+     std::vector<job_details> actualIntervalJobs = jobGateway->getJobsInInterval(epoch.addDays
              (-1), epoch, JobStatus::finished);
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(third);
@@ -1434,19 +1410,20 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
 
 // Test to see if method returns empty vector when status is not either processing, finished or scheduled.
 TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_InvalidStatus_Test){
-    EXPECT_TRUE(JobGateway::getJobsInInterval(QDateTime::currentDateTime(), QDateTime::currentDateTime(),
+    EXPECT_TRUE(jobGateway->getJobsInInterval(QDateTime::currentDateTime(), QDateTime::currentDateTime(),
             JobStatus::interrupted).empty());
 }
 
 // Test to see if exception is thrown when lower bound of interval is greater than upper bound.
 TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_InvalidInterval_Test){
-    EXPECT_THROW(JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays(1), QDateTime::currentDateTime(),
+    EXPECT_THROW(jobGateway->getJobsInInterval(QDateTime::currentDateTime().addDays(1), QDateTime::currentDateTime(),
             JobStatus::processing), std::invalid_argument);
 }
 
-class UpdateJobTest : public ::testing::Test {
+class UpdateJobTest : public JobGatewayTest {
 protected:
     void SetUp() override {
+        JobGatewayTest::SetUp();
         job.id = 1;
         job.status = (int) JobStatus::scheduled;
         job.user_id = 1;
@@ -1477,9 +1454,9 @@ protected:
     }
 
     void TearDown() override {
-        resetJobTable();
-        resetAllocResTable();
-        resetWorker();
+        resetJobTable(db);
+        resetAllocResTable(db);
+        resetWorker(db);
     }
 
     job_details job;
@@ -1487,29 +1464,27 @@ protected:
 };
 
 TEST_F(UpdateJobTest, UpdateJobTest_NoJobsTable_Test){
-    deleteJobsTable();
-    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
-    createJobsTable();
+    deleteJobsTable(db);
+    EXPECT_THROW(jobGateway->updateJob(job), std::logic_error);
+    createJobsTable(db);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_NoAllocResourcesTable_Test){
-    deleteAllocResTable();
-    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
-    createAllocResTable();
+    deleteAllocResTable(db);
+    EXPECT_THROW(jobGateway->updateJob(job), std::logic_error);
+    createAllocResTable(db);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_NoResultsTable_Test){
-    auto db = IGateway::AcquireDatabase();
-    deleteResultsTable();
-    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
-    createResultsTable();
+    deleteResultsTable(db);
+    EXPECT_THROW(jobGateway->updateJob(job), std::logic_error);
+    createResultsTable(db);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_NoWorkersTable_Test){
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("DROP TABLE workers", db);
+    QSqlQuery query("DROP TABLE workers", *db);
     query.exec();
-    EXPECT_THROW(JobGateway::updateJob(job), std::logic_error);
+    EXPECT_THROW(jobGateway->updateJob(job), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
                   "(\n"
                   "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -1530,38 +1505,36 @@ TEST_F(UpdateJobTest, UpdateJobTest_NoWorkersTable_Test){
 
 TEST_F(UpdateJobTest, UpdateJobTest_InvalidId_Test){
     job.id = 0;
-    EXPECT_THROW(JobGateway::updateJob(job), std::invalid_argument);
+    EXPECT_THROW(jobGateway->updateJob(job), std::invalid_argument);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_NonExistentJob_Test){
-    EXPECT_THROW(JobGateway::updateJob(job), std::runtime_error);
+    EXPECT_THROW(jobGateway->updateJob(job), std::runtime_error);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
     // Add the job and worker and then start the job.
-    EXPECT_EQ(JobGateway::add(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(jobGateway->add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
+    EXPECT_EQ(workerGateway->add(worker), worker.id);
     job.status = (int) JobStatus::processing;
     job.start_time = QDateTime::currentDateTime();
     job.allocated_specs = worker.specs;
     job.worker_id = 1;
-    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
-    EXPECT_TRUE(wasStartSuccessful(job, worker));
+    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_TRUE(wasStartSuccessful(job, worker, db));
 
     // Change the allocated resources
     Specs new_specs = worker.specs.value();
     new_specs.cores = worker.specs->cores + 2;
     job.allocated_specs = new_specs;
-    JobGateway::updateJob(job);
+    jobGateway->updateJob(job);
 
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", db);
+    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", *db);
     query.addBindValue(QVariant::fromValue(job.id));
     query.exec();
     query.next();
-    db = IGateway::AcquireDatabase();
-    QSqlQuery allocQuery("SELECT cores, ram, osIdentifier FROM allocated_resources WHERE id = ?", db);
+    QSqlQuery allocQuery("SELECT cores, ram, osIdentifier FROM allocated_resources WHERE id = ?", *db);
     EXPECT_EQ(query.value(0).toUInt(), 1);
     allocQuery.addBindValue(query.value(0));
     allocQuery.exec();
@@ -1572,36 +1545,35 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    JobGateway::updateJob(job);
+    EXPECT_EQ(jobGateway->add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
+    jobGateway->updateJob(job);
 
     // Nothing changed
-    job_details actualJob = JobGateway::getJob(job.id);
+    job_details actualJob = jobGateway->getJob(job.id);
     EXPECT_TRUE(job == actualJob);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     // Add the job and  two workers and then start the job.
-    EXPECT_EQ(JobGateway::add(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(jobGateway->add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
+    EXPECT_EQ(workerGateway->add(worker), worker.id);
     worker.public_key = "sadfsdcasd";
     worker.address = "1.2.4.5.6";
     worker.name = "windows";
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    EXPECT_EQ(workerGateway->add(worker), worker.id + 1);
     job.status = (int) JobStatus::processing;
     job.start_time = QDateTime::currentDateTime();
     job.allocated_specs = worker.specs;
     job.worker_id = 1;
-    EXPECT_TRUE(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
-    EXPECT_TRUE(wasStartSuccessful(job, worker));
+    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_TRUE(wasStartSuccessful(job, worker, db));
 
     // Update the worker_id
     job.worker_id = worker.id + 1;
-    JobGateway::updateJob(job);
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("SELECT worker_id FROM jobs WHERE id = ?", db);
+    jobGateway->updateJob(job);
+    QSqlQuery query("SELECT worker_id FROM jobs WHERE id = ?", *db);
     query.addBindValue(QVariant::fromValue(job.id));
     query.exec();
     query.next();
@@ -1609,41 +1581,41 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_EQ(jobGateway->add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::interrupted;
-    JobGateway::updateJob(job);
+    jobGateway->updateJob(job);
 
-    job_details actualJob = JobGateway::getJob(job.id);
+    job_details actualJob = jobGateway->getJob(job.id);
     EXPECT_TRUE(job == actualJob);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_EQ(jobGateway->add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::paused;
-    JobGateway::updateJob(job);
+    jobGateway->updateJob(job);
 
-    job_details actualJob = JobGateway::getJob(job.id);
+    job_details actualJob = jobGateway->getJob(job.id);
     EXPECT_TRUE(job == actualJob);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_EQ(jobGateway->add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::canceled;
-    JobGateway::updateJob(job);
+    jobGateway->updateJob(job);
 
-    job_details actualJob = JobGateway::getJob(job.id);
+    job_details actualJob = jobGateway->getJob(job.id);
     EXPECT_TRUE(job == actualJob);
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdatePriority_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
+    EXPECT_EQ(jobGateway->add(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.config.set_priority(Priority::emergency);
-    JobGateway::updateJob(job);
+    jobGateway->updateJob(job);
 
-    job_details actualJob = JobGateway::getJob(job.id);
+    job_details actualJob = jobGateway->getJob(job.id);
     EXPECT_TRUE(job == actualJob);
 }

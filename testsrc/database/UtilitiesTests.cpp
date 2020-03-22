@@ -4,47 +4,42 @@
 #include <database/IGateway.h>
 #include <QSqlQuery>
 
+#include "DatabaseTest.h"
+
 using namespace balancedbanana::database;
 
+using UtilitiesTest = DatabaseTest;
 
-class UtilitiesEnvironment : public ::testing::Environment {
-public:
-    void SetUp() override {
-        Repository("localhost", "balancedbanana", "balancedbanana", "qwer1234", 3306);
-    }
-};
+using DoesTableExistTest = UtilitiesTest;
 
-::testing::Environment* const util_env = ::testing::AddGlobalTestEnvironment(new UtilitiesEnvironment);
-
-
-TEST(DoesTableExistTest, DoesTableExistTest_Jobs_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("jobs"));
+TEST_F(DoesTableExistTest, DoesTableExistTest_Jobs_Test){
+    EXPECT_TRUE(Utilities::doesTableExist("jobs", db));
 }
 
 
-TEST(DoesTableExistTest, DoesTableExistTest_Users_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("users"));
+TEST_F(DoesTableExistTest, DoesTableExistTest_Users_Test){
+    EXPECT_TRUE(Utilities::doesTableExist("users", db));
 }
 
 
-TEST(DoesTableExistTest, DoesTableExistTest_Workers_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("workers"));
+TEST_F(DoesTableExistTest, DoesTableExistTest_Workers_Test){
+    EXPECT_TRUE(Utilities::doesTableExist("workers", db));
 }
 
 
-TEST(DoesTableExistTest, DoesTableExistTest_Job_Results_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("job_results"));
+TEST_F(DoesTableExistTest, DoesTableExistTest_Job_Results_Test){
+    EXPECT_TRUE(Utilities::doesTableExist("job_results", db));
 }
 
 
-TEST(DoesTableExistTest, DoesTableExistTest_Allocated_Resources_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("allocated_resources"));
+TEST_F(DoesTableExistTest, DoesTableExistTest_Allocated_Resources_Test){
+    EXPECT_TRUE(Utilities::doesTableExist("allocated_resources", db));
 }
 
-TEST(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
-    QSqlQuery query("DROP TABLE jobs", IGateway::AcquireDatabase());
+TEST_F(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
+    QSqlQuery query("DROP TABLE jobs", *db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("jobs"));
+    EXPECT_FALSE(Utilities::doesTableExist("jobs", db));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (\n"
                   "    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
                   "    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
@@ -77,10 +72,10 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
 }
 
 
-TEST(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
-    QSqlQuery query("DROP TABLE users", IGateway::AcquireDatabase());
+TEST_F(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
+    QSqlQuery query("DROP TABLE users", *db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("users"));
+    EXPECT_FALSE(Utilities::doesTableExist("users", db));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`users`\n"
                   "(\n"
                   "    `id`    BIGINT(10) UNSIGNED NOT NULL,\n"
@@ -97,10 +92,10 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
 }
 
 
-TEST(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
-    QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
+TEST_F(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
+    QSqlQuery query("DROP TABLE workers", *db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("workers"));
+    EXPECT_FALSE(Utilities::doesTableExist("workers", db));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
                   "(\n"
                   "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -120,10 +115,10 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
 }
 
 
-TEST(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
-    QSqlQuery query("DROP TABLE job_results", IGateway::AcquireDatabase());
+TEST_F(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
+    QSqlQuery query("DROP TABLE job_results", *db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("job_results"));
+    EXPECT_FALSE(Utilities::doesTableExist("job_results", db));
     query.prepare("CREATE TABLE `job_results` (\n"
                     "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                     "  `stdout` text NOT NULL,\n"
@@ -135,10 +130,10 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
 }
 
 
-TEST(DoesTableExistTest, DoesTableExistTest_NoAllocated_Resources_Test){
-    QSqlQuery query("DROP TABLE allocated_resources", IGateway::AcquireDatabase());
+TEST_F(DoesTableExistTest, DoesTableExistTest_NoAllocated_Resources_Test){
+    QSqlQuery query("DROP TABLE allocated_resources", *db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("allocated_resources"));
+    EXPECT_FALSE(Utilities::doesTableExist("allocated_resources", db));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
                   "(\n"
                   "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -153,7 +148,9 @@ TEST(DoesTableExistTest, DoesTableExistTest_NoAllocated_Resources_Test){
     query.exec();
 }
 
-TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Size_Diff_Job_Test){
+using AreDetailVectorsEqualTest = UtilitiesTest;
+
+TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Size_Diff_Job_Test){
     job_details first;
     job_details second;
     // Set up the first job
@@ -202,7 +199,7 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Size_Diff_Job_Test){
     EXPECT_FALSE(Utilities::areDetailVectorsEqual(firstVector, secondVector));
 }
 
-TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Jobs_Test){
+TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Jobs_Test){
     job_details first;
     job_details second;
     // Set up the first job
@@ -250,7 +247,7 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Jobs_Test){
     EXPECT_FALSE(Utilities::areDetailVectorsEqual(firstVector, secondVector));
 }
 
-TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Jobs_Test){
+TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Jobs_Test){
     job_details first;
     // Set up the first job
     first.id = 1;
@@ -279,7 +276,7 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Jobs_Test){
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(firstVector, secondVector));
 }
 
-TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Users_Test){
+TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Users_Test){
     user_details first;
     user_details second;
     // Set up the first user
@@ -306,7 +303,7 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Users_Test){
     EXPECT_FALSE(Utilities::areDetailVectorsEqual(firstVector, secondVector));
 }
 
-TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Users_Test){
+TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Users_Test){
     user_details first;
     // Set up the first user
     first.public_key = "34nrhk3hkr";
@@ -324,7 +321,7 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Users_Test){
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(firstVector, secondVector));
 }
 
-TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Workers_Test){
+TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Workers_Test){
     worker_details first;
     worker_details second;
     // Set up the first worker
@@ -361,7 +358,7 @@ TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Workers_Test
     EXPECT_FALSE(Utilities::areDetailVectorsEqual(firstVector, secondVector));
 }
 
-TEST(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Workers_Test){
+TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Workers_Test){
     worker_details first;
     // Set up the first worker
     first.public_key = "34nrhk3hkr";

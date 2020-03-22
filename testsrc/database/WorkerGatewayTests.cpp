@@ -15,23 +15,11 @@
 #include <string>
 #include <locale>
 
+#include "DatabaseTest.h"
+
 using namespace balancedbanana::database;
 
-/**
- * Test environment that has a global SetUp and TearDown methods for all test suites/tests.
- *
- * Sets up the database connection.
- *
- */
-class WorkerGatewayEnvironment : public ::testing::Environment{
-public:
-    void SetUp() override {
-        Repository("localhost", "balancedbanana", "balancedbanana", "qwer1234", 3306);
-    }
-};
-
-::testing::Environment* const worker_env = ::testing::AddGlobalTestEnvironment(new WorkerGatewayEnvironment);
-
+using WorkerGatewayTest = DatabaseTest;
 /**
  * Test to see if the connection to the DB was correctly established.
  */
@@ -40,9 +28,8 @@ TEST(ConnectionTest, ConnectionTest_CheckkDBConnection_Test){}
 /**
  * Deletes the all records in the workers table and resets the auto increment for the id.
  */
-void resetWorkerTable(){
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
+void resetWorkerTable(const std::shared_ptr<QSqlDatabase> &db){
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -53,9 +40,10 @@ void resetWorkerTable(){
 /**
  * Fixture class that initializes a sample worker's details.
  */
-class AddWorkerTest : public ::testing::Test {
+class AddWorkerTest : public WorkerGatewayTest {
 protected:
     void SetUp() override {
+        WorkerGatewayTest::SetUp();
         details.public_key = "34nrhk3hkr";
         Specs specs{};
         specs.osIdentifier = "Windows 10.4.1.4";
@@ -69,7 +57,7 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable();
+        resetWorkerTable(db);
     }
 
     worker_details details;
@@ -81,8 +69,8 @@ protected:
  * @param id The id of the added record.
  * @return true if the add was successful, otherwise false.
  */
-bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", IGateway::AcquireDatabase());
+bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", *db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -126,10 +114,10 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id){
 TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 
     // The first entry's id should be 1
-    EXPECT_TRUE(WorkerGateway::add(details) == 1);
+    EXPECT_TRUE(workerGateway->add(details) == 1);
 
     // The add must be successful
-    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, db));
 }
 
 // Test to see if the auto increment feature works as expected.
@@ -137,8 +125,8 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
 TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
 
     // Add the worker from the first test. Since it's the first worker, its id should be 1.
-    EXPECT_TRUE(WorkerGateway::add(details) == 1);
-    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(workerGateway->add(details) == 1);
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, db));
 
     // Initialize a new worker
     worker_details seconddetails{};
@@ -149,18 +137,19 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
     seconddetails.id = 2;
     seconddetails.empty = false;
 
-    EXPECT_TRUE(WorkerGateway::add(seconddetails) == 2);
-    EXPECT_TRUE(wasWorkerAddSuccessful(seconddetails, 2));
+    EXPECT_TRUE(workerGateway->add(seconddetails) == 2);
+    EXPECT_TRUE(wasWorkerAddSuccessful(seconddetails, 2, db));
 }
 
 /**
  * Fixture class that deletes the workers table on setup and restores it on teardown.
  */
-class NoWorkersTableTest : public ::testing::Test{
+class NoWorkersTableTest : public WorkerGatewayTest {
 protected:
     void SetUp() override {
+        WorkerGatewayTest::SetUp();
         // Deletes the workers table
-        QSqlQuery query("DROP TABLE workers", IGateway::AcquireDatabase());
+        QSqlQuery query("DROP TABLE workers", *db);
         query.exec();
 
         // Setup the varaibles needed
@@ -177,7 +166,6 @@ protected:
     }
 
     void TearDown() override {
-        auto db = IGateway::AcquireDatabase();
         QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
                         "(\n"
                         "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -192,7 +180,7 @@ protected:
                         "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
                         ")\n"
                         "ENGINE = InnoDB\n"
-                        "DEFAULT CHARACTER SET = utf8", db);
+                        "DEFAULT CHARACTER SET = utf8", *db);
         query.exec();
     }
 
@@ -202,22 +190,22 @@ protected:
 
 // Test to see if an exception is thrown when a worker is being added, but no workers' table exists.
 TEST_F(NoWorkersTableTest, NoWorkersTableTest_AddWorker_Test){
-    EXPECT_THROW(WorkerGateway::add(details), std::logic_error);
+    EXPECT_THROW(workerGateway->add(details), std::logic_error);
 }
 
 // Test to see if an exception is thrown when a worker is being removed, but no workers' table exists.
 TEST_F(NoWorkersTableTest, NoWorkersTableTest_RemoveWorker_Test){
-    EXPECT_THROW(WorkerGateway::remove(id), std::logic_error);
+    EXPECT_THROW(workerGateway->remove(id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the worker getter is called, but no workers' table exists.
 TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorker_Test){
-    EXPECT_THROW(WorkerGateway::getWorker(id), std::logic_error);
+    EXPECT_THROW(workerGateway->getWorker(id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the workers getter is called, but no workers' table exists.
 TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
-    EXPECT_THROW(WorkerGateway::getWorkers(), std::logic_error);
+    EXPECT_THROW(workerGateway->getWorkers(), std::logic_error);
 }
 
 /**
@@ -225,9 +213,8 @@ TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
  * @param id The id of the removed record.
  * @return  true if remove was successful, otherwise false.
  */
-bool wasWorkerRemoveSuccessful(uint64_t id){
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", db);
+bool wasWorkerRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", *db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -240,10 +227,10 @@ bool wasWorkerRemoveSuccessful(uint64_t id){
 /**
  * Fixture class that resets the auto increment on teardown.
  */
-class RemoveWorkerTest : public ::testing::Test {
+class RemoveWorkerTest : public WorkerGatewayTest {
 protected:
     void TearDown() override{
-        resetWorkerTable();
+        resetWorkerTable(db);
     }
 };
 
@@ -262,26 +249,27 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     details.id = 1;
     details.empty = false;
     // Since this is the first worker, this has to be true.
-    EXPECT_TRUE(WorkerGateway::add(details) == 1);
-    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1));
+    EXPECT_TRUE(workerGateway->add(details) == 1);
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, db));
 
     // This must return true.
-    EXPECT_TRUE(WorkerGateway::remove(1));
-    EXPECT_TRUE(wasWorkerRemoveSuccessful(1));
+    EXPECT_TRUE(workerGateway->remove(1));
+    EXPECT_TRUE(wasWorkerRemoveSuccessful(1, db));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
-    EXPECT_FALSE(WorkerGateway::remove(1));
+    EXPECT_FALSE(workerGateway->remove(1));
 }
 
 
 /**
  * Fixture class that initializes a sample worker on setUp and resets the table on teardown.
  */
-class GetWorkerTest : public ::testing::Test{
+class GetWorkerTest : public WorkerGatewayTest {
 protected:
     void SetUp() override {
+        WorkerGatewayTest::SetUp();
         details.public_key = "34nrhk3hkr";
         Specs specs{};
         specs.osIdentifier = "UNIX";
@@ -295,7 +283,7 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable();
+        resetWorkerTable(db);
     }
 
     worker_details details;
@@ -304,25 +292,26 @@ protected:
 // Test to see if the first worker can be retrieved correctly.
 TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
     // Add the worker. Its id should be 1, since it's the first worker to be added.
-    EXPECT_EQ(WorkerGateway::add(details), details.id);
+    EXPECT_EQ(workerGateway->add(details), details.id);
 
     // Get the worker and compare it to the added worker. They should be equal.
-    worker_details expected_details = WorkerGateway::getWorker(details.id);
+    worker_details expected_details = workerGateway->getWorker(details.id);
     EXPECT_TRUE(details == expected_details);
 }
 
 // Test to see if the getter method returns an empty worker_details when its called with an invalid id
 TEST_F(GetWorkerTest, GetWorkerTest_NonExistentWorker_Test){
     worker_details empty_details{};
-    EXPECT_TRUE(WorkerGateway::getWorker(1) == empty_details);
+    EXPECT_TRUE(workerGateway->getWorker(1) == empty_details);
 }
 
 /**
  * Fixture class that initializes three workers on setup and resets the table on teardown.
  */
-class GetWorkersTest : public ::testing::Test {
+class GetWorkersTest : public WorkerGatewayTest {
 protected:
     void SetUp() override {
+        WorkerGatewayTest::SetUp();
         // Set up the first worker
         first.public_key = "34nrhk3hkr";
         Specs firstSpecs{};
@@ -355,7 +344,7 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable();
+        resetWorkerTable(db);
     }
 
     worker_details first;
@@ -366,27 +355,28 @@ protected:
 // Test to see if getWorkers retrieves a vector of previously added workers from the database
 TEST_F(GetWorkersTest, GetWorkersTest_SuccessfulGet_Test){
     // Add the workers. Their ids should match the order of their addition.
-    EXPECT_EQ(WorkerGateway::add(first), first.id);
-    EXPECT_EQ(WorkerGateway::add(second), second.id);
-    EXPECT_EQ(WorkerGateway::add(third), third.id);
+    EXPECT_EQ(workerGateway->add(first), first.id);
+    EXPECT_EQ(workerGateway->add(second), second.id);
+    EXPECT_EQ(workerGateway->add(third), third.id);
 
     std::vector<worker_details> expectedVector;
     expectedVector.push_back(first);
     expectedVector.push_back(second);
     expectedVector.push_back(third);
 
-    std::vector<worker_details> actualVector = WorkerGateway::getWorkers();
+    std::vector<worker_details> actualVector = workerGateway->getWorkers();
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
 }
 
 // Test to see if the getter method returns an empty vector if the workers table is empty
 TEST_F(GetWorkersTest, GetWorkersTest_NonExistentWorkers_Test){
-    EXPECT_TRUE(WorkerGateway::getWorkers().empty());
+    EXPECT_TRUE(workerGateway->getWorkers().empty());
 }
 
-class GetWorkerByNameTest : public ::testing::Test {
+class GetWorkerByNameTest : public WorkerGatewayTest {
 protected:
     void SetUp() override {
+        WorkerGatewayTest::SetUp();
         worker.public_key = "34nrhk3hkr";
         Specs specs{};
         specs.osIdentifier = "10240";
@@ -400,17 +390,16 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable();
+        resetWorkerTable(db);
     }
 
     worker_details worker;
 };
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("DROP TABLE workers", db);
+    QSqlQuery query("DROP TABLE workers", *db);
     query.exec();
-    EXPECT_THROW(WorkerGateway::getWorkerByName(worker.name), std::logic_error);
+    EXPECT_THROW(workerGateway->getWorkerByName(worker.name), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
                   "(\n"
                   "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -430,18 +419,19 @@ TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
 }
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_WorkerFound_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
-    EXPECT_TRUE(WorkerGateway::getWorkerByName(worker.name) == worker);
+    EXPECT_EQ(workerGateway->add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id, db));
+    EXPECT_TRUE(workerGateway->getWorkerByName(worker.name) == worker);
 }
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_GetWorkerByNameTest_WorkerNotFound_Test_TestFound_Test){
-    EXPECT_EQ(WorkerGateway::getWorkerByName(worker.name).id, 0);
+    EXPECT_EQ(workerGateway->getWorkerByName(worker.name).id, 0);
 }
 
-class UpdateWorkerTest : public ::testing::Test {
+class UpdateWorkerTest : public WorkerGatewayTest {
 protected:
     void SetUp() override {
+        WorkerGatewayTest::SetUp();
         worker.public_key = "34nrhk3hkr";
         Specs specs{};
         specs.osIdentifier = "10240";
@@ -455,17 +445,16 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable();
+        resetWorkerTable(db);
     }
 
     worker_details worker;
 };
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("DROP TABLE workers", db);
+    QSqlQuery query("DROP TABLE workers", *db);
     query.exec();
-    EXPECT_THROW(WorkerGateway::updateWorker(worker), std::logic_error);
+    EXPECT_THROW(workerGateway->updateWorker(worker), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
                   "(\n"
                   "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -486,21 +475,21 @@ TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_InvalidId_Test){
     worker.id = 0;
-    EXPECT_THROW(WorkerGateway::updateWorker(worker), std::invalid_argument);
+    EXPECT_THROW(workerGateway->updateWorker(worker), std::invalid_argument);
 }
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorker_Test){
-    EXPECT_THROW(WorkerGateway::updateWorker(worker), std::runtime_error);
+    EXPECT_THROW(workerGateway->updateWorker(worker), std::runtime_error);
 }
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_Success_Test){
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id));
+    EXPECT_EQ(workerGateway->add(worker), worker.id);
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id, db));
 
     worker_details new_worker = worker;
     new_worker.name = "Windows 10";
-    WorkerGateway::updateWorker(new_worker);
-    worker_details actualWorker = WorkerGateway::getWorker(worker.id);
+    workerGateway->updateWorker(new_worker);
+    worker_details actualWorker = workerGateway->getWorker(worker.id);
     EXPECT_TRUE(actualWorker == new_worker);
 }
 
@@ -531,11 +520,14 @@ std::wstring generateRandomUnicodeString(size_t len, size_t start, size_t end)
         ustr[i] = (rand() % intervalLength) + start;
     }
     ustr[len] = L'\0';
-    return std::wstring(ustr);
+    std::wstring wstr(ustr);
+    delete[] ustr;
+    return wstr;
 }
 
+using WorkerEncodingTest = WorkerGatewayTest;
 
-TEST(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
+TEST_F(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
     /*
     worker_details worker;
     worker.public_key = "safdsadf";
@@ -543,9 +535,9 @@ TEST(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
     worker.name = name;
     worker.empty = false;
     worker.id = 1;
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
-    worker_details actualWorker = WorkerGateway::getWorker(worker.id);
-    EXPECT_EQ(WorkerGateway::getWorker(worker.id).name, worker.name);
+    EXPECT_EQ(workerGateway->add(worker), worker.id);
+    worker_details actualWorker = workerGateway->getWorker(worker.id);
+    EXPECT_EQ(workerGateway->getWorker(worker.id).name, worker.name);
     qDebug() << QString::fromStdString(actualWorker.name) << QString::fromStdString(worker.name);
 
      */
@@ -559,8 +551,7 @@ TEST(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
     std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
 
     std::wstring output = generateRandomUnicodeString(5, 0x0400, 0x04FF);
-    auto db = IGateway::AcquireDatabase();
-    QSqlQuery query("INSERT INTO workers (name, public_key) VALUES (?,?)", db);
+    QSqlQuery query("INSERT INTO workers (name, public_key) VALUES (?,?)", *db);
     query.addBindValue(QString::fromStdWString(output));
     query.addBindValue("something");
     query.exec();
@@ -569,6 +560,6 @@ TEST(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
         EXPECT_EQ(query.value(0).toString().toStdWString(), output);
     }
 
-    resetWorkerTable();
+    resetWorkerTable(db);
 }
 
