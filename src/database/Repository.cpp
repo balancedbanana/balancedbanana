@@ -5,21 +5,66 @@
 #include <database/UserGateway.h>
 #include <functional>
 #include <iostream>
+#include <utility>
+#include <QString>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
 
-Repository::Repository(const std::string& host_name, const std::string& databasename, const std::string&
-username, const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) :
-jobCache(), workerCache(), userCache(), lastJobId(0, 0), lastWorkerId(0, 0), lastUserId(0, 0), mtx(), timer() {
-    IGateway::createDBConnection(host_name, databasename, username, password, port);
+std::map<std::string, std::shared_ptr<Repository>> Repository::repositories = std::map<std::string, std::shared_ptr<Repository>>();
+
+Repository::RepositorySharer::RepositorySharer(const std::string &name, const std::string& host_name, const std::string& databasename, const std::string& username,
+                 const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) : Repository(name, host_name, databasename, username, password, port, updateInterval){
+}
+
+Repository::Repository(std::string name, std::string  host_name, std::string  databasename, std::string username, std::string  password,  uint64_t port, std::chrono::seconds updateInterval) :
+jobCache(), workerCache(), userCache(), lastJobId(0, 0), lastWorkerId(0, 0), lastUserId(0, 0), mtx(), timer(), databaseConnection(std::pair(std::this_thread::get_id(), nullptr)),
+name(std::move(name)), host_name(std::move(host_name)), databasename(std::move(databasename)), username(std::move(username)), password(std::move(password)), port(port){
     timer.setInterval(updateInterval.count());
     timer.addTimerFunction(std::function<void()>([this](){WriteBack();}));
     timer.start();
 }
 
 Repository::~Repository() {
-    FlushCache();
+    std::lock_guard guard(mtx);
+    WriteBack();
+    ClearCache();
+}
+
+std::shared_ptr<Repository> Repository::GetRepository(const std::string &name, const std::string& host_name, const std::string& databasename, const std::string& username,
+                                    const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) {
+    auto iterator = repositories.find(name);
+    if(iterator != repositories.end()) {
+        return iterator->second;
+    }
+    auto repo = std::make_shared<RepositorySharer>(name, host_name, databasename, username, password, port, updateInterval);
+    repositories.insert(std::pair(name, repo));
+    return repo;
+}
+
+std::shared_ptr<Repository> Repository::GetRepository(const std::string &name) {
+    auto iterator = repositories.find(name);
+    if(iterator == repositories.end()) {
+        throw std::runtime_error("Tried to access a database that is not connected");
+    }
+    return iterator->second;
+}
+
+std::shared_ptr<QSqlDatabase> Repository::GetDatabase() {
+    std::lock_guard guard(mtx);
+    if(databaseConnection.first != std::this_thread::get_id() || databaseConnection.second == nullptr || !databaseConnection.second->isOpen()) {
+        auto db = std::make_shared<QSqlDatabase>(QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(name)));
+        db->setHostName(QString::fromStdString(host_name));
+        db->setDatabaseName(QString::fromStdString(databasename));
+        db->setUserName(QString::fromStdString(username));
+        db->setPassword(QString::fromStdString(password));
+        db->setPort(port);
+        if(!db->open()){
+            throw std::logic_error("Error: connection with database failed.");
+        }
+        databaseConnection = std::pair(std::this_thread::get_id(), db);
+    }
+    return databaseConnection.second;
 }
 
 std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
@@ -31,7 +76,7 @@ std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
     if(it != workerCache.end()) {
         return it->second.first;
     } else {
-        worker_details wd = WorkerGateway::getWorker(id);
+        worker_details wd = WorkerGateway(GetDatabase()).getWorker(id);
         if(wd.empty) {
             return nullptr;
         }
@@ -50,7 +95,7 @@ std::shared_ptr<Worker> Repository::AddWorker(const std::string &name, const std
     wd.specs = specs;
     wd.address = address;
     std::lock_guard lock(mtx);
-    wd.id = WorkerGateway::add(wd);
+    wd.id = WorkerGateway(GetDatabase()).add(wd);
     std::shared_ptr<Worker> worker = Factory::createWorker(wd);
     workerCache.insert(std::pair(wd.id, std::pair(worker, true)));
     worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(this);
@@ -66,7 +111,7 @@ std::shared_ptr<Job> Repository::GetJob(uint64_t id) {
     if(it != jobCache.end()) {
         return it->second.first;
     } else {
-        job_details jd = JobGateway::getJob(id);
+        job_details jd = JobGateway(GetDatabase()).getJob(id);
         if(jd.empty) {
             return nullptr;
         }
@@ -93,7 +138,7 @@ command) {
     jd.start_time = std::nullopt;
     jd.status = scheduled;
     std::lock_guard lock(mtx);
-    jd.id = JobGateway::add(jd);
+    jd.id = JobGateway(GetDatabase()).add(jd);
     std::shared_ptr<Job> job = Factory::createJob(jd, GetUser(user_id));
     jobCache.insert(std::pair(jd.id, std::pair(job, true)));
     job->RegisterObserver(this);
@@ -109,7 +154,7 @@ std::shared_ptr<User> Repository::GetUser(uint64_t id) {
     if(it != userCache.end()) {
         return it->second.first;
     } else {
-        user_details ud = UserGateway::getUser(id);
+        user_details ud = UserGateway(GetDatabase()).getUser(id);
         if(ud.empty) {
             return nullptr;
         }
@@ -128,7 +173,7 @@ std::shared_ptr<User> Repository::AddUser(uint64_t id, const std::string& name, 
     ud.name = name;
     ud.email = email;
     std::lock_guard lock(mtx);
-    if (!UserGateway::add(ud)){
+    if (!UserGateway(GetDatabase()).add(ud)){
         return nullptr;
     }
     std::shared_ptr<User> user = Factory::createUser(ud);
@@ -146,7 +191,11 @@ void Repository::WriteBack() {
             jd.id = job->getId();
             jd.user_id = job->getUser()->id();
             jd.empty = false;
-            jd.worker_id = job->getWorker_id();
+            if(job->getWorker_id() != 0) {
+                jd.worker_id = job->getWorker_id();
+            } else {
+                jd.worker_id = std::nullopt;
+            }
             jd.allocated_specs = {job->getAllocated_osIdentifier(), job->getAllocated_cores(), job->getAllocated_ram()};
             jd.command = job->getCommand();
             jd.config = *job->getConfig();
@@ -159,7 +208,7 @@ void Repository::WriteBack() {
             jd.schedule_time = job->getScheduled_at();
             jd.start_time = job->getStarted_at();
             jd.status = job->getStatus();
-            JobGateway::updateJob(jd);
+            JobGateway(GetDatabase()).updateJob(jd);
             entry.second.second = false;
         }
     }
@@ -171,7 +220,7 @@ void Repository::WriteBack() {
         wd.public_key = worker->pubkey();
         wd.specs = worker->getSpec();
         wd.address = worker->getAddress();
-        WorkerGateway::updateWorker(wd);
+        WorkerGateway(GetDatabase()).updateWorker(wd);
         entry.second.second = false;
     }
     for(auto &entry : userCache) {
@@ -182,7 +231,7 @@ void Repository::WriteBack() {
         ud.public_key = user->pubkey();
         ud.name = user->name();
         ud.email = user->email();
-        UserGateway::updateUser(ud);
+        UserGateway(GetDatabase()).updateUser(ud);
         entry.second.second = false;
     }
 }
@@ -196,6 +245,7 @@ void Repository::FlushCache() {
     for(auto &pair : jobCache) {
         if(pair.second.first.use_count() == 1) {
             jobTrashList.push_back(pair.first);
+            pair.second.first->UnregisterObserver(this);
         }
     }
     for(auto id : jobTrashList) {
@@ -207,11 +257,27 @@ void Repository::FlushCache() {
     for(auto &pair : userCache) {
         if(pair.second.first.use_count() == 1) {
             userTrashList.push_back(pair.first);
+            pair.second.first->UnregisterObserver(this);
         }
     }
     for(auto id : userTrashList) {
         userCache.erase(id);
     }
+}
+
+void Repository::ClearCache() {
+    for(auto &pair : jobCache) {
+        pair.second.first->UnregisterObserver(this);
+    }
+    for(auto &pair : userCache) {
+        pair.second.first->UnregisterObserver(this);
+    }
+    for(auto &pair : workerCache) {
+        std::dynamic_pointer_cast<Observable<WorkerObservableEvent>>(pair.second.first)->UnregisterObserver(this);
+    }
+    jobCache.clear();
+    userCache.clear();
+    workerCache.clear();
 }
 
 std::vector<std::shared_ptr<Worker>> Repository::GetActiveWorkers() {
@@ -228,7 +294,7 @@ std::vector<std::shared_ptr<Worker>> Repository::GetActiveWorkers() {
 std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     std::lock_guard lock(mtx);
     std::vector<std::shared_ptr<Job>> unfinished;
-    for(auto&& job : JobGateway::getJobs()) {
+    for(auto&& job : JobGateway(GetDatabase()).getJobs()) {
         if ((JobStatus)job.status != JobStatus::finished) {
             auto sjob = jobCache.find(job.id);
             if(sjob != jobCache.end()) {
@@ -248,7 +314,7 @@ std::vector<std::shared_ptr<Job>>
 Repository::GetJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
     std::lock_guard lock(mtx);
     std::vector<std::shared_ptr<Job>> intervalJobs;
-    auto details = JobGateway::getJobsInInterval(from, to, status);
+    auto details = JobGateway(GetDatabase()).getJobsInInterval(from, to, status);
     intervalJobs.reserve(details.size());
     for (auto &entry : details){
         intervalJobs.push_back(GetJob(entry.id));
@@ -259,7 +325,7 @@ Repository::GetJobsInInterval(const QDateTime &from, const QDateTime &to, JobSta
 std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
     std::lock_guard lock(mtx);
     std::vector<std::shared_ptr<Worker>> workers;
-    auto details = WorkerGateway::getWorkers();
+    auto details = WorkerGateway(GetDatabase()).getWorkers();
     workers.reserve(details.size());
     for(auto &entry : details) {
         workers.push_back(GetWorker(entry.id));
@@ -268,7 +334,7 @@ std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
 }
 
 std::shared_ptr<Worker> Repository::FindWorker(const std::string &name) {
-    uint64_t id = WorkerGateway::getWorkerByName(name).id;
+    uint64_t id = WorkerGateway(GetDatabase()).getWorkerByName(name).id;
     if(id == 0) {
         return nullptr;
     }
@@ -276,7 +342,7 @@ std::shared_ptr<Worker> Repository::FindWorker(const std::string &name) {
 }
 
 std::shared_ptr<User> Repository::FindUser(const std::string &name) {
-    uint64_t id = UserGateway::getUserByName(name).id;
+    uint64_t id = UserGateway(GetDatabase()).getUserByName(name).id;
     if(id == 0) {
         return nullptr;
     }

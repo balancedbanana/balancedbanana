@@ -2,6 +2,9 @@
 
 #include "job_details.h"
 #include "job_result.h"
+#include "JobGateway.h"
+#include "UserGateway.h"
+#include "WorkerGateway.h"
 #include <configfiles/JobConfig.h>
 #include <scheduler/Job.h>
 #include <scheduler/Worker.h>
@@ -9,6 +12,7 @@
 
 #include <cinttypes>
 #include <QDateTime>
+#include <QThreadStorage>
 #include <string>
 #include <map>
 #include <timedevents/Timer.h>
@@ -22,7 +26,10 @@ namespace balancedbanana::database {
 
         //This is the interface that the rest of the program uses to query the database.
         class Repository : protected Observer<JobObservableEvent>, protected Observer<WorkerObservableEvent>, protected Observer<UserObservableEvent> {
-        private:
+        protected:
+            struct RepositorySharer;
+
+            static std::map<std::string, std::shared_ptr<Repository>> repositories;
 
             //structure: <id, <ptr, dirty>>
             std::map<uint64_t, std::pair<std::shared_ptr<Job>, bool>> jobCache;
@@ -35,11 +42,27 @@ namespace balancedbanana::database {
             timedevents::Timer timer;
             std::recursive_mutex mtx;
 
-        public:
-            Repository(const std::string& host_name, const std::string& databasename, const std::string& username,
-                    const std::string& password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
+            std::pair<std::thread::id, std::shared_ptr<QSqlDatabase>> databaseConnection;
+            std::string name;
+            std::string host_name;
+            std::string databasename;
+            std::string username;
+            std::string password;
+            uint64_t port;
 
-            ~Repository();
+            Repository(std::string name, std::string  host_name, std::string  databasename, std::string  username,
+                       std::string  password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
+
+        public:
+
+            ~Repository() override;
+
+            static std::shared_ptr<Repository> GetRepository(const std::string &name, const std::string& host_name, const std::string& databasename, const std::string& username,
+                                  const std::string& password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
+
+            static std::shared_ptr<Repository> GetRepository(const std::string &name);
+
+            std::shared_ptr<QSqlDatabase> GetDatabase();
 
             std::shared_ptr<Worker> GetWorker(uint64_t id);
             std::shared_ptr<Worker> AddWorker(const std::string &name, const std::string &publickey, const Specs &specs, const std::string &address);
@@ -52,6 +75,7 @@ namespace balancedbanana::database {
 
             void WriteBack();
             void FlushCache();
+            void ClearCache();
 
             std::vector<std::shared_ptr<Worker>> GetActiveWorkers();
             std::vector<std::shared_ptr<Job>> GetUnfinishedJobs();
@@ -65,5 +89,10 @@ namespace balancedbanana::database {
             void OnUpdate(Observable<WorkerObservableEvent> *observable, WorkerObservableEvent e) override;
             void OnUpdate(Observable<UserObservableEvent> *observable, UserObservableEvent e) override;
             void OnUpdate(Observable<JobObservableEvent> *observable, JobObservableEvent e) override;
+        };
+
+        struct Repository::RepositorySharer : public Repository {
+            RepositorySharer(const std::string &name, const std::string& host_name, const std::string& databasename, const std::string& username,
+                       const std::string& password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
         };
     }
