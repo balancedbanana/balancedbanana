@@ -20,7 +20,7 @@ UserGateway::UserGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(std::move(
  * @param user  The user to be added
  * @return The id of the user.
  */
-bool UserGateway::add(const user_details& user) {
+bool UserGateway::addUser(const user_details& user) {
     // DB must contain table
     if (!Utilities::doesTableExist("users", db)){
         Utilities::throwNoTableException("users");
@@ -52,7 +52,7 @@ bool UserGateway::add(const user_details& user) {
  * @param id  The id of the user to be deleted.
  * @return True if the operation was successful, otherwise false
  */
-bool UserGateway::remove(uint64_t user_id) {
+bool UserGateway::removeUser(uint64_t user_id) {
     if (!Utilities::doesTableExist("users", db)){
         Utilities::throwNoTableException("users");
     }
@@ -70,11 +70,7 @@ bool UserGateway::remove(uint64_t user_id) {
     }
 }
 
-/**
- * Getter method for the information of a user with the given id.
- * @param id  The id of the user.
- * @return The details of the user.
- */
+
 user_details UserGateway::getUser(uint64_t id) {
     if (!Utilities::doesTableExist("users", db)){
         Utilities::throwNoTableException("users");
@@ -104,10 +100,7 @@ user_details UserGateway::getUser(uint64_t id) {
 
 }
 
-/**
- * Getter for all the users in the database.
- * @return  Vector of all the users in the database.
- */
+
 std::vector<user_details> UserGateway::getUsers() {
     if (!Utilities::doesTableExist("users", db)){
         Utilities::throwNoTableException("users");
@@ -131,11 +124,6 @@ std::vector<user_details> UserGateway::getUsers() {
     }
 }
 
-/**
- * Getter for a user with a specific name
- * @param name The name of the user
- * @return Returns the correct details of the user if found, otherwise return empty details struct with invalid id
- */
 user_details UserGateway::getUserByName(const std::string &name) {
     if (!Utilities::doesTableExist("users", db)){
         Utilities::throwNoTableException("users");
@@ -159,10 +147,7 @@ user_details UserGateway::getUserByName(const std::string &name) {
     return details;
 }
 
-/**
- * Updates the given user's fields in the database.
- * @param user The user
- */
+
 void UserGateway::updateUser(const user_details &user) {
     if (!Utilities::doesTableExist("users", db)){
         Utilities::throwNoTableException("users");

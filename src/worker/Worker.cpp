@@ -145,6 +145,7 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
         try {
             switch ((TaskType)task.getType())
             {
+#if 0 /* UNUSED FEATURE */
             case TaskType::ADD_IMAGE: {
                 auto& content = task.getAddImageFileContent();
                 if(content.empty()) {
@@ -167,13 +168,20 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 com->send(taskmess);
                 break;
             }
+#endif /* UNUSED FEATURE */
             case TaskType::RUN: {
+                // Backup id contains timestamp
+                // auto&& dockerfile = task.getAddImageFileContent();
+                // if(!dockerfile.empty() && task.getBackupId().has_value())
+                //     docker.UpdateImage(task.getConfig()->image(), dockerfile, *task.getBackupId());
                 auto container = docker.Run(task);
+                #if 0 /* Now use jobid */
                 // ToDo save the taskid / containerid mapping
                 {
                     std::lock_guard<std::mutex> guard(midtodocker);
                     idtodocker[std::to_string(task.getJobId().value_or(0))] = container.GetId();
                 }
+                #endif
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
                 com->send(resp);
                 auto exitcode = container.Wait();
@@ -188,11 +196,13 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 break;
             }
             case TaskType::TAIL: {
-                Container container("");
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
                 {
                     std::lock_guard<std::mutex> guard(midtodocker);
                     container = idtodocker[std::to_string(task.getJobId().value_or(0))];
                 }
+                #endif
                 // Spec said 200 lines
                 auto lines = container.Tail(200);
                 Task response;
@@ -204,22 +214,26 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 break;
             }
             case TaskType::PAUSE: {
-                Container container("");
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
                 {
                     std::lock_guard<std::mutex> guard(midtodocker);
                     container = idtodocker[std::to_string(task.getJobId().value_or(0))];
                 }
+                #endif
                 container.Pause();
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::paused);
                 com->send(resp);
                 break;
             }
             case TaskType::CONTINUE: {
-                Container container("");
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
                 {
                     std::lock_guard<std::mutex> guard(midtodocker);
                     container = idtodocker[std::to_string(task.getJobId().value_or(0))];
                 }
+                #endif
                 container.Continue();
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
                 com->send(resp);

@@ -95,7 +95,7 @@ std::shared_ptr<Worker> Repository::AddWorker(const std::string &name, const std
     wd.specs = specs;
     wd.address = address;
     std::lock_guard lock(mtx);
-    wd.id = WorkerGateway(GetDatabase()).add(wd);
+    wd.id = WorkerGateway(GetDatabase()).addWorker(wd);
     std::shared_ptr<Worker> worker = Factory::createWorker(wd);
     workerCache.insert(std::pair(wd.id, std::pair(worker, true)));
     worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(this);
@@ -138,7 +138,7 @@ command) {
     jd.start_time = std::nullopt;
     jd.status = scheduled;
     std::lock_guard lock(mtx);
-    jd.id = JobGateway(GetDatabase()).add(jd);
+    jd.id = JobGateway(GetDatabase()).addJob(jd);
     std::shared_ptr<Job> job = Factory::createJob(jd, GetUser(user_id));
     jobCache.insert(std::pair(jd.id, std::pair(job, true)));
     job->RegisterObserver(this);
@@ -173,7 +173,7 @@ std::shared_ptr<User> Repository::AddUser(uint64_t id, const std::string& name, 
     ud.name = name;
     ud.email = email;
     std::lock_guard lock(mtx);
-    if (!UserGateway(GetDatabase()).add(ud)){
+    if (!UserGateway(GetDatabase()).addUser(ud)){
         return nullptr;
     }
     std::shared_ptr<User> user = Factory::createUser(ud);

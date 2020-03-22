@@ -167,7 +167,7 @@ JobGateway::JobGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(db) {
  * @param details  The information of a Job
  * @return The id of the added Job
  */
-uint64_t JobGateway::add(job_details details) {
+uint64_t JobGateway::addJob(job_details details) {
     // DB must contain table
     if (!Utilities::doesTableExist("jobs", db)){
         Utilities::throwNoTableException("jobs");
@@ -182,7 +182,7 @@ uint64_t JobGateway::add(job_details details) {
  * @param job_id The job's id
  * @return true if the operation was successful, otherwise false;
  */
-bool JobGateway::remove(uint64_t job_id) {
+bool JobGateway::removeJob(uint64_t job_id) {
     if (!Utilities::doesTableExist("jobs", db)){
         Utilities::throwNoTableException("jobs");
     }
@@ -269,7 +269,7 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
  * @param query The query
  */
 void setAllocatedTableValues(job_details& details, QSqlQuery& query, const std::shared_ptr<QSqlDatabase> &db){
-    if (Utilities::castToOptional(query.value(17).toUInt()) == std::nullopt){
+    if (query.value(17).isNull()){
         details.allocated_specs = std::nullopt;
     } else {
         QSqlQuery allocateQuery("SELECT osIdentifier, ram, cores FROM allocated_resources WHERE id = ?", *db);
@@ -314,11 +314,6 @@ void setResultTableValues(job_details&  details, QSqlQuery& query, const std::sh
     }
 }
 
-/**
- * Getter method for the information of a job with the given id.
- * @param job_id The job's id
- * @return The details of the job
- */
 job_details JobGateway::getJob(uint64_t job_id) {
     if (!Utilities::doesTableExist("jobs", db)){
         Utilities::throwNoTableException("jobs");
@@ -372,10 +367,6 @@ job_details JobGateway::getJob(uint64_t job_id) {
     return details;
 }
 
-/**
- * Getter for all the jobs in the database.
- * @return  Vector of all the jobs in the database.
- */
 std::vector<job_details> JobGateway::getJobs() {
     if (!Utilities::doesTableExist("jobs", db)){
         Utilities::throwNoTableException("jobs");
@@ -424,10 +415,6 @@ std::vector<job_details> JobGateway::getJobs() {
     return jobVector;
 }
 
-/**
- * Getter for all the jobs in the database with a specific worker_id.
- * @return  Vector of all the jobs in the database.
- */
 std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
     if (!Utilities::doesTableExist("jobs", db)){
         Utilities::throwNoTableException("jobs");
@@ -477,13 +464,6 @@ std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
     return jobVector;
 }
 
-/**
- * Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
- * @param job_id The id of the job
- * @param worker_id The id of the worker (or partition of the worker)
- * @param specs The resources assigned to the job
- * @return true if the operation was successful, otherwise false.
- */
 bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& specs, const QDateTime& start_time) {
     if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
@@ -525,14 +505,6 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& spec
     return false;
 }
 
-/**
- * Updates the status of a Job to finished and adds the finish time to its record.
- * @param job_id The id of the Job.
- * @param finish_time The finish time of the Job.
- * @param stdout The output of the Job
- * @param exit_code The exit code of the Job
- * @return true if the operation was successful, otherwise false.
- */
 bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         , const std::string& stdout, const int8_t exit_code) {
     if (!Utilities::doesTableExist("job_results", db)){
@@ -623,16 +595,6 @@ void addScheduledJobsInterval(const QDateTime& from, const QDateTime& to, std::v
     }
 }
 
-/**
- * Getter for Jobs that were either started, finished or scheduled within a certain time interval.
- *
- * Note: The Job's status is irrelevant to this method. The only thing that matters is the time field in its record.
- *
- * @param from The lower bound of the interval (inclusive)
- * @param to  The upper bound of the interval (inclusive)
- * @param status The status of the Jobs
- * @return Vector of the wanted Jobs
- */
 std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
     if (from > to){
         throw std::invalid_argument("getJobsInInterval error: lower bound of interval can't be greater than the upper bound.");
@@ -709,9 +671,9 @@ bool interruptJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
 }
 
 /**
- * Updates job's status to paused
- * @param id The id of the job
- * @return True if the operation was successful, otherwise false
+ * Updates job's status to paused.
+ * @param id The id of the job.
+ * @return True if the operation was successful, otherwise false.
  */
 bool pauseJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", *db);
@@ -724,6 +686,10 @@ bool pauseJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
     }
 }
 
+/**
+ * Updates a Job's allocated specs.
+ * @param job The Job.
+ */
 void updateAllocatedSpecs(const job_details& job, const std::shared_ptr<QSqlDatabase> &db){
     if (!job.allocated_specs.has_value()){
         return;
@@ -749,6 +715,10 @@ void updateAllocatedSpecs(const job_details& job, const std::shared_ptr<QSqlData
     }
 }
 
+/**
+ * Updates a Job's worker_id.
+ * @param job The Job.
+ */
 void updateWorkerId(const job_details& job, const std::shared_ptr<QSqlDatabase> &db){
     if (!job.worker_id.has_value()){
         return;
