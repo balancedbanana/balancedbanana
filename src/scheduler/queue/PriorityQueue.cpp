@@ -101,6 +101,7 @@ namespace balancedbanana {
             }
             for(auto&& j : removeing) {
                 normalList.remove(j);
+                submissionTimes.insert_or_assign((*j).getId(), UINT64_MAX);
             }
             removeing.clear();
             for(std::shared_ptr<Job> job : lowList) {
@@ -111,6 +112,7 @@ namespace balancedbanana {
             }
             for(auto&& j : removeing) {
                 lowList.remove(j);
+                submissionTimes.insert_or_assign((*j).getId(), UINT64_MAX);
             }
             removeing.clear();
             //Actually we dont check if a job has updated already, It can therefore upgrade twice, should hopefully not be a big problem
