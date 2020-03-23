@@ -10,6 +10,7 @@
 #include <scheduler/queue/PriorityQueue.h>
 #include <communication/message/TaskMessage.h>
 #include <scheduler/smtpserver/SmtpServer.h>
+#include <QtCore/QCoreApplication>
 #include <database/JobGateway.h>
 
 using namespace balancedbanana::commandLineInterface;
@@ -375,6 +376,9 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
 
 int main(int argc, char **argv)
 {
+    int _argc = 1;
+    char* _argv[] = { "bbs" };
+    QCoreApplication qapp(_argc, _argv);
     Scheduler scheduler;
     return scheduler.processCommandLineArguments(argc, argv);
 }
