@@ -32,7 +32,7 @@ DEFAULT CHARACTER SET = utf8;
 CREATE TABLE IF NOT EXISTS `balancedbanana`.`job_results`
 (
     `id`        BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `stdout`    TEXT          NOT NULL,
+    `output`    TEXT          NOT NULL,
     `exit_code` TINYINT(3)          NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `id_UNIQUE` (`id` ASC)

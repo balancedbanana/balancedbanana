@@ -14,6 +14,8 @@
 #include <iostream>
 #include <QSqlRecord>
 #include <utility>
+#include <QtSql/QSqlField>
+#include <QSqlDriver>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
@@ -297,7 +299,7 @@ void setResultTableValues(job_details&  details, QSqlQuery& query, const std::sh
     if (query.value(18).isNull()){
         details.result = std::nullopt;
     } else {
-        QSqlQuery resultQuery("SELECT stdout, exit_code FROM job_results WHERE id = ?", *db);
+        QSqlQuery resultQuery("SELECT output, exit_code FROM job_results WHERE id = ?", *db);
         resultQuery.addBindValue(query.value(18).toUInt());
         if (resultQuery.exec()){
             if (resultQuery.next()){
@@ -517,7 +519,7 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         if (!finish_time.isValid()){
             throw std::invalid_argument("finishJob error: finish_time is not valid");
         }
-        QSqlQuery queryResult("INSERT INTO job_results (exit_code, stdout) VALUES (?, ?)", *db);
+        QSqlQuery queryResult("INSERT INTO job_results (exit_code, output) VALUES (?, ?)", *db);
         queryResult.addBindValue(exit_code);
         queryResult.addBindValue(QVariant::fromValue(QString::fromStdString(stdout)));
         uint64_t result;
@@ -774,8 +776,52 @@ void updateAllocResBypass(const job_details& job, const std::shared_ptr<QSqlData
     }
 }
 
+QString getLastExecutedQuery(const QSqlQuery& query)
+{
+    QString sql = query.executedQuery();
+    int nbBindValues = query.boundValues().size();
+
+    for(int i = 0, j = 0; j < nbBindValues;)
+    {
+        int s = sql.indexOf(QLatin1Char('\''), i);
+        i = sql.indexOf(QLatin1Char('?'), i);
+        if (i < 1)
+        {
+            break;
+        }
+
+        if(s < i && s > 0)
+        {
+            i = sql.indexOf(QLatin1Char('\''), s + 1) + 1;
+            if(i < 2)
+            {
+                break;
+            }
+        }
+        else
+        {
+            const QVariant &var = query.boundValue(j);
+            QSqlField field(QLatin1String(""), var.type());
+            if (var.isNull())
+            {
+                field.clear();
+            }
+            else
+            {
+                field.setValue(var);
+            }
+            QString formatV = query.driver()->formatValue(field);
+            sql.replace(i, 1, formatV);
+            i += formatV.length();
+            ++j;
+        }
+    }
+
+    return sql;
+}
+
 void updateResultBypass(const job_details& job, const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery resultQuery;
+    QSqlQuery resultQuery(*db);
     bool updateResultId = false;
     if(job.result) {
         QSqlQuery resIdQuery("SELECT result_id FROM jobs WHERE id = ?", *db);
@@ -784,14 +830,14 @@ void updateResultBypass(const job_details& job, const std::shared_ptr<QSqlDataba
             throw std::runtime_error("updateJob error: " + resIdQuery.lastError().databaseText().toStdString());
         }
         if(resIdQuery.first() && resIdQuery.value(0).isNull()) {
-            resultQuery = QSqlQuery("INSERT INTO job_results (exit_code, stdout) VALUES (?, ?)", *db);
+            resultQuery = QSqlQuery("INSERT INTO job_results (exit_code, output) VALUES (?, ?)", *db);
             resultQuery.addBindValue(job.result->exit_code);
             resultQuery.addBindValue(QVariant::fromValue(QString::fromStdString(job.result->stdout)));
             updateResultId = true;
         } else {
-            resultQuery = QSqlQuery("UPDATE job_results SET stdout = ?, exit_code = ? WHERE id=?", *db);
+            resultQuery.prepare("UPDATE job_results SET exit_code = ?, output = ? WHERE id = ?");
+            resultQuery.addBindValue(job.result->exit_code);
             resultQuery.addBindValue(QVariant::fromValue(QString::fromStdString(job.result->stdout)));
-            resultQuery.addBindValue(QVariant::fromValue(job.result->exit_code));
             resultQuery.addBindValue(resIdQuery.value(0));
         }
     } else {

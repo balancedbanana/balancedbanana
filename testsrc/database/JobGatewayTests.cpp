@@ -2,7 +2,6 @@
 #include <database/JobGateway.h>
 #include <database/job_result.h>
 #include <database/job_details.h>
-#include <database/Repository.h>
 #include <database/Utilities.h>
 #include <database/WorkerGateway.h>
 
@@ -515,7 +514,7 @@ void deleteResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
 void createResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("CREATE TABLE `job_results` (\n"
                   "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
-                  "  `stdout` text NOT NULL,\n"
+                  "  `output` text NOT NULL,\n"
                   "  `exit_code` tinyint(3) NOT NULL,\n"
                   "  PRIMARY KEY (`id`),\n"
                   "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
@@ -886,7 +885,7 @@ protected:
 
 bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code, const std::shared_ptr<QSqlDatabase> &db){
     uint result_id = 1;
-    QSqlQuery queryResult("SELECT stdout, exit_code FROM job_results WHERE id = ?", *db);
+    QSqlQuery queryResult("SELECT output, exit_code FROM job_results WHERE id = ?", *db);
     queryResult.addBindValue(result_id);
     QSqlQuery queryJobs("SELECT finish_time, result_id FROM jobs WHERE id = ?", *db);
     queryJobs.addBindValue(QVariant::fromValue(job.id));
@@ -993,7 +992,6 @@ protected:
         job.config.set_priority(Priority::high);
 
         // Finish information
-        job_result result;
         result.stdout = "Some detailed info...";
         result.exit_code = 0;
 
@@ -1021,8 +1019,6 @@ protected:
     job_details job;
     worker_details worker;
     job_result result;
-    std::string stdout;
-    int8_t exit_code;
 };
 
 // Getter test for after startJob is called
@@ -1801,7 +1797,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultBoth_Test){
     EXPECT_TRUE(query.value(0).isNull());
 }
 
-// This test is for when the allocated resources are NULL in the database, but the new job_details has them
+// This test is for when the results are NULL in the database, but the new job_details has them
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
@@ -1817,7 +1813,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
     ASSERT_TRUE(queryJobsTable.next());
     ASSERT_FALSE(queryJobsTable.value(0).isNull());
 
-    QSqlQuery queryResultsTable("SELECT stdout, exit_code FROM job_results WHERE id = ?", *db);
+    QSqlQuery queryResultsTable("SELECT output, exit_code FROM job_results WHERE id = ?", *db);
     queryResultsTable.addBindValue(queryJobsTable.value(0));
     ASSERT_TRUE(queryResultsTable.exec());
     ASSERT_TRUE(queryResultsTable.next());
@@ -1825,36 +1821,36 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
     EXPECT_EQ(queryResultsTable.value(1).toInt(), job.result->exit_code);
 }
 
-// Test for when Job already has allocated_specs, but results are updated
+// Test for when Job already has results, but results are updated
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateResult_Test){
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
     ASSERT_TRUE(workerGateway->addWorker(worker));
-    job.worker_id = worker.id;
-    job.allocated_specs = worker.specs;
-    job.start_time = QDateTime::currentDateTime();
-    job.status = (int) JobStatus::processing;
-    ASSERT_TRUE(jobGateway->startJob(job.id, job.worker_id.value(), job.allocated_specs.value(), job.start_time.value()));
-    ASSERT_TRUE(wasStartSuccessful(job, worker, db));
+    job.finish_time = QDateTime::currentDateTime();
+    job.status = (int) JobStatus::finished;
+    job.result = {"some result..", 100};
+    ASSERT_TRUE(jobGateway->finishJob(job.id, job.finish_time.value(), job.result->stdout, job.result->exit_code));
+    ASSERT_TRUE(wasFinishSuccessful(job.result->stdout, job, job.result->exit_code, db));
 
-    // Get old AllocId
-    QSqlQuery queryAllocId("SELECT allocated_id FROM jobs WHERE id = ?", *db);
-    queryAllocId.addBindValue(QVariant::fromValue(job.id));
-    ASSERT_TRUE(queryAllocId.exec());
-    ASSERT_TRUE(queryAllocId.next());
+    // Get old ResultId
+    QSqlQuery queryResultId("SELECT result_id FROM jobs WHERE id = ?", *db);
+    queryResultId.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(queryResultId.exec());
+    ASSERT_TRUE(queryResultId.next());
 
-    // Change specs
-    job.allocated_specs->ram = worker.specs->ram + 1;
+    // Change result
+    job.result->exit_code = 10;
+    job.result->stdout = "some other result";
     jobGateway->updateJobBypassWriteProtection(job);
 
     // Getter should return equal job_details
     job_details job_actual = jobGateway->getJob(job.id);
     EXPECT_TRUE(job_actual == job);
 
-    // AllocId should be unchanged
-    QSqlQuery queryAllocIdNew("SELECT allocated_id FROM jobs WHERE id = ?", *db);
-    queryAllocIdNew.addBindValue(QVariant::fromValue(job.id));
-    ASSERT_TRUE(queryAllocIdNew.exec());
-    ASSERT_TRUE(queryAllocIdNew.next());
-    EXPECT_EQ(queryAllocId.value(0).toInt(), queryAllocIdNew.value(0).toInt());
+    // ResultId should be unchanged
+    QSqlQuery queryResultIdNew("SELECT result_id FROM jobs WHERE id = ?", *db);
+    queryResultIdNew.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(queryResultIdNew.exec());
+    ASSERT_TRUE(queryResultIdNew.next());
+    EXPECT_EQ(queryResultId.value(0).toInt(), queryResultIdNew.value(0).toInt());
 }
