@@ -7,6 +7,7 @@
 #include <iostream>
 #include <utility>
 #include <QString>
+#include <QVariant>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
@@ -53,7 +54,8 @@ std::shared_ptr<Repository> Repository::GetRepository(const std::string &name) {
 std::shared_ptr<QSqlDatabase> Repository::GetDatabase() {
     std::lock_guard guard(mtx);
     if(databaseConnection.first != std::this_thread::get_id() || databaseConnection.second == nullptr || !databaseConnection.second->isOpen()) {
-        auto db = std::make_shared<QSqlDatabase>(QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(name)));
+        auto db = std::make_shared<QSqlDatabase>(QSqlDatabase::addDatabase("QMYSQL", QVariant::fromValue
+        (std::this_thread::get_id()).toString()));
         db->setHostName(QString::fromStdString(host_name));
         db->setDatabaseName(QString::fromStdString(databasename));
         db->setUserName(QString::fromStdString(username));
