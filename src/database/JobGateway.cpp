@@ -784,9 +784,9 @@ void updateResultBypass(const job_details& job, const std::shared_ptr<QSqlDataba
             throw std::runtime_error("updateJob error: " + resIdQuery.lastError().databaseText().toStdString());
         }
         if(resIdQuery.first() && resIdQuery.value(0).isNull()) {
-            resultQuery = QSqlQuery("INSERT INTO job_results (stdout, exit_code) VALUES (?, ?)", *db);
+            resultQuery = QSqlQuery("INSERT INTO job_results (exit_code, stdout) VALUES (?, ?)", *db);
+            resultQuery.addBindValue(job.result->exit_code);
             resultQuery.addBindValue(QVariant::fromValue(QString::fromStdString(job.result->stdout)));
-            resultQuery.addBindValue(QVariant::fromValue(job.result->exit_code));
             updateResultId = true;
         } else {
             resultQuery = QSqlQuery("UPDATE job_results SET stdout = ?, exit_code = ? WHERE id=?", *db);

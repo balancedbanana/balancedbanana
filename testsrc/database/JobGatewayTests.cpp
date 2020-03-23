@@ -1714,16 +1714,16 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NonExistentJob_Test){
 
 // This test is for when both the database and the new job_details don't have allocated resources
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResBoth_Test){
-    EXPECT_EQ(jobGateway->addJob(job), job.id);
-    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
+    ASSERT_EQ(jobGateway->addJob(job), job.id);
+    ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
     jobGateway->updateJobBypassWriteProtection(job);
     job_details job_actual = jobGateway->getJob(job.id);
     EXPECT_TRUE(job_actual == job);
     QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", *db);
     query.addBindValue(QVariant::fromValue(job.id));
-    EXPECT_TRUE(query.exec());
-    EXPECT_TRUE(query.next());
+    ASSERT_TRUE(query.exec());
+    ASSERT_TRUE(query.next());
     EXPECT_TRUE(query.value(0).isNull());
 }
 
@@ -1752,6 +1752,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResDB_Test){
     EXPECT_EQ(queryAllocResTable.value(2).toInt(), job.allocated_specs->cores);
 }
 
+// Test for when Job already has allocated_specs, but specs are updated
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
@@ -1783,5 +1784,77 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
     ASSERT_TRUE(queryAllocIdNew.exec());
     ASSERT_TRUE(queryAllocIdNew.next());
     EXPECT_EQ(queryAllocId.value(0).toInt(), queryAllocIdNew.value(0).toInt());
+}
 
+// This test is for when both the database and the new job_details don't have results
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultBoth_Test){
+    ASSERT_EQ(jobGateway->addJob(job), job.id);
+    ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
+
+    jobGateway->updateJobBypassWriteProtection(job);
+    job_details job_actual = jobGateway->getJob(job.id);
+    EXPECT_TRUE(job_actual == job);
+    QSqlQuery query("SELECT result_id FROM jobs WHERE id = ?", *db);
+    query.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(query.exec());
+    ASSERT_TRUE(query.next());
+    EXPECT_TRUE(query.value(0).isNull());
+}
+
+// This test is for when the allocated resources are NULL in the database, but the new job_details has them
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
+    ASSERT_EQ(jobGateway->addJob(job), job.id);
+    ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
+
+    job.result = {"some result..", 100};
+    jobGateway->updateJobBypassWriteProtection(job);
+    job_details job_actual = jobGateway->getJob(job.id);
+    EXPECT_TRUE(job_actual == job);
+
+    QSqlQuery queryJobsTable("SELECT result_id FROM jobs WHERE id = ?", *db);
+    queryJobsTable.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(queryJobsTable.exec());
+    ASSERT_TRUE(queryJobsTable.next());
+    ASSERT_FALSE(queryJobsTable.value(0).isNull());
+
+    QSqlQuery queryResultsTable("SELECT stdout, exit_code FROM job_results WHERE id = ?", *db);
+    queryResultsTable.addBindValue(queryJobsTable.value(0));
+    ASSERT_TRUE(queryResultsTable.exec());
+    ASSERT_TRUE(queryResultsTable.next());
+    EXPECT_EQ(queryResultsTable.value(0).toString().toStdString(), job.result->stdout);
+    EXPECT_EQ(queryResultsTable.value(1).toInt(), job.result->exit_code);
+}
+
+// Test for when Job already has allocated_specs, but results are updated
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateResult_Test){
+    ASSERT_EQ(jobGateway->addJob(job), job.id);
+    ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
+    ASSERT_TRUE(workerGateway->addWorker(worker));
+    job.worker_id = worker.id;
+    job.allocated_specs = worker.specs;
+    job.start_time = QDateTime::currentDateTime();
+    job.status = (int) JobStatus::processing;
+    ASSERT_TRUE(jobGateway->startJob(job.id, job.worker_id.value(), job.allocated_specs.value(), job.start_time.value()));
+    ASSERT_TRUE(wasStartSuccessful(job, worker, db));
+
+    // Get old AllocId
+    QSqlQuery queryAllocId("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    queryAllocId.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(queryAllocId.exec());
+    ASSERT_TRUE(queryAllocId.next());
+
+    // Change specs
+    job.allocated_specs->ram = worker.specs->ram + 1;
+    jobGateway->updateJobBypassWriteProtection(job);
+
+    // Getter should return equal job_details
+    job_details job_actual = jobGateway->getJob(job.id);
+    EXPECT_TRUE(job_actual == job);
+
+    // AllocId should be unchanged
+    QSqlQuery queryAllocIdNew("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    queryAllocIdNew.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(queryAllocIdNew.exec());
+    ASSERT_TRUE(queryAllocIdNew.next());
+    EXPECT_EQ(queryAllocId.value(0).toInt(), queryAllocIdNew.value(0).toInt());
 }
