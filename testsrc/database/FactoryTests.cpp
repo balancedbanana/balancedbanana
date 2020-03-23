@@ -149,7 +149,9 @@ protected:
 bool compareWorkers(Worker& expected, Worker& actual){
     return expected.getId() == actual.getId()
     && ((!expected.getSpec().has_value() && !actual.getSpec().has_value())
-    || (expected.getSpec().value() == actual.getSpec().value()));
+    || (expected.getSpec().value() == actual.getSpec().value()))
+    && expected.name() == actual.name()
+    && expected.pubkey() == actual.pubkey();
 }
 
 TEST_F(CreateWorkerTest, CreateWorkerTest_Success_Test){
