@@ -47,7 +47,7 @@ Container Docker::Run(const Task & task) {
     }
     // Minimum only relevant for scheduler, might to check it here too
     if(config->max_cpu_count()) {
-        args.append({"--cpuset-cpus", QString::fromStdString(std::to_string(*config->max_cpu_count()))});
+        args.append({"--cpus", QString::fromStdString(std::to_string(*config->max_cpu_count()))});
     }
     if(!config->image().empty()) {
         args.append(QString::fromStdString(config->image()));
@@ -78,7 +78,7 @@ void balancedbanana::worker::Docker::BuildImage(const std::string& name, const s
         }
         // Minimum only relevant for scheduler, might to check it here too
         if(config->max_cpu_count()) {
-            args.append({"--cpuset-cpus", QString::fromStdString(std::to_string(*config->max_cpu_count()))});
+            args.append({"--cpu-period=\"100000\"", "--cpu-quota", QString::fromStdString(std::to_string(*config->max_cpu_count()) + "00000")});
         }
     }
     proc.setArguments(args);
