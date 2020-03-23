@@ -42,7 +42,7 @@ namespace balancedbanana::database {
             timedevents::Timer timer;
             std::recursive_mutex mtx;
 
-            std::pair<std::thread::id, std::shared_ptr<QSqlDatabase>> databaseConnection;
+            QThreadStorage<std::shared_ptr<QSqlDatabase>> databaseConnections;
             std::string name;
             std::string host_name;
             std::string databasename;

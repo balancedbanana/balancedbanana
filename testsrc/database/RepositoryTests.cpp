@@ -150,7 +150,6 @@ TEST_F(RepositoryTest, TimedWriteBack) {
     EXPECT_NO_THROW(user = repo->GetUser(1));
     EXPECT_NE(user, nullptr);
     EXPECT_EQ(user->name(), "name");
-    std::cout << user->email() << std::endl;
 }
 
 TEST_F(RepositoryTest, FlushCache) {

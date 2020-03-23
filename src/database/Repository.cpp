@@ -7,6 +7,7 @@
 #include <iostream>
 #include <utility>
 #include <QString>
+#include <random>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
@@ -18,7 +19,7 @@ Repository::RepositorySharer::RepositorySharer(const std::string &name, const st
 }
 
 Repository::Repository(std::string name, std::string  host_name, std::string  databasename, std::string username, std::string  password,  uint64_t port, std::chrono::seconds updateInterval) :
-jobCache(), workerCache(), userCache(), lastJobId(0, 0), lastWorkerId(0, 0), lastUserId(0, 0), mtx(), timer(), databaseConnection(std::pair(std::this_thread::get_id(), nullptr)),
+jobCache(), workerCache(), userCache(), lastJobId(0, 0), lastWorkerId(0, 0), lastUserId(0, 0), mtx(), timer(), databaseConnections(),
 name(std::move(name)), host_name(std::move(host_name)), databasename(std::move(databasename)), username(std::move(username)), password(std::move(password)), port(port){
     timer.setInterval(updateInterval.count());
     timer.addTimerFunction(std::function<void()>([this](){WriteBack();}));
@@ -52,19 +53,27 @@ std::shared_ptr<Repository> Repository::GetRepository(const std::string &name) {
 
 std::shared_ptr<QSqlDatabase> Repository::GetDatabase() {
     std::lock_guard guard(mtx);
-    if(databaseConnection.first != std::this_thread::get_id() || databaseConnection.second == nullptr || !databaseConnection.second->isOpen()) {
-        auto db = std::make_shared<QSqlDatabase>(QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(name)));
+    if(!databaseConnections.hasLocalData()) {
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
+        std::vector<uint32_t> name(4);
+        for (auto &&i : name) {
+            i = dis(gen);
+        }
+        std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
+        auto db = std::make_shared<QSqlDatabase>(QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(sname)));
         db->setHostName(QString::fromStdString(host_name));
         db->setDatabaseName(QString::fromStdString(databasename));
         db->setUserName(QString::fromStdString(username));
         db->setPassword(QString::fromStdString(password));
         db->setPort(port);
+        databaseConnections.setLocalData(db);
         if(!db->open()){
             throw std::logic_error("Error: connection with database failed.");
         }
-        databaseConnection = std::pair(std::this_thread::get_id(), db);
     }
-    return databaseConnection.second;
+    return databaseConnections.localData();
 }
 
 std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
