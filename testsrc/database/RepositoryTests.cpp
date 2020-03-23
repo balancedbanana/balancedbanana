@@ -95,6 +95,27 @@ TEST_F(RepositoryTest, AddJob_GetJob) {
     EXPECT_EQ(ptr->getCommand(), "command");
 }
 
+TEST_F(RepositoryTest, AlterJob_ChangeStatus) {
+    auto user = repo->AddUser(1, "name", "email", "public key");
+    std::shared_ptr<Job> job = nullptr;
+    QDateTime time = QDateTime::currentDateTime();
+    JobConfig config;
+    EXPECT_NO_THROW(job = repo->AddJob(1, config, time, "command"));
+    EXPECT_NE(job, nullptr);
+    uint64_t id = job->getId();
+    job->setStatus(canceled);
+    QDateTime finishTime = QDateTime::currentDateTime();
+    job->setFinished_at(finishTime);
+    repo->WriteBack();
+    repo->ClearCache();
+    auto newJob = job;
+    EXPECT_NO_THROW(job = repo->GetJob(id));
+    EXPECT_NE(newJob, nullptr);
+    EXPECT_EQ(newJob->getStatus(), canceled);
+    EXPECT_EQ(newJob->getFinished_at(), finishTime);
+    EXPECT_NE(job, newJob);
+}
+
 TEST_F(RepositoryTest, AddWorker_GetWorker) {
     EXPECT_EQ(repo->GetWorker(0), nullptr);
     Specs specs;
@@ -119,4 +140,29 @@ TEST_F(RepositoryTest, AddWorker_GetWorker) {
     EXPECT_EQ(ptr->getSpec()->cores, specs.cores);
     EXPECT_EQ(ptr->getSpec()->osIdentifier, specs.osIdentifier);
     EXPECT_EQ(ptr->getAddress(), "address");
+}
+
+TEST_F(RepositoryTest, TimedWriteBack) {
+    auto user = repo->AddUser(1, "name", "my super unique email", "public key");
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    repo->ClearCache();
+    user = nullptr;
+    EXPECT_NO_THROW(user = repo->GetUser(1));
+    EXPECT_NE(user, nullptr);
+    EXPECT_EQ(user->name(), "name");
+    std::cout << user->email() << std::endl;
+}
+
+TEST_F(RepositoryTest, FlushCache) {
+    auto user = repo->AddUser(1, "name", "email", "public key");
+    user->setEmail("new email");
+    repo->FlushCache();
+    auto newUser = repo->GetUser(1);
+    EXPECT_EQ(user, newUser);
+    auto usrptr = (uint64_t) user.get();
+    user = nullptr;
+    newUser = nullptr;
+    repo->FlushCache();
+    user = repo->GetUser(1);
+    EXPECT_NE((uint64_t) user.get(), usrptr);
 }

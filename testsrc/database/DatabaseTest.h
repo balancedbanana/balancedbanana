@@ -27,7 +27,7 @@ protected:
     }
 
     void SetUp() override {
-        repo = Repository::GetRepository("balancedbanana", "localhost", "balancedbanana", "balancedbanana", "qwer1234", 3306, std::chrono::seconds(10));
+        repo = Repository::GetRepository("balancedbanana", "localhost", "balancedbanana", "balancedbanana", "qwer1234", 3306, std::chrono::seconds(1));
         db = repo->GetDatabase();
         jobGateway = std::make_shared<JobGateway>(db);
         userGateway = std::make_shared<UserGateway>(db);
