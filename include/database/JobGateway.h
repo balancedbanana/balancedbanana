@@ -19,7 +19,7 @@ namespace balancedbanana::database {
          * @param details  The information of a Job
          * @return The id of the added Job
          */
-        uint64_t addJob(job_details details);
+        uint64_t addJob(const job_details& details);
 
         /**
          * Deletes a Job with the given id from the database.

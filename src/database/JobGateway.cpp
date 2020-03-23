@@ -9,7 +9,6 @@
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QDebug>
-#include <QByteArray>
 #include <QDateTime>
 #include <QDataStream>
 #include <iostream>
@@ -159,7 +158,7 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct, const std::shared
     return query.lastInsertId().toUInt();
 }
 
-JobGateway::JobGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(db) {
+JobGateway::JobGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(std::move(db)) {
 }
 
 /**
@@ -167,7 +166,7 @@ JobGateway::JobGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(db) {
  * @param details  The information of a Job
  * @return The id of the added Job
  */
-uint64_t JobGateway::addJob(job_details details) {
+uint64_t JobGateway::addJob(const job_details& details) {
     // DB must contain table
     if (!Utilities::doesTableExist("jobs", db)){
         Utilities::throwNoTableException("jobs");
@@ -553,7 +552,7 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
  */
 void addFinishedJobsInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
 std::vector<job_details>& jobs){
-    for (job_details job : jobs){
+    for (const job_details& job : jobs){
         if (job.finish_time.has_value()){
             if (from <= job.finish_time && job.finish_time <= to){
                 jobsInterval.push_back(job);
@@ -570,7 +569,7 @@ std::vector<job_details>& jobs){
  * @param jobs The vector of all jobs.
  */
 void addStartedJobsInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
-    for (job_details job : jobs){
+    for (const job_details& job : jobs){
         if (job.start_time.has_value()){
             if (from <= job.start_time && job.start_time <= to){
                 jobsInterval.push_back(job);
