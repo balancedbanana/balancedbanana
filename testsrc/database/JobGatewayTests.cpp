@@ -1,3 +1,5 @@
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cert-err58-cpp"
 #include <gtest/gtest.h>
 #include <database/JobGateway.h>
 #include <database/job_result.h>
@@ -867,8 +869,8 @@ protected:
         job.config.set_priority(Priority::emergency);
 
         // Finish information
-        stdout = "Some detailed info...";
-        exit_code = 0;
+        result.stdout = "Some detailed info...";
+        result.exit_code = 10;
 
     }
 
@@ -879,11 +881,10 @@ protected:
 
     job_details job;
     worker_details worker;
-    std::string stdout;
-    int8_t exit_code;
+    job_result result;
 };
 
-bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code, const std::shared_ptr<QSqlDatabase> &db){
+bool wasFinishSuccessful(const std::string stdout, job_details job, int8_t exit_code, const std::shared_ptr<QSqlDatabase> &db){
     uint result_id = 1;
     QSqlQuery queryResult("SELECT output, exit_code FROM job_results WHERE id = ?", *db);
     queryResult.addBindValue(result_id);
@@ -922,17 +923,17 @@ TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
-    EXPECT_TRUE(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code));
+    EXPECT_TRUE(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
 
     // Check if the values were set properly
-    EXPECT_TRUE(wasFinishSuccessful(stdout, job, exit_code, db));
+    EXPECT_TRUE(wasFinishSuccessful(result.stdout, job, result.exit_code, db));
 }
 
 // Test to see if exception is thrown when finishJob is called, but no job_results table exists
 TEST_F(FinishJobTest, FinishJobTest_NoJobResultsTable_Test){
     deleteResultsTable(db);
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
-    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
+    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code), std::logic_error);
     createResultsTable(db);
 }
 
@@ -940,14 +941,14 @@ TEST_F(FinishJobTest, FinishJobTest_NoJobResultsTable_Test){
 TEST_F(FinishJobTest, FinishJobTest_NoJobsTable_Test){
     deleteJobsTable(db);
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
-    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::logic_error);
+    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code), std::logic_error);
     createJobsTable(db);
 }
 
 // Test to see if finishJob returns false, when no job exists with the id arg
 TEST_F(FinishJobTest, FinishJobTest_NonExistentJob_Test){
     job.finish_time = QDateTime::currentDateTime();
-    EXPECT_FALSE(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code));
+    EXPECT_FALSE(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
 }
 
 // Test to see if an exception is thrown when finishJob is called with an invalid finish_time
@@ -955,7 +956,7 @@ TEST_F(FinishJobTest, FinishJobTest_InvalidFinishTime_Test){
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::fromString("0.13.54.13.01:5.5"));
-    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::invalid_argument);
+    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code), std::invalid_argument);
 }
 
 void resetWorker(const std::shared_ptr<QSqlDatabase> &db){

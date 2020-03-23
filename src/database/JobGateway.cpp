@@ -14,8 +14,6 @@
 #include <iostream>
 #include <QSqlRecord>
 #include <utility>
-#include <QtSql/QSqlField>
-#include <QSqlDriver>
 
 using namespace balancedbanana::configfiles;
 using namespace balancedbanana::database;
@@ -774,50 +772,6 @@ void updateAllocResBypass(const job_details& job, const std::shared_ptr<QSqlData
             throw std::runtime_error("updateJob error: " + resIdUpdateQuery.lastError().databaseText().toStdString());
         }
     }
-}
-
-QString getLastExecutedQuery(const QSqlQuery& query)
-{
-    QString sql = query.executedQuery();
-    int nbBindValues = query.boundValues().size();
-
-    for(int i = 0, j = 0; j < nbBindValues;)
-    {
-        int s = sql.indexOf(QLatin1Char('\''), i);
-        i = sql.indexOf(QLatin1Char('?'), i);
-        if (i < 1)
-        {
-            break;
-        }
-
-        if(s < i && s > 0)
-        {
-            i = sql.indexOf(QLatin1Char('\''), s + 1) + 1;
-            if(i < 2)
-            {
-                break;
-            }
-        }
-        else
-        {
-            const QVariant &var = query.boundValue(j);
-            QSqlField field(QLatin1String(""), var.type());
-            if (var.isNull())
-            {
-                field.clear();
-            }
-            else
-            {
-                field.setValue(var);
-            }
-            QString formatV = query.driver()->formatValue(field);
-            sql.replace(i, 1, formatV);
-            i += formatV.length();
-            ++j;
-        }
-    }
-
-    return sql;
 }
 
 void updateResultBypass(const job_details& job, const std::shared_ptr<QSqlDatabase> &db){
