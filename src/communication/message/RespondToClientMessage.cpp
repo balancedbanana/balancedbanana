@@ -9,16 +9,17 @@ namespace balancedbanana
 namespace communication
 {
 
-RespondToClientMessage::RespondToClientMessage(std::string data, bool unblock)
-    : Message(RESPOND_TO_CLIENT), data(std::move(data)), unblock(unblock)
+RespondToClientMessage::RespondToClientMessage(const std::string& data, bool unblock, uint64_t jobID)
+    : Message(RESPOND_TO_CLIENT), data(std::move(data)), unblock(unblock), jobID(jobID)
 {
 }
 
 RespondToClientMessage::RespondToClientMessage(const char *data, size_t &iterator, size_t size)
-    : Message(RESPOND_TO_CLIENT), data(""), unblock(false)
+    : Message(RESPOND_TO_CLIENT), data(""), unblock(false), jobID(0)
 {
     this->data = serialization::extractString(data, iterator, size);
     this->unblock = serialization::extract<bool>(data, iterator, size);
+    this->jobID = serialization::extract<uint64_t>(data, iterator, size);
 }
 
 std::string RespondToClientMessage::serialize() const {
@@ -26,6 +27,7 @@ std::string RespondToClientMessage::serialize() const {
     stream << Message::serialize();
     serialization::insertString(stream, data);
     serialization::insert<bool>(stream, unblock);
+    serialization::insert<uint64_t>(stream, jobID);
     return stream.str();
 }
 
@@ -41,6 +43,11 @@ const std::string &RespondToClientMessage::GetData() const
 bool RespondToClientMessage::getUnblock() const
 {
     return this->unblock;
+}
+
+uint64_t RespondToClientMessage::GetJobID() const
+{
+    return this->jobID;
 }
 
 } // namespace communication

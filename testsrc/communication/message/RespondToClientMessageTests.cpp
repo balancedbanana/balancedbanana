@@ -14,7 +14,7 @@ protected:
     }
 
     void SetUp() override {
-        msg = new RespondToClientMessage("This is a string of data", true);
+        msg = new RespondToClientMessage("This is a string of data", true, 0);
         size = new size_t(2 * sizeof(uint32_t) + sizeof(bool) + msg->GetData().size());
         serialized = new char[*size];
         *reinterpret_cast<uint32_t *>(serialized) = msg->GetType();

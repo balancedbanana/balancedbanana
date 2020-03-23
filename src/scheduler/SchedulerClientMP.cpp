@@ -8,6 +8,7 @@
 #include <communication/message/RespondToClientMessage.h>
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
+#include <scheduler/Clients.h>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
@@ -165,9 +166,19 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
     std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType(task, user->id(), dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
     std::shared_ptr<RespondToClientMessage> response = request->executeRequestAndFetchData();
 
+    // if the client has to wait for a response from worker:
+    // register client communicator under the job id in Clients file
+
+    // this "helps" as it "might" check if client actually is a valid object
+    getClient();
+
+    if (!response->getUnblock()) {
+        Clients::enter(task->getJobId().value_or(0), client);
+    }
+
     // Respond to Client
 
-    getClient().send(*response);
+    client->send(*response);
 }
 
 void SchedulerClientMP::setClient(const std::shared_ptr<Communicator> &com)

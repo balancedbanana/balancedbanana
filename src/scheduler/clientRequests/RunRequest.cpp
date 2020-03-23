@@ -40,7 +40,7 @@ std::shared_ptr<RespondToClientMessage> RunRequest::executeRequestAndFetchData()
     }
 
     // respond
-    return std::make_shared<RespondToClientMessage>(response.str(), true);
+    return std::make_shared<RespondToClientMessage>(response.str(), true, task->getJobId().value_or(0));
 }
 
 } // namespace scheduler

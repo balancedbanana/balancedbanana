@@ -4,7 +4,9 @@
 #include <communication/message/WorkerAuthMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/TaskResponseMessage.h>
+#include <communication/message/RespondToClientMessage.h>
 #include <communication/authenticator/AuthHandler.h>
+#include <scheduler/Clients.h>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
@@ -79,6 +81,18 @@ void SchedulerWorkerMP::processTaskResponseMessage(const balancedbanana::communi
 
 void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadResponseMessage &msg) {
     this->onWorkerLoadResponseMessage(msg);
+}
+
+void SchedulerWorkerMP::processRespondToClientMessage(const RespondToClientMessage &msg) {
+    // find which client to forward the message to
+
+    auto client = Clients::find(msg.GetJobID());
+    
+    if (client == nullptr) {
+        throw std::runtime_error("Could not find Client corresponding to a job.");
+    }
+
+    client->send(msg);
 }
 
 void SchedulerWorkerMP::OnWorkerLoadResponse(std::function<void(const WorkerLoadResponseMessage &msg)>&& func) {

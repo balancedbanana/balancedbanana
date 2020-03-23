@@ -35,7 +35,7 @@ std::shared_ptr<RespondToClientMessage> StopRequest::executeRequestAndFetchData(
     if (task->getJobId().has_value() == false)
     {
         response << NO_JOB_ID << std::endl;
-        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, task->getJobId().value_or(0));
     }
 
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
@@ -44,7 +44,7 @@ std::shared_ptr<RespondToClientMessage> StopRequest::executeRequestAndFetchData(
     if (job == nullptr)
     {
         response << NO_JOB_WITH_ID << std::endl;
-        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+        return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, task->getJobId().value_or(0));
     }
 
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
@@ -62,7 +62,7 @@ std::shared_ptr<RespondToClientMessage> StopRequest::executeRequestAndFetchData(
         {
             if (worker == nullptr) {
                 response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
-                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, task->getJobId().value_or(0));
             }
             // Set userId for Worker
             task->setUserId(userID);
@@ -77,7 +77,7 @@ std::shared_ptr<RespondToClientMessage> StopRequest::executeRequestAndFetchData(
         {
             if (worker == nullptr) {
                 response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
-                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, task->getJobId().value_or(0));
             }
             // Set userId for Worker
             task->setUserId(userID);
@@ -92,7 +92,7 @@ std::shared_ptr<RespondToClientMessage> StopRequest::executeRequestAndFetchData(
         {
             if (worker == nullptr) {
                 response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
-                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, task->getJobId().value_or(0));
             }
             // Set userId for Worker
             task->setUserId(userID);
@@ -117,7 +117,7 @@ std::shared_ptr<RespondToClientMessage> StopRequest::executeRequestAndFetchData(
     }
 
     // respond if no error occured
-    return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock);
+    return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, task->getJobId().value_or(0));
 }
 
 } // namespace scheduler

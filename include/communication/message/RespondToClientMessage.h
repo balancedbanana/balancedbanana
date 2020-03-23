@@ -13,7 +13,7 @@ namespace communication
 class RespondToClientMessage : public Message
 {
 public:
-    explicit RespondToClientMessage(std::string data, bool unblock);
+    explicit RespondToClientMessage(const std::string& data, bool unblock, uint64_t jobID);
 
     RespondToClientMessage(const char *data, size_t &iterator, size_t size);
 
@@ -23,11 +23,13 @@ public:
 
     const std::string &GetData() const;
     bool getUnblock() const;
+    uint64_t GetJobID() const;
 
 private:
 
     std::string data;
     bool unblock;
+    uint64_t jobID;
 };
 } // namespace communication
 
