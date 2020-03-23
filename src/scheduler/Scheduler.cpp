@@ -303,9 +303,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             });
             workerlistener = std::make_shared<CommunicatorListener>([&repo, &observer](){
                 return std::make_shared<SchedulerWorkerMP>([&repo, &observer](const std::string& name, const std::string& pubkey) -> std::shared_ptr<Worker> {
-                    // TODO Rakan: Ich weiss nicht was hier genau passiert, aber specs hat kein space member
-                    // 
-                    auto worker = repo->AddWorker(name, pubkey, { "", 32 * 1024, 50 }, "Why store an address");
+                    auto worker = repo->AddWorker(name, pubkey, { "", 32 * 1024, 50 });
                     worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(&observer);
                     return worker;
                 }, [&repo, &observer](const std::string &worker) -> std::shared_ptr<balancedbanana::scheduler::Worker> {
