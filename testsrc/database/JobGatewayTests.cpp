@@ -1618,3 +1618,170 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdatePriority_Test){
     job_details actualJob = jobGateway->getJob(job.id);
     EXPECT_TRUE(job == actualJob);
 }
+
+class UpdateJobBypassTest : public JobGatewayTest {
+protected:
+    void SetUp() override {
+        JobGatewayTest::SetUp();
+        job.id = 1;
+        job.status = (int) JobStatus::scheduled;
+        job.user_id = 1;
+        job.command = "mkdir build";
+        job.schedule_time = QDateTime::currentDateTime();
+        job.empty = false;
+        job.config.set_min_ram(4194304);
+        job.config.set_max_ram(4194305);
+        job.config.set_min_cpu_count(42);
+        job.config.set_max_cpu_count(43);
+        job.config.set_blocking_mode(true);
+        job.config.set_priority(Priority::low);
+        job.config.set_image("testimage");
+        job.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
+        job.config.set_interruptible(false);
+        job.config.set_current_working_dir(".");
+
+        worker.public_key = "sadfjsaljdf";
+        Specs specs{};
+        specs.osIdentifier = "10240";
+        specs.ram = 2 *FOUR_MB;
+        specs.cores = 4;
+        worker.specs = specs;
+        worker.address = "1.2.3.4";
+        worker.name = "Ubuntu";
+        worker.id = 1;
+        worker.empty = false;
+    }
+
+    void TearDown() override {
+        resetJobTable(db);
+        resetAllocResTable(db);
+        resetWorker(db);
+        resetResultsTable(db);
+    }
+
+    job_details job;
+    worker_details worker;
+};
+
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NoJobsTable_Test){
+    deleteJobsTable(db);
+    EXPECT_THROW(jobGateway->updateJobBypassWriteProtection(job), std::logic_error);
+    createJobsTable(db);
+}
+
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NoAllocResTable_Test){
+    deleteAllocResTable(db);
+    EXPECT_THROW(jobGateway->updateJobBypassWriteProtection(job), std::logic_error);
+    createAllocResTable(db);
+}
+
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NoResultsTable_Test){
+    deleteResultsTable(db);
+    EXPECT_THROW(jobGateway->updateJobBypassWriteProtection(job), std::logic_error);
+    createResultsTable(db);
+}
+
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NoWorkersTable_Test){
+    QSqlQuery query("DROP TABLE workers", *db);
+    query.exec();
+    EXPECT_THROW(jobGateway->updateJobBypassWriteProtection(job), std::logic_error);
+    query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
+                  "(\n"
+                  "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
+                  "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
+                  "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
+                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
+                  "    `public_key` LONGTEXT NOT NULL,\n"
+                  "    `name`       VARCHAR(255) NOT NULL,\n"
+                  "    PRIMARY KEY (`id`),\n"
+                  "    UNIQUE INDEX `id_UNIQUE` (`id` ASC),\n"
+                  "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
+                  ")\n"
+                  "ENGINE = InnoDB\n"
+                  "DEFAULT CHARACTER SET = utf8");
+    query.exec();
+}
+
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_InvalidId_Test){
+    job.id = 0;
+    EXPECT_THROW(jobGateway->updateJobBypassWriteProtection(job), std::invalid_argument);
+}
+
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NonExistentJob_Test){
+    EXPECT_THROW(jobGateway->updateJobBypassWriteProtection(job), std::runtime_error);
+}
+
+// This test is for when both the database and the new job_details don't have allocated resources
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResBoth_Test){
+    EXPECT_EQ(jobGateway->addJob(job), job.id);
+    EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
+
+    jobGateway->updateJobBypassWriteProtection(job);
+    job_details job_actual = jobGateway->getJob(job.id);
+    EXPECT_TRUE(job_actual == job);
+    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    query.addBindValue(QVariant::fromValue(job.id));
+    EXPECT_TRUE(query.exec());
+    EXPECT_TRUE(query.next());
+    EXPECT_TRUE(query.value(0).isNull());
+}
+
+// This test is for when the allocated resources are NULL in the database, but the new job_details has them
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResDB_Test){
+    ASSERT_EQ(jobGateway->addJob(job), job.id);
+    ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
+
+    job.allocated_specs = worker.specs;
+    jobGateway->updateJobBypassWriteProtection(job);
+    job_details job_actual = jobGateway->getJob(job.id);
+    EXPECT_TRUE(job_actual == job);
+
+    QSqlQuery queryJobsTable("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    queryJobsTable.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(queryJobsTable.exec());
+    ASSERT_TRUE(queryJobsTable.next());
+    ASSERT_FALSE(queryJobsTable.value(0).isNull());
+
+    QSqlQuery queryAllocResTable("SELECT osIdentifier, ram, cores FROM allocated_resources WHERE id = ?", *db);
+    queryAllocResTable.addBindValue(queryJobsTable.value(0));
+    ASSERT_TRUE(queryAllocResTable.exec());
+    ASSERT_TRUE(queryAllocResTable.next());
+    EXPECT_EQ(queryAllocResTable.value(0).toString().toStdString(), job.allocated_specs->osIdentifier);
+    EXPECT_EQ(queryAllocResTable.value(1).toInt(), job.allocated_specs->ram);
+    EXPECT_EQ(queryAllocResTable.value(2).toInt(), job.allocated_specs->cores);
+}
+
+TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
+    ASSERT_EQ(jobGateway->addJob(job), job.id);
+    ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
+    ASSERT_TRUE(workerGateway->addWorker(worker));
+    job.worker_id = worker.id;
+    job.allocated_specs = worker.specs;
+    job.start_time = QDateTime::currentDateTime();
+    job.status = (int) JobStatus::processing;
+    ASSERT_TRUE(jobGateway->startJob(job.id, job.worker_id.value(), job.allocated_specs.value(), job.start_time.value()));
+    ASSERT_TRUE(wasStartSuccessful(job, worker, db));
+
+    // Get old AllocId
+    QSqlQuery queryAllocId("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    queryAllocId.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(queryAllocId.exec());
+    ASSERT_TRUE(queryAllocId.next());
+
+    // Change specs
+    job.allocated_specs->ram = worker.specs->ram + 1;
+    jobGateway->updateJobBypassWriteProtection(job);
+
+    // Getter should return equal job_details
+    job_details job_actual = jobGateway->getJob(job.id);
+    EXPECT_TRUE(job_actual == job);
+
+    // AllocId should be unchanged
+    QSqlQuery queryAllocIdNew("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    queryAllocIdNew.addBindValue(QVariant::fromValue(job.id));
+    ASSERT_TRUE(queryAllocIdNew.exec());
+    ASSERT_TRUE(queryAllocIdNew.next());
+    EXPECT_EQ(queryAllocId.value(0).toInt(), queryAllocIdNew.value(0).toInt());
+
+}

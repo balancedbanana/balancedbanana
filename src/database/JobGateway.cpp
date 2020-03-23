@@ -817,9 +817,9 @@ void updateJobTableBypass(const job_details &job, std::shared_ptr<QSqlDatabase> 
                     "status_id=?,max_ram=?,user_id=?,worker_id=? WHERE id = ?", *db);
     QVariant_JobConfig qconf = convertJobConfig(job.user_id, job.config, job.schedule_time, job.command);
     query.addBindValue(qconf.q_min_ram);
-    query.addBindValue(job.start_time ? QVariant::fromValue(*job.start_time) : QVariant());
+    query.addBindValue(job.start_time ? job.start_time.value().toString(TIME_FORMAT) : QVariant(QVariant::String));
     query.addBindValue(qconf.q_schedule_time);
-    query.addBindValue(job.finish_time ? QVariant::fromValue(*job.finish_time) : QVariant());
+    query.addBindValue(job.finish_time ? job.finish_time.value().toString(TIME_FORMAT) : QVariant(QVariant::String));
     query.addBindValue(qconf.q_command);
     query.addBindValue(qconf.q_image);
     query.addBindValue(qconf.q_blocking_mode);
@@ -832,7 +832,7 @@ void updateJobTableBypass(const job_details &job, std::shared_ptr<QSqlDatabase> 
     query.addBindValue(QVariant::fromValue(job.status));
     query.addBindValue(qconf.q_max_ram);
     query.addBindValue(qconf.q_user_id);
-    query.addBindValue(job.worker_id ? QVariant::fromValue(*job.worker_id) : QVariant());
+    query.addBindValue(job.worker_id ? QVariant::fromValue(*job.worker_id) : QVariant(QVariant::UInt));
     query.addBindValue(QVariant::fromValue(job.id));
     if(!query.exec()) {
         throw std::runtime_error("updateJob error: " + query.lastError().databaseText().toStdString());
