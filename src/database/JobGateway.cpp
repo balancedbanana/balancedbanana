@@ -736,27 +736,7 @@ void updateWorkerId(const job_details& job, const std::shared_ptr<QSqlDatabase> 
     }
 }
 
-void JobGateway::updateJobBypassWriteProtection(const job_details &job) {
-    if (!Utilities::doesTableExist("jobs", db)){
-        Utilities::throwNoTableException("jobs");
-    }
-    if (!Utilities::doesTableExist("allocated_resources", db)){
-        Utilities::throwNoTableException("allocated_resources");
-    }
-    if (!Utilities::doesTableExist("job_results", db)){
-        Utilities::throwNoTableException("job_results");
-    }
-    if (!Utilities::doesTableExist("workers", db)){
-        Utilities::throwNoTableException("workers");
-    }
-    if (job.id == 0){
-        throw std::invalid_argument("updateJob error: invalid arguments.");
-    }
-    if (!Utilities::doesRecordExist("jobs", job.id, db)){
-        throw std::runtime_error("updateJob error: no job with id = " + std::to_string(job.id) + " exists");
-    }
-
-    //update allocated resources
+void updateAllocResBypass(const job_details& job, const std::shared_ptr<QSqlDatabase> &db){
     QSqlQuery resourceQuery;
     bool updateResourceId = false;
     if(job.allocated_specs) {
@@ -793,8 +773,9 @@ void JobGateway::updateJobBypassWriteProtection(const job_details &job) {
             throw std::runtime_error("updateJob error: " + resIdUpdateQuery.lastError().databaseText().toStdString());
         }
     }
+}
 
-    //update result
+void updateResultBypass(const job_details& job, const std::shared_ptr<QSqlDatabase> &db){
     QSqlQuery resultQuery;
     bool updateResultId = false;
     if(job.result) {
@@ -822,16 +803,19 @@ void JobGateway::updateJobBypassWriteProtection(const job_details &job) {
         throw std::runtime_error("updateJob error: " + resultQuery.lastError().databaseText().toStdString());
     }
     if(updateResultId) {
-        QSqlQuery resIdUpdateQuery("UPDATE jobs SET allocated_id=? WHERE id=?", *db);
-        resIdUpdateQuery.addBindValue(resourceQuery.lastInsertId());
+        QSqlQuery resIdUpdateQuery("UPDATE jobs SET result_id = ? WHERE id = ?", *db);
+        resIdUpdateQuery.addBindValue(resultQuery.lastInsertId());
         resIdUpdateQuery.addBindValue(QVariant::fromValue(job.id));
         if(!resIdUpdateQuery.exec()) {
             throw std::runtime_error("updateJob error: " + resIdUpdateQuery.lastError().databaseText().toStdString());
         }
     }
+}
 
-    //update rest of job
-    QSqlQuery query("UPDATE jobs SET min_ram=?,start_time=?,schedule_time=?,finish_time=?,command=?,image=?,blocking_mode=?,working_dir=?,interruptible=?,environment=?,min_cores=?,max_cores=?,priority=?,status_id=?,max_ram=?,user_id=?,worker_id=?", *db);
+void updateJobTableBypass(const job_details &job, std::shared_ptr<QSqlDatabase> &db){
+    QSqlQuery query("UPDATE jobs SET min_ram=?,start_time=?,schedule_time=?,finish_time=?,command=?,image=?,"
+                    "blocking_mode=?,working_dir=?,interruptible=?,environment=?,min_cores=?,max_cores=?,priority=?,"
+                    "status_id=?,max_ram=?,user_id=?,worker_id=? WHERE id = ?", *db);
     QVariant_JobConfig qconf = convertJobConfig(job.user_id, job.config, job.schedule_time, job.command);
     query.addBindValue(qconf.q_min_ram);
     query.addBindValue(job.start_time ? QVariant::fromValue(*job.start_time) : QVariant());
@@ -850,9 +834,40 @@ void JobGateway::updateJobBypassWriteProtection(const job_details &job) {
     query.addBindValue(qconf.q_max_ram);
     query.addBindValue(qconf.q_user_id);
     query.addBindValue(job.worker_id ? QVariant::fromValue(*job.worker_id) : QVariant());
+    query.addBindValue(QVariant::fromValue(job.id));
     if(!query.exec()) {
         throw std::runtime_error("updateJob error: " + query.lastError().databaseText().toStdString());
     }
+}
+
+void JobGateway::updateJobBypassWriteProtection(const job_details &job) {
+    if (!Utilities::doesTableExist("jobs", db)){
+        Utilities::throwNoTableException("jobs");
+    }
+    if (!Utilities::doesTableExist("allocated_resources", db)){
+        Utilities::throwNoTableException("allocated_resources");
+    }
+    if (!Utilities::doesTableExist("job_results", db)){
+        Utilities::throwNoTableException("job_results");
+    }
+    if (!Utilities::doesTableExist("workers", db)){
+        Utilities::throwNoTableException("workers");
+    }
+    if (job.id == 0){
+        throw std::invalid_argument("updateJob error: invalid arguments.");
+    }
+    if (!Utilities::doesRecordExist("jobs", job.id, db)){
+        throw std::runtime_error("updateJob error: no job with id = " + std::to_string(job.id) + " exists");
+    }
+
+    //update allocated resources
+    updateAllocResBypass(job, db);
+
+    //update result
+    updateResultBypass(job, db);
+
+    //update rest of job
+    updateJobTableBypass(job, db);
 }
 
 void JobGateway::updateJob(const job_details& job){
