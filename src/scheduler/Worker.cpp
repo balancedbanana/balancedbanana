@@ -12,7 +12,7 @@ using namespace balancedbanana::scheduler;
 Worker::Worker(uint64_t id, const std::string &name, const std::string &publickey, const std::optional<database::Specs>
         &specs) :
 IUser(name, publickey),
-               id(id), specs(specs), connected(false), address(""), comm(nullptr), resp(0, 0, 0, 0, 0, 0, 0), mtx(), cnd(){
+               id(id), specs(specs), connected(false), comm(nullptr), resp(0, 0, 0, 0, 0, 0, 0), mtx(), cnd(){
 }
 
 void Worker::send(const Message & msg) {
@@ -42,17 +42,6 @@ uint64_t Worker::getId() {
     return id;
 }
 
-const std::string &Worker::getAddress() {
-    std::lock_guard lock(mtx);
-    return address;
-}
-void Worker::setAddress(const std::string &adr) {
-    {
-        std::lock_guard lock(mtx);
-        address = adr;
-    }
-    Observable<balancedbanana::scheduler::WorkerObservableEvent>::Update(balancedbanana::scheduler::WorkerObservableEvent::DATA_CHANGE);
-}
 
 void Worker::setCommunicator(const std::shared_ptr<communication::Communicator>& com) {
     if(comm != nullptr) {

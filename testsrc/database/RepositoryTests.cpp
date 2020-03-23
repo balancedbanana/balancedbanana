@@ -123,7 +123,7 @@ TEST_F(RepositoryTest, AddWorker_GetWorker) {
     specs.cores = 42;
     specs.osIdentifier = "testOs";
     std::shared_ptr<Worker> worker = nullptr;
-    EXPECT_NO_THROW(worker = repo->AddWorker("name", "publickey", specs, "address"));
+    EXPECT_NO_THROW(worker = repo->AddWorker("name", "publickey", specs));
     EXPECT_NE(worker, nullptr);
     uint64_t id = worker->getId();
     auto ptr = repo->GetWorker(id);
@@ -139,7 +139,6 @@ TEST_F(RepositoryTest, AddWorker_GetWorker) {
     EXPECT_EQ(ptr->getSpec()->ram, specs.ram);
     EXPECT_EQ(ptr->getSpec()->cores, specs.cores);
     EXPECT_EQ(ptr->getSpec()->osIdentifier, specs.osIdentifier);
-    EXPECT_EQ(ptr->getAddress(), "address");
 }
 
 TEST_F(RepositoryTest, TimedWriteBack) {

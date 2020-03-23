@@ -47,7 +47,6 @@ int main() {
     }, [](int hours) -> std::vector<int> {
         return { 0, 2 }; 
     }, [](int jobid) -> std::shared_ptr<Job> {
-        // TODO Rakan: Ich habe allocated_space mit allocated_osIdentifier ersetzt
         return std::make_shared<Job>(jobid, QDateTime(QDate(2020, 1, 30), QTime(20, 10, 23, 0)), QDateTime(QDate(2020, 1, 30), QTime(22, 10, 23, 0)), QDateTime(QDate(2020, 1, 30), QTime(23, 10, 23, 0)), 100, 10, "", "Steve", 2, std::make_shared<User>(100, "Steve", ""), std::make_shared<balancedbanana::configfiles::JobConfig>(), balancedbanana::database::scheduled, std::make_shared<balancedbanana::database::job_result>());
     });
     auto com = std::make_shared<Communicator>("localhost", 2435, testmp);

@@ -720,7 +720,6 @@ protected:
         specs.ram = FOUR_MB;
         specs.cores = 4;
         worker.specs = specs;
-        worker.address = "1.2.3.4";
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
@@ -805,7 +804,6 @@ TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
                   "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
-                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
                   "    `public_key` LONGTEXT NOT NULL,\n"
                   "    `name`       VARCHAR(255) NOT NULL,\n"
                   "    PRIMARY KEY (`id`),\n"
@@ -1004,7 +1002,6 @@ protected:
         specs.ram = FOUR_MB;
         specs.cores = 4;
         worker.specs = specs;
-        worker.address = "1.2.3.4";
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
@@ -1132,7 +1129,6 @@ protected:
         specs.ram = 2 *FOUR_MB;
         specs.cores = 4;
         worker.specs = specs;
-        worker.address = "1.2.3.4";
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
@@ -1329,13 +1325,11 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     sspecs.ram = 2 *FOUR_MB;
     sspecs.cores = 4;
     worker.specs = sspecs;
-    worker.address = "1.2.3.4";
     worker.name = "Ubuntu";
     worker.id = 1;
     worker.empty = false;
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
     worker.public_key = "asdfsadcsadcsa";
-    worker.address = "6.4.23.2";
     worker.name = "Windows";
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id + 1);
     // The job then have to be started.
@@ -1370,13 +1364,11 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     specs.ram = 2 *FOUR_MB;
     specs.cores = 4;
     worker.specs = specs;
-    worker.address = "1.2.3.4";
     worker.name = "Ubuntu";
     worker.id = 1;
     worker.empty = false;
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
     worker.public_key = "asdfsadcsadcsa";
-    worker.address = "6.4.23.2";
     worker.name = "Windows";
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id + 1);
     // The job then have to be started.
@@ -1443,7 +1435,6 @@ protected:
         specs.ram = 2 *FOUR_MB;
         specs.cores = 4;
         worker.specs = specs;
-        worker.address = "1.2.3.4";
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
@@ -1487,7 +1478,6 @@ TEST_F(UpdateJobTest, UpdateJobTest_NoWorkersTable_Test){
                   "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
-                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
                   "    `public_key` LONGTEXT NOT NULL,\n"
                   "    `name`       VARCHAR(255) NOT NULL,\n"
                   "    PRIMARY KEY (`id`),\n"
@@ -1556,7 +1546,6 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
     worker.public_key = "sadfsdcasd";
-    worker.address = "1.2.4.5.6";
     worker.name = "windows";
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id + 1);
     job.status = (int) JobStatus::processing;
@@ -1643,7 +1632,6 @@ protected:
         specs.ram = 2 *FOUR_MB;
         specs.cores = 4;
         worker.specs = specs;
-        worker.address = "1.2.3.4";
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
@@ -1688,7 +1676,6 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NoWorkersTable_Test){
                   "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
-                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
                   "    `public_key` LONGTEXT NOT NULL,\n"
                   "    `name`       VARCHAR(255) NOT NULL,\n"
                   "    PRIMARY KEY (`id`),\n"

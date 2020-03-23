@@ -46,7 +46,6 @@ protected:
         specs.cores = 4;
         specs.ram = 16234;
         details.specs = specs;
-        details.address = "0.0.0.0";
         details.name = "CentOS";
         details.empty = false;
         details.id = 1;
@@ -74,7 +73,6 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id, const st
             int ramIndex = query.record().indexOf("ram");
             int coresIndex = query.record().indexOf("cores");
             int osIndex = query.record().indexOf("osIdentifier");
-            int addressIndex = query.record().indexOf("address");
             int keyIndex = query.record().indexOf("public_key");
 
             worker_details queryDetails{};
@@ -88,7 +86,6 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id, const st
                 specs.osIdentifier = query.value(osIndex).toString().toStdString();
                 queryDetails.specs = specs;
             }
-            queryDetails.address = query.value(addressIndex).toString().toStdString();
             queryDetails.public_key = query.value(keyIndex).toString().toStdString();
             queryDetails.id = id;
             queryDetails.empty = false;
@@ -128,7 +125,6 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
     worker_details seconddetails{};
     seconddetails.public_key = "sadfjsaljdf";
     seconddetails.specs = details.specs;
-    seconddetails.address = "1.2.3.4";
     seconddetails.name = "Ubuntu";
     seconddetails.id = 2;
     seconddetails.empty = false;
@@ -155,7 +151,6 @@ protected:
         specs.ram = 16384;
         specs.cores = 4;
         details.specs = specs;
-        details.address = "0.0.0.0";
         details.name = "CentOS";
         id = 1;
         details.empty = false;
@@ -168,7 +163,6 @@ protected:
                         "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
                         "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
                         "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
-                        "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
                         "    `public_key` LONGTEXT NOT NULL,\n"
                         "    `name`       VARCHAR(255) NOT NULL,\n"
                         "    PRIMARY KEY (`id`),\n"
@@ -240,7 +234,6 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     specs.ram = 16384;
     specs.cores = 6;
     details.specs = specs;
-    details.address = "0.0.0.0";
     details.name = "CentOS";
     details.id = 1;
     details.empty = false;
@@ -272,7 +265,6 @@ protected:
         specs.ram = 16384;
         specs.cores = 4;
         details.specs = specs;
-        details.address = "0.0.0.0";
         details.name = "CentOS";
         details.id = 1;
         details.empty = false;
@@ -315,7 +307,6 @@ protected:
         firstSpecs.ram = 16384;
         firstSpecs.cores = 4;
         first.specs = firstSpecs;
-        first.address = "0.0.0.0";
         first.name = "CentOS";
         first.id = 1;
         first.empty = false;
@@ -324,7 +315,6 @@ protected:
         second.public_key = "fsd8iasdf8sadf";
         second.specs = firstSpecs;
         second.specs->ram = 17385;
-        second.address = "1.1.1.1";
         second.name = "Ubuntu";
         second.id = 2;
         second.empty = false;
@@ -333,7 +323,6 @@ protected:
         third.public_key = "asdfascascsd";
         third.specs = firstSpecs;
         third.specs->cores = 10;
-        third.address = "2.2.2.2";
         third.name = "Windows";
         third.id = 3;
         third.empty = false;
@@ -379,7 +368,6 @@ protected:
         specs.ram = 16384;
         specs.cores = 4;
         worker.specs = specs;
-        worker.address = "0.0.0.0";
         worker.name = "CentOS";
         worker.id = 1;
         worker.empty = false;
@@ -402,7 +390,6 @@ TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
                   "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
-                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
                   "    `public_key` LONGTEXT NOT NULL,\n"
                   "    `name`       VARCHAR(255) NOT NULL,\n"
                   "    PRIMARY KEY (`id`),\n"
@@ -434,7 +421,6 @@ protected:
         specs.ram = 16384;
         specs.cores = 4;
         worker.specs = specs;
-        worker.address = "0.0.0.0";
         worker.name = "CentOS";
         worker.id = 1;
         worker.empty = false;
@@ -457,7 +443,6 @@ TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
                   "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
-                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
                   "    `public_key` LONGTEXT NOT NULL,\n"
                   "    `name`       VARCHAR(255) NOT NULL,\n"
                   "    PRIMARY KEY (`id`),\n"

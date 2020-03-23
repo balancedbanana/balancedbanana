@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`
     `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,
     `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,
     `osIdentifier`   TEXT NULL DEFAULT NULL,
-    `address`    VARCHAR(255)        NULL DEFAULT NULL,
     `public_key` LONGTEXT NOT NULL,
     `name`       VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`),

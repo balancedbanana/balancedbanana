@@ -45,7 +45,6 @@ std::shared_ptr<Job> Factory::createJob(const job_details& job_info, const std::
 std::shared_ptr<Worker> Factory::createWorker(const worker_details& worker_info) {
     std::shared_ptr<Worker> worker = std::make_shared<Worker>(worker_info.id, worker_info.name, worker_info
     .public_key, worker_info.specs);
-    worker->setAddress(worker_info.address);
     return worker;
 }
 

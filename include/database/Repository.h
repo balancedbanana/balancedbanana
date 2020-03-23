@@ -65,7 +65,7 @@ namespace balancedbanana::database {
             std::shared_ptr<QSqlDatabase> GetDatabase();
 
             std::shared_ptr<Worker> GetWorker(uint64_t id);
-            std::shared_ptr<Worker> AddWorker(const std::string &name, const std::string &publickey, const Specs &specs, const std::string &address);
+            std::shared_ptr<Worker> AddWorker(const std::string &name, const std::string &publickey, const Specs &specs);
 
             std::shared_ptr<Job> GetJob(uint64_t id);
             std::shared_ptr<Job> AddJob(uint64_t user_id, const JobConfig& config, const QDateTime& schedule_time, const std::string& command);

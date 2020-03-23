@@ -96,13 +96,12 @@ std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
     }
 }
 
-std::shared_ptr<Worker> Repository::AddWorker(const std::string &name, const std::string &publickey, const Specs &specs, const std::string &address) {
+std::shared_ptr<Worker> Repository::AddWorker(const std::string &name, const std::string &publickey, const Specs &specs) {
     worker_details wd;
     wd.id = 0;
     wd.name = name;
     wd.public_key = publickey;
     wd.specs = specs;
-    wd.address = address;
     std::lock_guard lock(mtx);
     wd.id = WorkerGateway(GetDatabase()).addWorker(wd);
     std::shared_ptr<Worker> worker = Factory::createWorker(wd);
@@ -228,7 +227,6 @@ void Repository::WriteBack() {
         wd.name = worker->name();
         wd.public_key = worker->pubkey();
         wd.specs = worker->getSpec();
-        wd.address = worker->getAddress();
         WorkerGateway(GetDatabase()).updateWorker(wd);
         entry.second.second = false;
     }

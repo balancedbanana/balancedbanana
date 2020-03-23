@@ -102,7 +102,6 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
                   "    `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,\n"
                   "    `osIdentifier`   TEXT NULL DEFAULT NULL,\n"
-                  "    `address`    VARCHAR(255)        NULL DEFAULT NULL,\n"
                   "    `public_key` LONGTEXT NOT NULL,\n"
                   "    `name`       VARCHAR(255) NOT NULL,\n"
                   "    PRIMARY KEY (`id`),\n"
@@ -331,7 +330,6 @@ TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Workers_Te
     firstSpecs.ram = 16384;
     firstSpecs.cores = 4;
     first.specs = firstSpecs;
-    first.address = "0.0.0.0";
     first.name = "CentOS";
     first.id = 1;
     first.empty = false;
@@ -343,7 +341,6 @@ TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Not_Equal_Workers_Te
     secondSpecs.ram = 12421;
     secondSpecs.cores = 3;
     second.specs = secondSpecs;
-    second.address = "1.1.1.1";
     second.name = "Ubuntu";
     second.id = 2;
     second.empty = false;
@@ -367,7 +364,6 @@ TEST_F(AreDetailVectorsEqualTest, AreDetailVectorsEqualTest_Equal_Workers_Test){
     firstSpecs.ram = 16384;
     firstSpecs.cores = 4;
     first.specs = firstSpecs;
-    first.address = "0.0.0.0";
     first.name = "CentOS";
     first.id = 1;
     first.empty = false;
