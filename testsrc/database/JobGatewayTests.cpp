@@ -100,7 +100,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id, const std::shared_pt
             int finish_time_index = query.record().indexOf("finish_time");
             int start_time_index = query.record().indexOf("start_time");
             int worker_id_index = query.record().indexOf("worker_id");
-            int status_id_index = query.record().indexOf("status_id");
+            int status_id_index = query.record().indexOf("status");
             int allocated_id_index = query.record().indexOf("allocated_id");
 
             job_details queryDetails{};
@@ -275,7 +275,8 @@ void createJobsTable(const std::shared_ptr<QSqlDatabase> &db){
                     "    `min_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
                     "    `max_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
                     "    `priority` ENUM('low', 'normal', 'high', 'emergency') NOT NULL DEFAULT 'normal',\n"
-                    "    `status_id` ENUM('scheduled', 'processing', 'paused', 'interrupted', 'finished', 'canceled') NOT NULL DEFAULT\n"
+                    "    `status` ENUM('scheduled', 'processing', 'paused', 'interrupted', 'finished', 'canceled') NOT "
+                    "NULL DEFAULT\n"
                     "        'scheduled',\n"
                     "    `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
                     "    `user_id` BIGINT(10) UNSIGNED NOT NULL,\n"
@@ -745,7 +746,7 @@ bool wasStartSuccessful(job_details job, worker_details worker, const std::share
     QSqlQuery queryAlloc("SELECT cores, ram, osIdentifier FROM allocated_resources WHERE id = ?",
             *db);
     queryAlloc.addBindValue(allocated_id);
-    QSqlQuery queryJobs("SELECT allocated_id, status_id, start_time FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryJobs("SELECT allocated_id, status, start_time FROM jobs WHERE id = ?", *db);
     queryJobs.addBindValue(QVariant::fromValue(job.id));
 
     if (queryAlloc.exec()){

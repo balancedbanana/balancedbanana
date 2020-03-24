@@ -332,7 +332,7 @@ job_details JobGateway::getJob(uint64_t job_id) {
                         "    command,\n"
                         "    schedule_time,\n"
                         "    worker_id,\n"
-                        "    status_id,\n"
+                        "    status,\n"
                         "    start_time,\n"
                         "    finish_time,\n"
                         "    allocated_id,\n"
@@ -383,7 +383,7 @@ std::vector<job_details> JobGateway::getJobs() {
                     "    command,\n"
                     "    schedule_time,\n"
                     "    worker_id,\n"
-                    "    status_id,\n"
+                    "    status,\n"
                     "    start_time,\n"
                     "    finish_time,\n"
                     "    allocated_id,\n"
@@ -431,7 +431,7 @@ std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
                     "    command,\n"
                     "    schedule_time,\n"
                     "    worker_id,\n"
-                    "    status_id,\n"
+                    "    status,\n"
                     "    start_time,\n"
                     "    finish_time,\n"
                     "    allocated_id,\n"
@@ -476,7 +476,7 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& spec
                 throw std::runtime_error("startJob error: allocated_resources query failed: " + queryAlloc.lastError
                 ().databaseText().toStdString());
             }
-            QSqlQuery query("UPDATE jobs SET allocated_id = ?, worker_id = ?, status_id = ?, start_time = ? WHERE id = "
+            QSqlQuery query("UPDATE jobs SET allocated_id = ?, worker_id = ?, status = ?, start_time = ? WHERE id = "
                             "?", *db);
             query.addBindValue(QVariant::fromValue(allocated_specs));
             query.addBindValue(QVariant::fromValue(worker_id));
@@ -520,7 +520,7 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
             throw std::runtime_error("finishJob error: job_results query failed: " + queryResult.lastError()
             .databaseText().toStdString());
         }
-        QSqlQuery query("UPDATE jobs SET finish_time = ?, result_id = ?, status_id = ? WHERE id = ?", *db);
+        QSqlQuery query("UPDATE jobs SET finish_time = ?, result_id = ?, status = ? WHERE id = ?", *db);
         query.addBindValue(QVariant::fromValue(finish_time.toString(TIME_FORMAT)));
         query.addBindValue(QVariant::fromValue(result));
         query.addBindValue((int) JobStatus::finished);
@@ -636,7 +636,7 @@ bool updateJobPriority(Priority priority, uint64_t id, const std::shared_ptr<QSq
  * @return True if the operation was successful, otherwise false
  */
 bool cancelJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
-    QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", *db);
+    QSqlQuery query("UPDATE jobs SET status = ? WHERE id = ?", *db);
     query.addBindValue(QString::fromStdString(status_to_string(JobStatus::canceled)));
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
@@ -652,7 +652,7 @@ bool cancelJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
  * @return True if the operation was successful, otherwise false
  */
 bool interruptJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
-    QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", *db);
+    QSqlQuery query("UPDATE jobs SET status = ? WHERE id = ?", *db);
     query.addBindValue(QString::fromStdString(status_to_string(JobStatus::interrupted)));
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
@@ -668,7 +668,7 @@ bool interruptJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
  * @return True if the operation was successful, otherwise false.
  */
 bool pauseJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
-    QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", *db);
+    QSqlQuery query("UPDATE jobs SET status = ? WHERE id = ?", *db);
     query.addBindValue(QString::fromStdString(status_to_string(JobStatus::paused)));
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
@@ -807,7 +807,7 @@ void updateResultBypass(const job_details& job, const std::shared_ptr<QSqlDataba
 void updateJobTableBypass(const job_details &job, std::shared_ptr<QSqlDatabase> &db){
     QSqlQuery query("UPDATE jobs SET min_ram=?,start_time=?,schedule_time=?,finish_time=?,command=?,image=?,"
                     "blocking_mode=?,working_dir=?,interruptible=?,environment=?,min_cores=?,max_cores=?,priority=?,"
-                    "status_id=?,max_ram=?,user_id=?,worker_id=? WHERE id = ?", *db);
+                    "status=?,max_ram=?,user_id=?,worker_id=? WHERE id = ?", *db);
     QVariant_JobConfig qconf = convertJobConfig(job.user_id, job.config, job.schedule_time, job.command);
     query.addBindValue(qconf.q_min_ram);
     query.addBindValue(job.start_time ? job.start_time.value().toString(TIME_FORMAT) : QVariant(QVariant::String));

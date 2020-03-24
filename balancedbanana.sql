@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (
     `min_cores` INT(10) UNSIGNED DEFAULT NULL,
     `max_cores` INT(10) UNSIGNED DEFAULT NULL,
     `priority` ENUM('low', 'normal', 'high', 'emergency') NOT NULL DEFAULT 'normal',
-    `status_id` ENUM('scheduled', 'processing', 'paused', 'interrupted', 'finished', 'canceled') NOT NULL DEFAULT
+    `status` ENUM('scheduled', 'processing', 'paused', 'interrupted', 'finished', 'canceled') NOT NULL DEFAULT
         'scheduled',
     `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,
     `user_id` BIGINT(10) UNSIGNED NOT NULL,
