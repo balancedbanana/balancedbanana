@@ -322,7 +322,8 @@ void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app)
     static std::vector<uint64_t> jobAndBackupID;
     jobAndBackupID.clear();
 
-    restoreSubCommand->add_option("ids", jobAndBackupID, "Restore this Job")->required();
+    restoreSubCommand->add_option("jobID", jobAndBackupID[0], "Id of Job which will be restored.")->required();
+    restoreSubCommand->add_option("backupID", jobAndBackupID[1], "Id of Backup with which to restore the job.")->required();
 
     restoreSubCommand->callback([&]() { callbackSubCommandRestore(task, jobAndBackupID); });
 }
