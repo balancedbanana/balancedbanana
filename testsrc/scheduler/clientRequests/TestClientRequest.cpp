@@ -32,41 +32,47 @@ TEST(ClientRequest, selectType)
 {
     std::shared_ptr<Task> task = std::make_shared<Task>();
 
+    auto testmp = std::make_shared<TestMP>();
+    auto listener = std::make_shared<CommunicatorListener>([testmp](){ return testmp; });
+    listener->listen("localhost", 2436, [listener](std::shared_ptr<balancedbanana::communication::Communicator> com) { com->detach(); });
+    auto com = std::make_shared<Communicator>("localhost", 2436, testmp);
+    com->detach();
+
     task->setType(TaskType::ADD_IMAGE);
-    auto addimageReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto addimageReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::BACKUP);
-    auto backupReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto backupReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::CONTINUE);
-    auto continueReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto continueReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::PAUSE);
-    auto pauseReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto pauseReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::REMOVE_IMAGE);
-    auto removeimageReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto removeimageReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::RESTORE);
-    auto restoreReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto restoreReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::RUN);
-    auto runReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto runReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::SERVERSTART);
-    auto serverstartReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto serverstartReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::STATUS);
-    auto statusReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto statusReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::STOP);
-    auto stopReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto stopReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::TAIL);
-    auto tailReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto tailReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     task->setType(TaskType::WORKERSTART);
-    auto workerstartReq = ClientRequest::selectRequestType(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    auto workerstartReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
     ASSERT_TRUE(addimageReq == nullptr);
     if (BackupRequest* b = dynamic_cast<BackupRequest*>(&*backupReq)) {} else FAIL();

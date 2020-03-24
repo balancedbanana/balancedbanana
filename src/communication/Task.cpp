@@ -37,6 +37,7 @@ Task::Task(const std::string &string) {
     jobId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     backupId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     userId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
+    clientId = extract<bool>(data, iterator, size) ? std::optional<uint64_t>(extract<uint64_t>(data, iterator, size)) : std::nullopt;
     if(iterator != size) {
         throw std::invalid_argument("string is too long");
     }
@@ -144,6 +145,13 @@ std::optional<uint64_t> Task::getUserId() const {
     return userId;
 }
 
+void Task::setClientId(std::optional<uint64_t> clientId) {
+    this->clientId = clientId;
+}
+std::optional<uint64_t> Task::getClientId() const {
+    return clientId;
+}
+
 std::string Task::serialize() const {
     using namespace serialization;
     std::stringstream stream;
@@ -174,6 +182,10 @@ std::string Task::serialize() const {
     insert<bool>(stream, userId.has_value());
     if(userId) {
         insert<uint64_t>(stream, userId.value());
+    }
+    insert<bool>(stream, clientId.has_value());
+    if(clientId) {
+        insert<uint64_t>(stream, clientId.value());
     }
     return stream.str();
 }

@@ -1,24 +1,31 @@
-#include "scheduler/Clients.h"
+#include <scheduler/Clients.h>
 
 #include <map>
+#include <mutex>
 
-std::map<uint64_t, const std::shared_ptr<balancedbanana::communication::Communicator>> map;
 
+std::map<uint64_t, balancedbanana::communication::Communicator*> map;
+uint64_t latest;
+std::mutex _mutex;
 
-void Clients::enter(uint64_t jobID, const std::shared_ptr<balancedbanana::communication::Communicator> &client)
+uint64_t Clients::enter(balancedbanana::communication::Communicator &client)
 {
-    map.insert(std::make_pair(jobID, client));
+    const std::lock_guard<std::mutex> lock(_mutex);
+
+    map.insert(std::make_pair(latest, &client));
+    return latest++;
 }
 
-std::shared_ptr<balancedbanana::communication::Communicator> Clients::find(uint64_t jobID)
+balancedbanana::communication::Communicator &Clients::find(uint64_t jobID)
 {
+    const std::lock_guard<std::mutex> lock(_mutex);
     auto clientPair = map.find(jobID);
 
     if (clientPair == map.end()) {
-        return nullptr;
+        throw std::runtime_error("Failure: Client not found.");
     }
 
     auto client = clientPair->second;
     map.erase(clientPair);
-    return client;
+    return *client;
 }

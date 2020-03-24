@@ -7,7 +7,13 @@
 class Clients
 {
 public:
-    static void enter(uint64_t jobID, const std::shared_ptr<balancedbanana::communication::Communicator> &client);
+    static uint64_t enter(balancedbanana::communication::Communicator &client);
 
-    static std::shared_ptr<balancedbanana::communication::Communicator> find(uint64_t jobID);
+    static balancedbanana::communication::Communicator &find(uint64_t id);
+
+private:
+
+    Clients();
+    ~Clients();
+
 };

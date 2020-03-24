@@ -86,13 +86,12 @@ void SchedulerWorkerMP::processWorkerLoadResponseMessage(const WorkerLoadRespons
 void SchedulerWorkerMP::processRespondToClientMessage(const RespondToClientMessage &msg) {
     // find which client to forward the message to
 
-    auto client = Clients::find(msg.GetJobID());
-    
-    if (client == nullptr) {
-        throw std::runtime_error("Could not find Client corresponding to a job.");
+    try {
+        auto client = &Clients::find(msg.GetClientID());
+        client->send(msg);
+    } catch (std::runtime_error& e) {
+        // well ... rip client
     }
-
-    client->send(msg);
 }
 
 void SchedulerWorkerMP::OnWorkerLoadResponse(std::function<void(const WorkerLoadResponseMessage &msg)>&& func) {
