@@ -274,8 +274,9 @@ void createJobsTable(const std::shared_ptr<QSqlDatabase> &db){
                     "    `environment` TEXT,\n"
                     "    `min_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
                     "    `max_cores` INT(10) UNSIGNED DEFAULT NULL,\n"
-                    "    `priority` INT(10) UNSIGNED NOT NULL DEFAULT '2',\n"
-                    "    `status_id` INT(10) UNSIGNED NOT NULL DEFAULT '1',\n"
+                    "    `priority` ENUM('low', 'normal', 'high', 'emergency') NOT NULL DEFAULT 'normal',\n"
+                    "    `status_id` ENUM('scheduled', 'processing', 'paused', 'interrupted', 'finished', 'canceled') NOT NULL DEFAULT\n"
+                    "        'scheduled',\n"
                     "    `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
                     "    `user_id` BIGINT(10) UNSIGNED NOT NULL,\n"
                     "    `worker_id` BIGINT(10) DEFAULT NULL,\n"
@@ -762,7 +763,7 @@ bool wasStartSuccessful(job_details job, worker_details worker, const std::share
     if (queryJobs.exec()){
         if (queryJobs.next()){
             EXPECT_EQ(queryJobs.value(0).toUInt(), allocated_id);
-            EXPECT_EQ(queryJobs.value(1).toInt(), (int) JobStatus::processing);
+            EXPECT_EQ(queryJobs.value(1).toString().toStdString(), status_to_string(JobStatus::processing));
             EXPECT_TRUE(QDateTime::fromString(queryJobs.value(2).toString(), TIME_FORMAT)
                         == job.start_time.value());
         } else {

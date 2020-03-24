@@ -24,6 +24,23 @@ namespace balancedbanana {
             }
         }
 
+        Priority from_string(std::string priority){
+            if (priority == "low" || priority == "1")
+                return Priority::low;
+
+            else if (priority == "normal" || priority == "2")
+                return Priority::normal;
+
+            else if (priority == "high" || priority == "3")
+                return Priority::high;
+
+            else if (priority == "emergency" || priority == "4")
+                return Priority::emergency;
+
+            else
+                throw std::invalid_argument("invalid priority");
+        }
+
         Priority stopriority(const std::string &value, bool &success) {
             success = true;
             if (value == "low" || value == "1") {

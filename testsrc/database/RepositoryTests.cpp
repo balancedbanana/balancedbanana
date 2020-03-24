@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <database/Utilities.h>
 #include <QSqlQuery>
+#include <QDebug>
 
 #include "DatabaseTest.h"
 

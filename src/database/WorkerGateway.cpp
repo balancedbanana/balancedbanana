@@ -15,11 +15,7 @@ using namespace balancedbanana::database;
 WorkerGateway::WorkerGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(std::move(db)) {
 }
 
-/**
- * Adds a worker to the database, Throws exceptions when errors occur.
- * @param worker  The worker to be added
- * @return The id of the worker.
- */
+
 uint64_t WorkerGateway::addWorker(const worker_details& worker) {
     // DB must contain table
     if (!Utilities::doesTableExist("workers", db)){
@@ -54,11 +50,6 @@ uint64_t WorkerGateway::addWorker(const worker_details& worker) {
     return query.lastInsertId().toUInt();
 }
 
-/**
- * Deletes a worker with the given id from the database,
- * @param id  The id of the worker to be deleted.
- * @return True if the operation was successful, otherwise false
- */
 bool WorkerGateway::removeWorker(uint64_t id) {
     if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");

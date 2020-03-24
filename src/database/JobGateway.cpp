@@ -36,13 +36,6 @@ struct QVariant_JobConfig{
     QVariant q_schedule_time;
 };
 
-// Get the integer value of an enumeration
-template <typename Enumeration>
-auto as_integer(Enumeration const value)
--> typename std::underlying_type<Enumeration>::type
-{
-    return static_cast<typename std::underlying_type<Enumeration>::type>(value);
-}
 
 /**
  * Converts all the Job args into QVariants and puts them in a QVariant_JobConfig struct
@@ -82,9 +75,9 @@ QVariant_JobConfig convertJobConfig(uint64_t user_id, const JobConfig& config, c
 
     QVariant q_priority;
     if (config.priority().has_value()){
-        q_priority = QVariant::fromValue(as_integer(config.priority().value()));
+        q_priority = QVariant::fromValue(static_cast<int>(config.priority().value()));
     } else {
-        q_priority = QVariant::fromValue((as_integer(Priority::normal)));
+        q_priority = QVariant::fromValue(static_cast<int>(Priority::normal));
     }
 
     QVariant q_interruptible;
@@ -222,7 +215,7 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     if (query.value(6).isNull()){
         details.config.set_priority(Priority::normal);
     } else {
-        details.config.set_priority(static_cast<Priority>(query.value(6).toInt()));
+        details.config.set_priority(from_string(query.value(6).toString().toStdString()));
     }
     details.config.set_image(query.value(7).toString().toStdString());
 
@@ -247,7 +240,7 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
     } else {
         details.worker_id = query.value(13).toUInt();
     }
-    details.status = query.value(14).toInt();
+    details.status = string_to_status(query.value(14).toString().toStdString());
     if (query.value(15).isNull()){
         details.start_time = std::nullopt;
     } else {
@@ -644,7 +637,7 @@ bool updateJobPriority(Priority priority, uint64_t id, const std::shared_ptr<QSq
  */
 bool cancelJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", *db);
-    query.addBindValue(QVariant::fromValue((int) JobStatus::canceled));
+    query.addBindValue(QString::fromStdString(status_to_string(JobStatus::canceled)));
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return true;
@@ -660,7 +653,7 @@ bool cancelJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
  */
 bool interruptJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", *db);
-    query.addBindValue(QVariant::fromValue((int) JobStatus::interrupted));
+    query.addBindValue(QString::fromStdString(status_to_string(JobStatus::interrupted)));
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return true;
@@ -676,7 +669,7 @@ bool interruptJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
  */
 bool pauseJob(uint64_t id, const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("UPDATE jobs SET status_id = ? WHERE id = ?", *db);
-    query.addBindValue(QVariant::fromValue((int) JobStatus::paused));
+    query.addBindValue(QString::fromStdString(status_to_string(JobStatus::paused)));
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return true;
