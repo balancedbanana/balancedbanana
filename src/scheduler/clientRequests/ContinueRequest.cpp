@@ -41,8 +41,9 @@ std::shared_ptr<RespondToClientMessage> ContinueRequest::executeRequestAndFetchD
     }
 
     std::shared_ptr<Job> job = dbGetJob(task->getJobId().value());
-
-    // fail if no Job with given ID exists
+    if(!job->getUser() || job->getUser()->id() != userID) {
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+    }
     if (job == nullptr)
     {
         response << NO_JOB_WITH_ID << std::endl;

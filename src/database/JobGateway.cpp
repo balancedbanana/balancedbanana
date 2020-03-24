@@ -159,12 +159,7 @@ uint64_t executeAddJobQuery(const QVariant_JobConfig& qstruct){
     return query.lastInsertId().toUInt();
 }
 
-/**
- * Adds a Job to the database as a record
- * @param details  The information of a Job
- * @return The id of the added Job
- */
-uint64_t JobGateway::add(job_details details) {
+uint64_t JobGateway::addJob(job_details details) {
     auto database = IGateway::AcquireDatabase();
     // DB must contain table
     if (!Utilities::doesTableExist("jobs")){
@@ -175,12 +170,7 @@ uint64_t JobGateway::add(job_details details) {
     return executeAddJobQuery(qstruct);
 }
 
-/**
- * Deletes a job with the given id from the database
- * @param job_id The job's id
- * @return true if the operation was successful, otherwise false;
- */
-bool JobGateway::remove(uint64_t job_id) {
+bool JobGateway::removeJob(uint64_t job_id) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
         Utilities::throwNoTableException("jobs");
@@ -268,7 +258,7 @@ void setJobTableValues(job_details& details, QSqlQuery& query){
  * @param query The query
  */
 void setAllocatedTableValues(job_details& details, QSqlQuery& query){
-    if (Utilities::castToOptional(query.value(17).toUInt()) == std::nullopt){
+    if (query.value(17).isNull()){
         details.allocated_specs = std::nullopt;
     } else {
         auto database = IGateway::AcquireDatabase();
@@ -315,11 +305,6 @@ void setResultTableValues(job_details&  details, QSqlQuery& query){
     }
 }
 
-/**
- * Getter method for the information of a job with the given id.
- * @param job_id The job's id
- * @return The details of the job
- */
 job_details JobGateway::getJob(uint64_t job_id) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
@@ -374,10 +359,6 @@ job_details JobGateway::getJob(uint64_t job_id) {
     return details;
 }
 
-/**
- * Getter for all the jobs in the database.
- * @return  Vector of all the jobs in the database.
- */
 std::vector<job_details> JobGateway::getJobs() {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
@@ -427,10 +408,6 @@ std::vector<job_details> JobGateway::getJobs() {
     return jobVector;
 }
 
-/**
- * Getter for all the jobs in the database with a specific worker_id.
- * @return  Vector of all the jobs in the database.
- */
 std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("jobs")){
@@ -481,13 +458,6 @@ std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
     return jobVector;
 }
 
-/**
- * Assigns a Worker (or a partition of a Worker) to a Job. The Job has now been started.
- * @param job_id The id of the job
- * @param worker_id The id of the worker (or partition of the worker)
- * @param specs The resources assigned to the job
- * @return true if the operation was successful, otherwise false.
- */
 bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& specs, const QDateTime& start_time) {
     auto database = IGateway::AcquireDatabase();
     if (!Utilities::doesTableExist("workers")){
@@ -530,14 +500,6 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& spec
     return false;
 }
 
-/**
- * Updates the status of a Job to finished and adds the finish time to its record.
- * @param job_id The id of the Job.
- * @param finish_time The finish time of the Job.
- * @param stdout The output of the Job
- * @param exit_code The exit code of the Job
- * @return true if the operation was successful, otherwise false.
- */
 bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         , const std::string& stdout, const int8_t exit_code) {
     auto database = IGateway::AcquireDatabase();
@@ -585,11 +547,11 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
  * @param jobsInterval The vector to fill with the wanted jobs
  * @param jobs The vector of all jobs.
  */
-void sortByFinishInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
+void addFinishedJobsInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const
 std::vector<job_details>& jobs){
     for (job_details job : jobs){
         if (job.finish_time.has_value()){
-            if (from.date() <= job.finish_time->date() && job.finish_time->date() <= to.date()){
+            if (from <= job.finish_time && job.finish_time <= to){
                 jobsInterval.push_back(job);
             }
         }
@@ -603,10 +565,10 @@ std::vector<job_details>& jobs){
  * @param jobsInterval The vector to fill with the wanted jobs
  * @param jobs The vector of all jobs.
  */
-void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
+void addStartedJobsInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval, const std::vector<job_details>& jobs){
     for (job_details job : jobs){
         if (job.start_time.has_value()){
-            if (from.date() <= job.start_time->date() && job.start_time->date() <= to.date()){
+            if (from <= job.start_time && job.start_time <= to){
                 jobsInterval.push_back(job);
             }
         }
@@ -620,44 +582,32 @@ void sortByStartInterval(const QDateTime& from, const QDateTime& to, std::vector
  * @param jobsInterval The vector to fill with the wanted jobs
  * @param jobs The vector of all jobs.
  */
-void sortByScheduledInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval,
-        const std::vector<job_details>& jobs){
+void addScheduledJobsInterval(const QDateTime& from, const QDateTime& to, std::vector<job_details>& jobsInterval,
+                              const std::vector<job_details>& jobs){
     for (const job_details& job : jobs){
-        if (from.date() <= job.schedule_time.date() && job.schedule_time.date() <= to.date()){
+        if (from <= job.schedule_time && job.schedule_time <= to){
             jobsInterval.push_back(job);
         }
     }
 }
 
-/**
- * Getter for Jobs that were either started, finished or scheduled within a certain time interval.
- *
- * Note: The method doesn't give jobs within the exact time interval. That wouldn't be possible to due to the seconds
- * between methods calls. The method will return the jobs, whose dates (so no time in secs, mins, etc.) are within
- * the time interval's dates.
- *
- * @param from The lower bound of the interval (inclusive)
- * @param to  The upper bound of the interval (inclusive)
- * @param status The status of the Jobs
- * @return Vector of the wanted Jobs
- */
 std::vector<job_details> JobGateway::getJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
-    if (from.date() > to.date()){
+    if (from > to){
         throw std::invalid_argument("getJobsInInterval error: lower bound of interval can't be greater than the upper bound.");
     }
     std::vector<job_details> jobs = getJobs();
     std::vector<job_details> jobsInterval;
     switch(status){
         case JobStatus::processing:
-            sortByStartInterval(from, to, jobsInterval, jobs);
+            addStartedJobsInterval(from, to, jobsInterval, jobs);
             break;
 
         case JobStatus::scheduled:
-            sortByScheduledInterval(from, to, jobsInterval, jobs);
+            addScheduledJobsInterval(from, to, jobsInterval, jobs);
             break;
 
         case JobStatus::finished:
-            sortByFinishInterval(from, to, jobsInterval, jobs);
+            addFinishedJobsInterval(from, to, jobsInterval, jobs);
             break;
 
         default:
@@ -720,9 +670,9 @@ bool interruptJob(uint64_t id) {
 }
 
 /**
- * Updates job's status to paused
- * @param id The id of the job
- * @return True if the operation was successful, otherwise false
+ * Updates job's status to paused.
+ * @param id The id of the job.
+ * @return True if the operation was successful, otherwise false.
  */
 bool pauseJob(uint64_t id) {
     auto database = IGateway::AcquireDatabase();
@@ -736,6 +686,10 @@ bool pauseJob(uint64_t id) {
     }
 }
 
+/**
+ * Updates a Job's allocated specs.
+ * @param job The Job.
+ */
 void updateAllocatedSpecs(const job_details& job){
     auto database = IGateway::AcquireDatabase();
     if (!job.allocated_specs.has_value()){
@@ -762,6 +716,10 @@ void updateAllocatedSpecs(const job_details& job){
     }
 }
 
+/**
+ * Updates a Job's worker_id.
+ * @param job The Job.
+ */
 void updateWorkerId(const job_details& job){
     auto database = IGateway::AcquireDatabase();
     if (!job.worker_id.has_value()){

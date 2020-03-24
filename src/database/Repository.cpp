@@ -34,7 +34,7 @@ std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
         }
         std::shared_ptr<Worker> worker = Factory::createWorker(wd);
         workerCache.insert(std::pair(id, std::pair(worker, false)));
-        worker->RegisterObserver(this);
+        worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(this);
         return worker;
     }
 }
@@ -47,10 +47,10 @@ std::shared_ptr<Worker> Repository::AddWorker(const std::string &name, const std
     wd.specs = specs;
     wd.address = address;
     std::lock_guard lock(mtx);
-    wd.id = WorkerGateway::add(wd);
+    wd.id = WorkerGateway::addWorker(wd);
     std::shared_ptr<Worker> worker = Factory::createWorker(wd);
     workerCache.insert(std::pair(wd.id, std::pair(worker, true)));
-    worker->RegisterObserver(this);
+    worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(this);
     return worker;
 }
 
@@ -87,7 +87,7 @@ command) {
     jd.start_time = std::nullopt;
     jd.status = scheduled;
     std::lock_guard lock(mtx);
-    jd.id = JobGateway::add(jd);
+    jd.id = JobGateway::addJob(jd);
     std::shared_ptr<Job> job = Factory::createJob(jd, GetUser(user_id));
     jobCache.insert(std::pair(jd.id, std::pair(job, true)));
     job->RegisterObserver(this);
@@ -119,7 +119,9 @@ std::shared_ptr<User> Repository::AddUser(uint64_t id, const std::string& name, 
     ud.name = name;
     ud.email = email;
     std::lock_guard lock(mtx);
-    ud.id = UserGateway::add(ud);
+    if (!UserGateway::addUser(ud)){
+        return nullptr;
+    }
     std::shared_ptr<User> user = Factory::createUser(ud);
     userCache.insert(std::pair(ud.id, std::pair(user, false)));
     user->RegisterObserver(this);
@@ -232,6 +234,19 @@ std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     }
     return unfinished;
 }
+
+std::vector<std::shared_ptr<Job>>
+Repository::GetJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
+    std::lock_guard lock(mtx);
+    std::vector<std::shared_ptr<Job>> intervalJobs;
+    auto details = JobGateway::getJobsInInterval(from, to, status);
+    intervalJobs.reserve(details.size());
+    for (auto &entry : details){
+        intervalJobs.push_back(GetJob(entry.id));
+    }
+    return intervalJobs;
+}
+
 std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
     std::lock_guard lock(mtx);
     std::vector<std::shared_ptr<Worker>> workers;
@@ -277,3 +292,5 @@ void Repository::OnUpdate(Observable<JobObservableEvent> *observable, JobObserva
         jobCache.find(job->getId())->second.second = true;
     }
 }
+
+

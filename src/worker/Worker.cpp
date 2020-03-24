@@ -10,6 +10,7 @@
 #include <communication/message/RespondToClientMessage.h>
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/authenticator/Authenticator.h>
+#include <sys/sysinfo.h>
 
 using namespace balancedbanana::worker;
 using namespace balancedbanana::communication;
@@ -113,9 +114,11 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg)
     {
         switch ((TaskType)task->getType())
         {
-        case TaskType::WORKERSTART:
-        {
-            HardwareDetailMessage detail = {8, 16000, "GNU/Linux"};
+        case TaskType::WORKERSTART: {
+            // TODO Might check return value of sysinfo
+            struct sysinfo info;
+            sysinfo(&info);
+            HardwareDetailMessage detail = { std::thread::hardware_concurrency(), info.totalram / (1024 * 1024), "GNU/Linux" };
             communicator->send(detail);
             std::thread([]() {
                 std::string cmd;
@@ -150,9 +153,13 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg)
     }
 }
 
-void Worker::processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg)
-{
-    WorkerLoadResponseMessage resp(32, 3, 1, 42, 2, 1, 12);
+void Worker::processWorkerLoadRequestMessage(const WorkerLoadRequestMessage &msg) {
+    // This might need more adjustments
+    // TODO Are threads the virtual number of threads reserved by Jobs and number of threads never used
+    // Might check return value of sysinfo
+    struct sysinfo info;
+    sysinfo(&info);
+    WorkerLoadResponseMessage resp(info.loads[0], (info.loads[0] * std::thread::hardware_concurrency()) / 100, std::thread::hardware_concurrency(), info.freeram / (1024 * 1024), info.totalram / (1024 * 1024), info.freeswap / (1024 * 1024), info.totalswap / (1024 * 1024));
     communicator->send(resp);
 }
 
@@ -165,16 +172,105 @@ void Worker::processTaskMessage(const TaskMessage &msg)
         {
             switch (task.getType())
             {
-            case TaskType::ADD_IMAGE:
-            {
-                auto &content = task.getAddImageFileContent();
-                if (content.empty())
-                {
+#if 0 /* UNUSED FEATURE */
+                case TaskType::ADD_IMAGE: {
+                auto& content = task.getAddImageFileContent();
+                if(content.empty()) {
                     throw std::runtime_error("Task lacks ImageFileContent");
                 }
                 docker.BuildImage(task.getAddImageName(), content);
-                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
+                Task response;
+                response.setType(TaskType::ADD_IMAGE);
+                response.setJobId(task.getJobId());
+                TaskMessage taskmess(response);
+                com->send(taskmess);
+                break;
+            }
+            case TaskType::REMOVE_IMAGE: {
+                docker.RemoveImage(task.getRemoveImageName());
+                Task response;
+                response.setType(TaskType::REMOVE_IMAGE);
+                response.setJobId(task.getJobId());
+                TaskMessage taskmess(response);
+                com->send(taskmess);
+                break;
+            }
+#endif /* UNUSED FEATURE */
+            case TaskType::RUN: {
+                // Backup id contains timestamp
+                // auto&& dockerfile = task.getAddImageFileContent();
+                // if(!dockerfile.empty() && task.getBackupId().has_value())
+                //     docker.UpdateImage(task.getConfig()->image(), dockerfile, *task.getBackupId());
+                auto container = docker.Run(task);
+                #if 0 /* Now use jobid */
+                // ToDo save the taskid / containerid mapping
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    idtodocker[std::to_string(task.getJobId().value_or(0))] = container.GetId();
+                }
+                #endif
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
                 com->send(resp);
+                RespondToClientMessage respondClient(std::to_string(task.getJobId().value_or(0)), task.getConfig()->blocking_mode().value_or(true), task.getClientId().value_or(0));
+                com->send(respondClient);
+                auto exitcode = container.Wait();
+                Task response;
+                response.setType(TaskType::RUN);
+                response.setUserId(exitcode);
+                // Spec said 200 lines
+                response.setAddImageFileContent(container.Tail(200));
+                response.setJobId(task.getJobId());
+                TaskMessage taskmess(response);
+                com->send(taskmess);
+                break;
+            }
+
+            case TaskType::TAIL: {
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                #endif
+                // Spec said 200 lines
+                auto lines = container.Tail(200);
+                
+                RespondToClientMessage response(lines, true, task.getClientId().value_or(0));
+
+                com->send(response);
+                break;
+            }
+
+            case TaskType::PAUSE: {
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                #endif
+                container.Pause();
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::paused);
+                com->send(resp);
+                RespondToClientMessage respondClient("Success", true, task.getClientId().value_or(0));
+                com->send(respondClient);
+                break;
+            }
+
+            case TaskType::CONTINUE: {
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                #endif
+                container.Continue();
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
+                com->send(resp);
+                RespondToClientMessage respondClient("Success", true, task.getClientId().value_or(0));
+                com->send(respondClient);
                 break;
             }
 
@@ -194,93 +290,6 @@ void Worker::processTaskMessage(const TaskMessage &msg)
                 RespondToClientMessage response(checkpoint.GetId(), true, task.getJobId().value_or(0));
                 com->send(response);
 
-                break;
-            }
-
-            case TaskType::CONTINUE:
-            {
-                // find job container
-                Container container("");
-                {
-                    std::lock_guard<std::mutex> guard(midtodocker);
-                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
-                }
-
-                // same as restoring latest checkpoint
-                // note: see pause where it creates a checkpoint with the id "latest"
-
-                // restore "latest" checkpoint of container
-
-                // find "latest" checkpoint
-                auto checkpoints = container.GetCheckpoints();
-
-                for (auto checkpoint : checkpoints) {
-                    if (checkpoint.GetId().compare("latest") == 0) {
-                        // restart checkpoint
-                        checkpoint.Start();
-
-                        RespondToClientMessage response("Success.", true, task.getJobId().value_or(0));
-                        com->send(response);
-                    }
-                }
-
-                RespondToClientMessage response("Failure: No latest Checkpoint", true, task.getJobId().value_or(0));
-                com->send(response);
-
-                break;
-            }
-
-            case TaskType::PAUSE:
-            {
-                // find job container
-                Container container("");
-                {
-                    std::lock_guard<std::mutex> guard(midtodocker);
-                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
-                }
-
-                // pause = backup and stop
-
-                // make checkpoint of container
-                std::string checkpointID = "latest";
-                try {
-                    auto checkpoint = container.CreateCheckpoint(checkpointID);
-
-                    // stop/suspend active container
-                    container.Stop();
-                } catch (std::runtime_error& e) {
-                    RespondToClientMessage response(e.what(), true, task.getJobId().value_or(0));
-                    com->send(response);
-                    break;
-                }
-
-                RespondToClientMessage response("Success", true, task.getJobId().value_or(0));
-                com->send(response);
-
-                break;
-            }
-
-            case TaskType::REMOVE_IMAGE:
-            {
-                docker.RemoveImage(task.getRemoveImageName());
-                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
-                com->send(resp);
-                break;
-            }
-            case TaskType::RUN:
-            {
-                auto container = docker.Run(task);
-                // ToDo save the taskid / containerid mapping
-                {
-                    std::lock_guard<std::mutex> guard(midtodocker);
-                    idtodocker[std::to_string(task.getJobId().value_or(0))] = container.GetId();
-                }
-                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
-                com->send(resp);
-                auto exitcode = container.Wait();
-                // How to summit the exitcode
-                TaskResponseMessage resp2(task.getJobId().value_or(0), balancedbanana::database::JobStatus::finished);
-                com->send(resp2);
                 break;
             }
 
@@ -312,6 +321,9 @@ void Worker::processTaskMessage(const TaskMessage &msg)
                         // and restart checkpoint
                         checkpoint.Start();
 
+                        TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
+                        com->send(resp);
+
                         RespondToClientMessage response("Success.", true, task.getJobId().value_or(0));
                         com->send(response);
                     }
@@ -340,6 +352,7 @@ void Worker::processTaskMessage(const TaskMessage &msg)
 
                 break;
             }
+
             case TaskType::STOP:
             {
                 // find job container
@@ -352,6 +365,8 @@ void Worker::processTaskMessage(const TaskMessage &msg)
                 // abort job (force cancel)
                 try {
                     container.Stop();
+                    TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::canceled);
+                    com->send(resp);
                     RespondToClientMessage response("Success.", true, task.getJobId().value_or(0));
                     com->send(response);
                 } catch (std::runtime_error& e) {
@@ -363,24 +378,6 @@ void Worker::processTaskMessage(const TaskMessage &msg)
                 break;
             }
 
-            case TaskType::TAIL:
-            {
-                Container container("");
-                {
-                    std::lock_guard<std::mutex> guard(midtodocker);
-                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
-                }
-
-                // Spec said 200 lines
-                auto lines = container.Tail(200);
-
-                // ToDo send them back
-
-                RespondToClientMessage response(lines, true, task.getJobId().value_or(0));
-
-                com->send(response);
-                break;
-            }
             default:
                 throw std::runtime_error("Not Implented yet :(");
             }
@@ -388,9 +385,12 @@ void Worker::processTaskMessage(const TaskMessage &msg)
         catch (const std::exception &ex)
         {
             std::cout << "Internal Error: " << ex.what() << "\n";
-            // What should I send on Error
-            TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::interrupted);
-            com->send(resp);
+            Task response;
+            response.setType(TaskType::HELP);
+            response.setAddImageFileContent(ex.what());
+            response.setJobId(task.getJobId());
+            TaskMessage taskmess(response);
+            com->send(taskmess);
         }
     }).detach();
 }

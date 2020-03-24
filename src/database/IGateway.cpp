@@ -42,14 +42,7 @@ QSqlDatabase balancedbanana::database::IGateway::AcquireDatabase() {
     }
 }
 
-/**
- * Creates the database connection
- * @param host_name The host name
- * @param databasename The name of the database
- * @param username The username of the MYSQL account
- * @param password The password of the MYSQL account
- * @param port The port
- */
+
 void IGateway::createDBConnection(const std::string& host_name, const std::string& databasename, const std::string&
 username, const std::string& password,  uint64_t port) {
     {

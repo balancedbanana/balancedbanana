@@ -13,8 +13,11 @@
 #include <QDebug>
 #include <QDataStream>
 #include <QDateTime>
+#include <QtCore/QTimeZone>
 
 using namespace balancedbanana::database;
+
+#define FOUR_MB (4194304)
 
 /**
  * Test environment that has a global SetUp and TearDown methods for all test suites/tests.
@@ -119,9 +122,8 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             queryDetails.config.set_min_cpu_count(Utilities::castToOptional(query.value(min_cores_index).toUInt()));
             queryDetails.config.set_max_cpu_count(Utilities::castToOptional(query.value(max_cores_index).toUInt()));
 
-            std::optional<QVariant> castedBlocking = Utilities::castToOptional(query.value(blocking_mode_index));
-            if (castedBlocking != std::nullopt){
-                queryDetails.config.set_blocking_mode(castedBlocking.value().toBool());
+            if (!query.value(blocking_mode_index).isNull()){
+                queryDetails.config.set_blocking_mode(query.value(blocking_mode_index).toBool());
             } else {
                 queryDetails.config.set_blocking_mode(std::nullopt);
             }
@@ -129,9 +131,8 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
             queryDetails.config.set_priority(static_cast<Priority> (query.value(priority_index).toUInt()));
             queryDetails.config.set_image(query.value(image_index).toString().toStdString());
 
-            std::optional<QVariant> castedInterruptible = Utilities::castToOptional(query.value(interruptible_index));
-            if (castedInterruptible != std::nullopt){
-                queryDetails.config.set_interruptible(castedInterruptible->toBool());
+            if (!query.value(interruptible_index).isNull()){
+                queryDetails.config.set_interruptible(query.value(interruptible_index).toBool());
             } else {
                 queryDetails.config.set_interruptible(std::nullopt);
             }
@@ -224,7 +225,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id){
 TEST_F(AddJobTest, AddJobTest_FirstJobSuccess_Test){
 
     // The first entry's id should be 1
-    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(JobGateway::addJob(details) == 1);
 
     // The add must be successful
     EXPECT_TRUE(wasJobAddSuccessful(details, 1));
@@ -234,7 +235,7 @@ TEST_F(AddJobTest, AddJobTest_FirstJobSuccess_Test){
 TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
 
     // Add the user from the first test. Since it's the first user, its id should be 1.
-    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(JobGateway::addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1));
 
     // Initialize another job
@@ -260,7 +261,7 @@ TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
     seconddetails.allocated_specs->cores = 4;
     seconddetails.allocated_specs->osIdentifier = "55";
 
-    EXPECT_TRUE(JobGateway::add(seconddetails) == 2);
+    EXPECT_TRUE(JobGateway::addJob(seconddetails) == 2);
     EXPECT_TRUE(wasJobAddSuccessful(seconddetails, 2));
 }
 
@@ -348,12 +349,12 @@ protected:
 
 // Test to see if an exception is thrown when a job is being added, but no jobs' table exists.
 TEST_F(NoJobsTableTest, NoJobsTableTest_AddJob_Test){
-    EXPECT_THROW(JobGateway::add(details), std::logic_error);
+    EXPECT_THROW(JobGateway::addJob(details), std::logic_error);
 }
 
 // Test to see if an exception is thrown when a job is being removed, but no jobs' table exists.
 TEST_F(NoJobsTableTest, NoJobsTableTest_RemoveJob_Test){
-    EXPECT_THROW(JobGateway::remove(details.id), std::logic_error);
+    EXPECT_THROW(JobGateway::removeJob(details.id), std::logic_error);
 }
 
 // Test to see if an exception is thrown when the job getter is called, but no jobs' table exists.
@@ -394,7 +395,7 @@ protected:
 // First add with only the mandatory information
 TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
 
-    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(JobGateway::addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1));
 }
 
@@ -440,17 +441,17 @@ TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
     details.config.set_priority(Priority::low);
 
     // Since this is the first job, this has to be true.
-    EXPECT_TRUE(JobGateway::add(details) == 1);
+    EXPECT_TRUE(JobGateway::addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1));
 
     // This must return true.
-    EXPECT_TRUE(JobGateway::remove(1));
+    EXPECT_TRUE(JobGateway::removeJob(1));
     EXPECT_TRUE(wasJobRemoveSuccessful(1));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveJobTest, RemoveJobTest_FailureRemove_Test){
-    EXPECT_FALSE(JobGateway::remove(1));
+    EXPECT_FALSE(JobGateway::removeJob(1));
 }
 
 /**
@@ -556,7 +557,7 @@ TEST_F(GetJobTest, GetJobTest_NonExistentJob_Test){
 // Test to see if getter returns correct struct when a job was added
 TEST_F(GetJobTest, GetJobTest_FirstAdd_Test){
     // Add the job. Should work without issues
-    EXPECT_TRUE(JobGateway::add(details) == details.id);
+    EXPECT_TRUE(JobGateway::addJob(details) == details.id);
     EXPECT_TRUE(wasJobAddSuccessful(details, details.id));
     EXPECT_TRUE(JobGateway::getJob(details.id) == details);
 }
@@ -575,7 +576,7 @@ TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
     detailss.config.set_priority(Priority::low);
     detailss.config.set_interruptible(false);
 
-    EXPECT_TRUE(JobGateway::add(detailss) == detailss.id);
+    EXPECT_TRUE(JobGateway::addJob(detailss) == detailss.id);
     EXPECT_TRUE(wasJobAddSuccessful(detailss, detailss.id));
     EXPECT_TRUE(JobGateway::getJob(detailss.id) == detailss);
 }
@@ -654,9 +655,9 @@ protected:
 // Test to see if getJobs retrieves a vector of previously added jobs from the database
 TEST_F(GetJobsTest, GetJobsTest_SuccessfulGet_Test){
     // Add the jobs. Their ids should match the order of their addition.
-    EXPECT_EQ(JobGateway::add(first), first.id);
-    EXPECT_EQ(JobGateway::add(second), second.id);
-    EXPECT_EQ(JobGateway::add(third), third.id);
+    EXPECT_EQ(JobGateway::addJob(first), first.id);
+    EXPECT_EQ(JobGateway::addJob(second), second.id);
+    EXPECT_EQ(JobGateway::addJob(third), third.id);
 
     std::vector<job_details> expectedVector;
     expectedVector.push_back(first);
@@ -798,8 +799,8 @@ bool wasStartSuccessful(job_details job, worker_details worker){
 // Test to see if successful startJob call sets the values in all tables properly
 TEST_F(StartJobTest, StartJobTest_SuccessfulStart_Test){
     // Setup by adding a job and worker to the database
-    EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
+    EXPECT_TRUE(WorkerGateway::addWorker(worker) == worker.id);
+    EXPECT_TRUE(JobGateway::addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
 
     job.start_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
@@ -854,7 +855,7 @@ TEST_F(StartJobTest, StartJobTest_NonExistentJob_Test){
 
 // Test to see if exception is thrown when no worker with the id arg exists in the database
 TEST_F(StartJobTest, StartJobTest_NonExistentWorker_Test){
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
+    EXPECT_TRUE(JobGateway::addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.start_time = QDateTime::currentDateTime();
     EXPECT_FALSE(JobGateway::startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
@@ -944,7 +945,7 @@ bool wasFinishSuccessful(std::string stdout, job_details job, int8_t exit_code){
 // Test to see if successful finishJob call sets the values in all tables properly
 TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
     // Add the job to the DB. This operation should be successful
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
+    EXPECT_TRUE(JobGateway::addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
     EXPECT_TRUE(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code));
@@ -978,7 +979,7 @@ TEST_F(FinishJobTest, FinishJobTest_NonExistentJob_Test){
 
 // Test to see if an exception is thrown when finishJob is called with an invalid finish_time
 TEST_F(FinishJobTest, FinishJobTest_InvalidFinishTime_Test){
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
+    EXPECT_TRUE(JobGateway::addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.finish_time = std::make_optional(QDateTime::fromString("0.13.54.13.01:5.5"));
     EXPECT_THROW(JobGateway::finishJob(job.id, job.finish_time.value(), stdout, exit_code), std::invalid_argument);
@@ -1052,8 +1053,8 @@ protected:
 
 // Getter test for after startJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
-    EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
+    EXPECT_TRUE(WorkerGateway::addWorker(worker) == worker.id);
+    EXPECT_TRUE(JobGateway::addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.start_time = QDateTime::currentDateTime();
     job.worker_id = 1;
@@ -1068,8 +1069,8 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
 
 // Getter test for after finishJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
-    EXPECT_TRUE(WorkerGateway::add(worker) == worker.id);
-    EXPECT_TRUE(JobGateway::add(job) == job.id);
+    EXPECT_TRUE(WorkerGateway::addWorker(worker) == worker.id);
+    EXPECT_TRUE(JobGateway::addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.start_time = QDateTime::currentDateTime();
     job.worker_id = 1;
@@ -1183,10 +1184,10 @@ protected:
 // the database
 TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_SuccessfulGet_Test){
     // Add the jobs. Their ids should match the order of their addition.
-    EXPECT_EQ(JobGateway::add(first), first.id);
-    EXPECT_EQ(JobGateway::add(second), second.id);
-    EXPECT_EQ(JobGateway::add(third), third.id);
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(JobGateway::addJob(first), first.id);
+    EXPECT_EQ(JobGateway::addJob(second), second.id);
+    EXPECT_EQ(JobGateway::addJob(third), third.id);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id);
     EXPECT_TRUE(JobGateway::startJob(second.id, worker.id, worker.specs.value(),
             QDateTime::fromString("2020.02.20:13.13.13.5", TIME_FORMAT)));
     EXPECT_TRUE(JobGateway::startJob(third.id, worker.id, worker.specs.value(),
@@ -1232,15 +1233,23 @@ TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_NonExistentJobs_Test){
     EXPECT_TRUE(JobGateway::getJobsWithWorkerId(worker.id).empty());
 }
 
+/**
+ * Creates three jobs and an epoch on SetUp and resets the table on TearDown.
+ */
 class GetJobsInIntervalTest : public ::testing::Test {
 protected:
     void SetUp() override{
+        // Set up a date/time to work with
+        epoch.setDate(QDate(2020, 3, 17));
+        epoch.setTime(QTime(20, 30));
+        epoch.setTimeZone(QTimeZone::systemTimeZone());
+
         // Set up the first job
         first.id = 1;
         first.user_id = 3;
         first.command = "mkdir build";
         first.status = (int) JobStatus::scheduled;
-        first.schedule_time = QDateTime::currentDateTime().addDays(-7);
+        first.schedule_time = epoch.addDays(-7);
         first.empty = false;
         first.config.set_min_ram(4194304);
         first.config.set_max_ram(4194305);
@@ -1258,7 +1267,7 @@ protected:
         second.user_id = 1;
         second.command = "mkdir build";
         second.status = (int) JobStatus::scheduled;
-        second.schedule_time = QDateTime::currentDateTime().addDays(-8);
+        second.schedule_time = epoch.addDays(-8);
         second.empty = false;
         second.config.set_min_ram(4194304);
         second.config.set_max_ram(4194305);
@@ -1277,7 +1286,7 @@ protected:
         third.user_id = 1;
         third.command = "mkdir build";
         third.status = (int) JobStatus::scheduled;
-        third.schedule_time = QDateTime::currentDateTime().addDays(-2);
+        third.schedule_time = epoch.addDays(-2);
         third.empty = false;
         third.config.set_min_ram(4194304);
         third.config.set_max_ram(4194305);
@@ -1291,9 +1300,9 @@ protected:
         third.config.set_current_working_dir(".");
 
         // Standard procedure to add jobs and to get them. This should work flawlessly
-        EXPECT_EQ(JobGateway::add(first), first.id);
-        EXPECT_EQ(JobGateway::add(second), second.id);
-        EXPECT_EQ(JobGateway::add(third), third.id);
+        EXPECT_EQ(JobGateway::addJob(first), first.id);
+        EXPECT_EQ(JobGateway::addJob(second), second.id);
+        EXPECT_EQ(JobGateway::addJob(third), third.id);
 
         std::vector<job_details> expectedVector;
         expectedVector.push_back(first);
@@ -1314,6 +1323,7 @@ protected:
     job_details first;
     job_details second;
     job_details third;
+    QDateTime epoch;
 };
 
 /**
@@ -1323,8 +1333,8 @@ protected:
  * scheduled one week prior, the second job 8 days prior and the third job 2 days prior.
  */
 TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Scheduled_Test){
-    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
-            (-7),QDateTime::currentDateTime(), JobStatus::scheduled);
+    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+            (-7),epoch, JobStatus::scheduled);
 
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(first);
@@ -1351,23 +1361,23 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     worker.name = "Ubuntu";
     worker.id = 1;
     worker.empty = false;
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id);
     worker.public_key = "asdfsadcsadcsa";
     worker.address = "6.4.23.2";
     worker.name = "Windows";
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id + 1);
     // The job then have to be started.
-    first.start_time = QDateTime::currentDateTime().addDays(-1);
+    first.start_time = epoch.addDays(-1);
     first.status = (int) JobStatus::processing;
     first.allocated_specs = worker.specs;
     first.worker_id = worker.id;
     EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
-    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), QDateTime::currentDateTime().addDays
+    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
     (-3)));
 
     // This is where the test begins.
-    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
-            (-2), QDateTime::currentDateTime(), JobStatus::processing);
+    std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+            (-2), epoch, JobStatus::processing);
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(first);
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
@@ -1392,22 +1402,22 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     worker.name = "Ubuntu";
     worker.id = 1;
     worker.empty = false;
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id);
     worker.public_key = "asdfsadcsadcsa";
     worker.address = "6.4.23.2";
     worker.name = "Windows";
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id + 1);
     // The job then have to be started.
-    first.start_time = QDateTime::currentDateTime().addDays(-1);
+    first.start_time = epoch.addDays(-1);
     first.status = (int) JobStatus::processing;
     first.allocated_specs = worker.specs;
     first.worker_id = worker.id;
     EXPECT_TRUE(JobGateway::startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
-    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), QDateTime::currentDateTime().addDays
+    EXPECT_TRUE(JobGateway::startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
     (-3)));
 
     // Finish the third job
-    third.finish_time = QDateTime::currentDateTime().addDays(-1);
+    third.finish_time = epoch.addDays(-1);
     third.status = (int)JobStatus::finished;
     job_result result;
     result.stdout = "error";
@@ -1415,8 +1425,8 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     third.result = result;
     EXPECT_TRUE(JobGateway::finishJob(third.id, third.finish_time.value(), third.result->stdout, third
     .result->exit_code));
-     std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(QDateTime::currentDateTime().addDays
-             (-1), QDateTime::currentDateTime(), JobStatus::finished);
+     std::vector<job_details> actualIntervalJobs = JobGateway::getJobsInInterval(epoch.addDays
+             (-1), epoch, JobStatus::finished);
     std::vector<job_details> expectedIntervalJobs;
     expectedIntervalJobs.push_back(third);
     EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedIntervalJobs, actualIntervalJobs));
@@ -1529,9 +1539,9 @@ TEST_F(UpdateJobTest, UpdateJobTest_NonExistentJob_Test){
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
     // Add the job and worker and then start the job.
-    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_EQ(JobGateway::addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id);
     job.status = (int) JobStatus::processing;
     job.start_time = QDateTime::currentDateTime();
     job.allocated_specs = worker.specs;
@@ -1562,7 +1572,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_EQ(JobGateway::addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     JobGateway::updateJob(job);
 
@@ -1573,13 +1583,13 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     // Add the job and  two workers and then start the job.
-    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_EQ(JobGateway::addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id);
     worker.public_key = "sadfsdcasd";
     worker.address = "1.2.4.5.6";
     worker.name = "windows";
-    EXPECT_EQ(WorkerGateway::add(worker), worker.id + 1);
+    EXPECT_EQ(WorkerGateway::addWorker(worker), worker.id + 1);
     job.status = (int) JobStatus::processing;
     job.start_time = QDateTime::currentDateTime();
     job.allocated_specs = worker.specs;
@@ -1599,7 +1609,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_EQ(JobGateway::addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.status = (int) JobStatus::interrupted;
     JobGateway::updateJob(job);
@@ -1609,7 +1619,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_EQ(JobGateway::addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.status = (int) JobStatus::paused;
     JobGateway::updateJob(job);
@@ -1619,7 +1629,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_EQ(JobGateway::addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.status = (int) JobStatus::canceled;
     JobGateway::updateJob(job);
@@ -1629,7 +1639,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdatePriority_Test){
-    EXPECT_EQ(JobGateway::add(job), job.id);
+    EXPECT_EQ(JobGateway::addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id));
     job.config.set_priority(Priority::emergency);
     JobGateway::updateJob(job);

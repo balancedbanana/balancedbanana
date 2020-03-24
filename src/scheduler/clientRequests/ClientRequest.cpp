@@ -8,6 +8,8 @@
 #include "scheduler/clientRequests/ContinueRequest.h"
 #include "scheduler/clientRequests/BackupRequest.h"
 #include "scheduler/clientRequests/RestoreRequest.h"
+#include "scheduler/clientRequests/AddImageRequest.h"
+#include "scheduler/clientRequests/RemoveImageRequest.h"
 
 namespace balancedbanana
 {
@@ -61,6 +63,12 @@ std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(const std::share
         break;
     case TaskType::RESTORE:
         return std::make_shared<RestoreRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        break;
+    case TaskType::ADD_IMAGE:
+        return std::make_shared<AddImageRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        break;
+    case TaskType::REMOVE_IMAGE:
+        return std::make_shared<RemoveImageRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
 
     default:

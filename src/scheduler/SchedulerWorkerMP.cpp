@@ -5,6 +5,7 @@
 #include <communication/message/HardwareDetailMessage.h>
 #include <communication/message/TaskResponseMessage.h>
 #include <communication/message/RespondToClientMessage.h>
+#include <communication/message/TaskMessage.h>
 #include <communication/authenticator/AuthHandler.h>
 #include <scheduler/Clients.h>
 
@@ -91,6 +92,29 @@ void SchedulerWorkerMP::processRespondToClientMessage(const RespondToClientMessa
         client->send(msg);
     } catch (std::runtime_error& e) {
         // well ... rip client
+    }
+}
+
+void balancedbanana::scheduler::SchedulerWorkerMP::processTaskMessage(const balancedbanana::communication::TaskMessage &msg) {
+    auto&& task = msg.GetTask();
+    switch(task.getType()) {
+        case TaskType::RUN:
+            if(auto job = getJobByID(task.getJobId().value_or(0))) {
+                job->setResult(std::make_shared<balancedbanana::database::job_result>(balancedbanana::database::job_result {task.getAddImageFileContent(), (int8_t)task.getUserId().value_or(-1)}));
+                job->setStatus(balancedbanana::database::JobStatus::finished);
+            }
+            // Observable<WorkerFinishEvent>::Update({ task.getJobId().value_or(0), task.getUserId().value_or(-1), task.getAddImageFileContent() });
+            break;
+        case TaskType::TAIL:
+            Observable<WorkerTailEvent>::Update({ task.getJobId().value_or(0), task.getAddImageFileContent() });
+            break;
+        case TaskType::HELP:
+            Observable<WorkerErrorEvent>::Update({ task.getJobId().value_or(0), task.getAddImageFileContent() });
+            if(auto job = getJobByID(task.getJobId().value_or(0))) {
+                job->setResult(std::make_shared<balancedbanana::database::job_result>(balancedbanana::database::job_result {task.getAddImageFileContent(), (int8_t)-1}));
+                job->setStatus(balancedbanana::database::JobStatus::canceled);
+            }
+            break;
     }
 }
 

@@ -288,7 +288,5 @@ void HttpServer::Cancel() {
 }
 
 balancedbanana::scheduler::HttpServer::~HttpServer() {
-	if(listentask && listentask->joinable()) {
-		listentask->join();
-	}
+	Cancel();
 }

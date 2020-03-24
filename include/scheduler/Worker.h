@@ -5,6 +5,7 @@
 #include <database/Specs.h>
 #include "IUser.h"
 #include "Observer.h"
+#include "WorkerObserver.h"
 #include <condition_variable>
 #include <optional>
 
@@ -18,7 +19,7 @@ namespace balancedbanana {
             HARDWARE_DETAIL_UPDATE
         };
 
-        class Worker : public IUser, public Observable<WorkerObservableEvent> {
+        class Worker : public IUser, public Observable<WorkerObservableEvent>/* , public Observable<WorkerFinishEvent> */, public Observable<WorkerTailEvent>, Observer<WorkerTailEvent>, public Observable<WorkerErrorEvent>, Observer<WorkerErrorEvent> {
         public:
             void send(const communication::Message & msg);
 
@@ -41,6 +42,9 @@ namespace balancedbanana {
             Worker(uint64_t id, const std::string &name, const std::string &publickey, const
             std::optional<database::Specs> &specs);
         private:
+            void OnUpdate(Observable<WorkerTailEvent> *obsable, WorkerTailEvent event) override;
+            void OnUpdate(Observable<WorkerErrorEvent> *obsable, WorkerErrorEvent event) override;
+            // TODO Kein Name??
             uint64_t id;
             std::optional<database::Specs> specs;
             bool connected;

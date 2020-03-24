@@ -5,6 +5,7 @@
 #include <scheduler/Clients.h>
 #include <sstream>
 #include <communication/message/TaskMessage.h>
+#include <future>
 
 using balancedbanana::communication::TaskMessage;
 using balancedbanana::database::JobStatus;
@@ -49,88 +50,54 @@ std::shared_ptr<RespondToClientMessage> TailRequest::executeRequestAndFetchData(
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, 0);
     }
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
+    if(!job->getUser() || job->getUser()->id() != userID) {
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+    }
     switch ((job->getStatus()))
     {
     case (int)JobStatus::scheduled:
         // add info job hasnt started yet to response
         response << OPERATION_UNAVAILABLE_JOB_NOT_RUN << std::endl;
         break;
-    case (int)JobStatus::processing:
-        // tell worker (if present) to send the tail of the job
-        {
-            if (worker == nullptr)
+    case (int)JobStatus::processing: {
+            // get tail by asking the worker
+            struct ObserverContext : Observer<WorkerTailEvent>
             {
-                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
-                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, 0);
-            }
+                uint64_t jobid;
+                std::promise<WorkerTailEvent> event;
+                void OnUpdate(Observable<WorkerTailEvent> *obsable, WorkerTailEvent event) override {
+                    if(this->jobid == event.jobid || event.jobid == 0) {
+                        this->event.set_value(event);
+                    }
+                };
+            };
+            ObserverContext context;
+            context.jobid = job->getId();
+            worker->Observable<WorkerTailEvent>::RegisterObserver(&context);
             // Set userId for Worker
             task->setUserId(userID);
             uint64_t clientID = Clients::enter(*client);
             task->setClientId(clientID);
             // Just Send to Worker
             worker->send(TaskMessage(*task));
-            shouldClientUnblock = false;
+            auto res = context.event.get_future().get();
+            worker->Observable<WorkerTailEvent>::UnregisterObserver(&context);
+            response << (res.jobid ? res.tail : OPERATION_FAILURE ) << "\n";
         }
         response << OPERATION_PROGRESSING_TAIL << std::endl;
         break;
     case (int)JobStatus::paused:
-        // tell worker (if present) to send the tail of the job
-        {
-            if (worker == nullptr)
-            {
-                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
-                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, 0);
-            }
-            // Set userId for Worker
-            task->setUserId(userID);
-            uint64_t clientID = Clients::enter(*client);
-            task->setClientId(clientID);
-            // Just Send to Worker
-            worker->send(TaskMessage(*task));
-            shouldClientUnblock = false;
-        }
-        response << OPERATION_PROGRESSING_TAIL << std::endl;
-        break;
-    case (int)JobStatus::interrupted:
-        // tell worker (if present) to send the tail of the job
-        {
-            if (worker == nullptr)
-            {
-                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
-                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, 0);
-            }
-            // Set userId for Worker
-            task->setUserId(userID);
-            uint64_t clientID = Clients::enter(*client);
-            task->setClientId(clientID);
-            // Just Send to Worker
-            worker->send(TaskMessage(*task));
-            shouldClientUnblock = false;
-        }
-        response << OPERATION_PROGRESSING_TAIL << std::endl;
-        break;
     case (int)JobStatus::canceled:
-        // tell worker (if present) to send the tail of the job
-        {
-            if (worker == nullptr)
-            {
-                response << OPERATION_UNAVAILABLE_NO_WORKER << std::endl;
-                return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, 0);
-            }
-            // Set userId for Worker
-            task->setUserId(userID);
-            uint64_t clientID = Clients::enter(*client);
-            task->setClientId(clientID);
-            // Just Send to Worker
-            worker->send(TaskMessage(*task));
-            shouldClientUnblock = false;
-        }
-        response << OPERATION_PROGRESSING_TAIL << std::endl;
-        break;
+    case (int)JobStatus::interrupted:
     case (int)JobStatus::finished:
-        // get result as the job is done
-        response << job->getResult()->stdout << std::endl
-                 << PREFIX_JOB_EXIT_CODE << job->getResult()->exit_code << std::endl;
+        if(job->getResult()) {
+            // get result
+            response << job->getResult()->stdout << "\n";
+            if(job->getStatus() != JobStatus::paused)
+                response << PREFIX_JOB_EXIT_CODE << std::hex << (uint32_t)job->getResult()->exit_code << std::endl;
+        } else {
+            response << OPERATION_FAILURE << std::endl;
+        }
         break;
     default:
         // add info job has corrupted status to response

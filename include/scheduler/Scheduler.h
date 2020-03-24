@@ -19,7 +19,7 @@ public:
 
     Scheduler();
 
-    void processCommandLineArguments(int argc, const char* const * argv);
+    int processCommandLineArguments(int argc, const char* const * argv);
 
 private:
     balancedbanana::configfiles::ApplicationConfig config;
