@@ -65,10 +65,10 @@ std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(const std::share
         return std::make_shared<RestoreRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::ADD_IMAGE:
-        return std::make_shared<AddImageRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<AddImageRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::REMOVE_IMAGE:
-        return std::make_shared<RemoveImageRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<RemoveImageRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
 
     default:

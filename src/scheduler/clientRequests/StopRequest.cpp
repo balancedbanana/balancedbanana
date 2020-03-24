@@ -49,7 +49,7 @@ std::shared_ptr<RespondToClientMessage> StopRequest::executeRequestAndFetchData(
         return std::make_shared<RespondToClientMessage>(response.str(), shouldClientUnblock, 0);
     }
     if(!job->getUser() || job->getUser()->id() != userID) {
-        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true, 0);
     }
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
     switch ((job->getStatus()))

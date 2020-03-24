@@ -51,7 +51,7 @@ std::shared_ptr<RespondToClientMessage> TailRequest::executeRequestAndFetchData(
     }
     std::shared_ptr<Worker> worker = dbGetWorker(job->getWorker_id());
     if(!job->getUser() || job->getUser()->id() != userID) {
-        return std::make_shared<RespondToClientMessage>("Permission Denied", true);
+        return std::make_shared<RespondToClientMessage>("Permission Denied", true, 0);
     }
     switch ((job->getStatus()))
     {
