@@ -7,7 +7,8 @@ add_executable(databasetests
         JobGatewayTests.cpp
         UtilitiesTests.cpp
         FactoryTests.cpp
-        RepositoryTests.cpp)
+        RepositoryTests.cpp
+        JobStatusTests.cpp)
 target_link_libraries(databasetests ${WHOLEARCHIVEBEG} communication scheduler configfiles database ${WHOLEARCHIVEEND} Qt5::Core ${GTEST})
 gtest_discover_tests(databasetests)
 
