@@ -358,7 +358,7 @@ job_details JobGateway::getJob(uint64_t job_id) {
             throw std::runtime_error("getJob error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        std::cerr << "getJob error: no job with id = " << job_id  << " exists" << std::endl;
+        throw std::runtime_error("getJob error: no job with id = " + std::to_string(job_id) + "exists");
     }
     return details;
 }
@@ -460,7 +460,7 @@ std::vector<job_details> JobGateway::getJobsWithWorkerId(uint64_t worker_id) {
     return jobVector;
 }
 
-bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& specs, const QDateTime& start_time) {
+void JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& specs, const QDateTime& start_time) {
     if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
@@ -487,21 +487,18 @@ bool JobGateway::startJob(uint64_t job_id, uint64_t worker_id, const Specs& spec
             query.addBindValue(QVariant::fromValue((int) JobStatus::processing));
             query.addBindValue(QVariant::fromValue(start_time.toString(TIME_FORMAT)));
             query.addBindValue(QVariant::fromValue(job_id));
-            if (query.exec()){
-                return true;
-            } else {
+            if (!query.exec()){
                 throw std::runtime_error("startJob error: " + query.lastError().databaseText().toStdString());
             }
         } else {
-            std::cerr << "startJob error: no worker with id = " << worker_id  << " exists" << std::endl;
+            throw std::runtime_error("startJob error: no worker with id = " + std::to_string(worker_id) + " exists");
         }
     } else {
-        std::cerr << "startJob error: no job with id = " << job_id  << " exists" << std::endl;
+        throw std::runtime_error("startJob error: no job with id = " + std::to_string(job_id) +" exists");
     }
-    return false;
 }
 
-bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
+void JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         , const std::string& stdout, const int8_t exit_code) {
     if (!Utilities::doesTableExist("job_results", db)){
         Utilities::throwNoTableException("job_results");
@@ -529,14 +526,11 @@ bool JobGateway::finishJob(uint64_t job_id, const QDateTime& finish_time
         query.addBindValue(QVariant::fromValue(result));
         query.addBindValue((int) JobStatus::finished);
         query.addBindValue(QVariant::fromValue(job_id));
-        if(query.exec()){
-            return true;
-        } else {
+        if(!query.exec()){
             throw std::runtime_error("finishJob error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        std::cerr << "finishJob error: no job with id = " << job_id  << " exists" << std::endl;
-        return false;
+        throw std::runtime_error("finishJob error: no job with id = " + std::to_string(job_id) + " exists");
     }
 }
 

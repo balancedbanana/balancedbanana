@@ -582,7 +582,7 @@ TEST_F(GetJobTest, GetJobTest_NoJobResultsTable_Test){
 
 // Test to see if getter returns empty struct when no job was added
 TEST_F(GetJobTest, GetJobTest_NonExistentJob_Test){
-    EXPECT_TRUE(jobGateway->getJob(details.id).empty);
+    EXPECT_THROW(jobGateway->getJob(details.id), std::runtime_error);
 }
 
 // Test to see if getter returns correct struct when a job was added
@@ -850,8 +850,7 @@ TEST_F(StartJobTest, StartJobTest_SuccessfulStart_Test){
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
     job.start_time = std::make_optional<QDateTime>(QDateTime::currentDateTime());
-    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
-
+    jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value());
 
     // Check if the values were set properly
     EXPECT_TRUE(wasStartSuccessful(job, worker, db));
@@ -893,7 +892,7 @@ TEST_F(StartJobTest, StartJobTest_NoJobsTable_Test){
 // Test to see if exception is thrown when no job with the id arg exists in the database
 TEST_F(StartJobTest, StartJobTest_NonExistentJob_Test){
     job.start_time = QDateTime::currentDateTime();
-    EXPECT_FALSE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_THROW(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()), std::runtime_error);
 }
 
 // Test to see if exception is thrown when no worker with the id arg exists in the database
@@ -902,7 +901,7 @@ TEST_F(StartJobTest, StartJobTest_NonExistentWorker_Test){
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.start_time = QDateTime::currentDateTime();
-    EXPECT_FALSE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    EXPECT_THROW(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()), std::runtime_error);
 }
 
 void resetResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
@@ -1000,7 +999,7 @@ TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
-    EXPECT_TRUE(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
+    jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code);
 
     // Check if the values were set properly
     EXPECT_TRUE(wasFinishSuccessful(result.stdout, job, result.exit_code, db));
@@ -1025,7 +1024,7 @@ TEST_F(FinishJobTest, FinishJobTest_NoJobsTable_Test){
 // Test to see if finishJob returns false, when no job exists with the id arg
 TEST_F(FinishJobTest, FinishJobTest_NonExistentJob_Test){
     job.finish_time = QDateTime::currentDateTime();
-    EXPECT_FALSE(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
+    EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code), std::runtime_error);
 }
 
 // Test to see if an exception is thrown when finishJob is called with an invalid finish_time
@@ -1118,7 +1117,7 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
     job.worker_id = 1;
     job.allocated_specs = worker.specs;
     job.status = (int) JobStatus::processing;
-    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value());
     EXPECT_TRUE(wasStartSuccessful(job, worker, db));
 
     job_details queryDetails = jobGateway->getJob(job.id);
@@ -1135,12 +1134,12 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
     job.worker_id = 1;
     job.allocated_specs = worker.specs;
     job.status = (int) JobStatus::processing;
-    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value());
     EXPECT_TRUE(wasStartSuccessful(job, worker, db));
     job.finish_time = QDateTime::currentDateTime().addDays(2);
     job.result = result;
     job.status = (int) JobStatus::finished;
-    EXPECT_TRUE(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code));
+    jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code);
     EXPECT_TRUE(wasFinishSuccessful(result.stdout, job, result.exit_code, db));
 
     job_details queryDetails = jobGateway->getJob(job.id);
@@ -1257,10 +1256,10 @@ TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_SuccessfulGet_Test){
     EXPECT_EQ(jobGateway->addJob(second), second.id);
     EXPECT_EQ(jobGateway->addJob(third), third.id);
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
-    EXPECT_TRUE(jobGateway->startJob(second.id, worker.id, worker.specs.value(),
-            QDateTime::fromString("2020.02.20:13.13.13.5", TIME_FORMAT)));
-    EXPECT_TRUE(jobGateway->startJob(third.id, worker.id, worker.specs.value(),
-                                     QDateTime::fromString("2020.02.21:13.13.13.5", TIME_FORMAT)));
+    jobGateway->startJob(second.id, worker.id, worker.specs.value(),
+            QDateTime::fromString("2020.02.20:13.13.13.5", TIME_FORMAT));
+    jobGateway->startJob(third.id, worker.id, worker.specs.value(),
+                                     QDateTime::fromString("2020.02.21:13.13.13.5", TIME_FORMAT));
     second.status = (int) JobStatus::processing;
     third.status = (int) JobStatus::processing;
     second.allocated_specs = worker.specs;
@@ -1449,9 +1448,9 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Started_Test){
     first.status = (int) JobStatus::processing;
     first.allocated_specs = worker.specs;
     first.worker_id = worker.id;
-    EXPECT_TRUE(jobGateway->startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
-    EXPECT_TRUE(jobGateway->startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
-    (-3)));
+    jobGateway->startJob(first.id, worker.id, worker.specs.value(), first.start_time.value());
+    jobGateway->startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
+    (-3));
 
     // This is where the test begins.
     std::vector<job_details> actualIntervalJobs = jobGateway->getJobsInInterval(epoch.addDays
@@ -1488,9 +1487,9 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     first.status = (int) JobStatus::processing;
     first.allocated_specs = worker.specs;
     first.worker_id = worker.id;
-    EXPECT_TRUE(jobGateway->startJob(first.id, worker.id, worker.specs.value(), first.start_time.value()));
-    EXPECT_TRUE(jobGateway->startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
-    (-3)));
+    jobGateway->startJob(first.id, worker.id, worker.specs.value(), first.start_time.value());
+    jobGateway->startJob(second.id, worker.id + 1, worker.specs.value(), epoch.addDays
+    (-3));
 
     // Finish the third job
     third.finish_time = epoch.addDays(-1);
@@ -1499,8 +1498,8 @@ TEST_F(GetJobsInIntervalTest, GetJobsInIntervalTest_Finished_Test){
     result.stdout = "error";
     result.exit_code = 0;
     third.result = result;
-    EXPECT_TRUE(jobGateway->finishJob(third.id, third.finish_time.value(), third.result->stdout, third
-    .result->exit_code));
+    jobGateway->finishJob(third.id, third.finish_time.value(), third.result->stdout, third
+    .result->exit_code);
      std::vector<job_details> actualIntervalJobs = jobGateway->getJobsInInterval(epoch.addDays
              (-1), epoch, JobStatus::finished);
     std::vector<job_details> expectedIntervalJobs;
@@ -1629,7 +1628,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
     job.start_time = QDateTime::currentDateTime();
     job.allocated_specs = worker.specs;
     job.worker_id = 1;
-    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value());
     EXPECT_TRUE(wasStartSuccessful(job, worker, db));
 
     // Change the allocated resources
@@ -1676,7 +1675,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     job.start_time = QDateTime::currentDateTime();
     job.allocated_specs = worker.specs;
     job.worker_id = 1;
-    EXPECT_TRUE(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()));
+    jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value());
     EXPECT_TRUE(wasStartSuccessful(job, worker, db));
 
     // Update the worker_id
@@ -1885,7 +1884,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
     job.allocated_specs = worker.specs;
     job.start_time = QDateTime::currentDateTime();
     job.status = (int) JobStatus::processing;
-    ASSERT_TRUE(jobGateway->startJob(job.id, job.worker_id.value(), job.allocated_specs.value(), job.start_time.value()));
+    jobGateway->startJob(job.id, job.worker_id.value(), job.allocated_specs.value(), job.start_time.value());
     ASSERT_TRUE(wasStartSuccessful(job, worker, db));
 
     // Get old AllocId
@@ -1960,7 +1959,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateResult_Test){
     job.finish_time = QDateTime::currentDateTime();
     job.status = (int) JobStatus::finished;
     job.result = {"some result..", 100};
-    ASSERT_TRUE(jobGateway->finishJob(job.id, job.finish_time.value(), job.result->stdout, job.result->exit_code));
+    jobGateway->finishJob(job.id, job.finish_time.value(), job.result->stdout, job.result->exit_code);
     ASSERT_TRUE(wasFinishSuccessful(job.result->stdout, job, job.result->exit_code, db));
 
     // Get old ResultId

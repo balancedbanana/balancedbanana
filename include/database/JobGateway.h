@@ -54,7 +54,7 @@ namespace balancedbanana::database {
          * @param specs The resources assigned to the job.
          * @return true if the operation was successful, otherwise false.
          */
-        bool startJob(uint64_t job_id, uint64_t worker_id, const Specs& specs, const QDateTime& start_time);
+        void startJob(uint64_t job_id, uint64_t worker_id, const Specs& specs, const QDateTime& start_time);
 
         /**
         * Updates the status of a Job to finished and adds the finish time to its record.
@@ -64,7 +64,7 @@ namespace balancedbanana::database {
         * @param exit_code The exit code of the Job
         * @return true if the operation was successful, otherwise false.
         */
-        bool finishJob(uint64_t job_id, const QDateTime& finish_time, const std::string& stdout, int8_t
+        void finishJob(uint64_t job_id, const QDateTime& finish_time, const std::string& stdout, int8_t
         exit_code);
 
         /**
