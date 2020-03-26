@@ -268,6 +268,10 @@ TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
     EXPECT_TRUE(wasJobAddSuccessful(seconddetails, 2, db));
 }
 
+TEST_F(AddJobTest, AddJobTest_NoUser_Test){
+    EXPECT_THROW(jobGateway->addJob(details), std::runtime_error);
+}
+
 /**
  * Restores the jobs table
  */
