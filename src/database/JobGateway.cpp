@@ -165,6 +165,10 @@ uint64_t JobGateway::addJob(const job_details& details) {
         Utilities::throwNoTableException("jobs");
     }
 
+    if (!Utilities::doesRecordExist("users", details.user_id, db)){
+        throw std::runtime_error("addJob error: no user with id = " + std::to_string(details.user_id));
+    }
+
     QVariant_JobConfig qstruct = convertJobConfig(details.user_id, details.config, details.schedule_time, details.command);
     return executeAddJobQuery(qstruct, db);
 }
