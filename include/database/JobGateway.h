@@ -26,7 +26,7 @@ namespace balancedbanana::database {
          * @param job_id The Job's id.
          * @return true if the operation was successful, otherwise false.
          */
-        bool removeJob(uint64_t id);
+        void removeJob(uint64_t id);
 
         /**
          * Getter method for the information of a Job with the given id.

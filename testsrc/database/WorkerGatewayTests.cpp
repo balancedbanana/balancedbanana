@@ -241,14 +241,14 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     EXPECT_TRUE(workerGateway->addWorker(details) == 1);
     EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, db));
 
-    // This must return true.
-    EXPECT_TRUE(workerGateway->removeWorker(1));
+    // This must work
+    EXPECT_NO_THROW(workerGateway->removeWorker(1));
     EXPECT_TRUE(wasWorkerRemoveSuccessful(1, db));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveWorkerTest, RemoveWorkerTest_FailureRemove_Test){
-    EXPECT_FALSE(workerGateway->removeWorker(1));
+    EXPECT_THROW(workerGateway->removeWorker(1), std::runtime_error);
 }
 
 
@@ -289,8 +289,7 @@ TEST_F(GetWorkerTest, GetWorkerTest_SuccessfulGet_Test){
 
 // Test to see if the getter method returns an empty worker_details when its called with an invalid id
 TEST_F(GetWorkerTest, GetWorkerTest_NonExistentWorker_Test){
-    worker_details empty_details{};
-    EXPECT_TRUE(workerGateway->getWorker(1) == empty_details);
+    EXPECT_THROW(workerGateway->getWorker(1), std::runtime_error);
 }
 
 /**

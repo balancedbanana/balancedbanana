@@ -22,7 +22,7 @@ namespace balancedbanana::database {
              * @param id  The id of the worker to be deleted.
              * @return True if the operation was successful, otherwise false
              */
-            bool removeWorker(uint64_t id);
+            void removeWorker(uint64_t id);
 
             /**
              * Getter method for the information of a worker with the given id.

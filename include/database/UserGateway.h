@@ -14,14 +14,14 @@ namespace balancedbanana::database {
          * @param user  The user to be added.
          * @return True if the operation was successful, otherwise false.
          */
-        bool addUser(const user_details &user);
+        void addUser(const user_details &user);
 
         /**
          * Deletes a user with the given id from the database.
          * @param id  The id of the user to be deleted.
          * @return True if the operation was successful, otherwise false.
          */
-        bool removeUser(uint64_t id);
+        void removeUser(uint64_t id);
 
         /**
          * Getter method for the information of a user with the given id.

@@ -222,7 +222,7 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id, const std::shared_pt
 // Test checks if the addJob method works properly given all the args.
 TEST_F(AddJobTest, AddJobTest_FirstJobSuccess_Test){
 
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
 
     // The first entry's id should be 1
     EXPECT_TRUE(jobGateway->addJob(details) == 1);
@@ -235,7 +235,7 @@ TEST_F(AddJobTest, AddJobTest_FirstJobSuccess_Test){
 TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
 
     // Add the job from the first test. Since it's the first job, its id should be 1.
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 
@@ -412,7 +412,7 @@ protected:
 
 // First add with only the mandatory information
 TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 }
@@ -466,18 +466,18 @@ TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
     user.email = "balanced@banana.kit.edu";
     user.name = "Rakan";
     user.empty = false;
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 
-    // This must return true.
-    EXPECT_TRUE(jobGateway->removeJob(1));
+    // This must work
+    EXPECT_NO_THROW(jobGateway->removeJob(1));
     EXPECT_TRUE(wasJobRemoveSuccessful(1, db));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveJobTest, RemoveJobTest_FailureRemove_Test){
-    EXPECT_FALSE(jobGateway->removeJob(1));
+    EXPECT_THROW(jobGateway->removeJob(1), std::runtime_error);
 }
 
 /**
@@ -588,7 +588,7 @@ TEST_F(GetJobTest, GetJobTest_NonExistentJob_Test){
 // Test to see if getter returns correct struct when a job was added
 TEST_F(GetJobTest, GetJobTest_FirstAdd_Test){
     // Add the job. Should work without issues
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(details) == details.id);
     EXPECT_TRUE(wasJobAddSuccessful(details, details.id, db));
     EXPECT_TRUE(jobGateway->getJob(details.id) == details);
@@ -608,7 +608,7 @@ TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
     detailss.config.set_priority(Priority::low);
     detailss.config.set_interruptible(false);
 
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(detailss) == detailss.id);
     EXPECT_TRUE(wasJobAddSuccessful(detailss, detailss.id, db));
     EXPECT_TRUE(jobGateway->getJob(detailss.id) == detailss);
@@ -698,7 +698,7 @@ protected:
 // Test to see if getJobs retrieves a vector of previously added jobs from the database
 TEST_F(GetJobsTest, GetJobsTest_SuccessfulGet_Test){
     // Add the jobs. Their ids should match the order of their addition.
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(first), first.id);
     EXPECT_EQ(jobGateway->addJob(second), second.id);
     EXPECT_EQ(jobGateway->addJob(third), third.id);
@@ -844,7 +844,7 @@ bool wasStartSuccessful(job_details job, worker_details worker, const std::share
 // Test to see if successful startJob call sets the values in all tables properly
 TEST_F(StartJobTest, StartJobTest_SuccessfulStart_Test){
     // Setup by adding a job and worker to the database
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(workerGateway->addWorker(worker) == worker.id);
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
@@ -897,7 +897,7 @@ TEST_F(StartJobTest, StartJobTest_NonExistentJob_Test){
 
 // Test to see if exception is thrown when no worker with the id arg exists in the database
 TEST_F(StartJobTest, StartJobTest_NonExistentWorker_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.start_time = QDateTime::currentDateTime();
@@ -995,7 +995,7 @@ std::shared_ptr<QSqlDatabase> &db){
 // Test to see if successful finishJob call sets the values in all tables properly
 TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
     // Add the job to the DB. This operation should be successful
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
@@ -1029,7 +1029,7 @@ TEST_F(FinishJobTest, FinishJobTest_NonExistentJob_Test){
 
 // Test to see if an exception is thrown when finishJob is called with an invalid finish_time
 TEST_F(FinishJobTest, FinishJobTest_InvalidFinishTime_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::fromString("0.13.54.13.01:5.5"));
@@ -1109,7 +1109,7 @@ protected:
 
 // Getter test for after startJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(workerGateway->addWorker(worker) == worker.id);
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
@@ -1126,7 +1126,7 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
 
 // Getter test for after finishJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(workerGateway->addWorker(worker) == worker.id);
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
@@ -1251,7 +1251,7 @@ protected:
 // the database
 TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_SuccessfulGet_Test){
     // Add the jobs. Their ids should match the order of their addition.
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(first), first.id);
     EXPECT_EQ(jobGateway->addJob(second), second.id);
     EXPECT_EQ(jobGateway->addJob(third), third.id);
@@ -1372,7 +1372,7 @@ protected:
         user.email = "balanced@banana.kit.edu";
         user.name = "Rakan";
         user.empty = false;
-        ASSERT_TRUE(userGateway->addUser(user));
+        ASSERT_NO_THROW(userGateway->addUser(user));
 
         // Standard procedure to add jobs and to get them. This should work flawlessly
         EXPECT_EQ(jobGateway->addJob(first), first.id);
@@ -1620,7 +1620,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_NonExistentJob_Test){
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
     // Add the job and worker and then start the job.
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
@@ -1652,7 +1652,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     jobGateway->updateJob(job);
@@ -1664,7 +1664,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     // Add the job and  two workers and then start the job.
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
@@ -1689,7 +1689,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::interrupted;
@@ -1700,7 +1700,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::paused;
@@ -1711,7 +1711,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::canceled;
@@ -1722,7 +1722,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdatePriority_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.config.set_priority(Priority::emergency);
@@ -1834,7 +1834,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NonExistentJob_Test){
 
 // This test is for when both the database and the new job_details don't have allocated resources
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResBoth_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
@@ -1850,7 +1850,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResBoth_Test){
 
 // This test is for when the allocated resources are NULL in the database, but the new job_details has them
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResDB_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
@@ -1876,7 +1876,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResDB_Test){
 
 // Test for when Job already has allocated_specs, but specs are updated
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
     ASSERT_TRUE(workerGateway->addWorker(worker));
@@ -1911,7 +1911,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
 
 // This test is for when both the database and the new job_details don't have results
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultBoth_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
@@ -1927,7 +1927,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultBoth_Test){
 
 // This test is for when the results are NULL in the database, but the new job_details has them
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
@@ -1952,7 +1952,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
 
 // Test for when Job already has results, but results are updated
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateResult_Test){
-    ASSERT_TRUE(userGateway->addUser(user));
+    ASSERT_NO_THROW(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
     ASSERT_TRUE(workerGateway->addWorker(worker));

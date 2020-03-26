@@ -178,20 +178,18 @@ uint64_t JobGateway::addJob(const job_details& details) {
  * @param job_id The job's id
  * @return true if the operation was successful, otherwise false;
  */
-bool JobGateway::removeJob(uint64_t job_id) {
+void JobGateway::removeJob(uint64_t job_id) {
     if (!Utilities::doesTableExist("jobs", db)){
         Utilities::throwNoTableException("jobs");
     }
     if (Utilities::doesRecordExist("jobs", job_id, db)){
         QSqlQuery query("DELETE FROM jobs WHERE id = ?", *db);
         query.addBindValue(QVariant::fromValue(job_id));
-        if (query.exec()){
-            return true;
-        } else {
+        if (!query.exec()){
             throw std::runtime_error("removeJob error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        return false;
+        throw std::runtime_error("removeJob error: no Job with id " + std::to_string(job_id) + " exists");
     }
 }
 

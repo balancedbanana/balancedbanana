@@ -27,6 +27,10 @@ TEST(StatusToStringTest, StatusToStringTest_Canceled_Test){
     EXPECT_EQ("canceled", status_to_string(JobStatus::canceled));
 }
 
+TEST(StatusToStringTest, StatusToStringTest_Invalid_Test){
+    EXPECT_THROW(status_to_string(static_cast<JobStatus>(10)), std::invalid_argument);
+}
+
 TEST(StringToStatusTest, StringToStatusTest_Scheduled_Test){
     EXPECT_EQ(JobStatus::scheduled, string_to_status("scheduled"));
 }
@@ -49,5 +53,9 @@ TEST(StringToStatusTest, StringToStatusTest_Finished_Test){
 
 TEST(StringToStatusTest, StringToStatusTest_Canceled_Test){
     EXPECT_EQ(JobStatus::canceled, string_to_status("canceled"));
+}
+
+TEST(StringToStatusTest, StringToStatusTest_Invalid_Test){
+    EXPECT_THROW(string_to_status(""), std::invalid_argument);
 }
 

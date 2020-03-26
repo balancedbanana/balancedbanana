@@ -20,7 +20,7 @@ UserGateway::UserGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(std::move(
  * @param user  The user to be added
  * @return The id of the user.
  */
-bool UserGateway::addUser(const user_details& user) {
+void UserGateway::addUser(const user_details& user) {
     // DB must contain table
     if (!Utilities::doesTableExist("users", db)){
         Utilities::throwNoTableException("users");
@@ -43,8 +43,6 @@ bool UserGateway::addUser(const user_details& user) {
     if (!query.exec()){
         throw std::runtime_error(query.lastError().databaseText().toStdString());
     }
-
-    return true;
 }
 
 /**
@@ -52,21 +50,18 @@ bool UserGateway::addUser(const user_details& user) {
  * @param id  The id of the user to be deleted.
  * @return True if the operation was successful, otherwise false
  */
-bool UserGateway::removeUser(uint64_t user_id) {
+void UserGateway::removeUser(uint64_t user_id) {
     if (!Utilities::doesTableExist("users", db)){
         Utilities::throwNoTableException("users");
     }
     if (Utilities::doesRecordExist("users", user_id, db)){
         QSqlQuery query("DELETE FROM users WHERE id = ?", *db);
         query.addBindValue(QVariant::fromValue(user_id));
-        if (query.exec()){
-            return true;
-        } else {
+        if (!query.exec()){
             throw std::runtime_error("removeUser error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        std::cerr << "removeUser error: no user with id = " << user_id  << " exists" << std::endl;
-        return false;
+        throw std::runtime_error("removeUser error: no user with id = " + std::to_string(user_id) + " exists");
     }
 }
 

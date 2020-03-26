@@ -8,7 +8,6 @@
 #include <QDebug>
 #include <QSqlError>
 #include <stdexcept>
-#include <iostream>
 
 using namespace balancedbanana::database;
 
@@ -50,21 +49,18 @@ uint64_t WorkerGateway::addWorker(const worker_details& worker) {
     return query.lastInsertId().toUInt();
 }
 
-bool WorkerGateway::removeWorker(uint64_t id) {
+void WorkerGateway::removeWorker(uint64_t id) {
     if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
     if (Utilities::doesRecordExist("workers", id, db)){
         QSqlQuery query("DELETE FROM workers WHERE id = ?", *db);
         query.addBindValue(QVariant::fromValue(id));
-        if (query.exec()){
-            return true;
-        } else {
+        if (!query.exec()){
             throw std::runtime_error("removeWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        std::cerr << "removeWorker error: no worker with id = " << id  << " exists" << std::endl;
-        return false;
+        throw std::runtime_error("removeWorker error: no worker with id = " + std::to_string(id) + " exists");
     }
 }
 
@@ -100,7 +96,7 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
             throw std::runtime_error("getWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        std::cerr << "getWorker error: no worker with id = " << id  << " exists" << std::endl;
+        throw std::runtime_error("getWorker error: no worker with id = " + std::to_string(id) + " exists");
     }
     return details;
 }

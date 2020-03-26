@@ -83,7 +83,7 @@ bool wasUserAddSuccessful(const user_details& details, uint64_t id, const std::s
 TEST_F(AddUserTest, AddUserTest_AddFirstUserSuccess_Test){
 
     // The first entry's id should be 1
-    EXPECT_TRUE(userGateway->addUser(details));
+    EXPECT_NO_THROW(userGateway->addUser(details));
 
     // The add must be successful
     EXPECT_TRUE(wasUserAddSuccessful(details, 1, db));
@@ -93,7 +93,7 @@ TEST_F(AddUserTest, AddUserTest_AddFirstUserSuccess_Test){
 TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
 
     // Add the user from the first test. Since it's the first user, its id should be 1.
-    EXPECT_TRUE(userGateway->addUser(details));
+    EXPECT_NO_THROW(userGateway->addUser(details));
     EXPECT_TRUE(wasUserAddSuccessful(details, 1, db));
 
     // Initialize a new user
@@ -104,7 +104,7 @@ TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
     seconddetails.empty = false;
     seconddetails.id = 2;
 
-    EXPECT_TRUE(userGateway->addUser(seconddetails));
+    EXPECT_NO_THROW(userGateway->addUser(seconddetails));
     EXPECT_TRUE(wasUserAddSuccessful(seconddetails, 2, db));
 }
 
@@ -199,17 +199,17 @@ TEST_F(RemoveUserTest, RemoveUserTest_SuccessfulRemove_Test){
     details.empty = false;
     details.id = 1;
     // Since this is the first user, this has to be true.
-    EXPECT_TRUE(userGateway->addUser(details));
+    EXPECT_NO_THROW(userGateway->addUser(details));
     EXPECT_TRUE(wasUserAddSuccessful(details, 1, db));
 
     // This must return true.
-    EXPECT_TRUE(userGateway->removeUser(1));
+    EXPECT_NO_THROW(userGateway->removeUser(1));
     EXPECT_TRUE(wasUserRemoveSuccessful(1, db));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
 TEST_F(RemoveUserTest, RemoveUserTest_FailureRemove_Test){
-    EXPECT_FALSE(userGateway->removeUser(1));
+    EXPECT_THROW(userGateway->removeUser(1), std::runtime_error);
 }
 
 /**
@@ -236,7 +236,7 @@ protected:
 // Test to see if the first user can be retrieved correctly.
 TEST_F(GetUserTest, GetUserTest_SuccessfulGet_Test){
     // Add the user. Its id should be 1, since it's the first to be added.
-    EXPECT_TRUE(userGateway->addUser(details));
+    EXPECT_NO_THROW(userGateway->addUser(details));
 
     // Get the user and compare it to the added user. They should be equal.
     user_details expected_details = userGateway->getUser(details.id);
@@ -290,9 +290,9 @@ protected:
 // Test to see if getUsers retrieves a vector of previously added users from the database
 TEST_F(GetUsersTest, GetUsersTest_SuccessfulGet_Test){
     // Add the users. Their ids should match the order of their addition.
-    EXPECT_TRUE(userGateway->addUser(first));
-    EXPECT_TRUE(userGateway->addUser(second));
-    EXPECT_TRUE(userGateway->addUser(third));
+    EXPECT_NO_THROW(userGateway->addUser(first));
+    EXPECT_NO_THROW(userGateway->addUser(second));
+    EXPECT_NO_THROW(userGateway->addUser(third));
 
     std::vector<user_details> expectedVector;
     expectedVector.push_back(first);
@@ -343,7 +343,7 @@ TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
 }
 
 TEST_F(GetUserByNameTest, GetUserByNameTest_UserFound_Test){
-    EXPECT_TRUE(userGateway->addUser(user));
+    EXPECT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(wasUserAddSuccessful(user, user.id, db));
     EXPECT_TRUE(userGateway->getUserByName(user.name) == user);
 }
@@ -395,7 +395,7 @@ TEST_F(UpdateUserTest, UpdateUserTest_NoUser_Test){
 }
 
 TEST_F(UpdateUserTest, UpdateUserTest_Success_Test){
-    EXPECT_TRUE(userGateway->addUser(user));
+    EXPECT_NO_THROW(userGateway->addUser(user));
     EXPECT_TRUE(wasUserAddSuccessful(user, user.id, db));
     // Add new details
     user_details new_user;
