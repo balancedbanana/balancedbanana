@@ -21,6 +21,7 @@
 using namespace balancedbanana::database;
 #define FOUR_MB (4194304)
 
+
 using JobGatewayTest = DatabaseTest;
 
 /**
@@ -63,13 +64,22 @@ protected:
         allocated_specs.cores = 4;
         allocated_specs.osIdentifier = "55";
         details.allocated_specs = allocated_specs;
+
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
     }
 
     void TearDown() override {
         resetJobTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details details;
+    user_details user;
 };
 
 /**
@@ -212,6 +222,8 @@ bool wasJobAddSuccessful(job_details& details, uint64_t id, const std::shared_pt
 // Test checks if the addJob method works properly given all the args.
 TEST_F(AddJobTest, AddJobTest_FirstJobSuccess_Test){
 
+    ASSERT_TRUE(userGateway->addUser(user));
+
     // The first entry's id should be 1
     EXPECT_TRUE(jobGateway->addJob(details) == 1);
 
@@ -222,7 +234,8 @@ TEST_F(AddJobTest, AddJobTest_FirstJobSuccess_Test){
 // Test to see if the auto increment feature works as expected.
 TEST_F(AddJobTest, AddJobTest_AddSecondJobSucess_Test){
 
-    // Add the user from the first test. Since it's the first user, its id should be 1.
+    // Add the job from the first test. Since it's the first job, its id should be 1.
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 
@@ -375,18 +388,27 @@ protected:
         details.config.set_image("testimage");
         details.config.set_current_working_dir(".");
         details.config.set_priority(Priority::high);
+
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
     }
 
     void TearDown() override {
         resetJobTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details details;
+    user_details user;
 };
 
 // First add with only the mandatory information
 TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
-
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 }
@@ -414,6 +436,8 @@ class RemoveJobTest : public JobGatewayTest {
 protected:
     void TearDown() override{
         resetJobTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 };
 
@@ -432,6 +456,13 @@ TEST_F(RemoveJobTest, RemoveJobTest_SuccessfulRemove_Test){
     details.config.set_priority(Priority::low);
 
     // Since this is the first job, this has to be true.
+    user_details user;
+    user.id = 1;
+    user.public_key = "asdjfascd3";
+    user.email = "balanced@banana.kit.edu";
+    user.name = "Rakan";
+    user.empty = false;
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(details) == 1);
     EXPECT_TRUE(wasJobAddSuccessful(details, 1, db));
 
@@ -469,19 +500,27 @@ protected:
         details.config.set_environment(std::vector<std::string>{"str1", "str2", "str3"});
         details.config.set_interruptible(false);
         details.config.set_current_working_dir(".");
+
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
     }
 
     void TearDown() override {
        resetJobTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details details;
+    user_details user;
 };
 
 void deleteAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
     QSqlQuery query("DROP TABLE allocated_resources", *db);
     query.exec();
-
 }
 
 void createAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
@@ -545,6 +584,7 @@ TEST_F(GetJobTest, GetJobTest_NonExistentJob_Test){
 // Test to see if getter returns correct struct when a job was added
 TEST_F(GetJobTest, GetJobTest_FirstAdd_Test){
     // Add the job. Should work without issues
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(details) == details.id);
     EXPECT_TRUE(wasJobAddSuccessful(details, details.id, db));
     EXPECT_TRUE(jobGateway->getJob(details.id) == details);
@@ -564,6 +604,7 @@ TEST_F(GetJobTest, GetJobTest_MandatoryAdd_Test){
     detailss.config.set_priority(Priority::low);
     detailss.config.set_interruptible(false);
 
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(detailss) == detailss.id);
     EXPECT_TRUE(wasJobAddSuccessful(detailss, detailss.id, db));
     EXPECT_TRUE(jobGateway->getJob(detailss.id) == detailss);
@@ -630,20 +671,30 @@ protected:
         third.config.set_interruptible(false);
         third.config.set_current_working_dir(".");
 
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
+
     }
 
     void TearDown() override {
         resetJobTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details first;
     job_details second;
     job_details third;
+    user_details user;
 };
 
 // Test to see if getJobs retrieves a vector of previously added jobs from the database
 TEST_F(GetJobsTest, GetJobsTest_SuccessfulGet_Test){
     // Add the jobs. Their ids should match the order of their addition.
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(first), first.id);
     EXPECT_EQ(jobGateway->addJob(second), second.id);
     EXPECT_EQ(jobGateway->addJob(third), third.id);
@@ -725,6 +776,12 @@ protected:
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
+
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
     }
     void TearDown() override {
         resetJobTable(db);
@@ -735,10 +792,13 @@ protected:
         query.exec();
         query.prepare("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT");
         query.exec();
+        query.prepare("DELETE FROM users");
+        query.exec();
     }
 
     job_details job;
     worker_details worker;
+    user_details user;
 };
 
 bool wasStartSuccessful(job_details job, worker_details worker, const std::shared_ptr<QSqlDatabase> &db){
@@ -780,6 +840,7 @@ bool wasStartSuccessful(job_details job, worker_details worker, const std::share
 // Test to see if successful startJob call sets the values in all tables properly
 TEST_F(StartJobTest, StartJobTest_SuccessfulStart_Test){
     // Setup by adding a job and worker to the database
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(workerGateway->addWorker(worker) == worker.id);
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
@@ -833,6 +894,7 @@ TEST_F(StartJobTest, StartJobTest_NonExistentJob_Test){
 
 // Test to see if exception is thrown when no worker with the id arg exists in the database
 TEST_F(StartJobTest, StartJobTest_NonExistentWorker_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.start_time = QDateTime::currentDateTime();
@@ -872,19 +934,29 @@ protected:
         result.stdout = "Some detailed info...";
         result.exit_code = 10;
 
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
+
     }
 
     void TearDown() override {
         resetJobTable(db);
         resetResultsTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details job;
     worker_details worker;
     job_result result;
+    user_details user;
 };
 
-bool wasFinishSuccessful(const std::string stdout, job_details job, int8_t exit_code, const std::shared_ptr<QSqlDatabase> &db){
+bool wasFinishSuccessful(const std::string& stdout, job_details job, int8_t exit_code, const
+std::shared_ptr<QSqlDatabase> &db){
     uint result_id = 1;
     QSqlQuery queryResult("SELECT output, exit_code FROM job_results WHERE id = ?", *db);
     queryResult.addBindValue(result_id);
@@ -920,6 +992,7 @@ bool wasFinishSuccessful(const std::string stdout, job_details job, int8_t exit_
 // Test to see if successful finishJob call sets the values in all tables properly
 TEST_F(FinishJobTest, FinishJobTest_SuccessfulFinish_Test){
     // Add the job to the DB. This operation should be successful
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::currentDateTime());
@@ -953,6 +1026,7 @@ TEST_F(FinishJobTest, FinishJobTest_NonExistentJob_Test){
 
 // Test to see if an exception is thrown when finishJob is called with an invalid finish_time
 TEST_F(FinishJobTest, FinishJobTest_InvalidFinishTime_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.finish_time = std::make_optional(QDateTime::fromString("0.13.54.13.01:5.5"));
@@ -1007,6 +1081,12 @@ protected:
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
+
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
     }
 
     void TearDown() override {
@@ -1014,15 +1094,19 @@ protected:
         resetJobTable(db);
         resetAllocResTable(db);
         resetWorker(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details job;
     worker_details worker;
     job_result result;
+    user_details user;
 };
 
 // Getter test for after startJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(workerGateway->addWorker(worker) == worker.id);
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
@@ -1039,6 +1123,7 @@ TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterStart_Test){
 
 // Getter test for after finishJob is called
 TEST_F(GetJobCompleteTest, GetJobCompleteTest_AfterFinish_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_TRUE(workerGateway->addWorker(worker) == worker.id);
     EXPECT_TRUE(jobGateway->addJob(job) == job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
@@ -1135,18 +1220,27 @@ protected:
         worker.id = 1;
         worker.empty = false;
 
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
+
     }
 
     void TearDown() override {
         resetJobTable(db);
         resetWorker(db);
         resetAllocResTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details first;
     job_details second;
     job_details third;
     worker_details worker;
+    user_details user;
 };
 
 // Test to see if getJobsWithWorkerId retrieves a vector of previously added jobs from the database.
@@ -1154,6 +1248,7 @@ protected:
 // the database
 TEST_F(GetJobsWithWorkerIdTest, GetJobsWithWorkerIdTest_SuccessfulGet_Test){
     // Add the jobs. Their ids should match the order of their addition.
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(first), first.id);
     EXPECT_EQ(jobGateway->addJob(second), second.id);
     EXPECT_EQ(jobGateway->addJob(third), third.id);
@@ -1216,7 +1311,7 @@ protected:
 
         // Set up the first job
         first.id = 1;
-        first.user_id = 3;
+        first.user_id = 1;
         first.command = "mkdir build";
         first.status = (int) JobStatus::scheduled;
         first.schedule_time = epoch.addDays(-7);
@@ -1269,6 +1364,13 @@ protected:
         third.config.set_interruptible(false);
         third.config.set_current_working_dir(".");
 
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
+        ASSERT_TRUE(userGateway->addUser(user));
+
         // Standard procedure to add jobs and to get them. This should work flawlessly
         EXPECT_EQ(jobGateway->addJob(first), first.id);
         EXPECT_EQ(jobGateway->addJob(second), second.id);
@@ -1281,6 +1383,7 @@ protected:
 
         std::vector<job_details> actualVector = jobGateway->getJobs();
         EXPECT_TRUE(Utilities::areDetailVectorsEqual(expectedVector, actualVector));
+
     }
 
     void TearDown() override {
@@ -1288,12 +1391,15 @@ protected:
         resetWorker(db);
         resetAllocResTable(db);
         resetResultsTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details first;
     job_details second;
     job_details third;
     QDateTime epoch;
+    user_details user;
 };
 
 /**
@@ -1440,16 +1546,25 @@ protected:
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
+
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
     }
 
     void TearDown() override {
         resetJobTable(db);
         resetAllocResTable(db);
         resetWorker(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details job;
     worker_details worker;
+    user_details user;
 };
 
 TEST_F(UpdateJobTest, UpdateJobTest_NoJobsTable_Test){
@@ -1502,6 +1617,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_NonExistentJob_Test){
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
     // Add the job and worker and then start the job.
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
@@ -1533,6 +1649,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     jobGateway->updateJob(job);
@@ -1544,6 +1661,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_NoValue_Test){
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     // Add the job and  two workers and then start the job.
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
@@ -1568,6 +1686,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::interrupted;
@@ -1578,6 +1697,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusInterrupted_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::paused;
@@ -1588,6 +1708,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusPaused_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.status = (int) JobStatus::canceled;
@@ -1598,6 +1719,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateStatusCanceled_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_UpdatePriority_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     EXPECT_EQ(jobGateway->addJob(job), job.id);
     EXPECT_TRUE(wasJobAddSuccessful(job, job.id, db));
     job.config.set_priority(Priority::emergency);
@@ -1637,6 +1759,12 @@ protected:
         worker.name = "Ubuntu";
         worker.id = 1;
         worker.empty = false;
+
+        user.id = 1;
+        user.public_key = "asdjfascd3";
+        user.email = "balanced@banana.kit.edu";
+        user.name = "Rakan";
+        user.empty = false;
     }
 
     void TearDown() override {
@@ -1644,10 +1772,13 @@ protected:
         resetAllocResTable(db);
         resetWorker(db);
         resetResultsTable(db);
+        QSqlQuery query("DELETE FROM users", *db);
+        query.exec();
     }
 
     job_details job;
     worker_details worker;
+    user_details user;
 };
 
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NoJobsTable_Test){
@@ -1700,6 +1831,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NonExistentJob_Test){
 
 // This test is for when both the database and the new job_details don't have allocated resources
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResBoth_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
@@ -1715,6 +1847,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResBoth_Test){
 
 // This test is for when the allocated resources are NULL in the database, but the new job_details has them
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResDB_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
@@ -1740,6 +1873,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResDB_Test){
 
 // Test for when Job already has allocated_specs, but specs are updated
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
     ASSERT_TRUE(workerGateway->addWorker(worker));
@@ -1774,6 +1908,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
 
 // This test is for when both the database and the new job_details don't have results
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultBoth_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
@@ -1789,6 +1924,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultBoth_Test){
 
 // This test is for when the results are NULL in the database, but the new job_details has them
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
 
@@ -1813,6 +1949,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
 
 // Test for when Job already has results, but results are updated
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateResult_Test){
+    ASSERT_TRUE(userGateway->addUser(user));
     ASSERT_EQ(jobGateway->addJob(job), job.id);
     ASSERT_TRUE(wasJobAddSuccessful(job, job.id, db));
     ASSERT_TRUE(workerGateway->addWorker(worker));
