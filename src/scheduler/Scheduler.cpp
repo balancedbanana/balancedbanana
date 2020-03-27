@@ -226,7 +226,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                     while(spec.ram > 4 /*4 MB limit avoid errors*/ && spec.cores > 0 /* 0 means no cores available for jobs*/ ) {
                         if(auto job = queue.getJob(spec.ram, spec.cores)) {
                             Task task;
-                            task.setConfig(job->getConfig());
+                            task.setConfig(job->copyConfig());
                             task.setTaskCommand(job->getCommand());
                             task.setUserId(job->getUser()->id());
                             job->setWorker_id(worker->getId());
