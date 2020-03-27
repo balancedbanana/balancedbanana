@@ -102,6 +102,8 @@ void balancedbanana::scheduler::SchedulerWorkerMP::processTaskMessage(const bala
                 job->setStatus(balancedbanana::database::JobStatus::canceled);
             }
             break;
+        default:
+            break;
     }
 }
 
