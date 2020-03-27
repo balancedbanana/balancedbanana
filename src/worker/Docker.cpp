@@ -37,7 +37,7 @@ Container Docker::Run(const Task & task) {
         std::string output = proc.readAllStandardOutput().toStdString();
         std::string err = proc.readAllStandardError().toStdString();
         if(proc.exitStatus() == QProcess::NormalExit && proc.exitCode() == 0 && !output.empty() && output != "\n") {
-            if(!output.find("exited")) {
+            if(output.find("exited") != std::string::npos) {
                 std::cout << "WARNING Removeing the old Job with all its Data...\n";
                 QProcess proc;
                 proc.setProgram("docker");
