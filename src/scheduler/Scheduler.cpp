@@ -170,14 +170,16 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                     queue.pullJob(job->getId());
                     std::lock_guard<std::mutex> guard(updatelock);
                     auto found = senttoworker.find(job->getId());
-                        if(found != senttoworker.end())
-                            senttoworker.erase(found);
-                        for(auto && worker : repo.GetActiveWorkers()) {
-                            processWorkerload(worker.get());
-                        }
+                    if(found != senttoworker.end())
+                        senttoworker.erase(found);
+                    for(auto && worker : repo.GetActiveWorkers()) {
+                        processWorkerload(worker.get());
+                    }
                 }
                 if(job->getStatus() == balancedbanana::database::finished) {
+                    // Finsihed Jobs cannot land again in the Queue
                     job->UnregisterObserver(this);
+                    // Try sending a email of finished mail
                     if(auto user = job->getUser()) {
                         auto mail = user->email();
                         if(!mail.empty()) {
@@ -375,7 +377,8 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
 int main(int argc, char **argv)
 {
     int _argc = 1;
-    char* _argv[] = { "bbs" };
+    char name[] = "bbs";
+    char* _argv[] = { name };
     QCoreApplication qapp(_argc, _argv);
     Scheduler scheduler;
     return scheduler.processCommandLineArguments(argc, argv);
