@@ -239,6 +239,19 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 com->send(resp);
                 break;
             }
+            case TaskType::STOP: {
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                #endif
+                container.Stop();
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::canceled);
+                com->send(resp);
+                break;
+            }
             default:
                 throw std::runtime_error("Not Implented yet :(");
             }
