@@ -35,7 +35,7 @@ jobs:
             LD_LIBRARY_PATH=$PWD/../copenssl/lib:$PWD/../llvm/lib cmake --build . -t install -j 4
             cp $PWD/../llvm/lib/libc++.so.1 $PWD/../llvm/lib/libc++abi.so.1 $PWD/../llvm/lib/libunwind.so.1 $PWD/../copenssl/lib/libssl.so $PWD/../copenssl/lib/libcrypto.so $PWD/../balancedbanana/lib/
             mkdir -p $PWD/../balancedbanana/share/balancedbanana
-            cp -r $PWD/../balancedbanana.sql $PWD/../testsrc/integration/.bb* $PWD/../balancedbanana/share/balancedbanana/
+            cp -r $PWD/../balancedbanana.sql $PWD/../share/.bb* $PWD/../balancedbanana/share/balancedbanana/
             cd ..
             cd balancedbanana/ && tar -zcvf ../balancedbanana.tar.gz . && cd -
       - run:
@@ -66,7 +66,7 @@ jobs:
             LD_LIBRARY_PATH=$PWD/../balancedbanana/lib:$PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib cmake --build . -t install -j 4
             cp $PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib/libc++.so.1 $PWD/../clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/lib/libc++abi.so.1 $PWD/../balancedbanana/lib/
             mkdir -p $PWD/../balancedbanana/share/balancedbanana
-            cp -r $PWD/../balancedbanana.sql $PWD/../testsrc/integration/.bb* $PWD/../balancedbanana/share/balancedbanana/
+            cp -r $PWD/../balancedbanana.sql $PWD/../share/.bb* $PWD/../balancedbanana/share/balancedbanana/
             cd ..
             cd balancedbanana/ && tar -zcvf ../balancedbanana.tar.gz . && cd -
       - run:

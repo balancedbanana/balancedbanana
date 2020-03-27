@@ -4,7 +4,7 @@ import sys
 import subprocess
 import time
 import os
-sample = subprocess.Popen("./HttpTests", stdin=subprocess.PIPE);
+sample = subprocess.Popen("./HttpTests", stdin=subprocess.PIPE)
 try:
     time.sleep(1)
     res = requests.get("http://localhost:8234/v1/jobs/2365")
