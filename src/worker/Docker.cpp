@@ -20,10 +20,38 @@ Container Docker::Run(const Task & task) {
         std::string output = proc.readAllStandardOutput().toStdString();
         std::string err = proc.readAllStandardError().toStdString();
         if(proc.exitStatus() == QProcess::NormalExit && proc.exitCode() == 0 && !output.empty() && output != "\n") {
-            std::cout << "Docker Image already built with id " << output;
+            std::cout << "Docker Image already built with id " << output << "\n";
         } else {
             std::cout << "Building Image" << task.getConfig()->image() << "\n";
             BuildImage(task.getConfig()->image(), dockerfile, imageid, task.getConfig());
+        }
+    }
+    std::string name = "bbdjob" + std::to_string(*task.getJobId());
+    {
+        std::cout << "Checking if the job with that it already exists...\n";
+    QProcess proc;
+    proc.setProgram("docker");
+        proc.setArguments({ "inspect", "--format='{{.State.Status}}'", QString::fromStdString(name) });
+        proc.start();
+        proc.waitForFinished(-1);
+        std::string output = proc.readAllStandardOutput().toStdString();
+        std::string err = proc.readAllStandardError().toStdString();
+        if(proc.exitStatus() == QProcess::NormalExit && proc.exitCode() == 0 && !output.empty() && output != "\n") {
+            if(!output.find("exited")) {
+                std::cout << "WARNING Removeing the old Job with all its Data...\n";
+                QProcess proc;
+                proc.setProgram("docker");
+                proc.setArguments({ "container", "rm", QString::fromStdString(name) });
+                proc.start();
+                proc.waitForFinished(-1);
+                std::string output = proc.readAllStandardOutput().toStdString();
+                std::string err = proc.readAllStandardError().toStdString();
+                if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
+                    throw std::runtime_error("Fatal failed to remove exited container: " + err);
+                }
+            } else {
+                throw std::runtime_error("Error Job with ID is not exited, but it's Status is: " + output);
+            }
         }
     }
     QProcess proc;
@@ -32,7 +60,6 @@ Container Docker::Run(const Task & task) {
     if(!task.getUserId()) {
         throw std::runtime_error("Invalid Argument userid needs a value");
     }
-    std::string name = "bbdjob" + std::to_string(*task.getJobId());
     QStringList args = { "run", "-d", "--name", QString::fromStdString(name), "--user", QString::fromStdString(std::to_string(*task.getUserId())), "--network", "host"};
     if(config->environment()) {
         for(auto && env : *config->environment()) {
