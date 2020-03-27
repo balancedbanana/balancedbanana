@@ -338,7 +338,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 }
                 return result; }, [&repo](int hours) -> std::vector<int> {
                 std::vector<int> result;
-                for(auto && job : repo->.GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
+                for(auto && job : repo->GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
                     result.emplace_back(job->getId());
                 }
 
