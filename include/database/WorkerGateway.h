@@ -8,33 +8,34 @@
 namespace balancedbanana::database {
         class WorkerGateway : virtual public IGateway {
         public:
+            explicit WorkerGateway(std::shared_ptr<QSqlDatabase> db);
 
             /**
              * Adds a worker to the database.
              * @param details  The worker to be added
              * @return The id of the worker.
              */
-            static uint64_t addWorker(const worker_details& details);
+            uint64_t addWorker(const worker_details& details);
 
             /**
              * Deletes a worker with the given id from the database.
              * @param id  The id of the worker to be deleted.
              * @return True if the operation was successful, otherwise false
              */
-            static bool removeWorker(uint64_t id);
+            void removeWorker(uint64_t id);
 
             /**
              * Getter method for the information of a worker with the given id.
              * @param id  The id of the worker.
              * @return The details of the worker.
              */
-            static worker_details getWorker(uint64_t id);
+            worker_details getWorker(uint64_t id);
 
             /**
              * Getter for all the workers in the database.
              * @return  Vector of all the workers in the database.
              */
-            static std::vector<worker_details> getWorkers();
+            std::vector<worker_details> getWorkers();
 
 
             /**
@@ -43,12 +44,12 @@ namespace balancedbanana::database {
              * @return Returns the correct details of the worker if found, otherwise returns empty details struct with
              * invalid id.
              */
-            static worker_details getWorkerByName(const std::string& name);
+            worker_details getWorkerByName(const std::string& name);
 
             /**
              * Updates certain fields of the Worker in the DB with id = worker.id.
              * @param worker The Worker's new information.
              */
-            static void updateWorker(const worker_details& worker);
+            void updateWorker(const worker_details& worker);
         };
     }

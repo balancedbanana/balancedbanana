@@ -14,13 +14,13 @@ protected:
 
     void SetUp() override {
         msg = new HardwareDetailMessage(42, 654321, "my operating system");
-        size = new size_t(4 * sizeof(uint32_t) + msg->GetOsIdentifier().size());
+        size = new size_t(3 * sizeof(uint32_t) + sizeof(uint64_t) + msg->GetOsIdentifier().size());
         serialized = new char[*size];
         *reinterpret_cast<uint32_t *>(serialized) = HARDWARE_DETAIL;
         *reinterpret_cast<uint32_t *>(serialized + sizeof(uint32_t)) = 42;
-        *reinterpret_cast<uint32_t *>(serialized + 2 * sizeof(uint32_t)) = 654321;
-        *reinterpret_cast<uint32_t *>(serialized + 3 * sizeof(uint32_t)) = msg->GetOsIdentifier().size();
-        memcpy(serialized + 4 * sizeof(uint32_t), msg->GetOsIdentifier().data(), msg->GetOsIdentifier().size());
+        *reinterpret_cast<uint64_t *>(serialized + 2 * sizeof(uint32_t)) = 654321;
+        *reinterpret_cast<uint32_t *>(serialized + 2 * sizeof(uint32_t) + sizeof(uint64_t)) = msg->GetOsIdentifier().size();
+        memcpy(serialized + 3 * sizeof(uint32_t) + sizeof(uint64_t), msg->GetOsIdentifier().data(), msg->GetOsIdentifier().size());
     }
 
     void TearDown() override {

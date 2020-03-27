@@ -17,16 +17,13 @@ namespace balancedbanana {
             //The specs of the worker.
             std::optional<Specs> specs;
 
-            std::string address;
-
             std::string public_key;
 
             // true if empty, otherwise false;
             bool empty = true;
 
             inline bool operator==(const worker_details& rhs){
-                return this->address == rhs.address
-                        && ((!this->specs.has_value() && !rhs.specs.has_value()) ||
+                return ((!this->specs.has_value() && !rhs.specs.has_value()) ||
                          (this->specs.value() == rhs.specs.value()))
                        && this->public_key == rhs.public_key
                        && this->name == rhs.name

@@ -5,7 +5,8 @@ set(SOURCES
         JobGateway.cpp
         Repository.cpp
         IGateway.cpp
-        Utilities.cpp)
+        Utilities.cpp
+        JobStatus.cpp)
 
 set(HEADERS
         ../../include/database/Factory.h
@@ -14,7 +15,8 @@ set(HEADERS
         ../../include/database/JobGateway.h
         ../../include/database/Repository.h
         ../../include/database/IGateway.h
-        ../../include/database/Utilities.h)
+        ../../include/database/Utilities.h
+        ../../include/database/JobStatus.h)
 
 add_library(database ${SOURCES} ${HEADERS})
 target_link_libraries(database PUBLIC Qt5::Core Qt5::Network Qt5::Sql configfiles scheduler timedEvents)

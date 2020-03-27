@@ -62,8 +62,15 @@ std::shared_ptr<User> Job::getUser() const {
     return user_;
 }
 
-std::shared_ptr<JobConfig> Job::getConfig() const {
+std::shared_ptr<const JobConfig> Job::getConfig() const {
     return config_;
+}
+
+std::shared_ptr<JobConfig> Job::copyConfig() const {
+    if(config_ == nullptr) {
+        return nullptr;
+    }
+    return std::make_shared<JobConfig>(*config_);
 }
 
 JobStatus Job::getStatus() const {
