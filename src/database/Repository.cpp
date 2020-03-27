@@ -8,6 +8,7 @@
 #include <utility>
 #include <QString>
 #include <random>
+#include <QDebug>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
@@ -51,7 +52,7 @@ std::shared_ptr<Repository> Repository::GetRepository(const std::string &name) {
     return iterator->second;
 }
 
-std::shared_ptr<QSqlDatabase> Repository::GetDatabase() {
+std::string Repository::GetDatabase() {
     std::lock_guard guard(mtx);
     if(!databaseConnections.hasLocalData()) {
         std::random_device rd;  //Will be used to obtain a seed for the random number engine
@@ -62,14 +63,15 @@ std::shared_ptr<QSqlDatabase> Repository::GetDatabase() {
             i = dis(gen);
         }
         std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
-        auto db = std::make_shared<QSqlDatabase>(QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(sname)));
-        db->setHostName(QString::fromStdString(host_name));
-        db->setDatabaseName(QString::fromStdString(databasename));
-        db->setUserName(QString::fromStdString(username));
-        db->setPassword(QString::fromStdString(password));
-        db->setPort(port);
-        databaseConnections.setLocalData(db);
-        if(!db->open()){
+        auto db = QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(sname));
+        db.setHostName(QString::fromStdString(host_name));
+        db.setDatabaseName(QString::fromStdString(databasename));
+        db.setUserName(QString::fromStdString(username));
+        db.setPassword(QString::fromStdString(password));
+        db.setPort(port);
+        databaseConnections.setLocalData(sname);
+        qDebug() << QString::fromStdString(sname);
+        if(!db.open()){
             throw std::logic_error("Error: connection with database failed.");
         }
     }

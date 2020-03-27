@@ -19,8 +19,9 @@ using UserGatewayTest = DatabaseTest;
 /**
  * Deletes the all records in the users table for the id.
  */
-void resetUserTable(const std::shared_ptr<QSqlDatabase>& db){
-    QSqlQuery query("DELETE FROM users", *db);
+void resetUserTable(const std::string& dbName){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+    QSqlQuery query("DELETE FROM users", db);
     query.exec();
 }
 
@@ -41,7 +42,7 @@ protected:
     }
 
     void TearDown() override {
-        resetUserTable(db);
+        resetUserTable(dbName);
     }
 };
 
@@ -51,8 +52,10 @@ protected:
  * @param id The id of the added record.
  * @return true if the addUser was successful, otherwise false.
  */
-bool wasUserAddSuccessful(const user_details& details, uint64_t id, const std::shared_ptr<QSqlDatabase>& db){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?", *db);
+bool wasUserAddSuccessful(const user_details& details, uint64_t id, const std::string& dbName){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -86,7 +89,7 @@ TEST_F(AddUserTest, AddUserTest_AddFirstUserSuccess_Test){
     EXPECT_NO_THROW(userGateway->addUser(details));
 
     // The add must be successful
-    EXPECT_TRUE(wasUserAddSuccessful(details, 1, db));
+    EXPECT_TRUE(wasUserAddSuccessful(details, 1, dbName));
 }
 
 // Test to see if the auto increment feature works as expected.
@@ -94,7 +97,7 @@ TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
 
     // Add the user from the first test. Since it's the first user, its id should be 1.
     EXPECT_NO_THROW(userGateway->addUser(details));
-    EXPECT_TRUE(wasUserAddSuccessful(details, 1, db));
+    EXPECT_TRUE(wasUserAddSuccessful(details, 1, dbName));
 
     // Initialize a new user
     user_details seconddetails{};
@@ -105,7 +108,7 @@ TEST_F(AddUserTest, AddUserTest_AddSecondUserSucess_Test){
     seconddetails.id = 2;
 
     EXPECT_NO_THROW(userGateway->addUser(seconddetails));
-    EXPECT_TRUE(wasUserAddSuccessful(seconddetails, 2, db));
+    EXPECT_TRUE(wasUserAddSuccessful(seconddetails, 2, dbName));
 }
 
 
@@ -119,7 +122,8 @@ protected:
     void SetUp() override {
         UserGatewayTest::SetUp();
         // Deletes the users table
-        QSqlQuery query("DROP TABLE users", *db);
+        auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+        QSqlQuery query("DROP TABLE users", db);
         query.exec();
 
         // Setup the varaibles needed
@@ -131,6 +135,8 @@ protected:
     }
 
     void TearDown() override {
+        auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
         QSqlQuery query("CREATE TABLE `users` (\n"
                         "  `name` varchar(45) NOT NULL,\n"
                         "  `email` varchar(255) NOT NULL,\n"
@@ -138,7 +144,7 @@ protected:
                         "  `id` bigint(10) unsigned NOT NULL,\n"
                         "  PRIMARY KEY (`id`),\n"
                         "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", *db);
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", db);
         query.exec();
     }
 };
@@ -168,8 +174,10 @@ TEST_F(NoUsersTableTest, NoUsersTableTest_GetUsers_Test){
  * @param id The id of the removed record.
  * @return  true if remove was successful, otherwise false.
  */
-bool wasUserRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase>& db){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?", *db);
+bool wasUserRemoveSuccessful(uint64_t id, const std::string& dbName){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -185,7 +193,7 @@ bool wasUserRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase>& d
 class RemoveUserTest : public UserGatewayTest {
 protected:
     void TearDown() override{
-        resetUserTable(db);
+        resetUserTable(dbName);
     }
 };
 
@@ -200,11 +208,11 @@ TEST_F(RemoveUserTest, RemoveUserTest_SuccessfulRemove_Test){
     details.id = 1;
     // Since this is the first user, this has to be true.
     EXPECT_NO_THROW(userGateway->addUser(details));
-    EXPECT_TRUE(wasUserAddSuccessful(details, 1, db));
+    EXPECT_TRUE(wasUserAddSuccessful(details, 1, dbName));
 
     // This must return true.
     EXPECT_NO_THROW(userGateway->removeUser(1));
-    EXPECT_TRUE(wasUserRemoveSuccessful(1, db));
+    EXPECT_TRUE(wasUserRemoveSuccessful(1, dbName));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
@@ -227,7 +235,7 @@ protected:
     }
 
     void TearDown() override {
-        resetUserTable(db);
+        resetUserTable(dbName);
     }
 
     user_details details;
@@ -279,7 +287,7 @@ protected:
     }
 
     void TearDown() override {
-        resetUserTable(db);
+        resetUserTable(dbName);
     }
 
     user_details first;
@@ -321,14 +329,16 @@ protected:
     }
 
     void TearDown() override {
-        resetUserTable(db);
+        resetUserTable(dbName);
     }
 
     user_details user;
 };
 
 TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE users", db);
     query.exec();
     EXPECT_THROW(userGateway->getUserByName(user.name), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
@@ -344,7 +354,7 @@ TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
 
 TEST_F(GetUserByNameTest, GetUserByNameTest_UserFound_Test){
     EXPECT_NO_THROW(userGateway->addUser(user));
-    EXPECT_TRUE(wasUserAddSuccessful(user, user.id, db));
+    EXPECT_TRUE(wasUserAddSuccessful(user, user.id, dbName));
     EXPECT_TRUE(userGateway->getUserByName(user.name) == user);
 }
 
@@ -364,14 +374,16 @@ protected:
     }
 
     void TearDown() override {
-        resetUserTable(db);
+        resetUserTable(dbName);
     }
 
     user_details user;
 };
 
 TEST_F(UpdateUserTest, UpdateUserTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE users", db);
     query.exec();
     EXPECT_THROW(userGateway->updateUser(user), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
@@ -396,7 +408,7 @@ TEST_F(UpdateUserTest, UpdateUserTest_NoUser_Test){
 
 TEST_F(UpdateUserTest, UpdateUserTest_Success_Test){
     EXPECT_NO_THROW(userGateway->addUser(user));
-    EXPECT_TRUE(wasUserAddSuccessful(user, user.id, db));
+    EXPECT_TRUE(wasUserAddSuccessful(user, user.id, dbName));
     // Add new details
     user_details new_user;
     new_user.public_key = "asdjcdasdlkcsadl";

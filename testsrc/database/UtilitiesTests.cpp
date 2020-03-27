@@ -13,33 +13,35 @@ using UtilitiesTest = DatabaseTest;
 using DoesTableExistTest = UtilitiesTest;
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_Jobs_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("jobs", db));
+    EXPECT_TRUE(Utilities::doesTableExist("jobs", dbName));
 }
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_Users_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("users", db));
+    EXPECT_TRUE(Utilities::doesTableExist("users", dbName));
 }
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_Workers_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("workers", db));
+    EXPECT_TRUE(Utilities::doesTableExist("workers", dbName));
 }
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_Job_Results_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("job_results", db));
+    EXPECT_TRUE(Utilities::doesTableExist("job_results", dbName));
 }
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_Allocated_Resources_Test){
-    EXPECT_TRUE(Utilities::doesTableExist("allocated_resources", db));
+    EXPECT_TRUE(Utilities::doesTableExist("allocated_resources", dbName));
 }
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
-    QSqlQuery query("DROP TABLE jobs", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE jobs", db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("jobs", db));
+    EXPECT_FALSE(Utilities::doesTableExist("jobs", dbName));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (\n"
                   "    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
                   "    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
@@ -75,9 +77,11 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
-    QSqlQuery query("DROP TABLE users", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE users", db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("users", db));
+    EXPECT_FALSE(Utilities::doesTableExist("users", dbName));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`users`\n"
                   "(\n"
                   "    `id`    BIGINT(10) UNSIGNED NOT NULL,\n"
@@ -95,9 +99,11 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("workers", db));
+    EXPECT_FALSE(Utilities::doesTableExist("workers", dbName));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
                   "(\n"
                   "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -117,9 +123,11 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
-    QSqlQuery query("DROP TABLE job_results", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE job_results", db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("job_results", db));
+    EXPECT_FALSE(Utilities::doesTableExist("job_results", dbName));
     query.prepare("CREATE TABLE `job_results` (\n"
                     "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                     "  `output` text NOT NULL,\n"
@@ -132,9 +140,11 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoAllocated_Resources_Test){
-    QSqlQuery query("DROP TABLE allocated_resources", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE allocated_resources", db);
     query.exec();
-    EXPECT_FALSE(Utilities::doesTableExist("allocated_resources", db));
+    EXPECT_FALSE(Utilities::doesTableExist("allocated_resources", dbName));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
                   "(\n"
                   "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"

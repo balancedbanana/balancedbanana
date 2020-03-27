@@ -7,7 +7,7 @@
 namespace balancedbanana::database {
     class UserGateway : virtual public IGateway {
     public:
-        explicit UserGateway(std::shared_ptr<QSqlDatabase> db);
+        explicit UserGateway(std::string dbName);
 
         /**
          * Adds a user to the database.

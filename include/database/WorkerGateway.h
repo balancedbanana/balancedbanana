@@ -6,9 +6,9 @@
 #include <vector>
 
 namespace balancedbanana::database {
-        class WorkerGateway : virtual public IGateway {
+        class WorkerGateway : public IGateway {
         public:
-            explicit WorkerGateway(std::shared_ptr<QSqlDatabase> db);
+            WorkerGateway(std::string dbName);
 
             /**
              * Adds a worker to the database.

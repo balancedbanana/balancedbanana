@@ -16,7 +16,7 @@ namespace balancedbanana::database {
          * Checks if table_name exists.
          * @return true when it exists, otherwise false.
          */
-        static bool doesTableExist(const std::string& table_name, const std::shared_ptr<QSqlDatabase>& database);
+        static bool doesTableExist(const std::string& table_name, const std::string& dbName);
 
         /**
          * Throws an exception for when a table doesn't exist.
@@ -30,7 +30,7 @@ namespace balancedbanana::database {
          * @param id The id of the record.
          * @return True if the record exists, otherwise false.
          */
-        static bool doesRecordExist(const std::string& table_name, uint64_t id, const std::shared_ptr<QSqlDatabase>& db);
+        static bool doesRecordExist(const std::string& table_name, uint64_t id, const std::string& dbName);
 
         /**
          * Serializes a vector of type T into a string.

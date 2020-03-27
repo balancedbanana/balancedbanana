@@ -12,7 +12,7 @@
 
 using namespace balancedbanana::database;
 
-UserGateway::UserGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(std::move(db)){
+UserGateway::UserGateway(std::string dbName) : IGateway(std::move(dbName)){
 }
 
 /**
@@ -21,8 +21,10 @@ UserGateway::UserGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(std::move(
  * @return The id of the user.
  */
 void UserGateway::addUser(const user_details& user) {
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
     // DB must contain table
-    if (!Utilities::doesTableExist("users", db)){
+    if (!Utilities::doesTableExist("users", dbName)){
         Utilities::throwNoTableException("users");
     }
 
@@ -33,7 +35,7 @@ void UserGateway::addUser(const user_details& user) {
     QVariant q_public_key = QVariant::fromValue(QString::fromStdString(user.public_key));
 
     // Create query
-    QSqlQuery query("INSERT INTO users (id, name, email, public_key) VALUES (?, ?, ?, ?)", *db);
+    QSqlQuery query("INSERT INTO users (id, name, email, public_key) VALUES (?, ?, ?, ?)", db);
     query.addBindValue(q_id);
     query.addBindValue(q_name);
     query.addBindValue(q_email);
@@ -51,11 +53,13 @@ void UserGateway::addUser(const user_details& user) {
  * @return True if the operation was successful, otherwise false
  */
 void UserGateway::removeUser(uint64_t user_id) {
-    if (!Utilities::doesTableExist("users", db)){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    if (!Utilities::doesTableExist("users", dbName)){
         Utilities::throwNoTableException("users");
     }
-    if (Utilities::doesRecordExist("users", user_id, db)){
-        QSqlQuery query("DELETE FROM users WHERE id = ?", *db);
+    if (Utilities::doesRecordExist("users", user_id, dbName)){
+        QSqlQuery query("DELETE FROM users WHERE id = ?", db);
         query.addBindValue(QVariant::fromValue(user_id));
         if (!query.exec()){
             throw std::runtime_error("removeUser error: " + query.lastError().databaseText().toStdString());
@@ -67,12 +71,14 @@ void UserGateway::removeUser(uint64_t user_id) {
 
 
 user_details UserGateway::getUser(uint64_t id) {
-    if (!Utilities::doesTableExist("users", db)){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    if (!Utilities::doesTableExist("users", dbName)){
         Utilities::throwNoTableException("users");
     }
     user_details details{};
-    if (Utilities::doesRecordExist("users", id, db)){
-        QSqlQuery query("SELECT public_key, name, email FROM users WHERE id = ?", *db);
+    if (Utilities::doesRecordExist("users", id, dbName)){
+        QSqlQuery query("SELECT public_key, name, email FROM users WHERE id = ?", db);
         query.addBindValue(QVariant::fromValue(id));
         if (query.exec()){
             if (query.next()){
@@ -97,10 +103,12 @@ user_details UserGateway::getUser(uint64_t id) {
 
 
 std::vector<user_details> UserGateway::getUsers() {
-    if (!Utilities::doesTableExist("users", db)){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    if (!Utilities::doesTableExist("users", dbName)){
         Utilities::throwNoTableException("users");
     }
-    QSqlQuery query("SELECT id, public_key, name, email FROM users", *db);
+    QSqlQuery query("SELECT id, public_key, name, email FROM users", db);
     std::vector<user_details> userVector;
     if (query.exec()){
         while (query.next()){
@@ -120,11 +128,13 @@ std::vector<user_details> UserGateway::getUsers() {
 }
 
 user_details UserGateway::getUserByName(const std::string &name) {
-    if (!Utilities::doesTableExist("users", db)){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    if (!Utilities::doesTableExist("users", dbName)){
         Utilities::throwNoTableException("users");
     }
     user_details details{};
-    QSqlQuery query("SELECT public_key, id, email FROM users WHERE name = ?", *db);
+    QSqlQuery query("SELECT public_key, id, email FROM users WHERE name = ?", db);
     query.addBindValue(QString::fromStdString(name));
     if (query.exec()){
         if (query.next()){
@@ -144,7 +154,9 @@ user_details UserGateway::getUserByName(const std::string &name) {
 
 
 void UserGateway::updateUser(const user_details &user) {
-    if (!Utilities::doesTableExist("users", db)){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    if (!Utilities::doesTableExist("users", dbName)){
         Utilities::throwNoTableException("users");
     }
 
@@ -152,8 +164,8 @@ void UserGateway::updateUser(const user_details &user) {
         throw std::invalid_argument("updateUser error: invalid arguments");
     }
 
-    if (Utilities::doesRecordExist("users", user.id, db)){
-        QSqlQuery query("UPDATE users SET name = ?, email = ?, public_key = ? WHERE id = ?", *db);
+    if (Utilities::doesRecordExist("users", user.id, dbName)){
+        QSqlQuery query("UPDATE users SET name = ?, email = ?, public_key = ? WHERE id = ?", db);
         query.addBindValue(QString::fromStdString(user.name));
         query.addBindValue(QString::fromStdString(user.email));
         query.addBindValue(QString::fromStdString(user.public_key));

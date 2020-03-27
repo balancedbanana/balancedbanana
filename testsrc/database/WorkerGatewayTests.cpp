@@ -24,8 +24,9 @@ using WorkerGatewayTest = DatabaseTest;
 /**
  * Deletes the all records in the workers table and resets the auto increment for the id.
  */
-void resetWorkerTable(const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
+void resetWorkerTable(const std::string &dbName){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -52,7 +53,7 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable(db);
+        resetWorkerTable(dbName);
     }
 
     worker_details details;
@@ -64,8 +65,10 @@ protected:
  * @param id The id of the added record.
  * @return true if the add was successful, otherwise false.
  */
-bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", *db);
+bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id, const std::string &dbName){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -105,12 +108,12 @@ bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id, const st
 
 // Test checks if the addWorker method in Gateway works properly given correct parameters
 TEST_F(AddWorkerTest, AddWorkerTest_AddFirstWorkerSuccess_Test){
-
+    qDebug() << QString::fromStdString(dbName);
     // The first entry's id should be 1
     EXPECT_TRUE(workerGateway->addWorker(details) == 1);
 
     // The add must be successful
-    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, db));
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, dbName));
 }
 
 // Test to see if the auto increment feature works as expected.
@@ -119,7 +122,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
 
     // Add the worker from the first test. Since it's the first worker, its id should be 1.
     EXPECT_TRUE(workerGateway->addWorker(details) == 1);
-    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, db));
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, dbName));
 
     // Initialize a new worker
     worker_details seconddetails{};
@@ -130,7 +133,7 @@ TEST_F(AddWorkerTest, AddWorkerTest_AddSecondWorkerSuccess_Test){
     seconddetails.empty = false;
 
     EXPECT_TRUE(workerGateway->addWorker(seconddetails) == 2);
-    EXPECT_TRUE(wasWorkerAddSuccessful(seconddetails, 2, db));
+    EXPECT_TRUE(wasWorkerAddSuccessful(seconddetails, 2, dbName));
 }
 
 /**
@@ -140,8 +143,9 @@ class NoWorkersTableTest : public WorkerGatewayTest {
 protected:
     void SetUp() override {
         WorkerGatewayTest::SetUp();
+        auto db = QSqlDatabase::database(QString::fromStdString(dbName));
         // Deletes the workers table
-        QSqlQuery query("DROP TABLE workers", *db);
+        QSqlQuery query("DROP TABLE workers", db);
         query.exec();
 
         // Setup the varaibles needed
@@ -157,6 +161,8 @@ protected:
     }
 
     void TearDown() override {
+        auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
         QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
                         "(\n"
                         "    `id`         BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -170,7 +176,7 @@ protected:
                         "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
                         ")\n"
                         "ENGINE = InnoDB\n"
-                        "DEFAULT CHARACTER SET = utf8", *db);
+                        "DEFAULT CHARACTER SET = utf8", db);
         query.exec();
     }
 
@@ -203,8 +209,10 @@ TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
  * @param id The id of the removed record.
  * @return  true if remove was successful, otherwise false.
  */
-bool wasWorkerRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", *db);
+bool wasWorkerRemoveSuccessful(uint64_t id, const std::string& dbName){
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -220,7 +228,7 @@ bool wasWorkerRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase> 
 class RemoveWorkerTest : public WorkerGatewayTest {
 protected:
     void TearDown() override{
-        resetWorkerTable(db);
+        resetWorkerTable(dbName);
     }
 };
 
@@ -239,11 +247,11 @@ TEST_F(RemoveWorkerTest, RemoveWorkerTest_SuccessfulRemove_Test){
     details.empty = false;
     // Since this is the first worker, this has to be true.
     EXPECT_TRUE(workerGateway->addWorker(details) == 1);
-    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, db));
+    EXPECT_TRUE(wasWorkerAddSuccessful(details, 1, dbName));
 
     // This must work
     EXPECT_NO_THROW(workerGateway->removeWorker(1));
-    EXPECT_TRUE(wasWorkerRemoveSuccessful(1, db));
+    EXPECT_TRUE(wasWorkerRemoveSuccessful(1, dbName));
 }
 
 // Test to see if the remove method fails when it's called with an invalid id.
@@ -271,7 +279,7 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable(db);
+        resetWorkerTable(dbName);
     }
 
     worker_details details;
@@ -328,7 +336,7 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable(db);
+        resetWorkerTable(dbName);
     }
 
     worker_details first;
@@ -373,14 +381,16 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable(db);
+        resetWorkerTable(dbName);
     }
 
     worker_details worker;
 };
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(workerGateway->getWorkerByName(worker.name), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
@@ -402,7 +412,7 @@ TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_WorkerFound_Test){
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id, db));
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id, dbName));
     EXPECT_TRUE(workerGateway->getWorkerByName(worker.name) == worker);
 }
 
@@ -426,14 +436,16 @@ protected:
     }
 
     void TearDown() override {
-        resetWorkerTable(db);
+        resetWorkerTable(dbName);
     }
 
     worker_details worker;
 };
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(workerGateway->updateWorker(worker), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
@@ -464,7 +476,7 @@ TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorker_Test){
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_Success_Test){
     EXPECT_EQ(workerGateway->addWorker(worker), worker.id);
-    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id, db));
+    EXPECT_TRUE(wasWorkerAddSuccessful(worker, worker.id, dbName));
 
     worker_details new_worker = worker;
     new_worker.name = "Windows 10";
@@ -531,7 +543,9 @@ TEST_F(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
     std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
 
     std::wstring output = generateRandomUnicodeString(5, 0x0400, 0x04FF);
-    QSqlQuery query("INSERT INTO workers (name, public_key) VALUES (?,?)", *db);
+    auto db = QSqlDatabase::database(QString::fromStdString(dbName));
+
+    QSqlQuery query("INSERT INTO workers (name, public_key) VALUES (?,?)", db);
     query.addBindValue(QString::fromStdWString(output));
     query.addBindValue("something");
     query.exec();
@@ -540,6 +554,6 @@ TEST_F(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
         EXPECT_EQ(query.value(0).toString().toStdWString(), output);
     }
 
-    resetWorkerTable(db);
+    resetWorkerTable(dbName);
 }
 
