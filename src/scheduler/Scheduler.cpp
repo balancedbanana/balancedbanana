@@ -167,16 +167,14 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 auto job = (Job*)obsable;
                 if(job->getStatus() != balancedbanana::database::scheduled) {
                     // Remove aborted, canced or other jobs from the queue
-                    // if(queue.pullJob(job->getId()) /* updatelock.try_lock() */) {
-                        std::lock_guard<std::mutex> guard(updatelock/* , std::adopt_lock */);
-                        auto found = senttoworker.find(job->getId()); //std::find(senttoworker.begin(), senttoworker.end(), job);
+                    queue.pullJob(job->getId());
+                    std::lock_guard<std::mutex> guard(updatelock);
+                    auto found = senttoworker.find(job->getId());
                         if(found != senttoworker.end())
                             senttoworker.erase(found);
                         for(auto && worker : repo.GetActiveWorkers()) {
                             processWorkerload(worker.get());
                         }
-                    // }
-
                 }
                 if(job->getStatus() == balancedbanana::database::finished) {
                     job->UnregisterObserver(this);
