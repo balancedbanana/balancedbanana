@@ -136,6 +136,37 @@ namespace balancedbanana {
             }
         }
 
+        std::shared_ptr<Job> PriorityQueue::pullJob(uint64_t id) {
+            if (submissionTimes.count(id) == 0) {
+                return nullptr;
+            }
+            for(std::shared_ptr<Job> job : emergencyList) {
+                if ((*job).getId() == id) {
+                    submissionTimes.erase((*job).getId());
+                    return job;
+                }
+            }
+            for(std::shared_ptr<Job> job : highList) {
+                if ((*job).getId() == id) {
+                    submissionTimes.erase((*job).getId());
+                    return job;
+                }
+            }
+            for(std::shared_ptr<Job> job : normalList) {
+                if ((*job).getId() == id) {
+                    submissionTimes.erase((*job).getId());
+                    return job;
+                }
+            }
+            for(std::shared_ptr<Job> job : lowList) {
+                if ((*job).getId() == id) {
+                    submissionTimes.erase((*job).getId());
+                    return job;
+                }
+            }
+            return nullptr;
+        }
+
         PriorityQueue::PriorityQueue(std::shared_ptr<Timer> timerptr, unsigned int updateInterval, uint64_t PriorityUpgradeTime) {
             timer = timerptr;
             pUpgradeTime = PriorityUpgradeTime;

@@ -82,7 +82,7 @@ std::future<int> Worker::processCommandLineArguments(int argc, const char* const
             connectWithServer(server, port);
         } catch(...) {
             std::cerr << "Error: Can not find Server\n";
-            prom.set_value(code);
+            prom.set_value(255);
             return prom.get_future();
         }
         authenticateWithServer();
@@ -123,7 +123,7 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
             authenticateWithServer();
         } else {
             std::cerr << "Error: Could not authenticate to the Server\n";
-            prom.set_value(-1);
+            prom.set_value(255);
         }
     }
 }
@@ -236,6 +236,19 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 #endif
                 container.Continue();
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
+                com->send(resp);
+                break;
+            }
+            case TaskType::STOP: {
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                #endif
+                container.Stop();
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::canceled);
                 com->send(resp);
                 break;
             }

@@ -11,7 +11,6 @@
 #include <communication/message/TaskMessage.h>
 #include <scheduler/smtpserver/SmtpServer.h>
 #include <QtCore/QCoreApplication>
-#include <utility>
 #include <database/JobGateway.h>
 
 using namespace balancedbanana::commandLineInterface;
@@ -168,19 +167,19 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 auto job = (Job*)obsable;
                 if(job->getStatus() != balancedbanana::database::scheduled) {
                     // Remove aborted, canced or other jobs from the queue
-                    // if(queue.pullJob(job->getId()) /* updatelock.try_lock() */) {
-                        std::lock_guard<std::mutex> guard(updatelock/* , std::adopt_lock */);
-                        auto found = senttoworker.find(job->getId()); //std::find(senttoworker.begin(), senttoworker.end(), job);
-                        if(found != senttoworker.end())
-                            senttoworker.erase(found);
-                        for(auto && worker : repo->GetActiveWorkers()) {
-                            processWorkerload(worker.get());
-                        }
-                    // }
-
+                    queue.pullJob(job->getId());
+                    std::lock_guard<std::mutex> guard(updatelock);
+                    auto found = senttoworker.find(job->getId());
+                    if(found != senttoworker.end())
+                        senttoworker.erase(found);
+                    for(auto && worker : repo->GetActiveWorkers()) {
+                        processWorkerload(worker.get());
+                    }
                 }
                 if(job->getStatus() == balancedbanana::database::finished) {
+                    // Finsihed Jobs cannot land again in the Queue
                     job->UnregisterObserver(this);
+                    // Try sending a email of finished mail
                     if(auto user = job->getUser()) {
                         auto mail = user->email();
                         if(!mail.empty()) {
@@ -344,7 +343,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 }
 
                 // No Idea to access the JobGateway????
-                // for(auto && job : repo->GetUnfinishedJobs()) {
+                // for(auto && job : repo.GetUnfinishedJobs()) {
                 //     if(job->get {
                 //         result.emplace_back(job->getId());
                 //     }
@@ -376,7 +375,8 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
 int main(int argc, char **argv)
 {
     int _argc = 1;
-    char* _argv[] = { "bbs" };
+    char name[] = "bbs";
+    char* _argv[] = { name };
     QCoreApplication qapp(_argc, _argv);
     Scheduler scheduler;
     return scheduler.processCommandLineArguments(argc, argv);
