@@ -122,7 +122,7 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
     EXPECT_FALSE(Utilities::doesTableExist("job_results", db));
     query.prepare("CREATE TABLE `job_results` (\n"
                     "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
-                    "  `stdout` text NOT NULL,\n"
+                    "  `output` text NOT NULL,\n"
                     "  `exit_code` tinyint(3) NOT NULL,\n"
                     "  PRIMARY KEY (`id`),\n"
                     "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
