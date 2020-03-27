@@ -4,7 +4,6 @@
 #include <scheduler/SchedulerWorkerMP.h>
 #include <scheduler/httpserver/HttpServer.h>
 #include <iostream>
-#include <chrono>
 #include <scheduler/Worker.h>
 #include <scheduler/Scheduler.h>
 #include <database/Repository.h>
@@ -148,19 +147,19 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             databaseport = std::stoi(config["databaseport"]);
         }
 
-        balancedbanana::database::Repository repo(databasehost, databaseschema, databaseuser, databasepassword, databaseport, std::chrono::minutes(1));
+        std::shared_ptr<balancedbanana::database::Repository> repo = balancedbanana::database::Repository::GetRepository("balancedbanana", databasehost, databaseschema, databaseuser, databasepassword, databaseport);
         balancedbanana::scheduler::PriorityQueue queue(std::make_shared<timedevents::Timer>(), 360, 960);
 
         struct QueueObserver : Observer<JobObservableEvent>, Observer<WorkerObservableEvent> {
             balancedbanana::scheduler::PriorityQueue& queue;
-            balancedbanana::database::Repository& repo;
+            std::shared_ptr<balancedbanana::database::Repository> repo;
             SmtpServer mailclient;
 
             std::mutex updatelock;
             std::unordered_map<uint64_t, std::shared_ptr<Job>> senttoworker;
             std::filesystem::path images;
 
-            QueueObserver(balancedbanana::scheduler::PriorityQueue& queue, balancedbanana::database::Repository& repo, SmtpServer && mailclient) : queue(queue), repo(repo), mailclient(std::move(mailclient)) {
+            QueueObserver(balancedbanana::scheduler::PriorityQueue& queue, std::shared_ptr<balancedbanana::database::Repository> repo, SmtpServer && mailclient) : queue(queue), repo(std::move(repo)), mailclient(std::move(mailclient)) {
                 images = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs" / "images";
             }
 
@@ -173,7 +172,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                     auto found = senttoworker.find(job->getId());
                     if(found != senttoworker.end())
                         senttoworker.erase(found);
-                    for(auto && worker : repo.GetActiveWorkers()) {
+                    for(auto && worker : repo->GetActiveWorkers()) {
                         processWorkerload(worker.get());
                     }
                 }
@@ -203,7 +202,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
 
             void OnJobAdded() {
                 std::lock_guard<std::mutex> guard(updatelock);
-                for(auto && worker : repo.GetActiveWorkers()) {
+                for(auto && worker : repo->GetActiveWorkers()) {
                     processWorkerload(worker.get());
                 }
             }
@@ -217,7 +216,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                             spec.ram -= job.second->getAllocated_ram();
                         }
                     }
-                    for(auto && job : repo.GetUnfinishedJobs()) {
+                    for(auto && job : repo->GetUnfinishedJobs()) {
                         if(job->getWorker_id() == worker->getId() && job->getStatus() == balancedbanana::database::processing) {
                             // Reduce spec with running Jobs
                             spec.cores -= job->getAllocated_cores();
@@ -281,7 +280,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                     [&repo](uint64_t workerID) -> std::shared_ptr<Worker> { return repo->GetWorker(workerID); },
                     
                     [&repo, &observer](uint64_t userid, const std::shared_ptr<JobConfig>& config, QDateTime &scheduleTime, const std::string& command) -> std::shared_ptr<Job> {
-                        auto job = repo->ddJob(userid, *config, scheduleTime, command);
+                        auto job = repo->AddJob(userid, *config, scheduleTime, command);
                         // Add newly created Jobs to the Queue
                         observer.queue.addTask(job);
                         job->RegisterObserver(&observer);
@@ -339,7 +338,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 }
                 return result; }, [&repo](int hours) -> std::vector<int> {
                 std::vector<int> result;
-                for(auto && job : repo->GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
+                for(auto && job : repo->.GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
                     result.emplace_back(job->getId());
                 }
 
