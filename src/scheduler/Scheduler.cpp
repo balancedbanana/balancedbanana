@@ -4,6 +4,7 @@
 #include <scheduler/SchedulerWorkerMP.h>
 #include <scheduler/httpserver/HttpServer.h>
 #include <iostream>
+#include <chrono>
 #include <scheduler/Worker.h>
 #include <scheduler/Scheduler.h>
 #include <database/Repository.h>
@@ -147,7 +148,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             databaseport = std::stoi(config["databaseport"]);
         }
 
-        balancedbanana::database::Repository repo(databasehost, databaseschema, databaseuser, databasepassword, databaseport);
+        balancedbanana::database::Repository repo(databasehost, databaseschema, databaseuser, databasepassword, databaseport, std::chrono::minutes(1));
         balancedbanana::scheduler::PriorityQueue queue(std::make_shared<timedevents::Timer>(), 360, 960);
 
         struct QueueObserver : Observer<JobObservableEvent>, Observer<WorkerObservableEvent> {
@@ -338,7 +339,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 }
                 return result; }, [&repo](int hours) -> std::vector<int> {
                 std::vector<int> result;
-                for(auto && job : repo->.GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
+                for(auto && job : repo->GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
                     result.emplace_back(job->getId());
                 }
 
