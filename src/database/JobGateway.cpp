@@ -708,7 +708,7 @@ void updateAllocatedSpecs(const job_details& job, const std::shared_ptr<QSqlData
  * @param job The Job.
  */
 void updateWorkerId(const job_details& job, const std::shared_ptr<QSqlDatabase> &db){
-    if (!job.worker_id.has_value()){
+    if (!job.worker_id.has_value() || job.worker_id.value() == 0 /** Worker ids always start at 1 */){
         return;
     }
     if (!Utilities::doesRecordExist("workers", job.worker_id.value(), db)){
