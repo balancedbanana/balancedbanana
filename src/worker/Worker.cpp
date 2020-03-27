@@ -269,7 +269,7 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 break;
             }
             case TaskType::RESTORE: {
-                Checkpoint checkpoint("bbdjob" + std::to_string(*task.getJobId()), "bbdbackup" + std::to_string(*task.getBackupId()));
+                Checkpoint checkpoint("bbdjob" + std::to_string(*task.getJobId()), "bbdbackup" + std::to_string(*task.getBackupId()), dockercheckpoints);
                 checkpoint.Start();
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
                 com->send(resp);
