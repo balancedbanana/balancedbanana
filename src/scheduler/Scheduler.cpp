@@ -152,7 +152,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
 
         struct QueueObserver : Observer<JobObservableEvent>, Observer<WorkerObservableEvent> {
             balancedbanana::scheduler::PriorityQueue& queue;
-            std::shared_ptr<balancedbanana::database::Repository> repo;
+            balancedbanana::database::Repository& repo;
             SmtpServer mailclient;
 
             std::mutex updatelock;
@@ -262,7 +262,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
         QueueObserver observer(queue, repo, {smtpserver, smtpport, false, email});
 
         // Reload scheduled Jobs from the database into the Queue
-        for(auto && job : repo.GetUnfinishedJobs()) {
+        for(auto && job : repo->GetUnfinishedJobs()) {
             if(job->getStatus() == balancedbanana::database::scheduled && job->getUser() /* Avoid working with invalid jobs*/) {
                 queue.addTask(job);
                 job->RegisterObserver(&observer);
@@ -276,11 +276,11 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             clientlistener = std::make_shared<CommunicatorListener>([&repo, &observer]() {
                 return std::make_shared<SchedulerClientMP>(
 
-                    [&repo](uint64_t jobID) -> std::shared_ptr<Job> { return repo.GetJob(jobID); },
-                    [&repo](uint64_t workerID) -> std::shared_ptr<Worker> { return repo.GetWorker(workerID); },
+                    [&repo](uint64_t jobID) -> std::shared_ptr<Job> { return repo->GetJob(jobID); },
+                    [&repo](uint64_t workerID) -> std::shared_ptr<Worker> { return repo->GetWorker(workerID); },
                     
                     [&repo, &observer](uint64_t userid, const std::shared_ptr<JobConfig>& config, QDateTime &scheduleTime, const std::string& command) -> std::shared_ptr<Job> {
-                        auto job = repo.AddJob(userid, *config, scheduleTime, command);
+                        auto job = repo->ddJob(userid, *config, scheduleTime, command);
                         // Add newly created Jobs to the Queue
                         observer.queue.addTask(job);
                         job->RegisterObserver(&observer);
@@ -292,8 +292,8 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
 
                     [&repo](size_t uid, const std::string &username, const std::string &pubkey) -> std::shared_ptr<User> {
                         //Important for the worker to run Jobs under the right userid!!
-                        return repo.AddUser(uid, username, "bot@localhost", pubkey); },
-                    [&repo](const std::string &username) -> std::shared_ptr<User> { return repo.FindUser(username); });
+                        return repo->AddUser(uid, username, "bot@localhost", pubkey); },
+                    [&repo](const std::string &username) -> std::shared_ptr<User> { return repo->FindUser(username); });
             });
             clientlistener->listen(server, port, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
                 auto mp = std::static_pointer_cast<SchedulerClientMP>(com->GetMP());
@@ -302,17 +302,17 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             });
             workerlistener = std::make_shared<CommunicatorListener>([&repo, &observer](){
                 return std::make_shared<SchedulerWorkerMP>([&repo, &observer](const std::string& name, const std::string& pubkey) -> std::shared_ptr<Worker> {
-                    auto worker = repo.AddWorker(name, pubkey, { "", 32 * 1024, 50 });
+                    auto worker = repo->AddWorker(name, pubkey, { "", 32 * 1024, 50 });
                     worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(&observer);
                     return worker;
                 }, [&repo, &observer](const std::string &worker) -> std::shared_ptr<balancedbanana::scheduler::Worker> {
-                    if(auto _worker = repo.FindWorker(worker)) {
+                    if(auto _worker = repo->FindWorker(worker)) {
                         _worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(&observer);
                         return _worker;
                     }
                     return nullptr;
                 }, [&repo](int jobid) -> std::shared_ptr<Job> {
-                    return repo.GetJob(jobid);
+                    return repo->GetJob(jobid);
                 });
             });
             workerlistener->listen(workerserver, workerport, [](std::shared_ptr<balancedbanana::communication::Communicator> com) {
@@ -320,10 +320,10 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 mp->setWorker(com);
                 com->detach();
             });
-            HttpServer server = HttpServer([&repo]() -> std::vector<std::shared_ptr<Worker>> { return repo.GetActiveWorkers(); }, [&repo](int workerid) -> std::vector<int> {
+            HttpServer server = HttpServer([&repo]() -> std::vector<std::shared_ptr<Worker>> { return repo->GetActiveWorkers(); }, [&repo](int workerid) -> std::vector<int> {
                 std::vector<int> result;
                 // Basically I only want the jobids running on a worker, but get whole objects hmm...
-                for(auto && job : repo.GetUnfinishedJobs()) {
+                for(auto && job : repo->GetUnfinishedJobs()) {
                     if(job->getWorker_id() == workerid) {
                         result.emplace_back(job->getId());
                     }
@@ -331,14 +331,14 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 return result; }, [&repo](int userid) -> std::vector<int> {
                 std::vector<int> result;
                 // Basically I only want the jobids running by a user, but get whole objects hmm...
-                for(auto && job : repo.GetUnfinishedJobs()) {
+                for(auto && job : repo->GetUnfinishedJobs()) {
                     if(job->getUser() && job->getUser()->id() == userid) {
                         result.emplace_back(job->getId());
                     }
                 }
                 return result; }, [&repo](int hours) -> std::vector<int> {
                 std::vector<int> result;
-                for(auto && job : repo.GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
+                for(auto && job : repo->.GetJobsInInterval(QDateTime::currentDateTime().addSecs(-hours * 60 * 60), QDateTime::currentDateTime(), balancedbanana::database::JobStatus::processing)) {
                     result.emplace_back(job->getId());
                 }
 
@@ -350,7 +350,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                 // }
                 return result; 
             }, [&repo](int jobid) -> std::shared_ptr<Job> {
-                return repo.GetJob(jobid);
+                return repo->GetJob(jobid);
             });
             server.listen(webapiserver, webapiport);
             std::string cmd;
