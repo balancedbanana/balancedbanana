@@ -82,7 +82,7 @@ std::future<int> Worker::processCommandLineArguments(int argc, const char* const
             connectWithServer(server, port);
         } catch(...) {
             std::cerr << "Error: Can not find Server\n";
-            prom.set_value(code);
+            prom.set_value(255);
             return prom.get_future();
         }
         authenticateWithServer();
@@ -123,7 +123,7 @@ void Worker::processAuthResultMessage(const AuthResultMessage &msg) {
             authenticateWithServer();
         } else {
             std::cerr << "Error: Could not authenticate to the Server\n";
-            prom.set_value(-1);
+            prom.set_value(255);
         }
     }
 }
