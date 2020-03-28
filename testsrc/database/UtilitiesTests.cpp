@@ -37,7 +37,7 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_Allocated_Resources_Test){
 }
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
-    QSqlQuery query("DROP TABLE jobs", *db);
+    QSqlQuery query("DROP TABLE jobs", db);
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("jobs", db));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (\n"
@@ -75,7 +75,7 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoJobs_Test){
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
-    QSqlQuery query("DROP TABLE users", *db);
+    QSqlQuery query("DROP TABLE users", db);
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("users", db));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`users`\n"
@@ -95,7 +95,7 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoUsers_Test){
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("workers", db));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
@@ -117,7 +117,7 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoWorkers_Test){
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
-    QSqlQuery query("DROP TABLE job_results", *db);
+    QSqlQuery query("DROP TABLE job_results", db);
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("job_results", db));
     query.prepare("CREATE TABLE `job_results` (\n"
@@ -132,7 +132,7 @@ TEST_F(DoesTableExistTest, DoesTableExistTest_NoJob_Results_Test){
 
 
 TEST_F(DoesTableExistTest, DoesTableExistTest_NoAllocated_Resources_Test){
-    QSqlQuery query("DROP TABLE allocated_resources", *db);
+    QSqlQuery query("DROP TABLE allocated_resources", db);
     query.exec();
     EXPECT_FALSE(Utilities::doesTableExist("allocated_resources", db));
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"

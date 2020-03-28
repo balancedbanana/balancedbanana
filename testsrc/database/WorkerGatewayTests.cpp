@@ -24,8 +24,8 @@ using WorkerGatewayTest = DatabaseTest;
 /**
  * Deletes the all records in the workers table and resets the auto increment for the id.
  */
-void resetWorkerTable(const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
+void resetWorkerTable(const QSqlDatabase &db){
+    QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -64,8 +64,8 @@ protected:
  * @param id The id of the added record.
  * @return true if the add was successful, otherwise false.
  */
-bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", *db);
+bool wasWorkerAddSuccessful(const worker_details& details, uint64_t id, const QSqlDatabase &db){
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -141,7 +141,7 @@ protected:
     void SetUp() override {
         WorkerGatewayTest::SetUp();
         // Deletes the workers table
-        QSqlQuery query("DROP TABLE workers", *db);
+        QSqlQuery query("DROP TABLE workers", db);
         query.exec();
 
         // Setup the varaibles needed
@@ -170,7 +170,7 @@ protected:
                         "    UNIQUE INDEX `name_UNIQUE` (`name` ASC)\n"
                         ")\n"
                         "ENGINE = InnoDB\n"
-                        "DEFAULT CHARACTER SET = utf8", *db);
+                        "DEFAULT CHARACTER SET = utf8", db);
         query.exec();
     }
 
@@ -203,8 +203,8 @@ TEST_F(NoWorkersTableTest, NoWorkersTableTest_GetWorkers_Test){
  * @param id The id of the removed record.
  * @return  true if remove was successful, otherwise false.
  */
-bool wasWorkerRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery query("SELECT * FROM workers WHERE id = ?", *db);
+bool wasWorkerRemoveSuccessful(uint64_t id, const QSqlDatabase &db){
+    QSqlQuery query("SELECT * FROM workers WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -380,7 +380,7 @@ protected:
 };
 
 TEST_F(GetWorkerByNameTest, GetWorkerByNameTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(workerGateway->getWorkerByName(worker.name), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
@@ -433,7 +433,7 @@ protected:
 };
 
 TEST_F(UpdateWorkerTest, UpdateWorkerTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(workerGateway->updateWorker(worker), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
@@ -531,7 +531,7 @@ TEST_F(WorkerEncodingTest, WorkerEncodingTest_U8Test_Test){
     std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
 
     std::wstring output = generateRandomUnicodeString(5, 0x0400, 0x04FF);
-    QSqlQuery query("INSERT INTO workers (name, public_key) VALUES (?,?)", *db);
+    QSqlQuery query("INSERT INTO workers (name, public_key) VALUES (?,?)", db);
     query.addBindValue(QString::fromStdWString(output));
     query.addBindValue("something");
     query.exec();

@@ -147,7 +147,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             databaseport = std::stoi(config["databaseport"]);
         }
 
-        std::shared_ptr<balancedbanana::database::Repository> repo = balancedbanana::database::Repository::GetRepository("balancedbanana", databasehost, databaseschema, databaseuser, databasepassword, databaseport);
+        std::shared_ptr<balancedbanana::database::Repository> repo = std::make_shared<balancedbanana::database::Repository>("balancedbanana", databasehost, databaseschema, databaseuser, databasepassword, databaseport);
         balancedbanana::scheduler::PriorityQueue queue(std::make_shared<timedevents::Timer>(), 360, 960);
 
         struct QueueObserver : Observer<JobObservableEvent>, Observer<WorkerObservableEvent> {

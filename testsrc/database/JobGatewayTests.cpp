@@ -27,8 +27,8 @@ using JobGatewayTest = DatabaseTest;
 /**
  * Deletes the all records in the jobs table and resets the auto increment for the id.
  */
-void resetJobTable(const std::shared_ptr<QSqlDatabase> &db) {
-    QSqlQuery query("ALTER TABLE jobs CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
+void resetJobTable(const QSqlDatabase &db) {
+    QSqlQuery query("ALTER TABLE jobs CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
     query.exec();
     query.prepare("DELETE FROM jobs");
     query.exec();
@@ -74,7 +74,7 @@ protected:
 
     void TearDown() override {
         resetJobTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -88,8 +88,8 @@ protected:
  * @param id The id of the added record.
  * @return true if the add was successful, otherwise false.
  */
-bool wasJobAddSuccessful(job_details& details, uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", *db);
+bool wasJobAddSuccessful(job_details& details, uint64_t id, const QSqlDatabase &db){
+    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -275,7 +275,7 @@ TEST_F(AddJobTest, AddJobTest_NoUser_Test){
 /**
  * Restores the jobs table
  */
-void createJobsTable(const std::shared_ptr<QSqlDatabase> &db){
+void createJobsTable(const QSqlDatabase &db){
     QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (\n"
                     "    `id` BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
                     "    `min_ram` BIGINT(10) UNSIGNED DEFAULT NULL,\n"
@@ -305,12 +305,12 @@ void createJobsTable(const std::shared_ptr<QSqlDatabase> &db){
                     "    UNIQUE INDEX `result_id_UNIQUE` (`result_id` ASC)\n"
                     ")\n"
                     "ENGINE=InnoDB\n"
-                    "DEFAULT CHARSET=utf8;", *db);
+                    "DEFAULT CHARSET=utf8;", db);
     query.exec();
 }
 
-void deleteJobsTable(const std::shared_ptr<QSqlDatabase> &db) {
-    QSqlQuery query("DROP TABLE jobs", *db);
+void deleteJobsTable(const QSqlDatabase &db) {
+    QSqlQuery query("DROP TABLE jobs", db);
     query.exec();
 }
 
@@ -402,7 +402,7 @@ protected:
 
     void TearDown() override {
         resetJobTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -422,8 +422,8 @@ TEST_F(AddJobMandatoryTest, AddJobMandatoryTest_OnlyMandatory_Test){
  * @param id The id of the removed record.
  * @return  true if remove was successful, otherwise false.
  */
-bool wasJobRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase> &db){
-    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", *db);
+bool wasJobRemoveSuccessful(uint64_t id, const QSqlDatabase &db){
+    QSqlQuery query("SELECT * FROM jobs WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -440,7 +440,7 @@ class RemoveJobTest : public JobGatewayTest {
 protected:
     void TearDown() override{
         resetJobTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 };
@@ -514,7 +514,7 @@ protected:
 
     void TearDown() override {
        resetJobTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -522,12 +522,12 @@ protected:
     user_details user;
 };
 
-void deleteAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
-    QSqlQuery query("DROP TABLE allocated_resources", *db);
+void deleteAllocResTable(const QSqlDatabase &db) {
+    QSqlQuery query("DROP TABLE allocated_resources", db);
     query.exec();
 }
 
-void createAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
+void createAllocResTable(const QSqlDatabase &db) {
     QSqlQuery query("CREATE TABLE IF NOT EXISTS `balancedbanana`.`allocated_resources`\n"
                     "(\n"
                     "    `id`    BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,\n"
@@ -538,7 +538,7 @@ void createAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
                     "    UNIQUE INDEX `id_UNIQUE` (`id` ASC)\n"
                     ")\n"
                     "ENGINE = InnoDB\n"
-                    "DEFAULT CHARACTER SET = utf8", *db);
+                    "DEFAULT CHARACTER SET = utf8", db);
     query.exec();
 }
 
@@ -553,19 +553,19 @@ TEST_F(GetJobTest, GetJobTest_NoAllocatedResourcesTable_Test){
     createAllocResTable(db);
 }
 
-void deleteResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
-    QSqlQuery query("DROP TABLE job_results", *db);
+void deleteResultsTable(const QSqlDatabase &db) {
+    QSqlQuery query("DROP TABLE job_results", db);
     query.exec();
 }
 
-void createResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
+void createResultsTable(const QSqlDatabase &db) {
     QSqlQuery query("CREATE TABLE `job_results` (\n"
                   "  `id` bigint(10) unsigned NOT NULL AUTO_INCREMENT,\n"
                   "  `output` text NOT NULL,\n"
                   "  `exit_code` tinyint(3) NOT NULL,\n"
                   "  PRIMARY KEY (`id`),\n"
                   "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8", *db);
+                  ") ENGINE=InnoDB DEFAULT CHARSET=utf8", db);
     query.exec();
 }
 
@@ -685,7 +685,7 @@ protected:
 
     void TearDown() override {
         resetJobTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -741,8 +741,8 @@ TEST_F(GetJobsTest, GetJobsTest_NonExistentJobs_Test){
 /**
  * Resets the allocated_resources table
  */
-void resetAllocResTable(const std::shared_ptr<QSqlDatabase> &db) {
-    QSqlQuery query("ALTER TABLE allocated_resources CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
+void resetAllocResTable(const QSqlDatabase &db) {
+    QSqlQuery query("ALTER TABLE allocated_resources CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
     query.exec();
     query.prepare("DELETE FROM allocated_resources");
     query.exec();
@@ -790,7 +790,7 @@ protected:
     void TearDown() override {
         resetJobTable(db);
         resetAllocResTable(db);
-        QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", *db);
+        QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL", db);
         query.exec();
         query.prepare("DELETE FROM workers");
         query.exec();
@@ -805,12 +805,12 @@ protected:
     user_details user;
 };
 
-bool wasStartSuccessful(job_details job, worker_details worker, const std::shared_ptr<QSqlDatabase> &db){
+bool wasStartSuccessful(job_details job, worker_details worker, const QSqlDatabase &db){
     uint allocated_id = 1;
     QSqlQuery queryAlloc("SELECT cores, ram, osIdentifier FROM allocated_resources WHERE id = ?",
-            *db);
+            db);
     queryAlloc.addBindValue(allocated_id);
-    QSqlQuery queryJobs("SELECT allocated_id, status, start_time FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryJobs("SELECT allocated_id, status, start_time FROM jobs WHERE id = ?", db);
     queryJobs.addBindValue(QVariant::fromValue(job.id));
 
     if (queryAlloc.exec()){
@@ -859,7 +859,7 @@ TEST_F(StartJobTest, StartJobTest_SuccessfulStart_Test){
 
 // Test to see if exception is thrown when no workers table exists
 TEST_F(StartJobTest, StartJobTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
 
     job.start_time = QDateTime::currentDateTime();
@@ -904,9 +904,9 @@ TEST_F(StartJobTest, StartJobTest_NonExistentWorker_Test){
     EXPECT_THROW(jobGateway->startJob(job.id, worker.id, worker.specs.value(), job.start_time.value()), std::runtime_error);
 }
 
-void resetResultsTable(const std::shared_ptr<QSqlDatabase> &db) {
+void resetResultsTable(const QSqlDatabase &db) {
     QSqlQuery query("ALTER TABLE job_results CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
-                    *db);
+                    db);
     query.exec();
     query.prepare("DELETE FROM job_results");
     query.exec();
@@ -948,7 +948,7 @@ protected:
     void TearDown() override {
         resetJobTable(db);
         resetResultsTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -959,11 +959,11 @@ protected:
 };
 
 bool wasFinishSuccessful(const std::string& stdout, job_details job, int8_t exit_code, const
-std::shared_ptr<QSqlDatabase> &db){
+QSqlDatabase &db){
     uint result_id = 1;
-    QSqlQuery queryResult("SELECT output, exit_code FROM job_results WHERE id = ?", *db);
+    QSqlQuery queryResult("SELECT output, exit_code FROM job_results WHERE id = ?", db);
     queryResult.addBindValue(result_id);
-    QSqlQuery queryJobs("SELECT finish_time, result_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryJobs("SELECT finish_time, result_id FROM jobs WHERE id = ?", db);
     queryJobs.addBindValue(QVariant::fromValue(job.id));
 
     if (queryResult.exec()){
@@ -1036,9 +1036,9 @@ TEST_F(FinishJobTest, FinishJobTest_InvalidFinishTime_Test){
     EXPECT_THROW(jobGateway->finishJob(job.id, job.finish_time.value(), result.stdout, result.exit_code), std::invalid_argument);
 }
 
-void resetWorker(const std::shared_ptr<QSqlDatabase> &db){
+void resetWorker(const QSqlDatabase &db){
     QSqlQuery query("ALTER TABLE workers CHANGE COLUMN `id` `id` BIGINT(10) UNSIGNED NOT NULL",
-                    *db);
+                    db);
     query.exec();
     query.prepare("DELETE FROM workers");
     query.exec();
@@ -1097,7 +1097,7 @@ protected:
         resetJobTable(db);
         resetAllocResTable(db);
         resetWorker(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -1235,7 +1235,7 @@ protected:
         resetJobTable(db);
         resetWorker(db);
         resetAllocResTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -1394,7 +1394,7 @@ protected:
         resetWorker(db);
         resetAllocResTable(db);
         resetResultsTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -1561,7 +1561,7 @@ protected:
         resetJobTable(db);
         resetAllocResTable(db);
         resetWorker(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -1589,7 +1589,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_NoResultsTable_Test){
 }
 
 TEST_F(UpdateJobTest, UpdateJobTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(jobGateway->updateJob(job), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
@@ -1637,11 +1637,11 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateAllocRes_Success_Test){
     job.allocated_specs = new_specs;
     jobGateway->updateJob(job);
 
-    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(job.id));
     query.exec();
     query.next();
-    QSqlQuery allocQuery("SELECT cores, ram, osIdentifier FROM allocated_resources WHERE id = ?", *db);
+    QSqlQuery allocQuery("SELECT cores, ram, osIdentifier FROM allocated_resources WHERE id = ?", db);
     EXPECT_EQ(query.value(0).toUInt(), 1);
     allocQuery.addBindValue(query.value(0));
     allocQuery.exec();
@@ -1681,7 +1681,7 @@ TEST_F(UpdateJobTest, UpdateJobTest_UpdateWorkerId_Test){
     // Update the worker_id
     job.worker_id = worker.id + 1;
     jobGateway->updateJob(job);
-    QSqlQuery query("SELECT worker_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery query("SELECT worker_id FROM jobs WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(job.id));
     query.exec();
     query.next();
@@ -1775,7 +1775,7 @@ protected:
         resetAllocResTable(db);
         resetWorker(db);
         resetResultsTable(db);
-        QSqlQuery query("DELETE FROM users", *db);
+        QSqlQuery query("DELETE FROM users", db);
         query.exec();
     }
 
@@ -1803,7 +1803,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NoResultsTable_Test){
 }
 
 TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_NoWorkersTable_Test){
-    QSqlQuery query("DROP TABLE workers", *db);
+    QSqlQuery query("DROP TABLE workers", db);
     query.exec();
     EXPECT_THROW(jobGateway->updateJobBypassWriteProtection(job), std::logic_error);
     query.prepare("CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`\n"
@@ -1841,7 +1841,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResBoth_Test){
     jobGateway->updateJobBypassWriteProtection(job);
     job_details job_actual = jobGateway->getJob(job.id);
     EXPECT_TRUE(job_actual == job);
-    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery query("SELECT allocated_id FROM jobs WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(job.id));
     ASSERT_TRUE(query.exec());
     ASSERT_TRUE(query.next());
@@ -1859,13 +1859,13 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAllocNoAllocResDB_Test){
     job_details job_actual = jobGateway->getJob(job.id);
     EXPECT_TRUE(job_actual == job);
 
-    QSqlQuery queryJobsTable("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryJobsTable("SELECT allocated_id FROM jobs WHERE id = ?", db);
     queryJobsTable.addBindValue(QVariant::fromValue(job.id));
     ASSERT_TRUE(queryJobsTable.exec());
     ASSERT_TRUE(queryJobsTable.next());
     ASSERT_FALSE(queryJobsTable.value(0).isNull());
 
-    QSqlQuery queryAllocResTable("SELECT osIdentifier, ram, cores FROM allocated_resources WHERE id = ?", *db);
+    QSqlQuery queryAllocResTable("SELECT osIdentifier, ram, cores FROM allocated_resources WHERE id = ?", db);
     queryAllocResTable.addBindValue(queryJobsTable.value(0));
     ASSERT_TRUE(queryAllocResTable.exec());
     ASSERT_TRUE(queryAllocResTable.next());
@@ -1888,7 +1888,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
     ASSERT_TRUE(wasStartSuccessful(job, worker, db));
 
     // Get old AllocId
-    QSqlQuery queryAllocId("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryAllocId("SELECT allocated_id FROM jobs WHERE id = ?", db);
     queryAllocId.addBindValue(QVariant::fromValue(job.id));
     ASSERT_TRUE(queryAllocId.exec());
     ASSERT_TRUE(queryAllocId.next());
@@ -1902,7 +1902,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateAlloc_Test){
     EXPECT_TRUE(job_actual == job);
 
     // AllocId should be unchanged
-    QSqlQuery queryAllocIdNew("SELECT allocated_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryAllocIdNew("SELECT allocated_id FROM jobs WHERE id = ?", db);
     queryAllocIdNew.addBindValue(QVariant::fromValue(job.id));
     ASSERT_TRUE(queryAllocIdNew.exec());
     ASSERT_TRUE(queryAllocIdNew.next());
@@ -1918,7 +1918,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultBoth_Test){
     jobGateway->updateJobBypassWriteProtection(job);
     job_details job_actual = jobGateway->getJob(job.id);
     EXPECT_TRUE(job_actual == job);
-    QSqlQuery query("SELECT result_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery query("SELECT result_id FROM jobs WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(job.id));
     ASSERT_TRUE(query.exec());
     ASSERT_TRUE(query.next());
@@ -1936,13 +1936,13 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateNoResultDB_Test){
     job_details job_actual = jobGateway->getJob(job.id);
     EXPECT_TRUE(job_actual == job);
 
-    QSqlQuery queryJobsTable("SELECT result_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryJobsTable("SELECT result_id FROM jobs WHERE id = ?", db);
     queryJobsTable.addBindValue(QVariant::fromValue(job.id));
     ASSERT_TRUE(queryJobsTable.exec());
     ASSERT_TRUE(queryJobsTable.next());
     ASSERT_FALSE(queryJobsTable.value(0).isNull());
 
-    QSqlQuery queryResultsTable("SELECT output, exit_code FROM job_results WHERE id = ?", *db);
+    QSqlQuery queryResultsTable("SELECT output, exit_code FROM job_results WHERE id = ?", db);
     queryResultsTable.addBindValue(queryJobsTable.value(0));
     ASSERT_TRUE(queryResultsTable.exec());
     ASSERT_TRUE(queryResultsTable.next());
@@ -1963,7 +1963,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateResult_Test){
     ASSERT_TRUE(wasFinishSuccessful(job.result->stdout, job, job.result->exit_code, db));
 
     // Get old ResultId
-    QSqlQuery queryResultId("SELECT result_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryResultId("SELECT result_id FROM jobs WHERE id = ?", db);
     queryResultId.addBindValue(QVariant::fromValue(job.id));
     ASSERT_TRUE(queryResultId.exec());
     ASSERT_TRUE(queryResultId.next());
@@ -1978,7 +1978,7 @@ TEST_F(UpdateJobBypassTest, UpdateJobBypassTest_UpdateResult_Test){
     EXPECT_TRUE(job_actual == job);
 
     // ResultId should be unchanged
-    QSqlQuery queryResultIdNew("SELECT result_id FROM jobs WHERE id = ?", *db);
+    QSqlQuery queryResultIdNew("SELECT result_id FROM jobs WHERE id = ?", db);
     queryResultIdNew.addBindValue(QVariant::fromValue(job.id));
     ASSERT_TRUE(queryResultIdNew.exec());
     ASSERT_TRUE(queryResultIdNew.next());

@@ -27,10 +27,6 @@ namespace balancedbanana::database {
         //This is the interface that the rest of the program uses to query the database.
         class Repository : protected Observer<JobObservableEvent>, protected Observer<WorkerObservableEvent>, protected Observer<UserObservableEvent> {
         protected:
-            struct RepositorySharer;
-
-            static std::map<std::string, std::shared_ptr<Repository>> repositories;
-
             //structure: <id, <ptr, dirty>>
             std::map<uint64_t, std::pair<std::shared_ptr<Job>, bool>> jobCache;
             std::map<uint64_t, std::pair<std::shared_ptr<Worker>, bool>> workerCache;
@@ -42,27 +38,21 @@ namespace balancedbanana::database {
             timedevents::Timer timer;
             std::recursive_mutex mtx;
 
-            QThreadStorage<std::shared_ptr<QSqlDatabase>> databaseConnections;
+            QThreadStorage<QSqlDatabase> databaseConnections;
             std::string name;
             std::string host_name;
             std::string databasename;
             std::string username;
             std::string password;
             uint64_t port;
+        public:
 
             Repository(std::string name, std::string  host_name, std::string  databasename, std::string  username,
-                       std::string  password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
-
-        public:
+                std::string  password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
 
             ~Repository() override;
 
-            static std::shared_ptr<Repository> GetRepository(const std::string &name, const std::string& host_name, const std::string& databasename, const std::string& username,
-                                  const std::string& password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
-
-            static std::shared_ptr<Repository> GetRepository(const std::string &name);
-
-            std::shared_ptr<QSqlDatabase> GetDatabase();
+            QSqlDatabase GetDatabase();
 
             std::shared_ptr<Worker> GetWorker(uint64_t id);
             std::shared_ptr<Worker> AddWorker(const std::string &name, const std::string &publickey, const Specs &specs);
@@ -89,10 +79,5 @@ namespace balancedbanana::database {
             void OnUpdate(Observable<WorkerObservableEvent> *observable, WorkerObservableEvent e) override;
             void OnUpdate(Observable<UserObservableEvent> *observable, UserObservableEvent e) override;
             void OnUpdate(Observable<JobObservableEvent> *observable, JobObservableEvent e) override;
-        };
-
-        struct Repository::RepositorySharer : public Repository {
-            RepositorySharer(const std::string &name, const std::string& host_name, const std::string& databasename, const std::string& username,
-                       const std::string& password,  uint64_t port, std::chrono::seconds updateInterval = std::chrono::minutes(1));
         };
     }

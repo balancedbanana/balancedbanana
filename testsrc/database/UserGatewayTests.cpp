@@ -19,8 +19,8 @@ using UserGatewayTest = DatabaseTest;
 /**
  * Deletes the all records in the users table for the id.
  */
-void resetUserTable(const std::shared_ptr<QSqlDatabase>& db){
-    QSqlQuery query("DELETE FROM users", *db);
+void resetUserTable(const QSqlDatabase& db){
+    QSqlQuery query("DELETE FROM users", db);
     query.exec();
 }
 
@@ -51,8 +51,8 @@ protected:
  * @param id The id of the added record.
  * @return true if the addUser was successful, otherwise false.
  */
-bool wasUserAddSuccessful(const user_details& details, uint64_t id, const std::shared_ptr<QSqlDatabase>& db){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?", *db);
+bool wasUserAddSuccessful(const user_details& details, uint64_t id, const QSqlDatabase& db){
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         if (query.next()){
@@ -119,7 +119,7 @@ protected:
     void SetUp() override {
         UserGatewayTest::SetUp();
         // Deletes the users table
-        QSqlQuery query("DROP TABLE users", *db);
+        QSqlQuery query("DROP TABLE users", db);
         query.exec();
 
         // Setup the varaibles needed
@@ -138,7 +138,7 @@ protected:
                         "  `id` bigint(10) unsigned NOT NULL,\n"
                         "  PRIMARY KEY (`id`),\n"
                         "  UNIQUE KEY `id_UNIQUE` (`id`)\n"
-                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", *db);
+                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8", db);
         query.exec();
     }
 };
@@ -168,8 +168,8 @@ TEST_F(NoUsersTableTest, NoUsersTableTest_GetUsers_Test){
  * @param id The id of the removed record.
  * @return  true if remove was successful, otherwise false.
  */
-bool wasUserRemoveSuccessful(uint64_t id, const std::shared_ptr<QSqlDatabase>& db){
-    QSqlQuery query("SELECT * FROM users WHERE id = ?", *db);
+bool wasUserRemoveSuccessful(uint64_t id, const QSqlDatabase& db){
+    QSqlQuery query("SELECT * FROM users WHERE id = ?", db);
     query.addBindValue(QVariant::fromValue(id));
     if (query.exec()){
         return !query.next();
@@ -328,7 +328,7 @@ protected:
 };
 
 TEST_F(GetUserByNameTest, GetUserByNameTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users", *db);
+    QSqlQuery query("DROP TABLE users", db);
     query.exec();
     EXPECT_THROW(userGateway->getUserByName(user.name), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"
@@ -371,7 +371,7 @@ protected:
 };
 
 TEST_F(UpdateUserTest, UpdateUserTest_NoUsersTable_Test){
-    QSqlQuery query("DROP TABLE users", *db);
+    QSqlQuery query("DROP TABLE users", db);
     query.exec();
     EXPECT_THROW(userGateway->updateUser(user), std::logic_error);
     query.prepare("CREATE TABLE `users` (\n"

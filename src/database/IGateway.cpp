@@ -2,5 +2,5 @@
 
 using namespace balancedbanana::database;
 
-IGateway::IGateway(std::shared_ptr<QSqlDatabase> db) : db(std::move(db)) {
+IGateway::IGateway(QSqlDatabase db) : db(std::move(db)) {
 }

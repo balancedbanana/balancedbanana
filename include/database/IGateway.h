@@ -7,8 +7,8 @@ namespace balancedbanana{
     namespace database{
         class IGateway{
         protected:
-            std::shared_ptr<QSqlDatabase> db;
-            explicit IGateway(std::shared_ptr<QSqlDatabase> db);
+            QSqlDatabase db;
+            explicit IGateway(QSqlDatabase db);
         };
     }
 }

@@ -11,7 +11,7 @@
 
 using namespace balancedbanana::database;
 
-WorkerGateway::WorkerGateway(std::shared_ptr<QSqlDatabase> db) : IGateway(std::move(db)) {
+WorkerGateway::WorkerGateway(QSqlDatabase db) : IGateway(std::move(db)) {
 }
 
 
@@ -35,7 +35,7 @@ uint64_t WorkerGateway::addWorker(const worker_details& worker) {
 
 
     // Create query
-    QSqlQuery query("INSERT INTO workers (public_key, osIdentifier, ram, cores, name) VALUES (?, ?, ?, ?, ?)", *db);
+    QSqlQuery query("INSERT INTO workers (public_key, osIdentifier, ram, cores, name) VALUES (?, ?, ?, ?, ?)", db);
     query.addBindValue(q_public_key);
     query.addBindValue(q_osIdentifier);
     query.addBindValue(q_ram);
@@ -54,7 +54,7 @@ void WorkerGateway::removeWorker(uint64_t id) {
         Utilities::throwNoTableException("workers");
     }
     if (Utilities::doesRecordExist("workers", id, db)){
-        QSqlQuery query("DELETE FROM workers WHERE id = ?", *db);
+        QSqlQuery query("DELETE FROM workers WHERE id = ?", db);
         query.addBindValue(QVariant::fromValue(id));
         if (!query.exec()){
             throw std::runtime_error("removeWorker error: " + query.lastError().databaseText().toStdString());
@@ -70,7 +70,7 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
     }
     worker_details details{};
     if (Utilities::doesRecordExist("workers", id, db)){
-        QSqlQuery query(*db);
+        QSqlQuery query(db);
         query.prepare("SELECT public_key, osIdentifier, ram, cores, name FROM workers WHERE id = (:id)");
         query.bindValue(":id", QVariant::fromValue(id));
         if (query.exec()){
@@ -105,7 +105,7 @@ std::vector<worker_details> WorkerGateway::getWorkers() {
     if (!Utilities::doesTableExist("workers", db)){
         Utilities::throwNoTableException("workers");
     }
-    QSqlQuery query("SELECT id, public_key, osIdentifier, ram, cores, name FROM workers", *db);
+    QSqlQuery query("SELECT id, public_key, osIdentifier, ram, cores, name FROM workers", db);
     std::vector<worker_details> workerVector;
     if (query.exec()) {
         while(query.next()){
@@ -136,7 +136,7 @@ worker_details WorkerGateway::getWorkerByName(const std::string &name) {
         Utilities::throwNoTableException("workers");
     }
     worker_details details{};
-    QSqlQuery query(*db);
+    QSqlQuery query(db);
     query.prepare("SELECT public_key, osIdentifier, ram, cores, id FROM workers WHERE name = ?");
     query.addBindValue(QString::fromStdString(name));
     if (query.exec()){
@@ -175,7 +175,7 @@ void WorkerGateway::updateWorker(const worker_details &worker) {
     if (Utilities::doesRecordExist("workers", worker.id, db)){
         QSqlQuery query("UPDATE workers SET name = ?, ram = ?, cores = ?, osIdentifier = ?, public_key ="
                         " ? "
-                        "WHERE id = ?", *db);
+                        "WHERE id = ?", db);
         query.addBindValue(QString::fromStdString(worker.name));
         QVariant q_ram;
         QVariant q_cores;

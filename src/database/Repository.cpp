@@ -12,12 +12,6 @@
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
 
-std::map<std::string, std::shared_ptr<Repository>> Repository::repositories = std::map<std::string, std::shared_ptr<Repository>>();
-
-Repository::RepositorySharer::RepositorySharer(const std::string &name, const std::string& host_name, const std::string& databasename, const std::string& username,
-                 const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) : Repository(name, host_name, databasename, username, password, port, updateInterval){
-}
-
 Repository::Repository(std::string name, std::string  host_name, std::string  databasename, std::string username, std::string  password,  uint64_t port, std::chrono::seconds updateInterval) :
 jobCache(), workerCache(), userCache(), lastJobId(0, 0), lastWorkerId(0, 0), lastUserId(0, 0), mtx(), timer(), databaseConnections(),
 name(std::move(name)), host_name(std::move(host_name)), databasename(std::move(databasename)), username(std::move(username)), password(std::move(password)), port(port){
@@ -32,26 +26,7 @@ Repository::~Repository() {
     ClearCache();
 }
 
-std::shared_ptr<Repository> Repository::GetRepository(const std::string &name, const std::string& host_name, const std::string& databasename, const std::string& username,
-                                    const std::string& password,  uint64_t port, std::chrono::seconds updateInterval) {
-    auto iterator = repositories.find(name);
-    if(iterator != repositories.end()) {
-        return iterator->second;
-    }
-    auto repo = std::make_shared<RepositorySharer>(name, host_name, databasename, username, password, port, updateInterval);
-    repositories.insert(std::pair(name, repo));
-    return repo;
-}
-
-std::shared_ptr<Repository> Repository::GetRepository(const std::string &name) {
-    auto iterator = repositories.find(name);
-    if(iterator == repositories.end()) {
-        throw std::runtime_error("Tried to access a database that is not connected");
-    }
-    return iterator->second;
-}
-
-std::shared_ptr<QSqlDatabase> Repository::GetDatabase() {
+QSqlDatabase Repository::GetDatabase() {
     std::lock_guard guard(mtx);
     if(!databaseConnections.hasLocalData()) {
         std::random_device rd;  //Will be used to obtain a seed for the random number engine
@@ -62,14 +37,14 @@ std::shared_ptr<QSqlDatabase> Repository::GetDatabase() {
             i = dis(gen);
         }
         std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
-        auto db = std::make_shared<QSqlDatabase>(QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(sname)));
-        db->setHostName(QString::fromStdString(host_name));
-        db->setDatabaseName(QString::fromStdString(databasename));
-        db->setUserName(QString::fromStdString(username));
-        db->setPassword(QString::fromStdString(password));
-        db->setPort(port);
+        auto db = QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(sname));
+        db.setHostName(QString::fromStdString(host_name));
+        db.setDatabaseName(QString::fromStdString(databasename));
+        db.setUserName(QString::fromStdString(username));
+        db.setPassword(QString::fromStdString(password));
+        db.setPort(port);
         databaseConnections.setLocalData(db);
-        if(!db->open()){
+        if(!db.open()){
             throw std::logic_error("Error: connection with database failed.");
         }
     }

@@ -17,12 +17,6 @@ protected:
 
 };
 
-TEST_F(RepositoryTest, GetRepository) {
-    EXPECT_EQ(Repository::GetRepository("balancedbanana", "localhost", "balancedbanana", "balancedbanana", "qwer1234", 3306), repo);
-    EXPECT_EQ(Repository::GetRepository("balancedbanana"), repo);
-    EXPECT_THROW(Repository::GetRepository("invalid database name"), std::runtime_error);
-}
-
 TEST_F(RepositoryTest, AddUser_GetUser) {
     EXPECT_EQ(repo->GetUser(0), nullptr);
     EXPECT_NO_THROW(repo->AddUser(1, "name", "email", "publickey"));

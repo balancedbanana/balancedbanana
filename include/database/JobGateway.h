@@ -12,7 +12,7 @@ namespace balancedbanana::database {
     class JobGateway : virtual public IGateway {
 
     public:
-        explicit JobGateway(std::shared_ptr<QSqlDatabase> db);
+        explicit JobGateway(QSqlDatabase db);
 
         /**
          * Adds a Job to the database as a record
