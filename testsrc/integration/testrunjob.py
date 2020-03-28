@@ -8,6 +8,7 @@ import inspect
 my_env = os.environ.copy()
 my_env["HOME"] = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 my_env["USER"] = "steve"
+uid = subprocess.check_output(["id", "-u", my_env["USER"]]).decode("utf-8").rstrip('\n')
 my_env["LD_LIBRARY_PATH"] = os.path.abspath(my_env["HOME"] + "../../../build/Webserver-build/Net")
 # Test bbc help
 bbc = subprocess.Popen(["../../src/client/bbc", "--help"], env=my_env)
@@ -85,23 +86,27 @@ try:
     bbc.wait()
     assert bbc.returncode == 0, "Scheduling another Job must be successful without password, after restarting bbs"
     time.sleep(1)
-    res = requests.get("http://localhost:8202/v1/jobs/1")
-    # result = yaml.safe_load(res.content)
-    # assert result['user_name'] != my_env["USER"], "Username must be steve"
-    res = requests.get("http://localhost:8202/v1/jobs/hours/3")
-    # result = yaml.safe_load(res.content)
-    # for job in result['jobs']:
-    #     print(job['job_id'])
+    # Get a list of all jobs of the user steve
+    res = requests.get("http://localhost:8202/v1/user/" + uid + "/jobs")
+    result = yaml.safe_load(res.content)
+    for job in result['jobs']:
+        # grab details of each job of steve
+        res = requests.get("http://localhost:8202/v1/jobs/" + str(job['job_id']))
+        result = yaml.safe_load(res.content)
+        assert result['user_name'] == my_env["USER"], "Username must be steve"
+    res = requests.get("http://localhost:8202/v1/jobs/hours/1")
+    assert res.status_code == 200, "Valid query"
+    result = yaml.safe_load(res.content)
+    for job in result['jobs']:
+        print(job['job_id'])
     res = requests.get("http://localhost:8202/v1/workmachines/1/jobs")
     # result = yaml.safe_load(res.content)
     # for job in result['jobs']:
     #     print(job['job_id'])
-    res = requests.get("http://localhost:8202/v1/user/330/jobs")
-    # result = yaml.safe_load(res.content)
-    # for job in result['jobs']:
-    #     print(job['job_id'])
     res = requests.get("http://localhost:8202/v1/user//jobs")
+    assert res.status_code == 404, "invalid Username"
     res = requests.get("http://localhost:8202/v1/workmachines/workload")
+    assert res.status_code == 200, "Valid query"
     result = yaml.safe_load(res.content)
     bbd.communicate(input=b'stop\n')
     bbd.wait()
