@@ -8,6 +8,7 @@
 #include <utility>
 #include <QString>
 #include <random>
+#include <set>
 
 using namespace balancedbanana::database;
 using namespace balancedbanana::configfiles;
@@ -290,14 +291,63 @@ std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     return unfinished;
 }
 
+void addFinishedCachedJobsInInterval(const QDateTime &from, const QDateTime &to, const std::map<uint64_t,
+        std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs, std::set<int>& cachedIds){
+    for (auto &entry : jobCache){
+        if (entry.second.second && entry.second.first->getFinished_at() <= from && entry.second.first->getFinished_at
+        () >= to){
+            intervalJobs.emplace_back(entry.second.first);
+            cachedIds.insert(entry.first);
+        }
+    }
+}
+
+void addStartedCachedJobsInInterval(const QDateTime &from, const QDateTime &to, const std::map<uint64_t,
+        std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs, std::set<int>& cachedIds){
+    for (auto &entry : jobCache){
+        if (entry.second.second && entry.second.first->getStarted_at() <= from && entry.second.first->getStarted_at()
+        >= to){
+            intervalJobs.emplace_back(entry.second.first);
+            cachedIds.insert(entry.first);
+        }
+    }
+}
+
+void addScheduledCachedJobsInInterval(const QDateTime &from, const QDateTime &to, const std::map<uint64_t,
+        std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs,
+        std::set<int>& cachedIds){
+    for (auto &entry : jobCache){
+        if (entry.second.second && entry.second.first->getScheduled_at() <= from && entry.second
+        .first->getScheduled_at() >= to){
+            intervalJobs.emplace_back(entry.second.first);
+            cachedIds.insert(entry.first);
+        }
+    }
+}
+
 std::vector<std::shared_ptr<Job>>
 Repository::GetJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
     std::lock_guard lock(mtx);
     std::vector<std::shared_ptr<Job>> intervalJobs;
+    std::set<int> cachedIds;
+    switch (status) {
+        case JobStatus::scheduled:
+            addScheduledCachedJobsInInterval(from, to, jobCache, intervalJobs, cachedIds);
+            break;
+        case JobStatus::processing:
+            addStartedCachedJobsInInterval(from, to, jobCache, intervalJobs, cachedIds);
+            break;
+        case JobStatus::finished:
+            addFinishedCachedJobsInInterval(from, to, jobCache, intervalJobs, cachedIds);
+            break;
+        default:
+            break;
+    }
     auto details = JobGateway(GetDatabase()).getJobsInInterval(from, to, status);
-    intervalJobs.reserve(details.size());
     for (auto &entry : details){
-        intervalJobs.push_back(GetJob(entry.id));
+        if (!cachedIds.count(entry.id)){
+            intervalJobs.emplace_back(GetJob(entry.id));
+        }
     }
     return intervalJobs;
 }
