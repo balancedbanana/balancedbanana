@@ -33,6 +33,7 @@ Worker::Worker()
     std::filesystem::create_directories(configdir);
     configpath = configdir / "appconfig.ini";
     config = ApplicationConfig(configpath);
+    dockercheckpoints = config.Contains("dockercheckpointpath") ? std::filesystem::canonical(config["dockercheckpointpath"]) : (configdir / "dockercheckpoints");
     publicauthfailed = false;
 }
 
@@ -249,6 +250,28 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 #endif
                 container.Stop();
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::canceled);
+                com->send(resp);
+                break;
+            }
+            case TaskType::BACKUP: {
+                Container container("bbdjob" + std::to_string(*task.getJobId()));
+                #if 0 /* Now use jobid */
+                {
+                    std::lock_guard<std::mutex> guard(midtodocker);
+                    container = idtodocker[std::to_string(task.getJobId().value_or(0))];
+                }
+                #endif
+                auto checkpoints = container.GetCheckpoints(dockercheckpoints);
+                auto checkpoint = container.CreateCheckpoint("bbdbackup" + checkpoints.size(), dockercheckpoints);
+                // ID get lost in nowhere
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
+                com->send(resp);
+                break;
+            }
+            case TaskType::RESTORE: {
+                Checkpoint checkpoint("bbdjob" + std::to_string(*task.getJobId()), "bbdbackup" + std::to_string(*task.getBackupId()), dockercheckpoints);
+                checkpoint.Start();
+                TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
                 com->send(resp);
                 break;
             }
