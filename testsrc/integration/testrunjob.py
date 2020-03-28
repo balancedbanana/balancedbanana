@@ -8,6 +8,7 @@ import inspect
 my_env = os.environ.copy()
 my_env["HOME"] = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 my_env["USER"] = "steve"
+my_env["LD_LIBRARY_PATH"] = os.path.abspath(my_env["HOME"] + "../../../build/Webserver-build/Net")
 # Test bbc help
 bbc = subprocess.Popen(["../../src/client/bbc", "--help"], env=my_env)
 bbc.wait()
@@ -104,7 +105,7 @@ try:
     result = yaml.safe_load(res.content)
     bbd.communicate(input=b'stop\n')
     bbd.wait()
-    assert bbs.returncode == 0, "stopping the Worker must be successful"
+    assert bbd.returncode == 0, "stopping the Worker must be successful"
     bbd = subprocess.Popen("../../src/worker/bbd", stdin=subprocess.PIPE, env=my_env)
     time.sleep(1)
     assert bbd.poll() == None, "The Worker must be running"
