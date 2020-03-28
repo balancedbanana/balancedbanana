@@ -262,7 +262,7 @@ void Worker::processTaskMessage(const TaskMessage &msg) {
                 }
                 #endif
                 auto checkpoints = container.GetCheckpoints(dockercheckpoints);
-                auto checkpoint = container.CreateCheckpoint("bbdbackup" + checkpoints.size(), dockercheckpoints);
+                auto checkpoint = container.CreateCheckpoint(&"bbdbackup" [ checkpoints.size()], dockercheckpoints);
                 // ID get lost in nowhere
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
                 com->send(resp);

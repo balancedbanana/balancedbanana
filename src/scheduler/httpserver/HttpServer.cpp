@@ -255,7 +255,8 @@ void HttpServer::listen(const std::string & ip, short port) {
 		for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
 			auto socketaddress = std::shared_ptr<sockaddr>((sockaddr*)new char[ptr->ai_addrlen]);
 			memcpy(socketaddress.get(), ptr->ai_addr, ptr->ai_addrlen);
-			if(listentask = listener->Listen(socketaddress, ptr->ai_addrlen)) {
+            listentask = listener->Listen(socketaddress, ptr->ai_addrlen);
+            if(listentask) {
 				freeaddrinfo(result);
 				return;
 			}
