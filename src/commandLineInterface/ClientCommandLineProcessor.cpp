@@ -66,7 +66,7 @@ void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char 
             std::stringstream job;
             for (int jobArg = arg + 1; jobArg < argc; ++jobArg)
             {
-                job << argv[jobArg];
+                job << argv[jobArg] << " ";
             }
 
             std::string jobCommand = job.str();
@@ -82,7 +82,8 @@ void extractJobCommand(const std::shared_ptr<Task> &task, int &argc, const char 
 
 void callbackSubCommandRun(const std::shared_ptr<Task> &task, bool block, std::string &email,
                            std::string &image, std::string &priority, std::optional<uint32_t> &max_cpu_count,
-                           std::optional<uint32_t> &min_cpu_count, std::optional<uint64_t> &max_ram, std::optional<uint64_t> &min_ram)
+                           std::optional<uint32_t> &min_cpu_count, std::optional<uint64_t> &max_ram, std::optional<uint64_t> &min_ram,
+                           std::string& jobCommand)
 {
     auto config = task->getConfig();
     task->setType(TaskType::RUN);
@@ -94,6 +95,7 @@ void callbackSubCommandRun(const std::shared_ptr<Task> &task, bool block, std::s
     config->set_min_cpu_count(min_cpu_count);
     config->set_max_ram(max_ram);
     config->set_min_ram(min_ram);
+    //task->setTaskCommand(jobCommand);
 
     bool couldConvert;
     configfiles::Priority prio = configfiles::stopriority(priority, couldConvert);
@@ -121,6 +123,7 @@ void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app)
     static std::optional<uint32_t> min_cpu_count;
     static std::optional<uint64_t> max_ram;
     static std::optional<uint64_t> min_ram;
+    static std::string jobCommand;
 
     block = false;
     email = "";
@@ -130,6 +133,7 @@ void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app)
     min_cpu_count = std::nullopt;
     max_ram = std::nullopt;
     min_ram = std::nullopt;
+    jobCommand = "";
 
     runSubCommand->add_flag("--block,-b", block, "Block during execution of Job");
     runSubCommand->add_option("--email,-e", email, "User EMail");
@@ -139,8 +143,10 @@ void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app)
     runSubCommand->add_option("--min-cpu-count,-c", min_cpu_count, "Minimum amount of wanted CPU Cores");
     runSubCommand->add_option("--max-ram,-R", max_ram, "Maximum amount of used RAM");
     runSubCommand->add_option("--min-ram,-r", min_ram, "Minimum amount of wanted CPU Cores");
+    runSubCommand->add_option("--job,-j", jobCommand, "The Job which will be executed on a Worker."
+        " Note that everything following will be considered part of the jobCommand so make sure this is the last argument of your call.");
 
-    runSubCommand->callback([&]() { callbackSubCommandRun(task, block, email, image, priority, max_cpu_count, min_cpu_count, max_ram, min_ram); });
+    runSubCommand->callback([&]() { callbackSubCommandRun(task, block, email, image, priority, max_cpu_count, min_cpu_count, max_ram, min_ram, jobCommand); });
 }
 
 void callbackSubCommandAddImage(const std::shared_ptr<Task> &task, std::vector<std::string> &imageNameAndPath)
