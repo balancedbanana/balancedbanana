@@ -303,14 +303,14 @@ void addSubCommandBackup(const std::shared_ptr<Task> &task, CLI::App &app)
     backupSubCommand->callback([&]() { callbackSubCommandBackup(task, jobID); });
 }
 
-void callbackSubCommandRestore(const std::shared_ptr<Task> &task, std::vector<uint64_t> &jobAndBackupID)
+void callbackSubCommandRestore(const std::shared_ptr<Task> &task, uint64_t jobID, uint64_t backupID)
 {
     task->setType(TaskType::RESTORE);
 
     //jobAndBackupID
 
-    task->setJobId(jobAndBackupID[0]);
-    task->setBackupId(jobAndBackupID[1]);
+    task->setJobId(jobID);
+    task->setBackupId(backupID);
 }
 
 void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app)
@@ -319,13 +319,16 @@ void addSubCommandRestore(const std::shared_ptr<Task> &task, CLI::App &app)
 
     addCommonOptions(task, *restoreSubCommand);
 
-    static std::vector<uint64_t> jobAndBackupID;
-    jobAndBackupID.clear();
+    static uint64_t jobID;
+    static uint64_t backupID;
 
-    restoreSubCommand->add_option("jobID", jobAndBackupID[0], "Id of Job which will be restored.")->required();
-    restoreSubCommand->add_option("backupID", jobAndBackupID[1], "Id of Backup with which to restore the job.")->required();
+    jobID = 0;
+    backupID = 0;
 
-    restoreSubCommand->callback([&]() { callbackSubCommandRestore(task, jobAndBackupID); });
+    restoreSubCommand->add_option("jobID", jobID, "Id of Job which will be restored.")->required();
+    restoreSubCommand->add_option("backupID", backupID, "Id of Backup with which to restore the job.")->required();
+
+    restoreSubCommand->callback([&]() { callbackSubCommandRestore(task, jobID, backupID); });
 }
 
 void addCommonOptions(const std::shared_ptr<Task> &task, CLI::App &subcommand)
