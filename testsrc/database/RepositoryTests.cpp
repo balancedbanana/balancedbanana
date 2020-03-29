@@ -207,8 +207,9 @@ TEST_F(RepositoryTest, FlushCache_RemoveJob) {
     auto newJob = repo->GetJob(id);
     EXPECT_EQ(job, newJob);
     auto jobptr = (uint64_t) job.get();
-    job = nullptr;
     newJob = nullptr;
+    EXPECT_EQ(job.use_count(), 2);
+    job = nullptr;
     repo->FlushCache();
     job = repo->GetJob(id);
     EXPECT_NE((uint64_t) job.get(), jobptr);

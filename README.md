@@ -1,9 +1,5 @@
 Master [![Build Status](https://travis-ci.org/balancedbanana/balancedbanana.svg?branch=master)](https://travis-ci.org/balancedbanana/balancedbanana)[![Coverage Status](https://coveralls.io/repos/github/balancedbanana/balancedbanana/badge.svg?branch=master)](https://coveralls.io/github/balancedbanana/balancedbanana?branch=master)
 
-qtErrorPatch [![Build Status](https://travis-ci.org/balancedbanana/balancedbanana.svg?branch=qtErrorPatch)](https://travis-ci.org/balancedbanana/balancedbanana)[![Coverage Status](https://coveralls.io/repos/github/balancedbanana/balancedbanana/badge.svg?branch=qtErrorPatch)](https://coveralls.io/github/balancedbanana/balancedbanana?branch=qtErrorPatch)
-
-ClientFunctionality [![Build Status](https://travis-ci.org/balancedbanana/balancedbanana.svg?branch=ClientFunctionality)](https://travis-ci.org/balancedbanana/balancedbanana)[![Coverage Status](https://coveralls.io/repos/github/balancedbanana/balancedbanana/badge.svg?branch=ClientFunctionality)](https://coveralls.io/github/balancedbanana/balancedbanana?branch=ClientFunctionality)
-
 # Dev Setup
 ## Ubuntu 18.04
 - `git clone https://github.com/balancedbanana/balancedbanana.git`
