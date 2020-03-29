@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <database/Utilities.h>
+#include <database/JobStatus.h>
 #include <QSqlQuery>
 #include <QDebug>
 
@@ -158,4 +159,45 @@ TEST_F(RepositoryTest, FlushCache) {
     repo->FlushCache();
     user = repo->GetUser(1);
     EXPECT_NE((uint64_t) user.get(), usrptr);
+}
+
+TEST_F(RepositoryTest, GetJobsInInterval_OldJob) {
+    auto user = repo->AddUser(1, "name", "email", "public key");
+    QDateTime beginTime = QDateTime::currentDateTime();
+    auto job1 = repo->AddJob(1, JobConfig(), beginTime.addSecs(1), "finished job command");
+    auto job2 = repo->AddJob(1, JobConfig(), beginTime.addSecs(2), "started job command");
+    uint64_t id1 = job1->getId();
+    job1->setStatus(scheduled);
+    job2->setStatus(scheduled);
+    job1->setScheduled_at(beginTime.addSecs(1));
+    job2->setScheduled_at(beginTime.addSecs(2));
+    repo->WriteBack();
+    repo->ClearCache();
+    EXPECT_EQ(repo->GetJobsInInterval(beginTime, beginTime.addSecs(3), JobStatus::scheduled).size(), 2);
+    auto jobs = repo->GetJobsInInterval(beginTime, beginTime.addMSecs(1500), scheduled);
+    EXPECT_EQ(jobs.size(), 1);
+    EXPECT_EQ(jobs[0]->getId(), id1);
+}
+
+TEST_F(RepositoryTest, GetJobsInInterval_NoInInterval) {
+    auto user = repo->AddUser(1, "name", "email", "public key");
+    QDateTime beginTime = QDateTime::currentDateTime();
+    auto job = repo->AddJob(1, JobConfig(), beginTime.addSecs(1), "finished job command");
+    job->setStatus(processing);
+    job->setScheduled_at(beginTime);
+    repo->WriteBack();
+    repo->ClearCache();
+    EXPECT_EQ(repo->GetJobsInInterval(beginTime.addSecs(5), beginTime.addSecs(6), scheduled).size(), 0);
+}
+
+TEST_F(RepositoryTest, GetJobsInInterval_ChangedJob) {
+    auto user = repo->AddUser(1, "name", "email", "public key");
+    QDateTime beginTime = QDateTime::currentDateTime();
+    auto job = repo->AddJob(1, JobConfig(), beginTime.addSecs(1), "command");
+    job->setStatus(processing);
+    job->setScheduled_at(beginTime.addSecs(1));
+    repo->WriteBack();
+    job->setScheduled_at(beginTime.addSecs(3));
+    EXPECT_EQ(repo->GetJobsInInterval(beginTime.addSecs(2), beginTime.addSecs(4), scheduled).size(), 1);
+    EXPECT_EQ(repo->GetJobsInInterval(beginTime, beginTime.addSecs(2), scheduled).size(), 0);
 }
