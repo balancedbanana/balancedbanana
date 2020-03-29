@@ -19,6 +19,7 @@ name(std::move(name)), host_name(std::move(host_name)), databasename(std::move(d
     timer.setInterval(updateInterval.count());
     timer.addTimerFunction(std::function<void()>([this](){WriteBack();}));
     timer.start();
+    databaseConnections = new QThreadStorage<QSqlDatabase>();
 }
 
 Repository::~Repository() {
@@ -29,7 +30,7 @@ Repository::~Repository() {
 
 QSqlDatabase Repository::GetDatabase() {
     std::lock_guard guard(mtx);
-    if(!databaseConnections.hasLocalData()) {
+    if(!databaseConnections->hasLocalData()) {
         std::random_device rd;  //Will be used to obtain a seed for the random number engine
         std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
         std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
@@ -44,12 +45,12 @@ QSqlDatabase Repository::GetDatabase() {
         db.setUserName(QString::fromStdString(username));
         db.setPassword(QString::fromStdString(password));
         db.setPort(port);
-        databaseConnections.setLocalData(db);
+        databaseConnections->setLocalData(db);
         if(!db.open()){
             throw std::logic_error("Error: connection with database failed.");
         }
     }
-    return databaseConnections.localData();
+    return databaseConnections->localData();
 }
 
 std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
