@@ -39,6 +39,7 @@ Worker::Worker()
     auto configdir = std::filesystem::canonical(home ? home : ".") / configname;
     std::filesystem::create_directories(configdir);
     auto configfilename = "appconfig.ini";
+    auto volumefilename = "volumemap.ini";
     configpath = configdir / configfilename;
     std::error_code code;
     auto exepath = std::filesystem::read_symlink("/proc/self/exe", code);
@@ -46,11 +47,22 @@ Worker::Worker()
         std::cerr << "WARN: cannot determine the config dir of this app, only $" HOME_ENV "/.bbc/appconfig.ini is considered: " << code.message() << "\n";
         config = ApplicationConfig(configpath);
     } else {
-        config = ApplicationConfig(exepath / ".." / ".." / "share" / "balancedbanana" / configname / configfilename);
-        std::ifstream is(configpath);
-        // Override appconfig with userconfig
-        if(is.is_open()) {
-            config.readFromStream(is);
+        auto bbfolder = exepath / ".." / ".." / "share" / "balancedbanana" / configname;
+        config = ApplicationConfig( bbfolder / configfilename);
+        volumemap = ApplicationConfig( bbfolder / volumefilename);
+        {
+            std::ifstream is(configpath);
+            // Override appconfig with userconfig
+            if(is.is_open()) {
+                config.readFromStream(is);
+            }
+        }
+        {
+            std::ifstream is(volumefilename);
+            // Override global volumemap with userconfig
+            if(is.is_open()) {
+                volumemap.readFromStream(is);
+            }
         }
     }
     dockercheckpoints = config.Contains("dockercheckpointpath") ? std::filesystem::canonical(config["dockercheckpointpath"]) : (configdir / "dockercheckpoints");
@@ -223,7 +235,7 @@ void Worker::processTaskMessage(const TaskMessage &msg)
                 // auto&& dockerfile = task.getAddImageFileContent();
                 // if(!dockerfile.empty() && task.getBackupId().has_value())
                 //     docker.UpdateImage(task.getConfig()->image(), dockerfile, *task.getBackupId());
-                auto container = docker.Run(task);
+                auto container = docker.Run(task, volumemap);
 #if 0 /* Now use jobid */
                 // ToDo save the taskid / containerid mapping
                 {

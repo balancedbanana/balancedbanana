@@ -1,6 +1,7 @@
 #pragma once
 #include "Container.h"
 #include <communication/Task.h>
+#include <unordered_map>
 
 namespace balancedbanana {
 	namespace worker {
@@ -10,7 +11,7 @@ namespace balancedbanana {
 			 * Runs a specfic Task
 			 * @param task have to a contain commandline and a userid
 			 **/
-			Container Run(const communication::Task& task);
+			Container Run(const communication::Task& task, const std::unordered_map<std::string, std::string>& volumemap = {});
 			/**
 			 * Build an image from a Dockerfile
 			 * @param name of the created image
