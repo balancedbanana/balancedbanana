@@ -7,6 +7,8 @@
 #include <scheduler/clientRequests/StatusRequest.h>
 #include <scheduler/clientRequests/StopRequest.h>
 #include <scheduler/clientRequests/TailRequest.h>
+#include <scheduler/clientRequests/AddImageRequest.h>
+#include <scheduler/clientRequests/RemoveImageRequest.h>
 
 #include <gtest/gtest.h>
 #include <memory>
@@ -23,6 +25,8 @@ using balancedbanana::scheduler::RunRequest;
 using balancedbanana::scheduler::StatusRequest;
 using balancedbanana::scheduler::StopRequest;
 using balancedbanana::scheduler::TailRequest;
+using balancedbanana::scheduler::AddImageRequest;
+using balancedbanana::scheduler::RemoveImageRequest;
 
 using balancedbanana::scheduler::Job;
 using balancedbanana::database::JobStatus;
@@ -74,11 +78,11 @@ TEST(ClientRequest, selectType)
     task->setType(TaskType::WORKERSTART);
     auto workerstartReq = ClientRequest::selectRequestType(task, userID, *com, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
 
-    ASSERT_TRUE(addimageReq == nullptr);
+    if (AddImageRequest* b = dynamic_cast<AddImageRequest*>(&*addimageReq)) {} else FAIL();
     if (BackupRequest* b = dynamic_cast<BackupRequest*>(&*backupReq)) {} else FAIL();
     if (ContinueRequest* b = dynamic_cast<ContinueRequest*>(&*continueReq)) {} else FAIL();
     if (PauseRequest* b = dynamic_cast<PauseRequest*>(&*pauseReq)) {} else FAIL();
-    ASSERT_TRUE(removeimageReq == nullptr);
+    if (RemoveImageRequest* b = dynamic_cast<RemoveImageRequest*>(&*removeimageReq)) {} else FAIL();
     if (RestoreRequest* b = dynamic_cast<RestoreRequest*>(&*restoreReq)) {} else FAIL();
     if (RunRequest* b = dynamic_cast<RunRequest*>(&*runReq)) {} else FAIL();
     ASSERT_TRUE(serverstartReq == nullptr);
