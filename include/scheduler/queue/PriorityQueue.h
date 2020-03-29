@@ -22,6 +22,8 @@ namespace balancedbanana {
 
             virtual void update();
 
+            virtual std::shared_ptr<Job> pullJob(uint64_t id);
+
             PriorityQueue(std::shared_ptr<timedevents::Timer> timerptr, unsigned int updateInterval, uint64_t PriorityUpgradeTime);
 
         private:

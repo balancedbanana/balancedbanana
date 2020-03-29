@@ -30,6 +30,7 @@ private:
     bool publicauthfailed;
     std::promise<int> prom;
     std::filesystem::path configpath;
+    std::filesystem::path dockercheckpoints;
     balancedbanana::configfiles::ApplicationConfig config;
     std::shared_ptr<balancedbanana::communication::Communicator> communicator;
     std::shared_ptr<balancedbanana::communication::Task> task;

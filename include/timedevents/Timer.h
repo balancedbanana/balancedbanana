@@ -4,6 +4,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 
 
 namespace balancedbanana
@@ -90,7 +91,8 @@ private:
 	/**
 	 * Some synchronization locks
 	 */
-	std::mutex mutex_timerFuncitons;
+	std::mutex mtx;
+	std::condition_variable waiter;
 
 };
 

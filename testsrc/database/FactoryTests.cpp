@@ -78,8 +78,8 @@ bool compareJobs(const Job& expected, const Job& actual){
     && expected.getConfig()->image() == actual.getConfig()->image()
     && expected.getConfig()->current_working_dir() == actual.getConfig()->current_working_dir()
     && static_cast<int>(expected.getStatus()) == static_cast<int>(actual.getStatus())
-    && expected.getResult()->stdout == actual.getResult()->stdout
-    && expected.getResult()->exit_code == actual.getResult()->exit_code;
+    && ((!expected.getResult() && !actual.getResult()) || (expected.getResult()->stdout == actual.getResult()->stdout
+    && expected.getResult()->exit_code == actual.getResult()->exit_code));
 }
 
 void fillJobWithDetails(const job_details& job_info, std::shared_ptr<User> user, Job& job_expected){
@@ -139,7 +139,6 @@ protected:
         worker_info.empty = false;
         worker_info.public_key = "casdasdc";
         worker_info.specs = {.osIdentifier = " ", .ram = 5, .cores = 6};
-        worker_info.address = "0.5.2.3";
         worker_info.id = 1;
         worker_info.name = "Rakan";
     }
@@ -149,14 +148,14 @@ protected:
 
 bool compareWorkers(Worker& expected, Worker& actual){
     return expected.getId() == actual.getId()
-    && expected.getAddress() == actual.getAddress()
     && ((!expected.getSpec().has_value() && !actual.getSpec().has_value())
-    || (expected.getSpec().value() == actual.getSpec().value()));
+    || (expected.getSpec().value() == actual.getSpec().value()))
+    && expected.name() == actual.name()
+    && expected.pubkey() == actual.pubkey();
 }
 
 TEST_F(CreateWorkerTest, CreateWorkerTest_Success_Test){
     Worker worker_expected = Worker(worker_info.id, worker_info.name, worker_info.public_key, worker_info.specs);
-    worker_expected.setAddress(worker_info.address);
     std::shared_ptr<Worker> worker_actual = Factory::createWorker(worker_info);
     ASSERT_TRUE(compareWorkers(worker_expected, *worker_actual));
 }

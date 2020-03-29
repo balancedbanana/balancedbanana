@@ -33,10 +33,6 @@ namespace balancedbanana {
 
             const communication::WorkerLoadResponseMessage& GetWorkerLoad();
 
-            const std::string &getAddress();
-
-            void setAddress(const std::string &adr);
-
             void setCommunicator(const std::shared_ptr<communication::Communicator>& com);
 
             Worker(uint64_t id, const std::string &name, const std::string &publickey, const
@@ -44,11 +40,9 @@ namespace balancedbanana {
         private:
             void OnUpdate(Observable<WorkerTailEvent> *obsable, WorkerTailEvent event) override;
             void OnUpdate(Observable<WorkerErrorEvent> *obsable, WorkerErrorEvent event) override;
-            // TODO Kein Name??
             uint64_t id;
             std::optional<database::Specs> specs;
             bool connected;
-            std::string address;
             std::shared_ptr<communication::Communicator> comm;
             communication::WorkerLoadResponseMessage resp;
             std::mutex mtx;

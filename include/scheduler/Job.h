@@ -37,7 +37,8 @@ namespace balancedbanana {
             const std::string &getCommand() const;
             uint64_t getWorker_id() const;
             std::shared_ptr<User> getUser() const;
-            std::shared_ptr<configfiles::JobConfig> getConfig() const;
+            std::shared_ptr<const configfiles::JobConfig> getConfig() const;
+            std::shared_ptr<configfiles::JobConfig> copyConfig() const;
             database::JobStatus getStatus() const;
             std::shared_ptr<database::job_result> getResult() const;
 

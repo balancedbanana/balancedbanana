@@ -32,7 +32,7 @@ DEFAULT CHARACTER SET = utf8;
 CREATE TABLE IF NOT EXISTS `balancedbanana`.`job_results`
 (
     `id`        BIGINT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `stdout`    TEXT          NOT NULL,
+    `output`    TEXT          NOT NULL,
     `exit_code` TINYINT(3)          NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE INDEX `id_UNIQUE` (`id` ASC)
@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`workers`
     `ram`        BIGINT(10) UNSIGNED NULL DEFAULT NULL,
     `cores`      INT(10) UNSIGNED NULL DEFAULT NULL,
     `osIdentifier`   TEXT NULL DEFAULT NULL,
-    `address`    VARCHAR(255)        NULL DEFAULT NULL,
     `public_key` LONGTEXT NOT NULL,
     `name`       VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`),
@@ -96,8 +95,9 @@ CREATE TABLE IF NOT EXISTS `balancedbanana`.`jobs` (
     `environment` TEXT,
     `min_cores` INT(10) UNSIGNED DEFAULT NULL,
     `max_cores` INT(10) UNSIGNED DEFAULT NULL,
-    `priority` INT(10) UNSIGNED NOT NULL DEFAULT '2',
-    `status_id` INT(10) UNSIGNED NOT NULL DEFAULT '1',
+    `priority` ENUM('low', 'normal', 'high', 'emergency') NOT NULL DEFAULT 'normal',
+    `status` ENUM('scheduled', 'processing', 'paused', 'interrupted', 'finished', 'canceled') NOT NULL DEFAULT
+        'scheduled',
     `max_ram` BIGINT(10) UNSIGNED DEFAULT NULL,
     `user_id` BIGINT(10) UNSIGNED NOT NULL,
     `worker_id` BIGINT(10) DEFAULT NULL,

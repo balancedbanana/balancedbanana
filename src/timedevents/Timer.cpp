@@ -17,6 +17,7 @@ Timer::~Timer()
 
 void Timer::setInterval(unsigned int seconds)
 {
+    std::lock_guard guard(mtx);
     if (!this->active)
     {
         this->delay = seconds;
@@ -25,6 +26,7 @@ void Timer::setInterval(unsigned int seconds)
 
 void Timer::addTimerFunction(const std::function<void()> &function)
 {
+    std::lock_guard guard(mtx);
     if (!this->active)
     {
         this->timerFunctions.push_back(function);
@@ -33,46 +35,22 @@ void Timer::addTimerFunction(const std::function<void()> &function)
 
 void Timer::start()
 {
+    std::unique_lock lock(mtx);
     if (!this->active)
     {
         this->active = true;
 
         this->sleeperThread = std::thread([&]() {
-            // Maximum number of seconds the internal timer thread is allowed to sleep at a time
-            // Lower values decrease response time to a stop call but increase activity of the hidden timer thread
-            static const unsigned int maxInternalIntervalLength = 10;
-            const unsigned int internalIntervals = this->delay / maxInternalIntervalLength;
-            const unsigned int remainder = this->delay % maxInternalIntervalLength;
-            while (this->active)
-            {
-                // sleep through delay in intervals of ten seconds and a remainder
-                // reacts faster to stop this way
-                for (unsigned int interval = 0; interval < internalIntervals; ++interval)
-                {
-                    if (!this->active)
-                    {
-                        // exit thread
-                        return;
-                    }
-                    std::this_thread::sleep_for(std::chrono::seconds(maxInternalIntervalLength));
-                }
-                if (!this->active)
-                {
-                    // exit thread
-                    return;
-                }
-                std::this_thread::sleep_for(std::chrono::seconds(remainder));
-
-                if (this->active)
-                {
+            std::unique_lock threadLock(mtx);
+            while(active) {
+                waiter.wait_for(threadLock, std::chrono::seconds(delay));
+                if (active) {
                     std::thread callerThread([&]() {
-                        for (auto i = this->timerFunctions.begin(); i != this->timerFunctions.end(); ++i)
-                        {
+                        for (auto i = timerFunctions.begin(); i != timerFunctions.end(); ++i) {
                             try {
                                 (*i)();
-
-                            } catch (const std::exception& ex) {
-                                std::cout << "TIMER Unhandled Error:" << ex.what() << "\n";
+                            } catch (const std::exception &ex) {
+                                std::cerr << "TIMER Unhandled Error:" << ex.what() << "\n";
                             }
                         }
                     });
@@ -85,9 +63,13 @@ void Timer::start()
 
 void Timer::stop()
 {
-    this->active = false;
-    if (sleeperThread.joinable())
-    {
-        sleeperThread.join();
+    std::unique_lock lock(mtx);
+    if(active) {
+        active = false;
+        waiter.notify_all();
+        lock.unlock();
+        if (sleeperThread.joinable()) {
+            sleeperThread.join();
+        }
     }
 }

@@ -1,7 +1,8 @@
 #pragma once
 
-namespace balancedbanana {
-    namespace database {
+#include <string>
+
+namespace balancedbanana::database {
 
 		enum JobStatus {
 			scheduled = 1,
@@ -11,5 +12,8 @@ namespace balancedbanana {
 			finished = 5,
 			canceled = 6,
 		};
+
+		std::string status_to_string(JobStatus status);
+
+		JobStatus string_to_status(const std::string& status);
 	}
-}
