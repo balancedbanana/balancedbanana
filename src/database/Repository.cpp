@@ -274,6 +274,7 @@ std::vector<std::shared_ptr<Worker>> Repository::GetActiveWorkers() {
 
 std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     std::lock_guard lock(mtx);
+    WriteBack();
     std::vector<std::shared_ptr<Job>> unfinished;
     for(auto&& job : JobGateway(GetDatabase()).getJobs()) {
         if ((JobStatus)job.status != JobStatus::finished) {
@@ -291,69 +292,22 @@ std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
     return unfinished;
 }
 
-void addFinishedCachedJobsInInterval(const QDateTime &from, const QDateTime &to, const std::map<uint64_t,
-        std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs, std::set<int>& cachedIds){
-    for (auto &entry : jobCache){
-        if (entry.second.second && entry.second.first->getFinished_at() >= from && entry.second.first->getFinished_at
-        () <= to){
-            intervalJobs.emplace_back(entry.second.first);
-            cachedIds.insert(entry.first);
-        }
-    }
-}
-
-void addStartedCachedJobsInInterval(const QDateTime &from, const QDateTime &to, const std::map<uint64_t,
-        std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs, std::set<int>& cachedIds){
-    for (auto &entry : jobCache){
-        if (entry.second.second && entry.second.first->getStarted_at() >= from && entry.second.first->getStarted_at()
-        <= to){
-            intervalJobs.emplace_back(entry.second.first);
-            cachedIds.insert(entry.first);
-        }
-    }
-}
-
-void addScheduledCachedJobsInInterval(const QDateTime &from, const QDateTime &to, const std::map<uint64_t,
-        std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs,
-        std::set<int>& cachedIds){
-    for (auto &entry : jobCache){
-        if (entry.second.second && entry.second.first->getScheduled_at() >= from && entry.second
-        .first->getScheduled_at() <= to){
-            intervalJobs.emplace_back(entry.second.first);
-            cachedIds.insert(entry.first);
-        }
-    }
-}
-
 std::vector<std::shared_ptr<Job>>
 Repository::GetJobsInInterval(const QDateTime &from, const QDateTime &to, JobStatus status) {
     std::lock_guard lock(mtx);
-    std::vector<std::shared_ptr<Job>> intervalJobs;
-    std::set<int> cachedIds;
-    switch (status) {
-        case JobStatus::scheduled:
-            addScheduledCachedJobsInInterval(from, to, jobCache, intervalJobs, cachedIds);
-            break;
-        case JobStatus::processing:
-            addStartedCachedJobsInInterval(from, to, jobCache, intervalJobs, cachedIds);
-            break;
-        case JobStatus::finished:
-            addFinishedCachedJobsInInterval(from, to, jobCache, intervalJobs, cachedIds);
-            break;
-        default:
-            break;
-    }
+    WriteBack();
     auto details = JobGateway(GetDatabase()).getJobsInInterval(from, to, status);
+    std::vector<std::shared_ptr<Job>> intervalJobs;
+    intervalJobs.reserve(details.size());
     for (auto &entry : details){
-        if (!cachedIds.count(entry.id)){
-            intervalJobs.emplace_back(GetJob(entry.id));
-        }
+        intervalJobs.emplace_back(GetJob(entry.id));
     }
     return intervalJobs;
 }
 
 std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
     std::lock_guard lock(mtx);
+    WriteBack();
     std::vector<std::shared_ptr<Worker>> workers;
     auto details = WorkerGateway(GetDatabase()).getWorkers();
     workers.reserve(details.size());
@@ -364,6 +318,8 @@ std::vector<std::shared_ptr<Worker>> Repository::GetWorkers() {
 }
 
 std::shared_ptr<Worker> Repository::FindWorker(const std::string &name) {
+    std::lock_guard lock(mtx);
+    WriteBack();
     uint64_t id = WorkerGateway(GetDatabase()).getWorkerByName(name).id;
     if(id == 0) {
         return nullptr;
@@ -372,6 +328,8 @@ std::shared_ptr<Worker> Repository::FindWorker(const std::string &name) {
 }
 
 std::shared_ptr<User> Repository::FindUser(const std::string &name) {
+    std::lock_guard lock(mtx);
+    WriteBack();
     uint64_t id = UserGateway(GetDatabase()).getUserByName(name).id;
     if(id == 0) {
         return nullptr;
@@ -380,18 +338,21 @@ std::shared_ptr<User> Repository::FindUser(const std::string &name) {
 }
 
 void Repository::OnUpdate(Observable<WorkerObservableEvent> *observable, WorkerObservableEvent e) {
+    std::lock_guard lock(mtx);
     auto *worker = reinterpret_cast<Worker *>(observable);
     if(e == WorkerObservableEvent::DATA_CHANGE) {
         workerCache.find(worker->getId())->second.second = true;
     }
 }
 void Repository::OnUpdate(Observable<UserObservableEvent> *observable, UserObservableEvent e) {
+    std::lock_guard lock(mtx);
     auto *user = reinterpret_cast<User *>(observable);
     if(e == UserObservableEvent::DATA_CHANGE) {
         userCache.find(user->id())->second.second = true;
     }
 }
 void Repository::OnUpdate(Observable<JobObservableEvent> *observable, JobObservableEvent e) {
+    std::lock_guard lock(mtx);
     auto *job = reinterpret_cast<Job *>(observable);
     if(e == JobObservableEvent::DATA_CHANGE) {
         jobCache.find(job->getId())->second.second = true;
