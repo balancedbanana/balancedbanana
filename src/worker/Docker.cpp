@@ -22,7 +22,7 @@ Container Docker::Run(const Task & task, const std::unordered_map<std::string, s
         if(proc.exitStatus() == QProcess::NormalExit && proc.exitCode() == 0 && !output.empty() && output != "\n") {
             std::cout << "Docker Image already built with id " << output << "\n";
         } else {
-            std::cout << "Building Image" << task.getConfig()->image() << "\n";
+            std::cout << "Building Image " << task.getConfig()->image() << "\n";
             BuildImage(task.getConfig()->image(), dockerfile, imageid, task.getConfig());
         }
     }

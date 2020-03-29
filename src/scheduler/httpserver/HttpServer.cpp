@@ -135,7 +135,7 @@ void HttpServer::listen(const std::string & ip, short port) {
 									resp << "status: " << status << "\n";
 									resp << "scheduled_at: " << job->getScheduled_at().toString().toStdString() << "\n";
 									resp << "finished_at: " << job->getFinished_at().toString().toStdString() << "\n";
-									resp << "spent_in_queue: ";
+									resp << "time_spent_in_queue: ";
 									switch (status)
 									{
 									case balancedbanana::database::JobStatus::scheduled:
@@ -150,7 +150,7 @@ void HttpServer::listen(const std::string & ip, short port) {
 										break;
 									}
 									resp << "\n";
-									resp << "time_spend_running: ";
+									resp << "time_spent_running: ";
 									switch (status)
 									{
 									case balancedbanana::database::JobStatus::finished:

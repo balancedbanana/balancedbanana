@@ -1,3 +1,3 @@
 FROM centos:7
 
-COPY runforever.sh .
+# COPY /home/ralmasri/projects/balancedbanana/testsrc/integration/Runforever/runforever.sh .
