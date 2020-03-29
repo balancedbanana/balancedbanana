@@ -271,6 +271,6 @@ TEST_F(RepositoryTest, GetUnfinishedJobs) {
     job3->setStatus(processing);
     EXPECT_EQ(repo->GetUnfinishedJobs().size(), 2);
     auto job4 = repo->AddJob(1, JobConfig(), time, "command");
-    job4->setStatus(canceled);
+    job4->setStatus(finished);
     EXPECT_EQ(repo->GetUnfinishedJobs().size(), 2);
 }
