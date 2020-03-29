@@ -368,3 +368,8 @@ void Worker::processTaskMessage(const TaskMessage &msg)
         }
     }).detach();
 }
+
+void Worker::onDisconnect() {
+    std::cerr << "Connection to Scheduler lost\n";
+    prom.set_value(-1);
+}

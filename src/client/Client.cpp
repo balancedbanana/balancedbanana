@@ -210,3 +210,8 @@ void Client::processRespondToClientMessage(const balancedbanana::communication::
         prom.set_value(0);
     }
 }
+
+void Client::onDisconnect() {
+    std::cerr << "Connection to Scheduler lost\n";
+    prom.set_value(-1);
+}

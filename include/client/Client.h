@@ -66,6 +66,7 @@ private:
 
     void processAuthResultMessage(const communication::AuthResultMessage &msg) override;
 	void processRespondToClientMessage(const communication::RespondToClientMessage& msg) override;
+    void onDisconnect() override;
 };
 
 } // namespace client

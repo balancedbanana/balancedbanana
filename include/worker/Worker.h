@@ -27,6 +27,7 @@ private:
     void processAuthResultMessage(const communication::AuthResultMessage &msg) override;
 	void processWorkerLoadRequestMessage(const communication::WorkerLoadRequestMessage &msg) override;
 	void processTaskMessage(const balancedbanana::communication::TaskMessage &msg) override;
+    void onDisconnect() override;
     bool publicauthfailed;
     std::promise<int> prom;
     std::filesystem::path configpath;
