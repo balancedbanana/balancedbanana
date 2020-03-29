@@ -23,10 +23,28 @@ using balancedbanana::configfiles::ApplicationConfig;
 Client::Client()
 {
     task = std::make_shared<Task>();
-    auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbc";
+    auto configname = ".bbc";
+    auto home = getenv(HOME_ENV);
+    if(!home) {
+        std::cerr << "WARN: Environment variable" HOME_ENV << "is not set, fallback to config in Current Working Directory" << "\n";
+    }
+    auto configdir = std::filesystem::canonical(home ? home : ".") / configname;
     std::filesystem::create_directories(configdir);
-    configpath = configdir / "appconfig.ini";
-    config = ApplicationConfig(configpath);
+    auto configfilename = "appconfig.ini";
+    configpath = configdir / configfilename;
+    std::error_code code;
+    auto exepath = std::filesystem::read_symlink("/proc/self/exe", code);
+    if(code) {
+        std::cerr << "WARN: cannot determine the config dir of this app, only $" HOME_ENV "/.bbc/appconfig.ini is considered: " << code.message() << "\n";
+        config = ApplicationConfig(configpath);
+    } else {
+        config = ApplicationConfig(exepath / ".." / ".." / "share" / "balancedbanana" / configname / configfilename);
+        std::ifstream is(configpath);
+        // Override appconfig with userconfig
+        if(is.is_open()) {
+            config.readFromStream(is);
+        }
+    }
     publicauthfailed = false;
 }
 

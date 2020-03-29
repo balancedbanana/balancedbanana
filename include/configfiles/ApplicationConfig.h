@@ -18,6 +18,8 @@ namespace balancedbanana::configfiles {
 
         ApplicationConfig(const ApplicationConfig &);
 
+        void readFromStream(std::istream &stream);
+
         bool Contains(const std::string& key);
 
         void Serialize(std::ostream &data) const;
