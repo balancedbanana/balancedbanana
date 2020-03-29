@@ -261,6 +261,16 @@ void Worker::processTaskMessage(const TaskMessage &msg)
 
                 RespondToClientMessage response(lines, true, task.getClientId().value_or(0));
 
+                Task observableResponse;
+
+                observableResponse.setType(TaskType::TAIL);
+                observableResponse.setAddImageFileContent(lines);
+                observableResponse.setJobId(task.getJobId());
+                observableResponse.setClientId(task.getClientId());
+                TaskMessage observableResponseMessage(task);
+
+                com->send(observableResponseMessage);
+
                 com->send(response);
                 break;
             }
