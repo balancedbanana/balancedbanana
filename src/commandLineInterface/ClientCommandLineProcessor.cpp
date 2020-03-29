@@ -149,11 +149,11 @@ void addSubCommandRun(const std::shared_ptr<Task> &task, CLI::App &app)
     runSubCommand->callback([&]() { callbackSubCommandRun(task, block, email, image, priority, max_cpu_count, min_cpu_count, max_ram, min_ram, jobCommand); });
 }
 
-void callbackSubCommandAddImage(const std::shared_ptr<Task> &task, std::vector<std::string> &imageNameAndPath)
+void callbackSubCommandAddImage(const std::shared_ptr<Task> &task, std::string& addImageName, std::string& addImageFilePath)
 {
     task->setType(TaskType::ADD_IMAGE);
-    task->setAddImageName(imageNameAndPath[0]);
-    task->setAddImageFilePath(imageNameAndPath[1]);
+    task->setAddImageName(addImageName);
+    task->setAddImageFilePath(addImageFilePath);
 }
 
 void callbackSubCommandRemoveImage(const std::shared_ptr<Task> &task, std::string &removeImageName)
@@ -171,15 +171,18 @@ void addSubCommandsImage(const std::shared_ptr<Task> &task, CLI::App &app)
     addCommonOptions(task, *subCommandRemoveImage);
     
     static std::string removeImage;
-    static std::vector<std::string> addImage;
+    static std::string addImageName;
+    static std::string addImageFilePath;
 
     removeImage = "";
-    addImage.clear();
+    addImageName = "";
+    addImageFilePath = "";
 
-    subCommandAddImage->add_option("imageNameAndPath", addImage, "Name of the new Docker Image and file path");
+    subCommandAddImage->add_option("imageName", addImageName, "Name of the new Docker Image and file path")->required();
+    subCommandAddImage->add_option("imageFilePath", addImageFilePath, "Name of the new Docker Image and file path")->required();
     subCommandRemoveImage->add_option("imageName", removeImage, "Name of the image which is to be forgotten");
 
-    subCommandAddImage->callback([&]() { callbackSubCommandAddImage(task, addImage); });
+    subCommandAddImage->callback([&]() { callbackSubCommandAddImage(task, addImageName, addImageFilePath); });
     subCommandRemoveImage->callback([&]() { callbackSubCommandRemoveImage(task, removeImage); });
 }
 
