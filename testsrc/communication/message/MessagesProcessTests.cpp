@@ -90,7 +90,7 @@ TEST_F(MessagesProcessTest, PublicKeyAuth) {
 }
 
 TEST_F(MessagesProcessTest, RespondToClient) {
-    mp->process(std::make_shared<RespondToClientMessage>("my data", false));
+    mp->process(std::make_shared<RespondToClientMessage>("my data", false, 0));
 }
 
 TEST_F(MessagesProcessTest, Task) {

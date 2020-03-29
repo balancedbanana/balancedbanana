@@ -34,6 +34,7 @@ namespace balancedbanana {
             void processWorkerAuthMessage(const communication::WorkerAuthMessage &msg) override;
             void processTaskResponseMessage(const communication::TaskResponseMessage &msg) override;
             void processWorkerLoadResponseMessage(const communication::WorkerLoadResponseMessage &msg) override;
+            void processRespondToClientMessage(const communication::RespondToClientMessage &msg) override;
             void processTaskMessage(const communication::TaskMessage &msg) override;
             void OnWorkerLoadResponse(std::function<void(const communication::WorkerLoadResponseMessage &msg)>&& func);
             void setWorker(const std::shared_ptr<communication::Communicator>& com);

@@ -40,6 +40,7 @@ class Task
 	std::optional<uint64_t> jobId;
 	std::optional<uint64_t> backupId;
 	std::optional<uint64_t> userId;
+	std::optional<uint64_t> clientId;
 
 public:
 	const static std::string configFilePath;
@@ -89,6 +90,9 @@ public:
 
 	void setUserId(std::optional<uint64_t> userId);
 	std::optional<uint64_t> getUserId() const;
+
+	void setClientId(std::optional<uint64_t> clientId);
+	std::optional<uint64_t> getClientId() const;
 
 	std::string serialize() const;
 };

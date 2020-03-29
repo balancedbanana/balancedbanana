@@ -14,27 +14,37 @@ namespace scheduler
 
 RunRequest::RunRequest(const std::shared_ptr<Task> &task,
                        const uint64_t userID,
+                       Communicator &client,
                        const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
                        const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
                        const std::function<std::shared_ptr<Job>(const uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> &dbAddJob,
                        const std::function<uint64_t(uint64_t jobID)> &queueGetPosition)
-    : ClientRequest(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition)
+    : ClientRequest(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition)
 {
 }
 
 std::shared_ptr<RespondToClientMessage> RunRequest::executeRequestAndFetchData()
 {
-    // Step 1: enter Job into Database
+    // prepare response
     std::stringstream response;
 
+    // enter job into database
     auto config = task->getConfig();
     QDateTime scheduleTime = QDateTime::currentDateTime();
     std::shared_ptr<Job> job = dbAddJob(userID, config, scheduleTime, task->getTaskCommand());
 
-    response << PREFIX_JOB_ID << job->getId() << std::endl;
+    // fail if job could not be created, otherwise return success
+    if (job == nullptr)
+    {
+        response << OPERATION_FAILURE << std::endl;
+    }
+    else
+    {
+        response << PREFIX_JOB_ID << job->getId() << std::endl;
+    }
 
-    // Step 2: Create RespondToClientMessage with string containing ID of new Job or error message in case of failure
-    return std::make_shared<RespondToClientMessage>(response.str(), true);
+    // respond
+    return std::make_shared<RespondToClientMessage>(response.str(), true, 0);
 }
 
 } // namespace scheduler

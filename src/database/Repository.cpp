@@ -294,8 +294,8 @@ std::vector<std::shared_ptr<Job>> Repository::GetUnfinishedJobs() {
 void addFinishedCachedJobsInInterval(const QDateTime &from, const QDateTime &to, const std::map<uint64_t,
         std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs, std::set<int>& cachedIds){
     for (auto &entry : jobCache){
-        if (entry.second.second && entry.second.first->getFinished_at() <= from && entry.second.first->getFinished_at
-        () >= to){
+        if (entry.second.second && entry.second.first->getFinished_at() >= from && entry.second.first->getFinished_at
+        () <= to){
             intervalJobs.emplace_back(entry.second.first);
             cachedIds.insert(entry.first);
         }
@@ -305,8 +305,8 @@ void addFinishedCachedJobsInInterval(const QDateTime &from, const QDateTime &to,
 void addStartedCachedJobsInInterval(const QDateTime &from, const QDateTime &to, const std::map<uint64_t,
         std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs, std::set<int>& cachedIds){
     for (auto &entry : jobCache){
-        if (entry.second.second && entry.second.first->getStarted_at() <= from && entry.second.first->getStarted_at()
-        >= to){
+        if (entry.second.second && entry.second.first->getStarted_at() >= from && entry.second.first->getStarted_at()
+        <= to){
             intervalJobs.emplace_back(entry.second.first);
             cachedIds.insert(entry.first);
         }
@@ -317,8 +317,8 @@ void addScheduledCachedJobsInInterval(const QDateTime &from, const QDateTime &to
         std::pair<std::shared_ptr<Job>, bool>>& jobCache, std::vector<std::shared_ptr<Job>>& intervalJobs,
         std::set<int>& cachedIds){
     for (auto &entry : jobCache){
-        if (entry.second.second && entry.second.first->getScheduled_at() <= from && entry.second
-        .first->getScheduled_at() >= to){
+        if (entry.second.second && entry.second.first->getScheduled_at() >= from && entry.second
+        .first->getScheduled_at() <= to){
             intervalJobs.emplace_back(entry.second.first);
             cachedIds.insert(entry.first);
         }

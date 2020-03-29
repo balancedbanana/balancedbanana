@@ -18,11 +18,12 @@ namespace scheduler
 
 ClientRequest::ClientRequest(const std::shared_ptr<Task> &task,
                              const uint64_t userID,
+                             Communicator& client,
                              const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
                              const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
                              const std::function<std::shared_ptr<Job>(const uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> &dbAddJob,
                              const std::function<uint64_t(uint64_t jobID)> &queueGetPosition)
-    : task(task), userID(userID), dbGetJob(dbGetJob), dbGetWorker(dbGetWorker), dbAddJob(dbAddJob),
+    : task(task), userID(userID), client(&client), dbGetJob(dbGetJob), dbGetWorker(dbGetWorker), dbAddJob(dbAddJob),
       queueGetPosition(queueGetPosition)
 {
     // This is needed for the vtable
@@ -30,6 +31,7 @@ ClientRequest::ClientRequest(const std::shared_ptr<Task> &task,
 
 std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(const std::shared_ptr<Task> &task,
                                                                 const uint64_t userID,
+                                                                Communicator& client,
                                                                 const std::function<std::shared_ptr<Job>(uint64_t jobID)> &dbGetJob,
                                                                 const std::function<std::shared_ptr<Worker>(uint64_t workerID)> &dbGetWorker,
                                                                 const std::function<std::shared_ptr<Job>(const uint64_t userID, const std::shared_ptr<JobConfig> &config, QDateTime &scheduleTime, const std::string &jobCommand)> &dbAddJob,
@@ -39,34 +41,34 @@ std::shared_ptr<ClientRequest> ClientRequest::selectRequestType(const std::share
     switch (requestType)
     {
     case TaskType::RUN:
-        return std::make_shared<RunRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<RunRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::STATUS:
-        return std::make_shared<StatusRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<StatusRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::TAIL:
-        return std::make_shared<TailRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<TailRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::STOP:
-        return std::make_shared<StopRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<StopRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::PAUSE:
-        return std::make_shared<PauseRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<PauseRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::CONTINUE:
-        return std::make_shared<ContinueRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<ContinueRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::BACKUP:
-        return std::make_shared<BackupRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<BackupRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::RESTORE:
-        return std::make_shared<RestoreRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<RestoreRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::ADD_IMAGE:
-        return std::make_shared<AddImageRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<AddImageRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
     case TaskType::REMOVE_IMAGE:
-        return std::make_shared<RemoveImageRequest>(task, userID, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+        return std::make_shared<RemoveImageRequest>(task, userID, client, dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
         break;
 
     default:

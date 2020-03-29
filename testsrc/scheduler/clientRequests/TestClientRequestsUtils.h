@@ -6,6 +6,9 @@
 #include <scheduler/Worker.h>
 #include <scheduler/User.h>
 #include <communication/Task.h>
+#include <communication/MessageProcessor.h>
+#include <communication/Communicator.h>
+#include <communication/CommunicatorListener.h>
 #include <configfiles/JobConfig.h>
 #include <QDateTime>
 #include <database/job_result.h>
@@ -13,13 +16,18 @@
 #include <database/JobStatus.h>
 
 using balancedbanana::communication::Task;
+using balancedbanana::communication::MessageProcessor;
+using balancedbanana::communication::Communicator;
+using balancedbanana::communication::CommunicatorListener;
 using balancedbanana::configfiles::JobConfig;
 using balancedbanana::database::job_result;
+using balancedbanana::database::JobStatus;
 using balancedbanana::database::Specs;
 using balancedbanana::scheduler::Job;
-using balancedbanana::database::JobStatus;
 using balancedbanana::scheduler::User;
 using balancedbanana::scheduler::Worker;
+
+struct TestMP : MessageProcessor {};
 
 constexpr uint64_t userID = 0;
 

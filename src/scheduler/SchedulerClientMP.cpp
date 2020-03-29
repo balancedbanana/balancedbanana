@@ -162,12 +162,12 @@ void SchedulerClientMP::processTaskMessage(const TaskMessage &msg)
 
     // run the request
 
-    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType(task, user->id(), dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
+    std::shared_ptr<ClientRequest> request = ClientRequest::selectRequestType(task, user->id(), getClient(), dbGetJob, dbGetWorker, dbAddJob, queueGetPosition);
     std::shared_ptr<RespondToClientMessage> response = request->executeRequestAndFetchData();
 
     // Respond to Client
 
-    getClient().send(*response);
+    client->send(*response);
 }
 
 void SchedulerClientMP::setClient(const std::shared_ptr<Communicator> &com)
