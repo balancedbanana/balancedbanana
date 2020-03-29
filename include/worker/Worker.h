@@ -33,10 +33,13 @@ private:
     std::filesystem::path configpath;
     std::filesystem::path dockercheckpoints;
     balancedbanana::configfiles::ApplicationConfig config;
+    balancedbanana::configfiles::ApplicationConfig volumemap;
     std::shared_ptr<balancedbanana::communication::Communicator> communicator;
     std::shared_ptr<balancedbanana::communication::Task> task;
+#if 0
 	std::mutex midtodocker;
 	configfiles::ApplicationConfig idtodocker;
+#endif
 };
 
 } // namespace worker

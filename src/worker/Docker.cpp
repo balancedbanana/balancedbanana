@@ -8,7 +8,7 @@
 using namespace balancedbanana::worker;
 using namespace balancedbanana::communication;
 
-Container Docker::Run(const Task & task) {
+Container Docker::Run(const Task & task, const std::unordered_map<std::string, std::string>& volumemap) {
     auto&& dockerfile = task.getAddImageFileContent();
     if(!dockerfile.empty() && task.getBackupId().has_value()) {
     QProcess proc;
@@ -66,6 +66,9 @@ Container Docker::Run(const Task & task) {
             args.append({"-e", QString::fromStdString(env)});
         }
     }
+    for(auto && vol : volumemap) {
+        args.append({"-v", QString::fromStdString(vol.first + ":" + vol.second)});
+    }
     if(config->max_ram()) {
         args.append({"-m", QString::fromStdString(std::to_string(*config->max_ram())) + "MB"});
     }
@@ -90,6 +93,15 @@ Container Docker::Run(const Task & task) {
     std::string output = proc.readAllStandardOutput().toStdString();
     if(proc.exitStatus() != QProcess::NormalExit || proc.exitCode() != 0) {
         std::string err = proc.readAllStandardError().toStdString();
+        std::vector<std::string> args_2;
+        for (auto s : args)
+        {
+            auto sts = s.toStdString();
+            args_2.emplace_back(sts);
+            /* code */
+        }
+        
+        // auto stdvec = args.toVector().toStdVector();
         throw std::runtime_error("Invalid Argument for docker start:\n" + output + "Error:\n" + err);
     }
     return Container(name);
