@@ -43,7 +43,7 @@ Scheduler::Scheduler()
     std::error_code code;
     auto exepath = std::filesystem::read_symlink("/proc/self/exe", code);
     if(code) {
-        std::cerr << "WARN: cannot determine the config dir of this app, only $" HOME_ENV "/.bbc/appconfig.ini is considered: " << code.message() << "\n";
+        std::cerr << "WARN: cannot determine the config dir of this app, only $" HOME_ENV "/.bbs/appconfig.ini is considered: " << code.message() << "\n";
         config = ApplicationConfig(configpath);
     } else {
         config = ApplicationConfig(exepath / ".." / ".." / "share" / "balancedbanana" / configname / configfilename);
