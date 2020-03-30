@@ -300,6 +300,13 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                     
                     [&repo, &observer](uint64_t userid, const std::shared_ptr<JobConfig>& config, QDateTime &scheduleTime, const std::string& command) -> std::shared_ptr<Job> {
                         auto job = repo->AddJob(userid, *config, scheduleTime, command);
+                        if(!config->email().empty()) {
+                            if(job->getUser()) {
+                                job->getUser()->setEmail(config->email());
+                            } else {
+                                std::cout << "WARN: USER is null, cannot update email\n";
+                            }
+                        }
                         // Add newly created Jobs to the Queue
                         observer.queue.addTask(job);
                         job->RegisterObserver(&observer);
