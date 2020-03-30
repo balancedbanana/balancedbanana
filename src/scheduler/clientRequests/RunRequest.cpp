@@ -44,7 +44,7 @@ std::shared_ptr<RespondToClientMessage> RunRequest::executeRequestAndFetchData()
     }
 
     // respond
-    return std::make_shared<RespondToClientMessage>(response.str(), true, 0);
+    return std::make_shared<RespondToClientMessage>(response.str(), task->getConfig()->blocking_mode().value_or(true), 0);
 }
 
 } // namespace scheduler
