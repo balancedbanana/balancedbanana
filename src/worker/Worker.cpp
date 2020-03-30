@@ -36,7 +36,7 @@ Worker::Worker()
     if(!home) {
         std::cerr << "WARN: Environment variable" HOME_ENV << "is not set, fallback to config in Current Working Directory" << "\n";
     }
-    auto configdir = std::filesystem::canonical(home ? home : ".") / configname;
+    auto configdir = std::filesystem::path(home ? home : ".") / configname;
     std::filesystem::create_directories(configdir);
     auto configfilename = "appconfig.ini";
     auto volumefilename = "volumemap.ini";
@@ -44,10 +44,10 @@ Worker::Worker()
     std::error_code code;
     auto exepath = std::filesystem::read_symlink("/proc/self/exe", code);
     if(code) {
-        std::cerr << "WARN: cannot determine the config dir of this app, only $" HOME_ENV "/.bbs/appconfig.ini is considered: " << code.message() << "\n";
+        std::cerr << "WARN: cannot determine the config dir of this app, only $" HOME_ENV "/.bbd/appconfig.ini is considered: " << code.message() << "\n";
         config = ApplicationConfig(configpath);
     } else {
-        auto bbfolder = exepath / ".." / ".." / "share" / "balancedbanana" / configname;
+        auto bbfolder = exepath.parent_path().parent_path() / "share" / "balancedbanana" / configname;
         config = ApplicationConfig( bbfolder / configfilename);
         volumemap = ApplicationConfig( bbfolder / volumefilename);
         {
@@ -65,7 +65,7 @@ Worker::Worker()
             }
         }
     }
-    dockercheckpoints = config.Contains("dockercheckpointpath") ? std::filesystem::canonical(config["dockercheckpointpath"]) : (configdir / "dockercheckpoints");
+    dockercheckpoints = config.Contains("dockercheckpointpath") ? std::filesystem::path(config["dockercheckpointpath"]) : (configdir / "dockercheckpoints");
     publicauthfailed = false;
 }
 

@@ -29,7 +29,8 @@ namespace balancedbanana::scheduler {
     }
 
     std::shared_ptr<RespondToClientMessage> RemoveImageRequest::executeRequestAndFetchData() {
-        auto imagefile = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs" / "images" / (task->getRemoveImageName() + ".txt");
+        auto home = getenv(HOME_ENV);
+        auto imagefile = std::filesystem::path(home ? home : ".") / ".bbs" / "images" / (task->getRemoveImageName() + ".txt");
         if(std::filesystem::exists(imagefile)) {
             std::filesystem::remove(imagefile);
         } else {

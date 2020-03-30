@@ -36,7 +36,7 @@ Scheduler::Scheduler()
     if(!home) {
         std::cerr << "WARN: Environment variable" HOME_ENV << "is not set, fallback to config in Current Working Directory" << "\n";
     }
-    auto configdir = std::filesystem::canonical(home ? home : ".") / configname;
+    auto configdir = std::filesystem::path(home ? home : ".") / configname;
     std::filesystem::create_directories(configdir);
     auto configfilename = "appconfig.ini";
     auto configpath = configdir / configfilename;
@@ -46,7 +46,7 @@ Scheduler::Scheduler()
         std::cerr << "WARN: cannot determine the config dir of this app, only $" HOME_ENV "/.bbs/appconfig.ini is considered: " << code.message() << "\n";
         config = ApplicationConfig(configpath);
     } else {
-        config = ApplicationConfig(exepath / ".." / ".." / "share" / "balancedbanana" / configname / configfilename);
+        config = ApplicationConfig(exepath.parent_path().parent_path() / "share" / "balancedbanana" / configname / configfilename);
         std::ifstream is(configpath);
         // Override appconfig with userconfig
         if(is.is_open()) {
@@ -179,7 +179,8 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
             std::filesystem::path images;
 
             QueueObserver(balancedbanana::scheduler::PriorityQueue& queue, std::shared_ptr<balancedbanana::database::Repository> repo, SmtpServer && mailclient) : queue(queue), repo(std::move(repo)), mailclient(std::move(mailclient)) {
-                images = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs" / "images";
+                auto home = getenv(HOME_ENV);
+                images = std::filesystem::path(home ? home : ".") / ".bbs" / "images";
             }
 
             void OnUpdate(Observable<JobObservableEvent> *obsable, JobObservableEvent event) override {

@@ -8,6 +8,7 @@
 #include <communication/message/RespondToClientMessage.h>
 #include <communication/message/AuthResultMessage.h>
 #include <communication/message/PublicKeyAuthMessage.h>
+#include <fstream>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
@@ -20,9 +21,6 @@ using balancedbanana::scheduler::ClientRequest;
 #else
 #define HOME_ENV "HOME"
 #endif
-
-auto configdir = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs";
-auto schedulerConfigPath = (std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs") / "appconfig.ini";
 
 #if 0
 SchedulerClientMP::SchedulerClientMP(balancedbanana::communication::Communicator *communicator) :
@@ -84,7 +82,24 @@ void SchedulerClientMP::processPublicKeyAuthMessage(const PublicKeyAuthMessage &
 
 void fillWithGlobals(const std::shared_ptr<Task> &task)
 {
-    ApplicationConfig globalConfig(schedulerConfigPath);
+    auto home = getenv(HOME_ENV);
+    auto configname = ".bbs";
+    auto configdir = std::filesystem::path(home ? home : ".") / configname;
+    auto configfilename = "appconfig.ini";
+    auto configpath = configdir / configfilename;
+    std::error_code code;
+    auto exepath = std::filesystem::read_symlink("/proc/self/exe", code);
+    ApplicationConfig globalConfig;
+    if(code) {
+        globalConfig = ApplicationConfig(configpath);
+    } else {
+        globalConfig = ApplicationConfig(exepath.parent_path().parent_path() / "share" / "balancedbanana" / configname / configfilename);
+        std::ifstream is(configpath);
+        // Override appconfig with userconfig
+        if(is.is_open()) {
+            globalConfig.readFromStream(is);
+        }
+    }
     auto config = task->getConfig();
 
     //Task entries

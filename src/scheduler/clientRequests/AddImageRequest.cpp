@@ -29,7 +29,8 @@ namespace balancedbanana::scheduler {
     }
 
     std::shared_ptr<RespondToClientMessage> AddImageRequest::executeRequestAndFetchData() {
-        auto folder = std::filesystem::canonical(getenv(HOME_ENV)) / ".bbs" / "images";
+        auto home = getenv(HOME_ENV);
+        auto folder = std::filesystem::path(home ? home : ".") / ".bbs" / "images";
         std::filesystem::create_directories(folder);
         auto imagefile = folder / (task->getAddImageName() + ".txt");
         if(task->getAddImageFileContent().empty()) {

@@ -28,7 +28,7 @@ Client::Client()
     if(!home) {
         std::cerr << "WARN: Environment variable" HOME_ENV << "is not set, fallback to config in Current Working Directory" << "\n";
     }
-    auto configdir = std::filesystem::canonical(home ? home : ".") / configname;
+    auto configdir = std::filesystem::path(home ? home : ".") / configname;
     std::filesystem::create_directories(configdir);
     auto configfilename = "appconfig.ini";
     configpath = configdir / configfilename;
@@ -38,7 +38,7 @@ Client::Client()
         std::cerr << "WARN: cannot determine the config dir of this app, only $" HOME_ENV "/.bbc/appconfig.ini is considered: " << code.message() << "\n";
         config = ApplicationConfig(configpath);
     } else {
-        config = ApplicationConfig(exepath / ".." / ".." / "share" / "balancedbanana" / configname / configfilename);
+        config = ApplicationConfig(exepath.parent_path().parent_path() / "share" / "balancedbanana" / configname / configfilename);
         std::ifstream is(configpath);
         // Override appconfig with userconfig
         if(is.is_open()) {
