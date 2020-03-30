@@ -245,7 +245,7 @@ void Worker::processTaskMessage(const TaskMessage &msg)
 #endif
                 TaskResponseMessage resp(task.getJobId().value_or(0), balancedbanana::database::JobStatus::processing);
                 com->send(resp);
-                RespondToClientMessage respondClient(std::to_string(task.getJobId().value_or(0)), !task.getConfig()->blocking_mode().value_or(false), task.getClientId().value_or(0));
+                RespondToClientMessage respondClient("", !task.getConfig()->blocking_mode().value_or(false), task.getClientId().value_or(0));
                 com->send(respondClient);
                 auto exitcode = container.Wait();
                 Task response;

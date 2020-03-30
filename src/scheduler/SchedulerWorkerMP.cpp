@@ -8,6 +8,7 @@
 #include <communication/message/TaskMessage.h>
 #include <communication/authenticator/AuthHandler.h>
 #include <scheduler/Clients.h>
+#include <iostream>
 
 using namespace balancedbanana::scheduler;
 using namespace balancedbanana::communication;
@@ -88,10 +89,16 @@ void SchedulerWorkerMP::processRespondToClientMessage(const RespondToClientMessa
     // find which client to forward the message to
 
     try {
-        auto client = &Clients::find(msg.GetClientID(), msg.getUnblock());
-        client->send(msg);
+        if ((msg.GetClientID() & (uint64_t)0x8000000000000000) != 0) {
+            auto client = &Clients::findByUser(msg.GetClientID(), msg.getUnblock());
+            client->send(msg);
+        } else {
+            auto client = &Clients::find(msg.GetClientID(), msg.getUnblock());
+            client->send(msg);
+        }
     } catch (std::runtime_error& e) {
         // well ... rip client
+        std::cout << "Failed to find client to pass message to: " << msg.GetClientID() << std::endl;
     }
 }
 

@@ -3,6 +3,7 @@
 #include "communication/Communicator.h"
 #include <sstream>
 #include <communication/message/TaskMessage.h>
+#include <scheduler/Clients.h>
 
 using balancedbanana::communication::Communicator;
 using balancedbanana::communication::TaskMessage;
@@ -32,6 +33,7 @@ std::shared_ptr<RespondToClientMessage> RunRequest::executeRequestAndFetchData()
     auto config = task->getConfig();
     QDateTime scheduleTime = QDateTime::currentDateTime();
     std::shared_ptr<Job> job = dbAddJob(userID, config, scheduleTime, task->getTaskCommand());
+    Clients::enterByUser(job->getUser()->id() | (uint64_t)0x8000000000000000, *client);
 
     // fail if job could not be created, otherwise return success
     if (job == nullptr)

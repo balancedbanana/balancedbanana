@@ -248,6 +248,7 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                             task.setConfig(job->copyConfig());
                             task.setTaskCommand(job->getCommand());
                             task.setUserId(job->getUser()->id());
+                            task.setClientId(job->getUser()->id() | (uint64_t)0x8000000000000000);
                             job->setWorker_id(worker->getId());
                             task.setType(TaskType::RUN);
                             task.setJobId(job->getId());

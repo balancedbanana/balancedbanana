@@ -203,7 +203,9 @@ void Client::processRespondToClientMessage(const balancedbanana::communication::
     std::string responseMessage = msg.GetData();
     bool unblock = msg.getUnblock();
 
-    std::cout << responseMessage << "\n"; // std::endl is not exacty what you want
+    if (responseMessage.compare("") != 0) {
+        std::cout << responseMessage << "\n"; // std::endl is not exacty what you want
+    }
 
     if (unblock || !specifiedBlock()) {
         // synchronize with client and tell it to unblock
