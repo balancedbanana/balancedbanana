@@ -16,7 +16,7 @@ uint64_t Clients::enter(balancedbanana::communication::Communicator &client)
     return latest++;
 }
 
-balancedbanana::communication::Communicator &Clients::find(uint64_t jobID)
+balancedbanana::communication::Communicator &Clients::find(uint64_t jobID, bool erase)
 {
     const std::lock_guard<std::mutex> lock(_mutex);
     auto clientPair = map.find(jobID);
@@ -26,6 +26,8 @@ balancedbanana::communication::Communicator &Clients::find(uint64_t jobID)
     }
 
     auto client = clientPair->second;
-    map.erase(clientPair);
+    if (erase) {
+        map.erase(clientPair);
+    }
     return *client;
 }

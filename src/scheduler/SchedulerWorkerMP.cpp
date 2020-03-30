@@ -88,7 +88,7 @@ void SchedulerWorkerMP::processRespondToClientMessage(const RespondToClientMessa
     // find which client to forward the message to
 
     try {
-        auto client = &Clients::find(msg.GetClientID());
+        auto client = &Clients::find(msg.GetClientID(), msg.getUnblock());
         client->send(msg);
     } catch (std::runtime_error& e) {
         // well ... rip client
