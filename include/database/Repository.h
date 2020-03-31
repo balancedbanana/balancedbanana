@@ -38,7 +38,7 @@ namespace balancedbanana::database {
             timedevents::Timer timer;
             std::recursive_mutex mtx;
 
-            QThreadStorage<QSqlDatabase>* databaseConnections;
+            std::map<std::thread::id, std::shared_ptr<QSqlDatabase>> databaseConnections;
             std::string name;
             std::string host_name;
             std::string databasename;
@@ -52,7 +52,7 @@ namespace balancedbanana::database {
 
             ~Repository() override;
 
-            QSqlDatabase GetDatabase();
+            QSqlDatabase &GetDatabase();
 
             std::shared_ptr<Worker> GetWorker(uint64_t id);
             std::shared_ptr<Worker> AddWorker(const std::string &name, const std::string &publickey, const Specs &specs);

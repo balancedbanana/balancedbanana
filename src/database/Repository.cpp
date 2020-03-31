@@ -19,7 +19,6 @@ name(std::move(name)), host_name(std::move(host_name)), databasename(std::move(d
     timer.setInterval(updateInterval.count());
     timer.addTimerFunction(std::function<void()>([this](){WriteBack();}));
     timer.start();
-    databaseConnections = new QThreadStorage<QSqlDatabase>();
 }
 
 Repository::~Repository() {
@@ -28,9 +27,10 @@ Repository::~Repository() {
     ClearCache();
 }
 
-QSqlDatabase Repository::GetDatabase() {
+QSqlDatabase &Repository::GetDatabase() {
     std::lock_guard guard(mtx);
-    if(!databaseConnections->hasLocalData()) {
+    auto iterator = databaseConnections.find(std::this_thread::get_id());
+    if(iterator == databaseConnections.end()) {
         std::random_device rd;  //Will be used to obtain a seed for the random number engine
         std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
         std::uniform_int_distribution<uint32_t> dis(0, std::numeric_limits<uint32_t>::max());
@@ -39,18 +39,19 @@ QSqlDatabase Repository::GetDatabase() {
             i = dis(gen);
         }
         std::string sname((char*)name.data(), name.size() * sizeof(uint32_t));
-        auto db = QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(sname));
-        db.setHostName(QString::fromStdString(host_name));
-        db.setDatabaseName(QString::fromStdString(databasename));
-        db.setUserName(QString::fromStdString(username));
-        db.setPassword(QString::fromStdString(password));
-        db.setPort(port);
-        databaseConnections->setLocalData(db);
-        if(!db.open()){
+        auto db = std::make_shared<QSqlDatabase>(QSqlDatabase::addDatabase("QMYSQL", QString::fromStdString(sname)));
+        db->setHostName(QString::fromStdString(host_name));
+        db->setDatabaseName(QString::fromStdString(databasename));
+        db->setUserName(QString::fromStdString(username));
+        db->setPassword(QString::fromStdString(password));
+        db->setPort(port);
+        databaseConnections.insert(std::pair(std::this_thread::get_id(), db));
+        if(!db->open()){
             throw std::logic_error("Error: connection with database failed.");
         }
+        return *db;
     }
-    return databaseConnections->localData();
+    return *iterator->second;
 }
 
 std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
