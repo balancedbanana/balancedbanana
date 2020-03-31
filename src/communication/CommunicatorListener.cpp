@@ -7,6 +7,7 @@
 #include <openssl/pem.h>
 #include <openssl/conf.h>
 #include <openssl/x509v3.h>
+#include <iostream>
 #ifndef _WIN32
 #include <signal.h>
 #endif
@@ -49,8 +50,15 @@ void CommunicatorListener::listen(const std::string & ip, short port, const std:
 
 	if(getaddrinfo(ip.data(), std::to_string(port).data(), &hints, &result) == 0) {
 		for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
-			auto socketaddress = std::shared_ptr<sockaddr>((sockaddr*)new char[ptr->ai_addrlen]);
-			memcpy(socketaddress.get(), ptr->ai_addr, ptr->ai_addrlen);
+		    //if(sizeof(sockaddr) < ptr->ai_addrlen) {
+		    //    std::cout << sizeof(sockaddr) << " " << ptr->ai_addrlen << std::endl;
+		    //    throw std::runtime_error("Communicator Listener: ai_address is too long");
+		    //}
+			//auto socketaddress = std::shared_ptr<sockaddr>((sockaddr*)new char[ptr->ai_addrlen]);
+			auto socketaddress = std::make_shared<sockaddr>();
+			//auto socketaddress = std::make_shared<std::vector<char>>();
+			//socketaddress->reserve(ptr->ai_addrlen);
+			memcpy(socketaddress.get(), ptr->ai_addr, ptr->ai_addrlen <= sizeof(sockaddr) ? ptr->ai_addrlen : sizeof(sockaddr));
             listenthread = listener->Listen(socketaddress, ptr->ai_addrlen);
             if(listenthread) {
 				freeaddrinfo(result);
