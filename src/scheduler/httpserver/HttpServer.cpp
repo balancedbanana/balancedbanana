@@ -253,7 +253,9 @@ void HttpServer::listen(const std::string & ip, short port) {
 
 	if(getaddrinfo(ip.data(), std::to_string(port).data(), &hints, &result) == 0) {
 		for(ptr=result; ptr != NULL ;ptr=ptr->ai_next) {
-			auto socketaddress = std::shared_ptr<sockaddr>((sockaddr*)new char[ptr->ai_addrlen]);
+			auto socketaddress = std::shared_ptr<sockaddr>((sockaddr*)new char[ptr->ai_addrlen], [](sockaddr* addr) {
+				delete[] (char*)addr;
+			});
 			memcpy(socketaddress.get(), ptr->ai_addr, ptr->ai_addrlen);
             listentask = listener->Listen(socketaddress, ptr->ai_addrlen);
             if(listentask) {
