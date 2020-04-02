@@ -253,8 +253,14 @@ int Scheduler::processCommandLineArguments(int argc, const char *const *argv)
                             job->setWorker_id(worker->getId());
                             task.setType(TaskType::RUN);
                             task.setJobId(job->getId());
-                            job->setAllocated_ram(std::min(job->getConfig()->max_ram().value_or((uint64_t)-1), spec.ram));
-                            job->setAllocated_cores(std::min(job->getConfig()->max_cpu_count().value_or((uint32_t)-1), spec.cores));
+                            auto allocatedram = std::min(job->getConfig()->max_ram().value_or((uint64_t)-1), spec.ram);
+                            job->setAllocated_ram(allocatedram);
+                            if(job->getConfig()->max_ram().has_value())
+                                task.getConfig()->set_max_ram(allocatedram);
+                            auto allocatedcores = std::min(job->getConfig()->max_cpu_count().value_or((uint32_t)-1), spec.cores);
+                            job->setAllocated_cores(allocatedcores);
+                            if(job->getConfig()->max_cpu_count().has_value())
+                                task.getConfig()->set_max_cpu_count(allocatedcores);
                             job->setAllocated_osIdentifier(spec.osIdentifier);
                             // Read the dockerfile and send it, to allow new Workers anytime to build the image ondemand
                             auto imagepath = images / (job->getConfig()->image() + ".txt");
