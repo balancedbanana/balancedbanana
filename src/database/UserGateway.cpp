@@ -61,7 +61,7 @@ void UserGateway::removeUser(uint64_t user_id) {
             throw std::runtime_error("removeUser error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("removeUser error: no user with id = " + std::to_string(user_id) + " exists");
+        throw entry_not_exists_error("removeUser error: no user with id = " + std::to_string(user_id) + " exists");
     }
 }
 
@@ -89,7 +89,7 @@ user_details UserGateway::getUser(uint64_t id) {
             throw std::runtime_error("getUser error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        std::cerr << "getUser error: no user with id = " << id  << " exists" << std::endl;
+        throw entry_not_exists_error("getUser error: no user with id = " + std::to_string(id) + " exists");
     }
     return details;
 
@@ -162,7 +162,7 @@ void UserGateway::updateUser(const user_details &user) {
             throw std::runtime_error("updateUser error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("updateUser error: no user with id = " + std::to_string(user.id) + " exists");
+        throw entry_not_exists_error("updateUser error: no user with id = " + std::to_string(user.id) + " exists");
     }
 }
 

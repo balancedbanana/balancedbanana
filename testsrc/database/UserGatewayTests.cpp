@@ -246,7 +246,7 @@ TEST_F(GetUserTest, GetUserTest_SuccessfulGet_Test){
 // Test to see if the getter method returns an empty user_details when its called with an invalid id
 TEST_F(GetUserTest, GetUserTest_NonExistentUser_Test){
     user_details empty_details{};
-    EXPECT_TRUE(userGateway->getUser(1) == empty_details);
+    EXPECT_THROW(userGateway->getUser(1), entry_not_exists_error);
 }
 
 /**

@@ -166,7 +166,7 @@ uint64_t JobGateway::addJob(const job_details& details) {
     }
 
     if (!Utilities::doesRecordExist("users", details.user_id, db)){
-        throw std::runtime_error("addJob error: no user with id = " + std::to_string(details.user_id));
+        throw entry_not_exists_error("addJob error: no user with id = " + std::to_string(details.user_id));
     }
 
     QVariant_JobConfig qstruct = convertJobConfig(details.user_id, details.config, details.schedule_time, details.command);
@@ -189,7 +189,7 @@ void JobGateway::removeJob(uint64_t job_id) {
             throw std::runtime_error("removeJob error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("removeJob error: no Job with id " + std::to_string(job_id) + " exists");
+        throw entry_not_exists_error("removeJob error: no Job with id " + std::to_string(job_id) + " exists");
     }
 }
 
@@ -356,7 +356,7 @@ job_details JobGateway::getJob(uint64_t job_id) {
             throw std::runtime_error("getJob error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("getJob error: no job with id = " + std::to_string(job_id) + "exists");
+        throw entry_not_exists_error("getJob error: no job with id = " + std::to_string(job_id) + "exists");
     }
     return details;
 }

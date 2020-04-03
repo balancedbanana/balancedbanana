@@ -60,7 +60,7 @@ void WorkerGateway::removeWorker(uint64_t id) {
             throw std::runtime_error("removeWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("removeWorker error: no worker with id = " + std::to_string(id) + " exists");
+        throw entry_not_exists_error("removeWorker error: no worker with id = " + std::to_string(id) + " exists");
     }
 }
 
@@ -96,7 +96,7 @@ worker_details WorkerGateway::getWorker(uint64_t id) {
             throw std::runtime_error("getWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("getWorker error: no worker with id = " + std::to_string(id) + " exists");
+        throw entry_not_exists_error("getWorker error: no worker with id = " + std::to_string(id) + " exists");
     }
     return details;
 }
@@ -194,7 +194,7 @@ void WorkerGateway::updateWorker(const worker_details &worker) {
             throw std::runtime_error("updateWorker error: " + query.lastError().databaseText().toStdString());
         }
     } else {
-        throw std::runtime_error("updateWorker error: no worker with id = " + std::to_string(worker.id) + " exists");
+        throw entry_not_exists_error("updateWorker error: no worker with id = " + std::to_string(worker.id) + " exists");
     }
 }
 
