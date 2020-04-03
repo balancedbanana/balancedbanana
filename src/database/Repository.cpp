@@ -63,14 +63,19 @@ std::shared_ptr<Worker> Repository::GetWorker(uint64_t id) {
     if(it != workerCache.end()) {
         return it->second.first;
     } else {
-        worker_details wd = WorkerGateway(GetDatabase()).getWorker(id);
-        if(wd.empty) {
+        try {
+            worker_details wd = WorkerGateway(GetDatabase()).getWorker(id);
+            if (wd.empty) {
+                return nullptr;
+            }
+            std::shared_ptr<Worker> worker = Factory::createWorker(wd);
+            workerCache.insert(std::pair(id, std::pair(worker, false)));
+            worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(
+                    this);
+            return worker;
+        } catch(entry_not_exists_error &e) {
             return nullptr;
         }
-        std::shared_ptr<Worker> worker = Factory::createWorker(wd);
-        workerCache.insert(std::pair(id, std::pair(worker, false)));
-        worker->balancedbanana::scheduler::Observable<balancedbanana::scheduler::WorkerObservableEvent>::RegisterObserver(this);
-        return worker;
     }
 }
 
@@ -97,14 +102,18 @@ std::shared_ptr<Job> Repository::GetJob(uint64_t id) {
     if(it != jobCache.end()) {
         return it->second.first;
     } else {
-        job_details jd = JobGateway(GetDatabase()).getJob(id);
-        if(jd.empty) {
+        try {
+            job_details jd = JobGateway(GetDatabase()).getJob(id);
+            if(jd.empty) {
+                return nullptr;
+            }
+            std::shared_ptr<Job> job = Factory::createJob(jd, GetUser(jd.user_id));
+            jobCache.insert(std::pair(id, std::pair(job, false)));
+            job->RegisterObserver(this);
+            return job;
+        } catch(entry_not_exists_error &e) {
             return nullptr;
         }
-        std::shared_ptr<Job> job = Factory::createJob(jd, GetUser(jd.user_id));
-        jobCache.insert(std::pair(id, std::pair(job, false)));
-        job->RegisterObserver(this);
-        return job;
     }
 }
 
@@ -140,14 +149,18 @@ std::shared_ptr<User> Repository::GetUser(uint64_t id) {
     if(it != userCache.end()) {
         return it->second.first;
     } else {
-        user_details ud = UserGateway(GetDatabase()).getUser(id);
-        if(ud.empty) {
+        try {
+            user_details ud = UserGateway(GetDatabase()).getUser(id);
+            if (ud.empty) {
+                return nullptr;
+            }
+            std::shared_ptr<User> user = Factory::createUser(ud);
+            userCache.insert(std::pair(id, std::pair(user, false)));
+            user->RegisterObserver(this);
+            return user;
+        } catch(entry_not_exists_error &e) {
             return nullptr;
         }
-        std::shared_ptr<User> user = Factory::createUser(ud);
-        userCache.insert(std::pair(id, std::pair(user, false)));
-        user->RegisterObserver(this);
-        return user;
     }
 }
 
