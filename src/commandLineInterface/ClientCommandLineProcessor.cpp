@@ -95,6 +95,15 @@ void callbackSubCommandRun(const std::shared_ptr<Task> &task, bool block, std::s
     config->set_min_cpu_count(min_cpu_count);
     config->set_max_ram(max_ram);
     config->set_min_ram(min_ram);
+
+    auto home = getenv("HOME");
+    if(home) {
+        auto userDefaultPath = std::filesystem::path(home) / ".bbc" / "JobConfig";
+        if(std::filesystem::exists(userDefaultPath)) {
+            //std::cout << "found config" << std::endl;
+            config->Merge(configfiles::JobConfig(userDefaultPath));
+        }
+    }
     //task->setTaskCommand(jobCommand);
 
     bool couldConvert;
